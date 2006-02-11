@@ -115,9 +115,7 @@ Frac = FractionField
 from fraction_field_element import is_FractionFieldElement
 
 # Arithmetic
-from arith import *
-from arith import factor as integer_factor
-
+from arith import *                   
 
 from morphism import is_RingHomomorphism
 

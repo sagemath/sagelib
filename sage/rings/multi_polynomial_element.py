@@ -94,7 +94,7 @@ class MPolynomial(Element_cmp_, CommutativeRingElement):
             K = self.parent().base_ring()
         y = K(0) 
         for (m,c) in self.element().dict().iteritems():  
-            y += K(c)*misc.mul([ x[i]**m[i] for i in range(n) ])      
+            y += c*misc.mul([ x[i]**m[i] for i in range(n) ])      
         return y 
 
     def _cmp_(self, right):
@@ -749,11 +749,11 @@ class MPolynomial_singular_repr(MPolynomial_polydict):
         return self.__singular
     
     def factor(self):
-        """
+        r"""
         Compute the irreducible factorization of this polynomial.
 
         ALGORITHM: Use Singular.
-        
+
         EXAMPLES:
             sage: x, y = PolynomialRing(QQ, 2, ['x','y']).gens()
             sage: f = (x^3 + 2*y^2*x) * (x^2 + x + 1); f
@@ -770,6 +770,9 @@ class MPolynomial_singular_repr(MPolynomial_polydict):
             sage: F = f.factor()
             sage: F
             2 * x * (2 + x)^2 * (y + x) * (y + 2*x)
+
+        Next we factor a larger product involving many variables.
+            sage: 
         """
         R = self.parent()
         S = self._singular_().factorize()
