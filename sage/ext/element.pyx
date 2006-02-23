@@ -130,7 +130,9 @@ cdef class Element(sage_object.SageObject):
     #    except TypeError:
     #        raise TypeError, "right action of %s on %s not defined"%(right, self)
             
-        
+
+
+    
 
 
 cdef class ModuleElement(Element):
