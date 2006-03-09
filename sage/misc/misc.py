@@ -152,7 +152,7 @@ def verbose(mesg="", t=0, level=1, caller_name=None):
     """
     if level>LEVEL:
         return cputime()
-    
+
     frame = sys._getframe(1).f_code
     file_name = frame.co_filename
     lineno = frame.co_firstlineno
