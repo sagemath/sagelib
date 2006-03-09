@@ -339,6 +339,8 @@ setup(name        = 'sage',
                      'sage.groups',
                      
                      'sage.interfaces',
+
+                     'sage.lfunctions',
                      
                      'sage.libs',
                      'sage.libs.hanke',
