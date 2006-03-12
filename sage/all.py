@@ -1,6 +1,6 @@
 """nodoctest
 all.py -- much of sage is imported into this module, so you don't
-          have to import everything individually. 
+          have to import everything individually.
 """
 
 #*****************************************************************************
