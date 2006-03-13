@@ -132,9 +132,9 @@ class Sequence(Mutability, sage.ext.sage_object.SageObject, list):
     sequence to a tuple, and returning the hash of that.  The hash
     is cached, and is only recomputed if the sequence is changed
     (which has a small performance penalty for assignment).
-    
+
         sage: hash(v)
-        172593046             # 32-bit
+        2083920238            # 32-bit
         -1663705395917193534  # 64-bit
         sage: v[0] = 10
         sage: hash(v)
