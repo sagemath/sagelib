@@ -104,8 +104,8 @@ def make_new_ZZ(x='0'):
     return n
 
 # Random-number generation 
-def randomBnd(long n):
-    r"""
+def randomBnd(q):
+    r""" 
     Returns cryptographically-secure random number in the range [0,n)
     Slightly faster that Python's \code{random.randint}
 
@@ -114,12 +114,16 @@ def randomBnd(long n):
         sage: 1 in w
         False
 
-    AUTHOR:
+    AUTHOR: 
         -- Didier Deshommes <dfdeshom@gmail.com>
     """
+    cdef ntl_ZZ y, w
+    y = ntl_ZZ()
+        
     _sig_on
-    return ZZ_randomBnd(n)
-
+    w = make_new_ZZ(str(q))
+    return  make_ZZ(ZZ_randomBnd(w.x))
+        
 def randomBits(long n):
     r"""
     Return a pseudo-random number between 0 and $2^n-1$
@@ -132,8 +136,8 @@ def randomBits(long n):
         sage: 1 in w
         False
     """
-    _sig_on
-    return ZZ_randomBits(n)
+    _sig_on 
+    return make_ZZ(ZZ_randomBits(n))
 
 ##############################################################################
 #
