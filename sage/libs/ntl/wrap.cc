@@ -5,6 +5,7 @@ using namespace std;
 #include "wrap.h"
 #include <NTL/mat_poly_ZZ.h>
 
+
 //////// ZZ //////////
 
 ZZ* new_ZZ() {
@@ -89,8 +90,14 @@ struct ZZ* ZZ_copy(struct ZZ* x)
 }
 
 /*Random-number generation */
+
+void setSeed(const struct ZZ* n)
+{
+  SetSeed(*n);
+}
+ 
 struct ZZ* ZZ_randomBnd(const struct ZZ* n)
-{   
+{ 
   ZZ *z = new ZZ();
   RandomBnd(*z,*n);
   return z;
