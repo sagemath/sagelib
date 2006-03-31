@@ -181,6 +181,10 @@ class Polynomial(Element_cmp_, ring_element.RingElement):
 
     def __getitem__(self, n):
         raise NotImplementedError
+
+    def __iter__(self):
+        for x in self.list():
+            yield x
         
     def __hash__(self):
         return hash(tuple(self.list()))
