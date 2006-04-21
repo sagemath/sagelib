@@ -560,6 +560,9 @@ class FiniteField_ext_pari(FiniteField_generic):
 
     def is_prime_field(self):
         return False
+
+    def is_prime(self):
+        return False
         
     def gen(self, n=0):
         """
@@ -857,6 +860,9 @@ class FiniteField_prime_modn(FiniteField_generic, integer_mod_ring.IntegerModRin
     def is_prime_field(self):
         return True
         
+    def is_prime(self):
+        return True
+
     def polynomial(self):
         try:
             return self.__polynomial
