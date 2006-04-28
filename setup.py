@@ -335,6 +335,8 @@ setup(name        = 'sage',
                      'sage.ext',
                      
                      'sage.functions',
+
+                     'sage.geometry',                     
                      
                      'sage.groups',
                      
