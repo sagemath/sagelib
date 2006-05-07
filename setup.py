@@ -382,6 +382,8 @@ setup(name        = 'sage',
                      'sage.schemes.plane_quartics',
                      'sage.schemes.elliptic_curves',
                      'sage.schemes.hyperelliptic_curves',
+
+                     'sage.server',
                      
                      'sage.structure',
                      ],
