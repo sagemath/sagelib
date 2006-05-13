@@ -88,16 +88,16 @@ from sage.ext.sage_object import SageObject
 from colorsys import hsv_to_rgb #for the hue function
 
 try:
-    
+
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.transforms import Value
     from matplotlib.figure import Figure
     import matplotlib.patches as patches
     from matplotlib.cbook import flatten
 
-except ImportError:
-
-    print "WARNING -- matplotlib did not build correctly."
+except ImportError, msg:
+    print msg
+    print "WARNING -- matplotlib did not build correctly as part of SAGE."
 
 
 from axes import find_axes
