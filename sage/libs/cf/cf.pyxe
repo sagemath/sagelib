@@ -140,7 +140,7 @@ cdef class Variable:
         the polynomial ring. Objects of class Variable must not only
         refer to variables of the polynomial ring, but also to so
         called algebraic and transcendental variables.
-        
+
         INPUT:
 
 	    name -- The level of the variable is specified to be the
@@ -153,11 +153,11 @@ cdef class Variable:
 	    construction the name of the variable is set to name.
 
 	    If name is an integer it is interpreted as a level.
-                     
+
             level -- The constructor generates an object of class
             Variable with level set to level.  level has to be a level
             of a polynomial variable or of a transcendental variable.
-            
+
         The default constructor creates an object with level set to
         LEVEL_BASEDOMAIN. Such a variable evaluates into the unit
         element of the current base domain when converted to a
@@ -203,7 +203,7 @@ cdef class Variable:
 
     def __dealloc__(Variable self):
         delete_Variable(self.thisptr)
-            
+
     def level(self):
         """
         Returns the level of this variable.
@@ -211,7 +211,7 @@ cdef class Variable:
         #embed{ int Variable_level(void *obj)
 	return ((Variable *)obj)->level();
         #}embed
-    
+
         return Variable_level(self.thisptr)
 
     def name(Variable self):
@@ -232,7 +232,7 @@ cdef class Variable:
         #}embed
         _sig_on
         return make_Variable(Variable_highest(self.thisptr))
-        
+
     def next(self):
         """
         This method returns an object of class Variable which refers
@@ -295,9 +295,9 @@ cdef class Variable:
 
         #might be slow but it kept crashing otherwise
         return str(CanonicalForm(self))
-    
-    
-         
+
+
+
 
 #embed{ void delete_Variable( void *obj)
 if(obj) {
@@ -321,8 +321,8 @@ cdef class CanonicalForm:
     """
     cdef void *thisptr
     cdef void *iterator
-    
-    def __init__(self,arg=None, arg2=None, cache=None):
+
+    def __init__(self,arg=None, arg2=None, kcache=None):
         """
         If arg is a Variable and exp==None this constructor generates
         a canonical form out of the variable arg.  If the level of x
@@ -358,8 +358,8 @@ cdef class CanonicalForm:
         INPUT:
             arg --   integer, Variable, Polynomial, or string
             arg2 --  optional second argument in dependence of first one
-            cache -- optional base field cache to use MPolynomial elements
-            
+            kcache -- optional base field cache to use MPolynomial elements
+
         EXAMPLES:
             sage: R=PolynomialRing(GF(127),2)
             sage: f=R('3234*x0*x1+6575*x0^2+52')
@@ -371,7 +371,7 @@ cdef class CanonicalForm:
             sage: cf.CF(f)._sage_(R)==f
             True
 
-            
+
 
         """
         #embed{ void *CF_init()
@@ -403,14 +403,14 @@ cdef class CanonicalForm:
         #}embed
 
         #embed{ void CF_polygen(void *ret, int c, int level, long e)
-           *(CanonicalForm*)ret += c * CanonicalForm(Variable(level),e);
+            *(CanonicalForm*)ret += c * CanonicalForm(Variable(level),e);
         #}embed
 
         #embed{ void CF_mongen(void *ret, int level, long e)
-           if(e!=0)
-              *(CanonicalForm*)ret *= CanonicalForm(Variable(level),e);
+            if(e!=0)
+                *(CanonicalForm*)ret *= CanonicalForm(Variable(level),e);
         #}embed
-        
+
         cdef CanonicalForm cPoly
         cdef CanonicalForm t
         cdef int varlevel
@@ -421,27 +421,27 @@ cdef class CanonicalForm:
 
         # maybe a switch-case dict might be faster here?
         if is_FieldElement(arg) and arg.parent().degree()!=1:
-           cPoly = CF(0)
-           if not isinstance(arg2,Variable):
-              arg2 = setBaseDomain(arg.parent())
-           varlevel  = arg2.level()
-           f = arg._pari_().lift().lift()
-           if f.poldegree() == 0:
-              self.thisptr = CF_initi(int(f))
-              return 
-           for i from 0 <= i <= f.poldegree():
-              CF_polygen(cPoly.thisptr,int(f[i]),varlevel,i)
-           self.thisptr = cPoly.thisptr
-           return
-           
+            cPoly = CF(0)
+            if not isinstance(arg2,Variable):
+                arg2 = setBaseDomain(arg.parent())
+            varlevel  = arg2.level()
+            f = arg._pari_().lift().lift()
+            if f.poldegree() == 0:
+                self.thisptr = CF_initi(int(f))
+                return 
+            for i from 0 <= i <= f.poldegree():
+                CF_polygen(cPoly.thisptr,int(f[i]),varlevel,i)
+            self.thisptr = cPoly.thisptr
+            return
+
         elif is_MPolynomialRingElement(arg):
             poly = CF(0)
             for e,c in arg.element().dict().iteritems():
                 t = CF(0)
-                if cache!=None:
-                    if not cache.has_key(c):
-                        cache[c]=CF(c,arg2)
-                    t = t + cache[c]
+                if kcache!=None:
+                    if not kcache.has_key(c):
+                        kcache[c]=CF(c,arg2)
+                    t = t + kcache[c]
                 else:
                     t = t + CF(c,arg2)
                 for i from 1 <= i <= len(e):
@@ -458,7 +458,7 @@ cdef class CanonicalForm:
             for i from 0 <= i <= arg.degree():
                 cPoly = cPoly + CF(arg[i])*CF(v,i)
             self.thisptr = cPoly.thisptr
-            
+
         elif isinstance(arg,CanonicalForm):
             self.thisptr = CF_copy(<void*>(<CanonicalForm>arg).thisptr)
 
@@ -467,7 +467,7 @@ cdef class CanonicalForm:
 
         elif isinstance(arg,Variable) and arg2!=None:
             self.thisptr = CF_initVn(<void*>(<Variable>arg).thisptr,int(arg2))
-            
+
         elif isinstance(arg,str):
             arg = "".join([arg,";"])
             self.thisptr = str_to_CF(arg)
@@ -547,7 +547,7 @@ cdef class CanonicalForm:
         #embed{ void *CF_div(void *l, void *r)
         return new CanonicalForm((*(CanonicalForm*)l) / (*(CanonicalForm*)r));
         #}embed
-        
+
         cdef CanonicalForm cRight
         cdef CanonicalForm cLeft
         try:
@@ -557,14 +557,14 @@ cdef class CanonicalForm:
             raise ArithmeticError, "Cannot divide %s through %s"%(left,right)
         _sig_on
         return make_CF(CF_div(cLeft.thisptr,cRight.thisptr))
-        
+
     def __pow__(CanonicalForm self,long e, ignored):
         #embed{ void *CF_pow(void *l, long e)
         return new CanonicalForm( power((*(CanonicalForm*)l),e) );
         #}embed
         _sig_on
         return make_CF(CF_pow(self.thisptr, e))
-        
+
     def __neg__(CanonicalForm self):
         #embed{ void *CF_neg(void *l)
         return new CanonicalForm(-(*(CanonicalForm*)l));
@@ -588,7 +588,7 @@ cdef class CanonicalForm:
 ##             cOther = CanonicalForm(other)
 ##         except TypeError:
 ##             raise ArithmeticError, "Cannot add %s and %s"%(self,other)
-        
+
 ##         CF_iadd(self.thisptr,cOther.thisptr)
 ##         return self
 
@@ -622,7 +622,7 @@ cdef class CanonicalForm:
 ##         #embed{ void CF_idiv(void *l, void *r)
 ##         (*(CanonicalForm*)l) /= (*(CanonicalForm*)r);
 ##         #}embed
-        
+
 ##         cdef CanonicalForm cOther
 ##         try:
 ##             cOther = CanonicalForm(other)
@@ -631,14 +631,14 @@ cdef class CanonicalForm:
 
 ##         CF_idiv(self.thisptr,cOther.thisptr)
 ##         return self
-        
+
 ##     def __ipow__(CanonicalForm self,long e, ignored):
 ##         #embed{ void CF_ipow(void *l, long e)
 ##         (*(CanonicalForm*)l) = power((*(CanonicalForm*)l),e);
 ##         #}embed
 ##         CF_ipow(self.thisptr,e)
 ##         return self
-        
+
 
     def __cmp__(CanonicalForm self,other):
         """
@@ -675,7 +675,7 @@ cdef class CanonicalForm:
         #embed{ void *CF_mod(void *l, void *r)
         return new CanonicalForm((*(CanonicalForm*)l) % (*(CanonicalForm*)r));
         #}embed
-        
+
         cdef CanonicalForm cOther
         try:
             cOther = CanonicalForm(other)
@@ -687,7 +687,7 @@ cdef class CanonicalForm:
     def __getitem__(CanonicalForm self, i):
         """
         operator [] - return i'th coefficient from self.
-        
+
         Returns self if self is in a base domain and i equals zero.
         Returns zero (from the current domain) if self is in a base
         domain and i is larger than zero.  Otherwise, returns the
@@ -695,7 +695,7 @@ cdef class CanonicalForm:
         self) or zero if self does not contain x^i.  Elements in an
         algebraic extension are considered polynomials.  i should be
         larger or equal zero.
-        
+
         INPUT:
             i -- exponent, this may be a tuple of exponents
 
@@ -713,15 +713,15 @@ cdef class CanonicalForm:
 
         NOTE:
             Never use a loop like
-            
+
             for i in range(f.degree( )):
                 print f[ i ]
-            
+
             which is much slower than
 
             for c in f:
                 print c
-             
+
         """
         #embed{ void *CF_getitem(void *e,int i)
         if (((CanonicalForm*)e)->degree() < i) {
@@ -759,7 +759,7 @@ cdef class CanonicalForm:
         #embed{ void *CF_iterinit(void *e)
         return new CFIterator(*(CanonicalForm*)e);
         #}embed
-        
+
         #embed{ void *CF_iter(void *it, int *exp)
         if(((CFIterator*)it)->hasTerms()) {
             CanonicalForm *ret = new CanonicalForm(((CFIterator*)it)->coeff());
@@ -776,10 +776,10 @@ cdef class CanonicalForm:
 
         if self.is_zero():
             raise StopIteration
-        
+
         if self.iterator == NULL:
             self.iterator = CF_iterinit(self.thisptr)
-        
+
         _sig_on
         ret = CF_iter(self.iterator,&exp)
         _sig_off
@@ -789,7 +789,7 @@ cdef class CanonicalForm:
         else:
             self.iterator = CF_iterinit(self.thisptr)
             raise StopIteration
-    
+
     def __call__(CanonicalForm self, arg):
         """
         Returns the current object with the substitution described
@@ -881,7 +881,7 @@ cdef class CanonicalForm:
         #embed{ int CF_isZero(void *e)
         return ((CanonicalForm*)e)->isZero();
         #}embed
-        
+
         return bool(CF_isZero(self.thisptr))
 
     def is_imm(CanonicalForm self):
@@ -944,14 +944,14 @@ cdef class CanonicalForm:
         #}embed
         _sig_on
         return make_CF(CF_Lc(self.thisptr))
-        
+
     def LC(CanonicalForm self, v=None):
         """
         LC( ) returns the leading coefficient of self where self is
         considered a univariate polynomial in its main variable.  An
         element of an algebraic extension is considered an univariate
         polynomial, too.
-        
+
         LC( v ) returns the leading coefficient of CO where CO is
         considered an univariate polynomial in the polynomial variable v.
 
@@ -959,11 +959,11 @@ cdef class CanonicalForm:
 
         INPUT:
             v -- if set the leading coefficient with respect to this
-                        variable is returned.
+                variable is returned.
         OUTPUT:
             CanonicalForm representing the lead coefficient.
 
- 
+
         """
         #embed{ void *CF_LC(void *e,void *v)
         if (v == NULL) {
@@ -1088,11 +1088,11 @@ cdef class CanonicalForm:
         """
         This selector returns the level of the main variable of self.
         """
-        
+
         #embed{ int CF_level(void *e)
         return ((CanonicalForm*)e)->level();
         #}embed
-        
+
         return CF_level(self.thisptr)
 
     def mapinto(CanonicalForm self, mapMe = False):
@@ -1104,16 +1104,16 @@ cdef class CanonicalForm:
 
         INPUT:
             mapMe -- if True this object is mappend and nothing is returned 
-                     (default: False)
+                (default: False)
         """
-        
+
         #embed{ void *CF_mapinto(void *self)
         return new CanonicalForm(((CanonicalForm*)self)->mapinto());
         #}embed
         #embed{ void CF_mapintos(void *self)
         *(CanonicalForm*)self = ((CanonicalForm*)self)->mapinto();
         #}embed
-        
+
         if mapMe:
             CF_mapintos(self.thisptr)
         else:
@@ -1150,7 +1150,7 @@ cdef class CanonicalForm:
     def inGF(CanonicalForm self):
         """
         This method returns true if the object is an element of GF(q).
-         """
+            """
         #embed{ int CF_inGF(void *self)
         return ((CanonicalForm*)self)->inGF();
         #}embed
@@ -1246,7 +1246,7 @@ cdef class CanonicalForm:
                 retval = retval + self.__cflist__(c,list(e))
             return retval 
 
-    def _sage_(self,r,cache=None):
+    def _sage_(self, r, kcache=None):
         """
         Coerces self into r.
 
@@ -1259,7 +1259,7 @@ cdef class CanonicalForm:
 
         INPUT:
             r -- ring to coerce to
-            cache -- optional finite field cache
+            kcache -- optional finite field cache
 
         EXAMPLES:
             sage: cf.setBaseDomain(GF(127))
@@ -1277,18 +1277,20 @@ cdef class CanonicalForm:
         """
         from sage.rings.polynomial_ring import is_PolynomialRing
 
+        self.mapinto(mapMe=True)
+
         if is_PolynomialRing(r):
-           l = [0]*(self.degree()+1)
-           base = r.base_ring()
-           for c,e in self:
-               cs = str(c)
-               if cache!=None:
-                  if not cache.has_key(cs):
-                     cache[cs]=base(cs)
-                  l[e]=cache[cs]
-               else:
-                  l[e]=base(cs)
-           return r(l)
+            l = [0]*(self.degree()+1)
+            base = r.base_ring()
+            for c,e in self:
+                cs = str(c)
+                if kcache!=None:
+                    if not kcache.has_key(cs):
+                        kcache[cs]=base(cs)
+                    l[e]=kcache[cs]
+                else:
+                    l[e]=base(cs)
+            return r(l)
         else:
             d={}
             level = self.level()-1
@@ -1297,11 +1299,15 @@ cdef class CanonicalForm:
 
             kgen = str(r.base_ring().gen())
 
+            if self.is_zero():
+                # obey binary compatibility
+                return r(polydict.PolyDict({}))
+
             if self.inCoeffDomain():
                 # catch the constant case
                 cs = str(self)
                 if not self.inFF():
-                   cs = cs.replace(str(self.mvar()),kgen)
+                    cs = cs.replace(str(self.mvar()),kgen)
                 d[tuple([int(0),]*r.ngens())]=r.base_ring()(cs)
                 return r(polydict.PolyDict(d))
 
@@ -1310,13 +1316,15 @@ cdef class CanonicalForm:
                 exp[level]= e
                 l = self.__cflist__(c,exp)
                 for c2,e2 in l:
+                    if c2.is_zero():
+                        continue
                     cs = str(c2)
                     if not c2.inFF():
                         cs = cs.replace(str(c2.mvar()),kgen)
-                    if cache!=None:
-                        if not cache.has_key(cs):
-                            cache[cs]=r.base_ring()(cs)
-                        d[tuple(e2)]=cache[cs]
+                    if kcache!=None:
+                        if not kcache.has_key(cs):
+                            kcache[cs]=r.base_ring()(cs)
+                        d[tuple(e2)]=kcache[cs]
                     else:
                         d[tuple(e2)]=r.base_ring()(cs)
             return r(polydict.PolyDict(d))
@@ -1397,10 +1405,10 @@ def setBaseDomain(k,force=False):
 
     INPUT:
         force -- enforce creation of a new algebraic variable (default: False)
-    
+
     """
     global __domains__
-    
+
     from sage.rings.finite_field import is_FiniteField
 
     setCharacteristicp(int(k.characteristic()))
@@ -1411,8 +1419,8 @@ def setBaseDomain(k,force=False):
             __domains__[k] = rootOf(k.polynomial())
             setCharacteristic(k.characteristic())
         return  __domains__[k]
-    
-    
+
+
 
 def getCharacteristic():
     """
@@ -1436,9 +1444,9 @@ def rootOf(mipo, char *name = NULL):
 
     INPUT:
         mipo -- minimal polynomial to define the algebraic variable,
-                this must be a CanonicalForm or something coercable to
-                ca CanonicalForm via the CanonicalForm constructor
-		
+            this must be a CanonicalForm or something coercable to
+            ca CanonicalForm via the CanonicalForm constructor
+
         name -- name to assign to the algebraic variable
 
     \note{Do not use this function to construct a base domain for
@@ -1459,7 +1467,7 @@ def rootOf(mipo, char *name = NULL):
         cMipo = CanonicalForm(mipo)
     else:
         cMipo = mipo
-        
+
     if name == NULL or len(name)==0:
         _sig_on
         return make_Variable(rootOfp(cMipo.thisptr))
@@ -1488,7 +1496,7 @@ def getMipo( a,  x=None ):
 
     if x==None:
         x='x'
-    
+
     if not isinstance(a,Variable):
         cA = Variable(a)
     else:
@@ -1497,7 +1505,7 @@ def getMipo( a,  x=None ):
         cX = Variable(x)
     else:
         cX = x
-    
+
     _sig_on
     return make_CF(CF_getMipo(cA.thisptr,cX.thisptr))
 
