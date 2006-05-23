@@ -249,7 +249,6 @@ def dimension_cusp_forms_eps(eps, k=2):
     """
     if isinstance(eps, (int,long) ):
         return dimension_cusp_forms_gamma0(eps,k)
-
     
     if k < 0:
         return Z(0)
