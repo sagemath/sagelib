@@ -136,10 +136,18 @@ class Cell:
     def input_text(self):
         return self.__in
 
-    def set_output_text(self, output):
+    def set_output_text(self, output, html):
         if len(output) > MAX_OUTPUT:
             output = 'WARNING: Output truncated!\n' + output[:MAX_OUTPUT] + '\n(truncated)'
         self.__out = output
+        self.__out_html = html
+
+    def output_html(self):
+        try:
+            return self.__out_html
+        except AttributeError:
+            self.__out_html = ''
+            return ''
 
     def output_text(self, ncols=0):
         if ncols:
@@ -231,7 +239,7 @@ class Cell:
 
     def html_out(self, ncols=0):
         out_wrap = self.output_text(ncols).replace('<','&lt;')
-        out_no_wrap = self.output_text(0).replace('<','&lt;')
+        out_no_wrap = self.output_text(0).replace('<','&lt;') 
         if self.computing():
             cls = "cell_output_running"
         else:
@@ -241,9 +249,11 @@ class Cell:
                  <table class="cell_output"><tr><td>
                  <pre class="cell_output" id="cell_output_%s">%s</pre>
                  <pre class="cell_output_nowrap" id="cell_output_nowrap_%s">%s</pre>
-                 </tr></td></table>
+                 </td></tr>
+                 <tr><td><pre class="cell_output_html" id="cell_output_html_%s">%s</pre></td></tr></table>
                </div>"""%(cls, self.__id, self.__id,
                           self.__id, out_wrap,
-                          self.__id, out_no_wrap)
+                          self.__id, out_no_wrap,
+                          self.__id, self.output_html())
         return s
     
