@@ -1,7 +1,7 @@
 """
 Coercion helper functions
 """
-
+ 
 #*****************************************************************************
 #       Copyright (C) 2004-2005 William Stein <wstein@ucsd.edu>
 #

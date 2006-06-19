@@ -5,7 +5,7 @@ AUTHORS: Kyle Schalm <kschalm@math.utexas.edu> (2005-09)
          William Stein <wstein@ucsd.edu>: bug fixes, examples, maintenance
          Didier Deshommes <dfdeshom@gmail.com> (2006-03-19): examples
 """
-
+ 
 #*****************************************************************************
 #
 #   SAGE: System for Algebra and Geometry Experimentation    

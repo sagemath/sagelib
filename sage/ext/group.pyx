@@ -1,7 +1,7 @@
 """
 Base class for all groups
 """
-
+ 
 #*****************************************************************************
 #       Copyright (C) 2005 William Stein <wstein@ucsd.edu>
 #

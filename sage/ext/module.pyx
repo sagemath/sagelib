@@ -1,7 +1,7 @@
 """
 Abstract base class for modules
 """
-
+ 
 #*****************************************************************************
 #       Copyright (C) 2005 William Stein <wstein@ucsd.edu>
 #
