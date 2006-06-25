@@ -2,7 +2,7 @@
 Some arithmetic functions that use GMP
 """
 
-"""
+""" 
 To use these functions in your pyrex extension:
   1. Put
          cimport arith_gmp
