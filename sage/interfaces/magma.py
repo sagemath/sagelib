@@ -455,8 +455,8 @@ class MagmaFunction(ExpectFunction):
     def _sage_doc_(self):
         M = self._parent
         return M.eval(self._name)
-    
-        
+
+
 class MagmaElement(ExpectElement):
     def __getattr__(self, attrname):
         if attrname[:1] == "_":
