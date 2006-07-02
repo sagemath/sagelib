@@ -577,6 +577,9 @@ cdef class FiniteField(Field):
 
     def _gap_init_(self):
         return 'GF(%s)'%self.order()
+
+    def _magma_init_(self):
+        return 'GF(%s)'%self.order()
     
     def __cmp__(self, other):
         """
