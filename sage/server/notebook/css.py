@@ -826,7 +826,7 @@ textarea.cell_input {
   padding-left:3px;
   padding-top:0px;
   padding-bottom:0px;
-  width: 100%;
+  width: 100%; 
 }
 
 textarea.cell_input_hide {
@@ -850,7 +850,7 @@ textarea.cell_input_active {
    border: 0px solid #ffffff;  
   font-family: courier, monospace;
   font-size:12pt;
-  overflow:hidden;
+  overflow:hidden; 
   padding-left:3px;
   padding-top:0px;
   padding-bottom:0px;
