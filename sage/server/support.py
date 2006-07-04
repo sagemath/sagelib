@@ -45,6 +45,9 @@ def init(object_directory=None, globs={}):
         sage.ext.sage_object.base=object_directory
     sage.misc.latex.EMBEDDED_MODE = True
     sage.misc.pager.EMBEDDED_MODE = True
+    
+    # Turn on latex print mode by default.
+    #sage.misc.latex.lprint()
 
 
 ######################################################################
