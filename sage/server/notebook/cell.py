@@ -258,8 +258,11 @@ class Cell:
                 s = s[j+7:]
             s = t
             if not self.is_html() and len(s.strip()) > 0:
-                s = '<pre>' + s + '</pre>'
+                s = '<pre class="shrunk">' + s + '</pre>'
         return s
+
+    def has_output(self):
+        return len(self.__out.strip()) > 0
 
     def is_html(self):
         try:
@@ -334,7 +337,7 @@ class Cell:
             if 'hide' in cls:
                 return ''
             else:
-                s = '<pre>%s</pre>'%(self.__in.replace('<','&lt;'))
+                s = '<pre class="shrunk">%s</pre>'%(self.__in.replace('<','&lt;'))
                 return s
 
         s = """<div class="insert_new_cell" id="insert_new_cell_%s"
@@ -412,9 +415,9 @@ class Cell:
                  
         
         s = top + out + '\n</div>'
-        
+
         r = '[%s]'%self.relative_id()
-        r += '&nbsp;'*(5-len(r)) 
+        r += '&nbsp;'*(5-len(r))
         tbl = """<table class="cell_output_box"><tr>
                <td class="cell_number" id="cell_number_%s" onClick="cycle_cell_output_type(%s);">%s</td>
                <td class="output_cell">%s</td></tr></table>"""%(
