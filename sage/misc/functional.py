@@ -890,6 +890,8 @@ def square_free_part(x):
         if e%2 != 0:
             n *= p
     return n * F.unit()
+
+squarefree_part = square_free_part
     
 def square_root(x):
     """
