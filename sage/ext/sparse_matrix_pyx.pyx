@@ -4,7 +4,7 @@ Sparse matrices over $\F_p$ and $\Q$
 This is a compiled implementation of sparse matrix algebra over small
 prime finite fields and the rational numbers, which is used mainly
 internally by other classes.
-
+ 
 AUTHOR:
    -- William Stein (2004): first version
    -- William Stein (2006-02-12): added set_row_to_multiple_of_row
