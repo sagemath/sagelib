@@ -341,6 +341,8 @@ setup(name        = 'sage',
                      'sage.categories',
 
                      'sage.coding',
+
+                     'sage.combinat',
                      
                      'sage.crypto',
                      
