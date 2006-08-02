@@ -180,7 +180,13 @@ class HeckeModule_generic(sage.modules.module.Module):
             return self.__hecke_algebra
         except AttributeError:
             self.__hecke_algebra = algebra.HeckeAlgebra(self)
-            return self.__hecke_algebra            
+            return self.__hecke_algebra
+
+    def is_zero(self):
+        """
+        Return True if this modular symbols space has dimension 0.
+        """
+        return self.dimension() == 0
 
     def is_full_hecke_module(self):
         """
