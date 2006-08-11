@@ -1520,7 +1520,7 @@ class Polynomial_generic_dense(Polynomial):
             i = 0
         return self.__coeffs[i:j]
 
-    def __setitem__(self, n, value):        
+    def __setitem__(self, n, value):
         if self._is_gen:
             raise ValueError, "the generator cannot be changed"
         n = int(n)

@@ -359,7 +359,7 @@ class PowerSeries(Element_cmp_, ring_element.RingElement):
                self.parent() != denom.parent():
             
             return bin_op(self, denom, operator.div)
-
+            
         u = denom.unit_part()
         inv = ~u  # inverse
         
