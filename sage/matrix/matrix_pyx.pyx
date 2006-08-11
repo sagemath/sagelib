@@ -6,7 +6,6 @@ AUTHORS:
     -- Martin Albrecht: conversion to Pyrex
     -- Jaap Spies: various functions
     -- Gary Zablackis: fixed a sign bug in generic determinant. 
-    
 
 Elements of matrix spaces are of class \code{Matrix} (or a class
 derived from Matrix).  They can be either sparse or dense, and can be
