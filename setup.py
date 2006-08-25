@@ -276,7 +276,10 @@ ext_modules = [ \
     Extension('sage.matrix.matrix_pyx',
               ['sage/matrix/matrix_pyx.pyx']
               ), \
-
+                            
+    Extension('sage.rings.integer_mod_pyx',
+              ['sage/rings/integer_mod_pyx.pyx']
+              ), \
 
     ]
     
