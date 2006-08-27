@@ -429,7 +429,9 @@ setup(name        = 'sage',
                      
                      'sage.functions',
 
-                     'sage.geometry',                     
+                     'sage.geometry',
+
+                     'sage.gsl',
                      
                      'sage.groups',
                      'sage.groups.abelian_gps',
