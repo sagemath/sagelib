@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 DEVEL = False
-PYTHON_VERSION='2.4'
+PYTHON_VERSION='2.4'   
 
 # TODO: make the CBLAS choice intelligent based on the environment.
 CBLAS='gslcblas'  # slow but guaranteed to be available
