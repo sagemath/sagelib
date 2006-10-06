@@ -146,8 +146,10 @@ class IntegerRing(principal_ideal_domain.PrincipalIdealDomain, _uniq_int):
 
     def _latex_(self):
         return "\\mathbf{Z}"
-
     
+    def __len__(self):
+        raise TypeError, 'len() of unsized object'
+
     def __call__(self, x, base=0):
         try:
             return sage.rings.integer.Integer(x, base)
