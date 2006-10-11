@@ -121,28 +121,24 @@ class HG:
 
     browse = serve
         
-    def unbundle(self, bundle, update=True, options=''):
+    def unbundle(self, bundle, update=True):
         """
         Apply patches from a hg patch to the repository.
-
-        If the bundle is a .patch file, instead call the import_patch method.
 
         INPUT:
              bundle -- an hg bundle (created with the bundle command)
              update -- if True (the default), update the working directory after unbundling.
         """
-        if bundle[-6:] == '.patch':
-            self.import_patch(bundle, options)
-            return
         bundle = os.path.abspath(bundle)
         print "Unbundling bundle %s"%bundle
         if update:
             options = '-u'
         else:
             options = ''
-        self('unbundle %s %s "%s"'%(options, options, bundle))
+        self('unbundle %s "%s"'%(options, bundle))
 
     apply = unbundle
+
 
     def export(self, revs, filename='%R.patch', text=False, options=''):
         r"""
@@ -224,6 +220,7 @@ class HG:
         """
         self('import "%s" %s'%(filename,options))
 
+        
     def add(self, files, options=''):
         """
         Add the given list of files (or file) or directories
@@ -390,7 +387,7 @@ class HG:
             url = self.__url
         if not '/' in url:
             url = '%s/devel/sage-%s'%(SAGE_ROOT, url)
-
+            
         self('pull %s %s'%(options, url))
         if self.__target == 'sage':
             print ""
@@ -403,7 +400,7 @@ class HG:
         print "of the repository you are using.  This might not"
         print "work with the notebook yet."
 
-    def merge(self, options='-f'):
+    def merge(self, options=''):
         """
         Merge working directory with another revision
         
@@ -413,13 +410,13 @@ class HG:
         performed before any further updates are allowed.
 
         INPUT:
-            options -- default: '-f'
+            options -- default: ''
                  -b --branch  merge with head of a specific branch
                  -f --force   force a merge with outstanding changes
         """
         self('merge %s'%options)
 
-    def update(self, options='-f'):
+    def update(self, options=''):
         """
         update or merge working directory
 
@@ -438,7 +435,7 @@ class HG:
         aliases: up, checkout, co
 
         INPUT:
-            options -- string (default: '-f')
+            options -- string (default: '')
              -b --branch  checkout the head of a specific branch
              -C --clean   overwrite locally modified files
              -f --force   force a merge with outstanding changes
