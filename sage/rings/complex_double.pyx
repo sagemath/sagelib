@@ -2,7 +2,7 @@ r"""
 Double Precision Complex Numbers
 
 PYREX: sage.rings.complex_double
-
+ 
 SAGE supports arithmetic using double-precision complex numbers.  A
 double-precision complex number is a complex number x + I*y with x, y
 64-bit (8 byte) floating point numbers (double precision).

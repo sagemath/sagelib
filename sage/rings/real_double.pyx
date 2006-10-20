@@ -3,7 +3,7 @@ Field of Double-Precision Real Numbers
 
 PYREX: sage.rings.real_double
 """
-
+ 
 include '../ext/cdefs.pxi'
 include '../ext/interrupt.pxi'
 include '../gsl/gsl.pxi'
