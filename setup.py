@@ -158,6 +158,9 @@ complex_number2 = Extension('sage.rings.complex_number2',
 			    ['sage/rings/complex_number2.pyx'],
 			    libraries = ['gmp'])
 
+free_module_element = Extension('sage.modules.free_module_element',
+                                ['sage/modules/free_module_element.pyx'])
+
 ################ GSL wrapping ######################
 
 gsl_fft = Extension('sage.gsl.fft',
@@ -180,11 +183,19 @@ complex_double = Extension('sage.rings.complex_double',
                            ['sage/rings/complex_double.pyx'],
                            libraries = ['gsl', CBLAS, 'pari', 'gmp'])
 
+RealDoubleVectors = Extension('sage.modules.RealDoubleVectors',['sage/modules/RealDoubleVectors.pyx'],
+                              libraries = ['gsl',CBLAS,'pari','gmp'],define_macros = [('GSL_DISABLE_DEPRECAED','1')])
+
+ComplexDoubleVectors = Extension('sage.modules.ComplexDoubleVectors',['sage/modules/ComplexDoubleVectors.pyx'],libraries = ['gsl',CBLAS,'pari','gmp'],
+                                define_macros= [('GSL_DISABLE_DEPRECATED','1')])
+
 #####################################################
 
 ext_modules = [ \
+    free_module_element, \
+    ComplexDoubleVectors,\
+    RealDoubleVectors,\
     ec, \
-
     pari, \
 
     mwrank, \
@@ -205,7 +216,7 @@ ext_modules = [ \
     matrix_integer,
     matrix_rational_dense,
     matrix_rational_sparse,
-
+    
     gsl_fft,
     gsl_interpolation,
     gsl_callback,
