@@ -7,7 +7,8 @@ cdef extern from "stdlib.h":
     char *strcpy(char *dest, char *src)
 
 cdef extern from "string.h":
-    void *memcpy(void *s1, void *s2, size_t n)
+    void *memset(void *dest, int c, size_t n)
+    void *memcpy(void *dest, void *src, size_t n)
 
 cdef extern from "stdio.h":
     ctypedef struct FILE

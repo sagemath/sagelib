@@ -2,15 +2,12 @@
 Generic matrices over the integers modulo n.
 """
 
-cimport matrix_generic
-import matrix_generic
+cimport matrix_dense
+import matrix_dense
 
 include "../ext/interrupt.pxi"
 include "../ext/cdefs.pxi"
 
-cdef extern from "string.h":
-    void *memset(void *dest, int c, size_t n)
-    void *memcpy(void *dest, void *src, size_t n)
 
 from sage.misc.misc import verbose, get_verbose
 
@@ -28,8 +25,8 @@ LEAVE_UNINITIALIZED = "LEAVE UNINITIALIZED"
 
 MAX_MODULUS = 46340
 
-cdef class Matrix_modn_dense(matrix_generic.Matrix):
-    def __init__(self, parent, object entries=None, coerce=True, copy=True, clear=True):
+cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
+    def __init__(self, parent, object entries=None, coerce_entries=True, copy=True, clear=True):
         matrix_generic.Matrix.__init__(self, parent)
 
         cdef int i, p, nrows, ncols
