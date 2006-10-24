@@ -111,7 +111,7 @@ cdef class ComplexDoubleField_class(sage.rings.ring.Field):
         if other is ComplexDoubleField:
             return 0
         return -1
-
+    
     def __repr__(self):
         """
         Print out this complex double field.
@@ -199,6 +199,9 @@ cdef class ComplexDoubleElement(sage.structure.element.FieldElement):
         self._complex = gsl_complex_rect(real, imag)
         global the_complex_double_field
         self._parent = the_complex_double_field
+
+    def __hash__(self):
+        return hash(str(self))
 
     def __richcmp__(ComplexDoubleElement self, right, int op):
         """
