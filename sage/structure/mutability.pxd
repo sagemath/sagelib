@@ -1,18 +1,17 @@
-r"""
-Mutability
+"""
+Mutability Pyrex Implementation
 """
 
 ##########################################################################
 #
 #   SAGE: System for Algebra and Geometry Experimentation    
 #
-#       Copyright (C) 2006 William Stein <wstein@gmail.com>
+#       Copyright (C) 2006 William Stein <wstein@ucsd.edu>
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #                  http://www.gnu.org/licenses/
 ##########################################################################
 
-from sage.structure.mutability_pyx import Mutability
-
-def __reduce__Mutability(x):
-    return Mutability(x)
+cdef class Mutability:
+    cdef int _is_immutable
+    cdef _require_mutable_cdef(self)
