@@ -184,28 +184,58 @@ cdef class Matrix(sage.structure.element.ModuleElement):
     def set_immutable(self):
         """
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(QQ['x','y'], 2, 2, range(4))
+            sage: A.is_mutable()
+            True
+            sage: A[0,0] = 10
+            sage: A
+            [10   1]
+            [ 2   3]
+            sage: A.set_immutable()
+            sage: A.is_mutable()
+            False
+            sage: A[0,0] = 10
+            Traceback (most recent call last):
+            ...
+            <type 'exceptions.ValueError'>: matrix is immutable; please change a copy instead (use self.copy())       
         """
         self._mutability.set_immutable()
 
     def is_immutable(self):
         """
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(QQ['t','s'], 2, 2, range(4))
+            sage: A.is_immutable()
+            False
+            sage: A.set_immutable()
+            sage: A.is_immutable()
+            True
         """
-        return self._mutability._is_immutable
+        return bool(self._mutability._is_immutable)
 
     def is_mutable(self):
         """
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(QQ['t','s'], 2, 2, range(4))
+            sage: A.is_mutable()
+            True
+            sage: A.set_immutable()
+            sage: A.is_mutable()
+            False
         """
-        return self._mutability.is_mutable()
+        return bool(self._mutability.is_mutable())
 
     def _matrix_(self, R):
         """
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(ZZ[['t']], 2, 2, range(4))
+            sage: A.parent()
+             Full MatrixSpace of 2 by 2 dense matrices over Power Series Ring in t over Integer Ring
+            sage: A._matrix_(QQ[['t']])
+            [0 1]
+            [2 3]
+            sage: A._matrix_(QQ[['t']]).parent()
+             Full MatrixSpace of 2 by 2 dense matrices over Power Series Ring in t over Rational Field
         """
         return self.change_ring(R)
 
@@ -347,7 +377,13 @@ cdef class Matrix(sage.structure.element.ModuleElement):
     def __hash__(self):
         """
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(ZZ[['t']], 2, 2, range(4))
+            sage: B = A.copy()
+            sage: A.__hash__() == B.__hash__()
+            True
+            sage: A[0,0] = -1
+            sage: A.__hash__() == B.__hash__()
+            False
         """
         return hash(str(self))
 
@@ -740,7 +776,12 @@ cdef class Matrix(sage.structure.element.ModuleElement):
 
 
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(QQ[['t']], 2, 2, range(4))
+            sage: A.block_sum(100*A)
+            [  1   2   0   0]
+            [  3   4   0   0]
+            [  0   0 100 200]
+            [  0   0 300 400]
         """
         if not isinstance(other, Matrix):
             raise TypeError, "other must be a Matrix"
@@ -754,7 +795,18 @@ cdef class Matrix(sage.structure.element.ModuleElement):
         matrix into the given ring.
 
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(QQ, 2, 2, [1/2, 1/3, 1/3, 1/4])
+            sage: A.parent()
+             Full MatrixSpace of 2 by 2 dense matrices over Rational Field
+            sage: A.change_ring(GF(25))
+            [3 2]
+            [2 4]
+            sage: A.change_ring(GF(25)).parent()
+             Full MatrixSpace of 2 by 2 dense matrices over Finite Field in a of size 5^2
+            sage: A.change_ring(ZZ)
+            Traceback (most recent call last):
+            ...
+            <type 'exceptions.TypeError'>: Unable to coerce rational (=1/2) to an Integer.
         """
         if ring == self.base_ring():
             if copy:
@@ -796,7 +848,7 @@ cdef class Matrix(sage.structure.element.ModuleElement):
         Return the commutator self*other - other*self.
 
         EXAMPLES:
-            sage: ???
+            sage: A = Matrix(QQ[['t']], 2, 2, range(4))
         """
         return self*other - other*self
       
@@ -1970,10 +2022,11 @@ cdef class Matrix(sage.structure.element.ModuleElement):
             return right._left_scalar_multiply(self)
 
         if PY_TYPE_CHECK(right, sage.modules.free_module_element.FreeModuleElement):
-            raise TypeError, "cannot multiply matrix times row vector -- instead computer row vector times matrix"
+            raise TypeError, "cannot multiply matrix times row vector -- instead compute row vector times matrix"
 
         if not PY_TYPE_CHECK(right, Matrix):
             # the only possibility is to coerce to a scalar. 
+            # TODO: what if right is not in the 
             return self._right_scalar_multiply(right)
 
         # Now both self and right are matrices.
@@ -1991,38 +2044,38 @@ cdef class Matrix(sage.structure.element.ModuleElement):
         #
         #   * if one matrix is sparse and the other is dense, the
         #     product is dense.
-
-        if (<Matrix> self)._parent.base_ring() is (<Matrix> right)._parent.base_ring():
-            return self._multiply_matrices_over_same_base_ring(right)
-
-        # Now the base rings are not the same
-        try:
-            self, right = sage.structure.coerce.canonical_base_coercion(self, right)
-        except TypeError:
-            raise TypeError, "base rings must be compatible"
         
-        # Either an error was just raised, or self and right now have the same base ring.
-        return self._multiply_matrices_over_same_base_ring(right)
 
-    def _multiply_matrices_over_same_base_ring(self, Matrix right):
-        """
-        Multiply two matrices that are assumed to be defined over the same
-        base ring.
-
-        EXAMPLES:
-            sage: ???
-        """
-        # Both self and right are matrices and have the same base rings.
         # First we check that matrix multiplication is defined.
-        if self._ncols != right._nrows:
+        if (<Matrix> self)._ncols != (<Matrix> right)._nrows:
             raise ArithmeticError, "number of columns of self must equal number of rows of right."
+
+        # check parents directly for speed on square matrices (e.g. 2x2 matrices over ZZ) 
+        if not ( (<Matrix> self)._parent is (<Matrix> right)._parent 
+                or (<Matrix> self)._parent.base_ring() is (<Matrix> right)._parent.base_ring() ):
+            # The base rings are not the same
+            try:
+                self, right = sage.structure.coerce.canonical_base_coercion(self, right)
+            except TypeError:
+                raise TypeError, "base rings must be compatible"
+            # Either an error was just raised, or self and right now have the same base ring.
+            
         # Next we deal with the possiblity that one could be sparse and the other dense.
         if self.is_sparse() and not right.is_sparse():
             self = self.dense_matrix()
         elif right.is_sparse() and not self.is_dense():
             right = right.dense_matrix()
+        
+        return (<Matrix> self)._mul_cousins_cdef(right)
 
-        # Now we can do the matrix multiply.
+    cdef _mul_cousins_cdef(self, Matrix right):
+        """
+        Multiply two matrices that are assumed to be compatable and 
+        defined over the same base ring.
+
+        EXAMPLES:
+            sage: ???
+        """
         if self._will_use_strassen(right):
             return self.strassen_multiply(right)
         else:
@@ -2032,6 +2085,9 @@ cdef class Matrix(sage.structure.element.ModuleElement):
         """
         Multiply the matrices self and right using the classical $O(n^3)$
         algorithm.
+        
+        This method assumes that self and right have the same parent and 
+        compatable dimensions. 
 
         EXAMPLES
 
