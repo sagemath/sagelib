@@ -72,7 +72,7 @@ cdef extern from "Python.h":
     int PySequence_Size(object)
     object PySequence_Fast_GET_ITEM(object, int)
     void** PySequence_Fast_ITEMS(object o)
-
+  
     # Reference counting
     void Py_INCREF(object)
 
