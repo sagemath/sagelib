@@ -6,10 +6,11 @@ cimport sage.rings.ring
 cimport sage.libs.pari.gen
 
 import sage.structure.coerce
-#import complex_number
+
+import sage.structure.element
+cimport sage.structure.element
+from sage.structure.element cimport RingElement
  
-import integer_ring
-import infinity
 
 cdef class ComplexDoubleField_class(sage.rings.ring.Field):
 	pass
@@ -17,18 +18,8 @@ cdef class ComplexDoubleField_class(sage.rings.ring.Field):
 cdef class ComplexDoubleElement(sage.structure.element.FieldElement):
 	cdef gsl_complex _complex
 	
-
 	cdef int cmp(ComplexDoubleElement left,ComplexDoubleElement right)
 	
 	cdef GEN _gen(self)
-	
+	cdef RingElement _add_sibling_cdef(self, RingElement right)
 
-#cdef new_element(gsl_complex x)
-
-#cdef  new_from_gen(GEN g, pari_sp sp)
-
-#cdef GEN complex_gen(x)
-
-#cdef _add_(ComplexDoubleElement self,ComplexDoubleElement right)
-
-	
