@@ -86,6 +86,8 @@ class HG:
         if self.__name == "SAGE Library Source Code":
             b = branch_current_hg()
             if b == '': b='main'
+	    elif b[-1] == '/':
+	        b = b[:-1]
             print("Branch: %s"%b)
 
 
