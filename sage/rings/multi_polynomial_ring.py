@@ -72,7 +72,7 @@ from sage.rings.polynomial_singular_interface import PolynomialRing_singular_rep
 
 import multi_polynomial_ideal
 
-from polynomial_ring_c import PolynomialRing as MPolynomialRing
+from sage.rings.polynomial_ring_c import PolynomialRing as MPolynomialRing
 
 def is_MPolynomialRing(x):
     return isinstance(x, MPolynomialRing_generic)
