@@ -97,6 +97,12 @@ class PolynomialRing_generic(commutative_algebra.CommutativeAlgebra):
         self.__cyclopoly_cache = {}
         self._has_singular = False
         self._assign_names(name)
+
+    def __reduce__(self):
+        import sage.rings.polynomial_ring_constructor
+        return (sage.rings.polynomial_ring_constructor.PolynomialRing,
+                (self.base_ring(), self.variable_name(), None, self.is_sparse()))
+            
         
     def __call__(self, x=None, check=True, is_gen = False, construct=False):
         C = self.__polynomial_class
@@ -452,7 +458,7 @@ class PolynomialRing_dense_mod_p(PolynomialRing_dense_mod_n,
                 return self._singular_().parent(x).sage_poly(self)
             except:
                 raise TypeError,"Unable to coerce string"
-        return polynomial.Polynomial_dense_mod_p(self, x, check, is_gen,construct=construct)        
+        return polynomial.Polynomial_dense_mod_p(self, x, check, is_gen,construct=construct)
 
 
 def polygen(base_ring, name="x"):
