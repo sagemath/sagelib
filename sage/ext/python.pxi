@@ -121,7 +121,8 @@
 cdef extern from "Python.h":
     ctypedef void PyObject
     ctypedef void PyTypeObject
-    ctypedef struct FILE    
+    ctypedef struct FILE
+
 
 include 'python_ref.pxi'
 include 'python_exc.pxi'
