@@ -84,6 +84,8 @@ cdef class Matrix_dense(matrix.Matrix):
                 l = l + 1
         return left.new_matrix(left._nrows, right._ncols, entries = v, coerce=False, copy=False)
 
+
+
     
     def _pickle(self):
         version = -1
