@@ -14,5 +14,6 @@ cdef class Integer(EuclideanDomainElement):
 
     cdef RingElement _add_c_impl(self, RingElement right)
     cdef RingElement _sub_c_impl(self, RingElement right)
+    cdef RingElement _neg_c_impl(self)
 
 cdef extern int set_mpz(Integer self, mpz_t value)
