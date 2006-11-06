@@ -224,7 +224,7 @@ def gens_to_basis_matrix(syms, relation_matrix, mod, field, sparse):
 
 
     M = matrix_space.MatrixSpace(field, len(syms), len(basis), sparse=sparse)
-    
+
     B = M(0)
     for i in basis_mod2:
         t, l = search(basis, i)
