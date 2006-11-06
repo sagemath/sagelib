@@ -311,6 +311,9 @@ ext_modules = [ \
 
     # complex_number2, \
 
+    Extension('sage.ext.sig',
+              sources = ['sage/ext/sig.pyx']), \
+
     Extension('sage.ext.arith',
               sources = ['sage/ext/arith.pyx']), \
 
@@ -472,7 +475,7 @@ def need_to_pyrex(filename, outfile):
     pxd = base+'.pxd'
     if is_older(pxd, outfile):   # outfile is older than pxd file (if it exists)
         return True
-    
+
     # Now we look inside the file to see what it cimports or include.
     # If any of these files are newer than outfile, we rebuild
     # outfile.

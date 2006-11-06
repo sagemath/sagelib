@@ -22,7 +22,6 @@ cdef extern from "stdio.h":
     int fclose(FILE *strea)
     cdef FILE *stdout
     int scanf(char *format, ...)
-    
 
 cdef extern from "math.h":
     double sqrt(double x)
