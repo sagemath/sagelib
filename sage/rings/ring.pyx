@@ -23,10 +23,10 @@ AUTHORS:
 
 include "../ext/stdsage.pxi"
 
-cimport sage.structure.element
+from sage.structure.parent_gens cimport ParentWithGens
 import random
 
-cdef class Ring(sage.structure.parent_gens.ParentWithGens):
+cdef class Ring(ParentWithGens):
     """
     Generic ring class.
     """
@@ -204,7 +204,7 @@ cdef class Ring(sage.structure.parent_gens.ParentWithGens):
             return self.ideal(x)
         else:
             return x.ideal(self)    # switched because this is Pyrex / extension class
-        
+
     def _r_action(self, x):
         return self.ideal(x)
 
@@ -970,14 +970,8 @@ cdef class CommutativeAlgebra(CommutativeRing):
     def __init__(self, base_ring):
         if not isinstance(base_ring, CommutativeRing):
             raise TypeError, "base ring must be a commutative ring"
-        self.__base_ring = base_ring
+        ParentWithGens.__init__(self, base_ring)
 
-    def base_ring(self):
-        """
-        Return the base ring of this commutative algebra.
-        """
-        return self.__base_ring
-    
     def characteristic(self):
         """
         Return the characteristic of this algebra, which is the same
