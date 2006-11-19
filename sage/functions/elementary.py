@@ -90,6 +90,8 @@ import sage.rings.ring as ring
 from constants import e as E
 from functions import sin,cos,expo
 
+from sage.structure.parent_gens import ParentWithGens
+
 from functions import *
 
 
@@ -198,15 +200,10 @@ class ElementaryFunctionRing(commutative_ring.CommutativeRing):
        Elementary function (-2)exp(3*t)cos(5*t) + (t)exp(-t)sin(2*t)
 
     """
-    def __init__(self, base_ring, varname="x"):       
-        self.__base_ring = base_ring
-        ring.Ring.__init__(self)
+    def __init__(self, base_ring, varname="x"):
+        ParentWithGens.__init__(self, base_ring, varname)
         self._varname = varname
 
-    def base_ring(self):
-        # must be QQ, RR or some flavor of RR
-        return self.__base_ring
-                
     def var(self):
         return self._varname
 
