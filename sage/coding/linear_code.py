@@ -610,16 +610,16 @@ class LinearCode(module.Module):
             sage: MS = MatrixSpace(GF(2),4,7)
             sage: G = MS([[1,1,1,0,0,0,0], [ 1, 0, 0, 1, 1, 0, 0], [ 0, 1, 0,1, 0, 1, 0], [1, 1, 0, 1, 0, 0, 1]])
             sage: C = LinearCode(G)
-            sage: C.spectrum()
+            sage: C.spectrum() 
             [1, 0, 0, 7, 7, 0, 0, 1]
 
         """
         F = self.base_ring()
         q = F.order()
         G = self.gen_mat()
-        Glist = [list(x) for x in G] 
+        Glist = [list(x) for x in G]
         Gstr = "Z("+str(q)+")*"+str(Glist)
-        spec = wtdist(Gstr,F)  
+        spec = wtdist(Gstr,F)
         return spec
         
     def weight_distribution(self):
