@@ -53,6 +53,15 @@ We illustrate the exponent notation for creation of free modules.
     Vector space of dimension 2 over Rational Field
     sage: R^3
     Vector space of dimension 3 over Real Field with 53 bits of precision
+
+Base ring:
+    sage: R = MPolynomialRing(RationalField(),2); x,y = R.gens()
+    sage: M = FreeModule(R,2)
+    sage: M.base_ring()
+    Polynomial Ring in x0, x1 over Rational Field
+
+    sage: VectorSpace(RationalField(), 10).base_ring()
+    Rational Field
 """
 
 #*****************************************************************************
@@ -76,11 +85,11 @@ import weakref
 
 
 # SAGE imports
-import sage.modules.free_module_element
+import free_module_element
+
 import module
 
 import sage.matrix.matrix_space
-import sage.matrix.matrix
 
 import sage.misc.latex as latex
 
@@ -91,11 +100,13 @@ import sage.rings.integral_domain as integral_domain
 import sage.rings.ring as ring
 import sage.rings.integer_ring
 import sage.rings.infinity
-import sage.rings.integer as integer
-import sage.structure.gens as gens
-
+import sage.rings.integer
+import sage.structure.parent_gens as gens
+import sage.modules.real_double_vector
+import sage.modules.complex_double_vector
 from sage.structure.sequence import Sequence
 
+from sage.structure.parent_gens import ParentWithGens
 
 ###############################################################################
 #
@@ -158,12 +169,12 @@ def FreeModule(base_ring, rank, sparse=False, inner_product_matrix=None):
         sage: M.is_sparse()
         True
         sage: type(M.gen(0))
-        <class 'sage.modules.free_module_element.FreeModuleElement_generic_sparse'>
+        <class 'free_module_element.FreeModuleElement_generic_sparse'>
 
     The default is dense.
         sage: M = ZZ^200
         sage: type(M.gen(0))
-        <class 'sage.modules.free_module_element.FreeModuleElement_generic_dense'>
+        <class 'free_module_element.FreeModuleElement_generic_dense'>
 
 
     Note that matrices associated in some way to sparse free modules
@@ -207,38 +218,44 @@ def FreeModule(base_ring, rank, sparse=False, inner_product_matrix=None):
         [1 2]
         [3 4]
     """
-    #global _cache
+    global _cache
     rank = int(rank)
     if not (inner_product_matrix is None):
         inner_product_matrix = sage.matrix.matrix_space.MatrixSpace(base_ring, rank)(inner_product_matrix)
 
-    # Caching disabled since inner product matrix can be changed at any time.
-    # Enabling caching saves little and might lead to difficult to understand bugs.
-    
-    #key = (base_ring, rank, sparse, inner_product_matrix)
-    #if _cache.has_key(key):
-    #    M = _cache[key]()
-    #    if not (M is None):
-    #        return M
+    key = (base_ring, rank, sparse, inner_product_matrix)
+    if _cache.has_key(key):
+        M = _cache[key]()
+        if not (M is None):
+            return M
 
-    if not isinstance(base_ring, commutative_ring.CommutativeRing):
+    if not base_ring.is_commutative():
         raise TypeError, "base_ring must be a commutative ring"
 
-    if isinstance(base_ring, field.Field):
+    if not sparse and isinstance(base_ring,sage.rings.real_double.RealDoubleField_class):
+        M = RealDoubleVectorSpace_class(rank)
+
+    elif not sparse and isinstance(base_ring,sage.rings.complex_double.ComplexDoubleField_class):
+        M=ComplexDoubleVectorSpace_class(rank)
+
+    elif isinstance(base_ring, field.Field):
         M = FreeModule_ambient_field(base_ring, rank,
                                         sparse=sparse, inner_product_matrix=inner_product_matrix)
 
     elif isinstance(base_ring, principal_ideal_domain.PrincipalIdealDomain):
         M = FreeModule_ambient_pid(base_ring, rank,
                                    sparse=sparse, inner_product_matrix=inner_product_matrix)
+    
     elif isinstance(base_ring, integral_domain.IntegralDomain):
         M = FreeModule_ambient_domain(base_ring, rank,
                                          sparse=sparse, inner_product_matrix=inner_product_matrix)
+    
+
     else:
         M = FreeModule_ambient(base_ring, rank,
                                   sparse=sparse, inner_product_matrix=inner_product_matrix)
 
-    #_cache[key] = weakref.ref(M)
+    _cache[key] = weakref.ref(M)
     return M
     
 
@@ -317,39 +334,83 @@ class FreeModule_generic(module.Module):
         """
         if not isinstance(base_ring, commutative_ring.CommutativeRing):
             raise TypeError, "base_ring (=%s) must be a commutative ring"%base_ring
-        rank = integer.Integer(rank)
+        rank = sage.rings.integer.Integer(rank)
         if rank < 0:
             raise ValueError, "rank (=%s) must be nonnegative"%rank
-        degree = integer.Integer(degree)
+        degree = sage.rings.integer.Integer(degree)
         if degree < 0:
             raise ValueError, "degree (=%s) must be nonnegative"%degree
         
         self.__uses_ambient_inner_product = True
-        self.__base_ring = base_ring
         self.__rank = rank
         self.__degree = degree
         self.__is_sparse = sparse
         self._inner_product_matrix = inner_product_matrix
+        self.element_class()
+        ParentWithGens.__init__(self, base_ring)
 
-        if self.is_sparse():
-            self._element_class = sage.modules.free_module_element.FreeModuleElement_generic_sparse
-            return
-        self._element_class = sage.modules.free_module_element.FreeModuleElement_generic_dense
-
-    def __call__(self, x, coerce_entries=True, copy=True, check_element=True):
-        if isinstance(x, (int, long, integer.Integer)) and x==0:
+    def element_class(self):
+        try:
+            return self._element_class
+        except AttributeError:
+            pass
+        if self.__is_sparse:
+            C = free_module_element.FreeModuleElement_generic_sparse
+        else:
+            C = free_module_element.FreeModuleElement_generic_dense
+        self._element_class = C
+        return C
+    
+    def __call__(self, x, coerce=True, copy=True, check=True):
+        if isinstance(x, (int, long, sage.rings.integer.Integer)) and x==0:
             return self.zero_vector()
-        elif isinstance(x, sage.modules.free_module_element.FreeModuleElement):
+        elif isinstance(x, free_module_element.FreeModuleElement):
             if x.parent() is self:
                 if copy:
-                    return x.copy()
+                    return x.__copy__()
                 else:
                     return x
             x = x.list()
-        w = self._element_class(self, x, coerce_entries, copy)
-        if check_element:
+        w = self._element_class(self, x, coerce, copy)
+        if check:
+            if isinstance(self, FreeModule_ambient):
+                return w
             self.coordinates(w)
         return w
+
+    def _has_coerce_map_from_space(self, V):
+        """
+        Return True if V canonically coerces to self.
+        """
+        try:
+            return self.__has_coerce_map_from_space[V]
+        except AttributeError:
+            self.__has_coerce_map_from_space = {}
+        except KeyError:
+            pass
+        if self.base_ring() is V.base_ring():
+            h = V.is_submodule(self)
+        elif not self.base_ring().has_coerce_map_from(V.base_ring()):
+            self.__has_coerce_map_from_space[V] = False
+            return False
+        else:
+            h = V.base_extend(self.base_ring()).is_submodule(self)
+        self.__has_coerce_map_from_space[V] = h
+        return h
+
+    def _coerce_impl(self, x):
+        """
+        Canonical coercion of x into this free module.
+            (0, 4/3, 8/3, 4, 16/3)        
+        """
+        if isinstance(x, (int, long, sage.rings.integer.Integer)) and x==0:
+            return self.zero_vector()
+        if isinstance(x, free_module_element.FreeModuleElement):
+            # determining if the map exists is expensive the first time,
+            # so we cache it.
+            if self._has_coerce_map_from_space(x.parent()):
+                return self(x)
+        raise TypeError
 
     def __cmp__(self, right):
         raise NotImplementedError
@@ -382,7 +443,7 @@ class FreeModule_generic(module.Module):
             [1/2]
             
         """
-        if not isinstance(v, sage.modules.free_module_element.FreeModuleElement):
+        if not isinstance(v, free_module_element.FreeModuleElement):
             return False
         if v.parent() is self:
             return True
@@ -405,7 +466,7 @@ class FreeModule_generic(module.Module):
         Return iterator over the elements of this free module.
         
         EXAMPLES:
-            sage: V = VectorSpace(GF(4),2)
+            sage: V = VectorSpace(GF(4,'a'),2)
             sage: [x for x in V]
             [(0, 0), (1, 0), (a, 0), (a + 1, 0), (0, 1), (1, 1), (a, 1), (a + 1, 1), (0, a), (1, a), (a, a), (a + 1, a), (0, a + 1), (1, a + 1), (a, a + 1), (a + 1, a + 1)]
 
@@ -460,20 +521,19 @@ class FreeModule_generic(module.Module):
         """
         return FreeModule(self.base_ring(), self.degree())
     
-    def base_ring(self):
+    def base_extend(self, R):
+        r"""
+        Return the base extension of self to R.  This
+        is the same as \code{self.change_ring(R)} except
+        that a TypeError is raised if there is no canonical
+        coerce map from the base ring of self to R.
+
+        INPUT:
+            R -- ring
         """
-        Return the base ring of this module.
-        
-        EXAMPLES:
-            sage: R = MPolynomialRing(RationalField(),2); x,y = R.gens()
-            sage: M = FreeModule(R,2)
-            sage: M.base_ring()
-            Polynomial Ring in x0, x1 over Rational Field
-            
-            sage: VectorSpace(RationalField(), 10).base_ring()
-            Rational Field
-        """
-        return self.__base_ring
+        if R.has_coerce_map_from(self.base_ring()):
+            return self.change_ring(R)
+        raise TypeError, "base extension from self to R not defined."
 
     def basis(self):
         """
@@ -736,7 +796,7 @@ class FreeModule_generic(module.Module):
             return self._inner_product_is_dot_product_cache
         except AttributeError:
             if self.is_ambient():
-                if self._inner_product_matrix is None or self._inner_product_matrix == integer.Integer(1):
+                if self._inner_product_matrix is None or self._inner_product_matrix == sage.rings.integer.Integer(1):
                     self._inner_product_is_dot_product_cache = True
                 else:
                     self._inner_product_is_dot_product_cache = False
@@ -747,51 +807,94 @@ class FreeModule_generic(module.Module):
                     self._inner_product_is_dot_product_cache = False
             return self._inner_product_is_dot_product_cache
 
-    def set_inner_product_matrix(self, A):
-        """
-        Sets the inner product matrix of this module to the matrix A.
+# I commented out both setting and unsetting the inner product matrix
+# since being able to change them contradicts that unique objects are
+# immutable.
+##     def unset_inner_product_matrix(self):
+##         r"""
+##         If an inner product was set on this module using 
+##         \code{self.set_inner_product_matrix(...)}, this function
+##         unsets that inner product, thus reverting to the inner
+##         product induced from that on the ambient module. 
         
-        EXAMPLES:
-        We change the inner product matrix over an ambient free module. 
-            sage: M = FreeModule(IntegerRing(), 2)
-            sage: M.inner_product_matrix()
-            [1 0]
-            [0 1]
-            sage: M.set_inner_product_matrix([0,-1,-1,0])
-            sage: M.inner_product_matrix()
-            [ 0 -1]
-            [-1  0]
-            sage: (M.0).inner_product(M.1)
-            -1
+##         EXAMPLES:
+##             sage: M = FreeModule(RationalField(), 2)
+##             sage: M.set_inner_product_matrix([-1,0,0,-1])
+##             sage: (M.0).inner_product(M.0)
+##             -1
             
-        We can also set the inner product matrix of a submodule:
-            sage: W = M.submodule([[1,2]])
-            sage: W.set_inner_product_matrix([2])
-            sage: W
-            Free module of degree 2 and rank 1 over Integer Ring
-            Echelon basis matrix:
-            [1 2]
-            sage: W.inner_product_matrix()
-            [2]
-            sage: v = W.gen(0)
-            sage: v.inner_product(v)
-            2
-        """
-        if not isinstance(A, sage.matrix.matrix.Matrix):
-            A = sage.matrix.matrix_space.MatrixSpace(self.base_ring(), self.rank())(A)
-        else:
-            if A.nrows() != self.rank():
-                raise ArithmeticError, "A must have %s rows but it has %s rows"%(self.rank(),
-                                                                                A.nrows())
-            if A.ncols() != self.rank():
-                raise ArithmeticError, "A must have %s columns but it has %s rows"%(self.rank(),
-                                                                                A.ncols())
-        self._inner_product_matrix = A
-        self.__uses_ambient_inner_product = False
-        try:
-            del self._inner_product_is_dot_product_cache
-        except AttributeError:
-            pass
+##         We set and unset an inner product matrix on a submodule.  Note
+##         that unsetting the inner product on the submodule switches back
+##         to using the ambient inner product.
+##             sage: M2 = M.submodule([[1,1]])
+##             sage: M2.gen(0).inner_product(M2.gen(0))
+##             -2
+##             sage: M2.set_inner_product_matrix([1])
+##             sage: M2.gen(0).inner_product(M2.gen(0))
+##             1
+##             sage: M2.unset_inner_product_matrix()
+##             sage: M2.gen(0).inner_product(M2.gen(0))
+##             -2
+            
+##         Changing the ambient inner product changes that
+##         on the submodule, since the submodule uses the ambient
+##         product after calling \code{unset_inner_product_matrix}.
+##             sage: M.unset_inner_product_matrix()
+##             sage: M2.gen(0).inner_product(M2.gen(0))
+##             2
+##         """
+##         self.__uses_ambient_inner_product = True
+##         try:
+##             del self._inner_product_is_dot_product_cache
+##             self._inner_product_matrix = None
+##         except AttributeError:
+##             pass
+
+##     def set_inner_product_matrix(self, A):
+##         """
+##         Sets the inner product matrix of this module to the matrix A.
+        
+##         EXAMPLES:
+##         We change the inner product matrix over an ambient free module. 
+##             sage: M = FreeModule(IntegerRing(), 2)
+##             sage: M.inner_product_matrix()
+##             [1 0]
+##             [0 1]
+##             sage: M.set_inner_product_matrix([0,-1,-1,0])
+##             sage: M.inner_product_matrix()
+##             [ 0 -1]
+##             [-1  0]
+##             sage: (M.0).inner_product(M.1)
+##             -1
+            
+##         We can also set the inner product matrix of a submodule:
+##             sage: W = M.submodule([[1,2]])
+##             sage: W.set_inner_product_matrix([2])
+##             sage: W
+##             Free module of degree 2 and rank 1 over Integer Ring
+##             Echelon basis matrix:
+##             [1 2]
+##             sage: W.inner_product_matrix()
+##             [2]
+##             sage: v = W.gen(0)
+##             sage: v.inner_product(v)
+##             2
+##         """
+##         if not isinstance(A, sage.matrix.matrix_generic.Matrix):
+##             A = sage.matrix.matrix_space.MatrixSpace(self.base_ring(), self.rank())(A)
+##         else:
+##             if A.nrows() != self.rank():
+##                 raise ArithmeticError, "A must have %s rows but it has %s rows"%(self.rank(),
+##                                                                                 A.nrows())
+##             if A.ncols() != self.rank():
+##                 raise ArithmeticError, "A must have %s columns but it has %s rows"%(self.rank(),
+##                                                                                 A.ncols())
+##         self._inner_product_matrix = A
+##         self.__uses_ambient_inner_product = False
+##         try:
+##             del self._inner_product_is_dot_product_cache
+##         except AttributeError:
+##             pass
     
     def is_ambient(self):
         """
@@ -939,47 +1042,7 @@ class FreeModule_generic(module.Module):
             2
         """
         return self.__rank
-    
-    def unset_inner_product_matrix(self):
-        r"""
-        If an inner product was set on this module using 
-        \code{self.set_inner_product_matrix(...)}, this function
-        unsets that inner product, thus reverting to the inner
-        product induced from that on the ambient module. 
         
-        EXAMPLES:
-            sage: M = FreeModule(RationalField(), 2)
-            sage: M.set_inner_product_matrix([-1,0,0,-1])
-            sage: (M.0).inner_product(M.0)
-            -1
-            
-        We set and unset an inner product matrix on a submodule.  Note
-        that unsetting the inner product on the submodule switches back
-        to using the ambient inner product.
-            sage: M2 = M.submodule([[1,1]])
-            sage: M2.gen(0).inner_product(M2.gen(0))
-            -2
-            sage: M2.set_inner_product_matrix([1])
-            sage: M2.gen(0).inner_product(M2.gen(0))
-            1
-            sage: M2.unset_inner_product_matrix()
-            sage: M2.gen(0).inner_product(M2.gen(0))
-            -2
-            
-        Changing the ambient inner product changes that
-        on the submodule, since the submodule uses the ambient
-        product after calling \code{unset_inner_product_matrix}.
-            sage: M.unset_inner_product_matrix()
-            sage: M2.gen(0).inner_product(M2.gen(0))
-            2
-        """
-        self.__uses_ambient_inner_product = True
-        try:
-            del self._inner_product_is_dot_product_cache
-            self._inner_product_matrix = None
-        except AttributeError:
-            pass
-    
     def uses_ambient_inner_product(self):
         """
         Return \code{True} if the inner product on this module is the one induced
@@ -1017,8 +1080,10 @@ class FreeModule_generic(module.Module):
             sage: M.zero_submodule().zero_vector()
             (0, 0)
         """
+        # Do *not* cache this -- it must be computed fresh each time, since
+        # it is is used by __call__ to make a new copy of the 0 element. 
+        
         return self._element_class(self, 0)
-
 
 class FreeModule_generic_pid(FreeModule_generic):
     """
@@ -1231,7 +1296,7 @@ class FreeModule_generic_pid(FreeModule_generic):
         
         if self.base_ring().is_field():
             if self == other:
-                return integer.Integer(1)
+                return sage.rings.integer.Integer(1)
             else:
                 if other.is_subspace(self):
                     return sage.rings.infinity.infinity
@@ -2204,10 +2269,11 @@ class FreeModule_ambient(FreeModule_generic):
             return self.__basis
         except  AttributeError:
             ZERO = self(0)
+            one = self.base_ring()(1)
             w = []
             for n in range(self.rank()):
-                v = ZERO.copy()
-                v[n] = 1
+                v = ZERO.__copy__()
+                v[n] = one
                 w.append(v)
             self.__basis = basis_seq(self, w)
             return self.__basis
@@ -2243,6 +2309,7 @@ class FreeModule_ambient(FreeModule_generic):
         if self.base_ring() == R:
             return self
         return FreeModule(R, self.rank())
+
     
     def linear_combination_of_basis(self, v):
         """
@@ -2497,13 +2564,14 @@ class FreeModule_submodule_with_basis_pid(FreeModule_generic_pid):
         R = ambient.base_ring()
 
         if echelonize and not already_echelonized:
-            basis = self._echelonize(ambient, basis).rows()
+            basis = self._echelonized_basis(ambient, basis)
         
         FreeModule_generic.__init__(self, R, len(basis), ambient.degree(),
                             ambient.is_sparse(), inner_product_matrix=inner_product_matrix)
 
-        w = [self._element_class(self, x.list(),
-                          coerce_entries=False, copy=True) for x in basis]
+        C = self.element_class()
+        w = [C(self, x.list(),
+                          coerce=False, copy=True) for x in basis]
 
         self.__basis = basis_seq(self, w)
 
@@ -2516,13 +2584,13 @@ class FreeModule_submodule_with_basis_pid(FreeModule_generic_pid):
             if echelonize or already_echelonized:
                 self.__echelonized_basis = self.__basis   
             else:
-                w = self._echelonize(ambient, basis).rows()
+                w = self._echelonized_basis(ambient, basis)
                 self.__echelonized_basis = basis_seq(self, w)
 
         if check and len(basis) != len(self.__echelonized_basis):
             raise ArithmeticError, "basis vectors must be linearly independent."
 
-    def _echelonize(self, ambient, basis):
+    def _echelonized_basis(self, ambient, basis):
         d = self._denominator(basis)
         MAT = sage.matrix.matrix_space.MatrixSpace(ambient.base_ring(),
                         len(basis), ambient.degree(),
@@ -2530,10 +2598,11 @@ class FreeModule_submodule_with_basis_pid(FreeModule_generic_pid):
         if d > 1:
             basis = [x*d for x in basis]
         A = MAT(basis)
-        E = A.echelon_form(include_zero_rows=False)
+        E = A.echelon_form()
         if d != 1:
             E = E.matrix_over_field()*(~d)   # divide out denominator
-        return E
+        # Return the first rank rows (i.e., the nonzero rows).
+        return E.rows()[:E.rank()]
 
     def __cmp__(self, other):
         r"""
@@ -2674,10 +2743,10 @@ class FreeModule_submodule_with_basis_pid(FreeModule_generic_pid):
             sage: W.echelon_coordinates([0,0,2,0,-1/2])
             [0, 2]
         """
-        if not isinstance(v, sage.modules.free_module_element.FreeModuleElement):
+        if not isinstance(v, free_module_element.FreeModuleElement):
             v = self.ambient_vector_space()(v)
         if v.degree() != self.degree():
-            raise ArithmeticError, "v (=%s) is not in self"%v
+            raise TypeError, "v (=%s) is not in self"%v
         nz = v.nonzero_positions()
         zero = self.base_ring()(0)
         if len(nz) == 0:
@@ -2700,7 +2769,7 @@ class FreeModule_submodule_with_basis_pid(FreeModule_generic_pid):
             # recursion.
             v -= b*q
         if not v.is_zero():
-            raise ArithmeticError, "v (=%s) is not in self"%v
+            raise TypeError, "v (=%s) is not in self"%v
         return c
 
     def user_to_echelon_matrix(self):
@@ -3101,13 +3170,14 @@ class FreeModule_submodule_with_basis_field(FreeModule_generic_field, FreeModule
         # for internal use only
         return 1
 
-    def _echelonize(self, ambient, basis):
+    def _echelonized_basis(self, ambient, basis):
         MAT = sage.matrix.matrix_space.MatrixSpace(ambient.base_ring(),
                         len(basis), ambient.degree(),
                         sparse = ambient.is_sparse())
         A = MAT(basis)
-        E = A.echelon_form(include_zero_rows=False)
-        return E
+        E = A.echelon_form()
+        # Return the first rank rows (i.e., the nonzero rows).
+        return E.rows()[:E.rank()]
 
     def is_ambient(self):
         """
@@ -3180,10 +3250,10 @@ class FreeModule_submodule_field(FreeModule_submodule_with_basis_field):
             sage: W.echelon_coordinates([1,5,9])
             [1, 5]
         """
-        if not isinstance(v, sage.modules.free_module_element.FreeModuleElement):
+        if not isinstance(v, free_module_element.FreeModuleElement):
             v = self.ambient_vector_space()(v)
         if v.degree() != self.degree():
-            raise ArithmeticError, "v (=%s) is not in self"%v
+            raise TypeError, "v (=%s) is not in self"%v
         nz = v.nonzero_positions()
         zero = self.base_field()(0)
         if len(nz) == 0:
@@ -3245,3 +3315,24 @@ class FreeModule_submodule_field(FreeModule_submodule_with_basis_field):
     
 def basis_seq(V, w):
     return Sequence(w, universe=V, check = False, immutable=True, cr=True)
+
+
+
+
+
+
+class RealDoubleVectorSpace_class(FreeModule_ambient_field):
+    def __init__(self,n):
+        FreeModule_ambient_field.__init__(self,sage.rings.real_double.RDF,n)
+        self._element_class = sage.modules.real_double_vector.RealDoubleVectorSpaceElement
+
+    def coordinates(self,v):
+        return v
+
+class ComplexDoubleVectorSpace_class(FreeModule_ambient_field):
+    def __init__(self,n):
+        FreeModule_ambient_field.__init__(self,sage.rings.complex_double.CDF,n)
+        self._element_class = sage.modules.complex_double_vector.ComplexDoubleVectorSpaceElement
+
+    def coordinates(self,v):
+        return v
