@@ -12,13 +12,20 @@ cdef class MatrixWindow:
     ############################
     # creation and initialization
     ############################    
+    cdef MatrixWindow _new(MatrixWindow self):
+        return PY_NEW(MatrixWindow)
+
     cdef MatrixWindow new_matrix_window(MatrixWindow self, Matrix matrix,
                                          Py_ssize_t row, Py_ssize_t col, Py_ssize_t n_rows, Py_ssize_t n_cols):
+        """
+        This method is here only to provide a fast cdef way of constructing new matrix windows. 
+        The only implicit assumption is that self._matrix and matrix are over the same basering. 
+        """
         cdef MatrixWindow M
-        M = PY_NEW(MatrixWindow)
-        M._matrix = self._matrix
-        M._row = self._row + row
-        M._col = self._col + col
+        M = self._new()
+        M._matrix = matrix  
+        M._row = row
+        M._col = col
         M._nrows = n_rows
         M._ncols = n_cols
         M._zero = self._zero
@@ -101,10 +108,11 @@ cdef class MatrixWindow:
         """
         Returns an actual matrix object representing this view.
         """
+        cdef MatrixWindow w
         a = self._matrix.new_matrix(self._nrows, self._ncols)  # zero matrix
-        b = self.new_matrix_window(a, 0, 0, self._nrows, self._ncols)
-        b.set_to(self)
-        return b
+        w = self.new_matrix_window(a, 0, 0, self._nrows, self._ncols)
+        w.set_to(self)
+        return a
 
     def nrows(MatrixWindow self):
         return self._nrows
@@ -208,7 +216,7 @@ cdef class MatrixWindow:
         self.set_to(echelon.matrix_window())
         return echelon.pivots()
         
-    cdef element_is_zero(MatrixWindow self, Py_ssize_t i, Py_ssize_t j):
+    cdef int element_is_zero(MatrixWindow self, Py_ssize_t i, Py_ssize_t j):
         return self._matrix.get_unsafe(i+self._row, j+self._col) == self._zero
 
     cdef new_empty_window(MatrixWindow self, Py_ssize_t nrows, Py_ssize_t ncols):
