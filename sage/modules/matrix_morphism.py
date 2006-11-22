@@ -108,7 +108,7 @@ class MatrixMorphism(sage.categories.all.Morphism):
         if C.is_ambient():
             return C(v)
         return C.linear_combination_of_basis(v)
-        
+
     def __invert__(self):
         if self.nrows() != self.ncols():
             raise ZeroDivisionError, "Inverse of morphism not defined."%self
