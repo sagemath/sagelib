@@ -214,6 +214,7 @@ try{
   });
 } catch(e){}
 
+
 function get_keyboard() {
   var b,o,warn=false;
 
@@ -694,7 +695,7 @@ function cell_blur(id) {
     e = get_cell(id);
     if(e == null) return;
     e.className="cell_input"; 
-    cell_input_minimize_size(e); 
+    cell_input_minimize_size(e);  
     return true;
 }
 
@@ -1101,6 +1102,7 @@ function evaluate_cell(id, action) {
         jump_to_cell(id,1);
     }
     cell_set_running(id);
+    
     var cell_input = get_cell(id);
     var I = cell_input.value;
     var input = escape0(I);
@@ -1245,7 +1247,7 @@ function check_for_cell_update() {
 }
 
 function start_update_check() {
-    if(updating) return;
+    if(updating) return; 
     updating = true;
     check_for_cell_update();
     set_class('interrupt', 'interrupt')
