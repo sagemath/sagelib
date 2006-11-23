@@ -312,6 +312,12 @@ def generic_cmp(x,y):
     elif x==y:
         return 0
     return 1
+
+def cmp_props(left, right, props):
+    for a in props:
+        c = cmp(left.__getattribute__(a)(), right.__getattribute__(a)())
+        if c: return c
+    return 0
     
 def prod(x, z=None):
     """
@@ -1134,3 +1140,6 @@ def branch_current_hg_notice(branch):
         return ''
     notice = 'Loading SAGE library. Current Mercurial branch is: '
     return notice + branch
+
+
+
