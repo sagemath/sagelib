@@ -4,7 +4,7 @@ Interface to the Factory library.
 AUTHORS:
     -- Martin Albrecht <malb@informatik.uni-bremen.de> (2006-05-01)
     -- William Stein (2006-05-07): trivial reformating of long lines
-
+ 
 From the Factory manual:
 
     Factory is a C++ class library which implements a recursive
