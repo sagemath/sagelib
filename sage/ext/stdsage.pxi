@@ -28,14 +28,12 @@ cdef extern from "stdsage.h":
     object PY_NEW(object t)
     void* PY_TYPE(object o)
     int PY_TYPE_CHECK(object o, object t)
-    object IS_INSTANCE(object o, object t)    
+    object IS_INSTANCE(object o, object t)
     void PY_SET_TP_NEW(object t1, object t2)
     int HAS_DICTIONARY(object o)
     PyObject** FAST_SEQ_UNSAFE(object o)
     int PY_IS_NUMERIC(object o)
-
-# Initialize the global tuple. 
-init_global_empty_tuple()
+    
 
 # Memory management
 cdef extern from "stdlib.h":
@@ -45,6 +43,7 @@ cdef extern from "stdsage.h":
     void  sage_free(void *p)
     void* sage_realloc(void *p, size_t n)
     void* sage_malloc(size_t)
+    void  init_csage()
 
 
 
