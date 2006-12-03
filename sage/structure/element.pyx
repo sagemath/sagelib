@@ -677,7 +677,7 @@ cdef class ModuleElement(Element):
     ##################################################
     # Other properties
     ##################################################
-    def order(self):
+    def order(self):              ### DO NOT OVERRIDE THIS!!! Instead, override additive_order. 
         """
         Return the additive order of self.
         """
@@ -1091,6 +1091,17 @@ cdef class RingElement(ModuleElement):
         if self == 1 or self == -1:
             return True
         raise NotImplementedError
+
+    def is_nilpotent(self):
+        """
+        Return True if self is nilpotent, i.e., some power of self
+        is 0.
+        """
+        if self.is_unit():
+            return False
+        if self.is_zero():
+            return True
+        raise NotImplementedError
     
     def __pow__(self, n, dummy):
         cdef int i
@@ -1355,7 +1366,8 @@ def is_IntegralDomainElement(x):
     return IS_INSTANCE(x, IntegralDomainElement)
 
 cdef class IntegralDomainElement(CommutativeRingElement):
-    pass
+    def is_nilpotent(self):
+        return self.is_zero()
 
 
 def is_DedekindDomainElement(x):

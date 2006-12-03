@@ -55,7 +55,7 @@ cdef class MatrixWindow:
     cdef new_empty_window(MatrixWindow self, Py_ssize_t nrows, Py_ssize_t ncols):
         a = self._matrix.new_matrix(nrows, ncols)
         return self.new_matrix_window(a, 0, 0, nrows, ncols)
-
+       
     def __repr__(self):
         return "Matrix window of size %s x %s at (%s,%s):\n%s"%(
             self._nrows, self._ncols, self._row, self._col, self._matrix)
