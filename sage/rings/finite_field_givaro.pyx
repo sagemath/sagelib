@@ -871,12 +871,9 @@ cdef class FiniteField_givaro(FiniteField):
 
         EXAMPLE:
             sage: list(GF(2**2, 'a'))
-            [0, 1, a, a + 1]
+            [0, a, a + 1, 1]
         """
-        if self.degree()>1:
-            return FiniteField.__iter__(self)
-        else:
-            return FiniteField_givaro_iterator(self)
+        return FiniteField_givaro_iterator(self)
 
     def __richcmp__(left, right, int op):
         return (<Parent>left)._richcmp(right, op)
@@ -912,7 +909,7 @@ cdef class FiniteField_givaro(FiniteField):
 
         EXAMPLES:
             sage: hash(GF(3^4, 'a'))
-            695660592
+            -1256259214
         """
         if self._hash is None:
             pass
@@ -1192,9 +1189,9 @@ cdef class FiniteField_givaro_iterator:
     EXAMPLES:
         sage: for x in GF(2^2,'a'): print x
         0
-        1
         a
-        a + 1    
+        a + 1
+        1
     """
     cdef int iterator
     cdef FiniteField_givaro _parent
@@ -1209,11 +1206,11 @@ cdef class FiniteField_givaro_iterator:
 
         self.iterator=self.iterator+1
         
-        if self.iterator==self._parent.characteristic():
+        if self.iterator==self._parent.order_c():
             self.iterator = -1
             raise StopIteration
         
-        return make_FiniteField_givaroElement(self._parent,self._parent.int_to_log(self.iterator))
+        return make_FiniteField_givaroElement(self._parent,self.iterator)
 
     def __repr__(self):
         return "Iterator over %s"%self._parent
@@ -1923,7 +1920,7 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
             sage: S.<a> = GF(5^3); S
             Finite Field in a of size 5^3
             sage: hash(a)
-            1019132106        
+            1735586064
         """
         return hash((parent_object(self).__hash__(), self.element))
     

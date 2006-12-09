@@ -770,6 +770,12 @@ cdef class IntegerMod_gmp(IntegerMod_abstract):
         return float(self.lift())
         
     def __hash__(self):
+        """
+        EXAMPLES:
+            sage: a = Mod(8943, 2^100)
+            sage: hash(a)
+            -1590013994
+        """
 #        return mpz_pythonhash(self.value)
         return hash((self.__modulus.sageInteger, self.lift()))
 
@@ -1098,7 +1104,13 @@ cdef class IntegerMod_int(IntegerMod_abstract):
         return float(self.ivalue)
 
     def __hash__(self):
-        return hash(self.ivalue)
+        """
+        EXAMPLES:
+            sage: a = Mod(89, 2^10)
+            sage: hash(a)
+            1704751112
+        """
+        return hash((self.__modulus.sageInteger, self.ivalue))
 
 ### End of class
 
@@ -1513,16 +1525,18 @@ cdef class IntegerMod_int64(IntegerMod_abstract):
 
     def __hash__(self):
         """
-        Compute hash of self.   This is the hash of the underlying integer, which
-        is just that integer. 
+        Compute hash of self.
+
+        This is a combination of the hash of the underlying integer
+        and the modulus.
 
         EXAMPLES:
             sage: a = Mod(8943, 2^35)
             sage: hash(a)
-            8943
+            -1178568930
         """
         
-        return hash(self.ivalue)
+        return hash((self.__modulus.sageInteger, self.ivalue))
 
 ### End of class
 

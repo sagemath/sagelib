@@ -8,14 +8,14 @@ Finite Fields support iteration, starting with 0.
     sage: i = 0
     sage: for x in k: print i, x; i+=1
     0 0
-    1 1
-    2 2
-    3 a
-    4 a + 1
-    5 a + 2
-    6 2*a
+    1 2*a
+    2 a + 1
+    3 a + 2
+    4 2
+    5 a
+    6 2*a + 2
     7 2*a + 1
-    8 2*a + 2
+    8 1
     sage: for a in GF(5):
     ...    print a
     0
@@ -193,11 +193,11 @@ class FiniteField_ext_pari(FiniteField_generic):
 
     The following is a native Python set:
         sage: set(k)
-        set([a, 2*a + 1, a + 2, a + 1, 2*a + 2, 1, 0, 2, 2*a])
+        set([a + 1, 2*a + 2, a + 2, 2*a + 1, a, 0, 2, 1, 2*a])
 
     And the following is a SAGE enumerated set:
         sage: EnumeratedSet(k)
-        {a, 2*a + 1, a + 2, a + 1, 2*a + 2, 1, 0, 2, 2*a}
+         {a + 1, 2*a + 2, a + 2, 2*a + 1, a, 0, 2, 1, 2*a}
 
     We can also make a list via comprehension:
         sage: [x for x in k]
@@ -689,9 +689,9 @@ class FiniteField_ext_pari(FiniteField_generic):
             sage: hash(GF(3,'a'))
             904200654
             sage: hash(GF(9,'a'))
-            205387690
+            -716912824
             sage: hash(GF(9,'b'))
-            -74532899
+            161161135
         """
         return hash((self.__order, self.variable_name(), self.__modulus))
 
