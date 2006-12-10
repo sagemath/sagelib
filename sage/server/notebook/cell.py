@@ -477,7 +477,7 @@ class Cell:
                  """%(typ, self.__id, out_wrap,
                       typ, self.__id, out_nowrap,
                       typ, self.__id, out_html)
-                 
+
         s = top + out + '</div>'
 
         #r = '[%s]'%self.relative_id()
