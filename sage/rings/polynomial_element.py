@@ -202,7 +202,8 @@ class Polynomial(commutative_algebra_element.CommutativeAlgebraElement):
         """
         Compare the two polynomials self and other.
 
-        We order polynomials in dictionary order starting with the *linear* coefficients.
+        We order polynomials first by degree, then in dictionary order
+        starting with the coefficient of largest degree.
         
         EXAMPLES:
             sage: R.<x> = QQ['x']
@@ -215,8 +216,10 @@ class Polynomial(commutative_algebra_element.CommutativeAlgebraElement):
             sage: R(-1) < R(0)
             True
         """
-        m = max(self.degree(), other.degree())
-        for i in xrange(m+1):
+        d1 = self.degree(); d2 = other.degree()
+        c = cmp(d1, d2)
+        if c: return c
+        for i in reversed(xrange(d1+1)):
             c = cmp(self[i], other[i])
             if c: return c
         return 0
@@ -932,7 +935,7 @@ class Polynomial(commutative_algebra_element.CommutativeAlgebraElement):
             sage: f.factor()
             (x^4 + 2*a*x^3 + (a + 1)*x + 2) * (x^4 + (a + 2)*x^3 + (2*a + 2)*x + 2) * (x + a) * (x + 2*a + 1)
 
-            sage: k.<x> = GF(9,'a')
+            sage: k = GF(9,'x')    # purposely calling it x to test robustness
             sage: x = PolynomialRing(k,'x0').gen()
             sage: f = x^3 + x + 1
             sage: f.factor()
@@ -966,12 +969,12 @@ class Polynomial(commutative_algebra_element.CommutativeAlgebraElement):
         
         from sage.rings.number_field.all import is_NumberField
         
-        if integer_mod_ring.is_IntegerModRing(R) or finite_field.is_FiniteField(R) or \
+        if integer_mod_ring.is_IntegerModRing(R) or \
                isinstance(R, (integer_ring.IntegerRing, rational_field.RationalField)):
 
             G = list(self._pari_('x').factor())
 
-        elif is_NumberField(R):
+        elif is_NumberField(R) or finite_field.is_FiniteField(R):
 
             v = [x._pari_("a") for x in self.list()]
             f = pari(v).Polrev()

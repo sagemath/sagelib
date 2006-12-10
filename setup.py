@@ -245,6 +245,8 @@ ext_modules = [ \
 
     matrix,
 
+    #cf, 
+
     matrix_dense,
     matrix_generic_dense,
 
@@ -672,8 +674,6 @@ setup(name        = 'sage',
                      
                      'sage.databases',
                      
-                     'sage.edu',
-
                      'sage.ext',
                      
                      'sage.functions',
