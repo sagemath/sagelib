@@ -986,6 +986,11 @@ textarea.cell_input_active {
 }
 */
 
+span.cell_evaluate {
+  position: relative;
+  top: 2px;
+  cursor:pointer;
+}
 
 /************ CELL OUTPUT **************************/
 
@@ -1081,8 +1086,8 @@ div.cell_output_hidden {
 }
 
 pre.shrunk {
-   height:0px;
-   display:inline; 
+/*   height:0px; */
+   display:inline;
 }
 
 pre.cell_output_hidden {
