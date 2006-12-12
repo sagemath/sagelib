@@ -406,11 +406,11 @@ class LinearCode(module.Module):
         [1, 0, 0, 7, 7, 0, 0, 1]
         sage: C.minimum_distance_why()     # optional (net connection)
         Ub(7,4) = 3 follows by the Griesmer bound.
-        sage: MS = MatrixSpace(IntegerModRing(5),4,7)
+        sage: MS = MatrixSpace(GF(5),4,7)
         sage: G  = MS([[1,1,1,0,0,0,0], [1,0,0,1,1,0,0], [0,1,0,1,0,1,0], [1,1,0,1,0,0,1]])
         sage: C  = LinearCode(G)
         sage: C
-        Linear code of length 7, dimension 4 over Ring of integers modulo 5
+        Linear code of length 7, dimension 4 over Finite Field of size 5
 
     AUTHOR: David Joyner (11-2005)
     """
@@ -1140,9 +1140,8 @@ class LinearCode(module.Module):
             sage: C.assmus_mattson_designs(6)
             0 
             sage: X = range(24)                           #  example 2
-            sage: blocks = [c.support() for c in C if hamming_weight(c)==8]  ## long time computation
-
-        Now if you type len(blocks) you'll see there are 759 blocks in this design.
+            sage: blocks = [c.support() for c in C if hamming_weight(c)==8]; len(blocks)  ## long time computation
+            759
         
         REFERENCE:
             [HP] W. C. Huffman and V. Pless, {\bf Fundamentals of ECC}, Cambridge Univ. Press, 2003.
