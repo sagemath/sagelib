@@ -84,8 +84,6 @@ class PowerSeries(ring_element.RingElement):
         S = sage.rings.power_series_ring.PowerSeriesRing(R,
                                       name = self.parent().variable_name())
         return S(self)
-
-         return self.parent()(f, prec)
  
     def __cmp__(self, right):
         r"""
