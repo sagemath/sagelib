@@ -623,6 +623,9 @@ cdef class FiniteField(Field):
             True
         """
         raise NotImplementedError
+        
+    def _set_weakref_handle(self, handle):
+       self._weakref_handle = handle
 
     def _latex_(self):
         r"""
