@@ -91,7 +91,7 @@ import sage.interfaces.gap
 
 cache = {}
 
-def FiniteField(order, name=None, modulus=None, names=None, elem_cache=None, cache_ring=False):
+def FiniteField(order, name=None, modulus=None, names=None, elem_cache=False):
     """
     Return the globally unique finite field of given order with generator
     labeled by the given name and possibly with given modulus.
@@ -124,22 +124,9 @@ def FiniteField(order, name=None, modulus=None, names=None, elem_cache=None, cac
 
     key = (order, name, modulus)
     if cache.has_key(key):
-        #return cache[key]
-    # I have disabled weakref support for finite fields, because it isn't
-    # really implemented in Pyrex.  - SEE track ticket #165
-        #K = cache[key]()
-        #if not K is None:
-        #    return K
-
-    # This is a weakref workaround. 
-        handle = cache[key]()
-        if not handle is None:
-            return handle()
-
-    # ?!?! this seems to get around something in PARI that affects weakref--a bad frame pointer?
-    try: "a"._pari_()
-    except AttributeError: pass
-
+        K = cache[key]()
+        if not K is None:
+            return K
     if arith.is_prime(order):
         K = FiniteField_prime_modn(order)
     else:
@@ -153,21 +140,9 @@ def FiniteField(order, name=None, modulus=None, names=None, elem_cache=None, cac
         else:
             K = FiniteField_ext_pari(order, name, modulus)
         
-    #cache[key] = weakref.ref(K)
-    #cache[key] = K
-    if (cache_ring):
-        cache[key] = weakref.ref(weakref_indirection(K))
+    cache[key] = weakref.ref(K)
     return K
-    
-class weakref_indirection():
-    # This is a hack until pyrex supports weakref directly, 
-    # but for now the overhead of doing arithmetic between two 
-    # equal but distinct fields is a killer...
-    def __init__(self, field):
-         self.field = field
-         field._set_weakref_handle(self)
-    def __call__(self):
-         return self.field
+
 
 def is_PrimeFiniteField(x):
     return isinstance(x, FiniteField_prime_modn)

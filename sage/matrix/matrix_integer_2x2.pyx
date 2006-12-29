@@ -11,7 +11,7 @@ include "../ext/python_ref.pxi"
 from sage.rings.integer cimport Integer
 from sage.rings.rational_field import QQ
 from sage.rings.integer_ring import ZZ
-from sage.structure.element cimport ModuleElement
+from sage.structure.element cimport ModuleElement, Element
 
 cimport matrix_dense
 import matrix_dense
@@ -160,8 +160,8 @@ cdef class Matrix_integer_2x2(matrix_dense.Matrix_dense):
         mpz_add(A.d, left.d, (<Matrix_integer_2x2>right).d)
         return A
     
-#    cdef int _cmp_c_impl(left, Element right) except -2:
-#        return mpz_cmp(left.a, (<Matrix_integer_2x2>right).a) or mpz_cmp(left.b, (<Matrix_integer_2x2>right).b) or mpz_cmp(left.c, (<Matrix_integer_2x2>right).c) or mpz_cmp(left.d, (<Matrix_integer_2x2>right).d)
+    cdef int _cmp_c_impl(left, Element right) except -2:
+        return mpz_cmp(left.a, (<Matrix_integer_2x2>right).a) or mpz_cmp(left.b, (<Matrix_integer_2x2>right).b) or mpz_cmp(left.c, (<Matrix_integer_2x2>right).c) or mpz_cmp(left.d, (<Matrix_integer_2x2>right).d)
        
     def __neg__(self):
         cdef Matrix_integer_2x2 A
@@ -173,7 +173,10 @@ cdef class Matrix_integer_2x2(matrix_dense.Matrix_dense):
         return A
         
     def __invert__(self):
-        # TODO: figure out when we want inverse in this ring, and when over the integers
+        MS = self._matrix_(QQ).parent()
+        return MS([self.get_unsafe(1,1)/D, -self.get_unsafe(0,1)/D, -self.get_unsafe(1,0)/D, self.get_unsafe(0,0)/D], coerce=False, copy=False)
+            
+    def __invert__unit(self):
         cdef Matrix_integer_2x2 A
         cdef Integer D
         D = self.determinant()
@@ -194,11 +197,8 @@ cdef class Matrix_integer_2x2(matrix_dense.Matrix_dense):
             return A
             
         else:
-#            MS = sage.matrix.matrix_space.MatrixSpace(QQ, 2, 2, False)
-            MS = self._matrix_(QQ).parent()
-            return MS([self.get_unsafe(1,1)/D, -self.get_unsafe(0,1)/D, -self.get_unsafe(1,0)/D, self.get_unsafe(0,0)/D], coerce=False, copy=False)
-
-        
+            raise ZeroDivisionError, "Not a unit!"
+            
     def _multiply_classical(left, matrix.Matrix _right):
         """
         Multiply the matrices left and right using the classical $O(n^3)$
