@@ -109,7 +109,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         for i from 0 <= i < self._nrows:
             self.matrix[i] = self._entries + k
             k = k + self._ncols
-        
+
     def __dealloc__(self):
         if self.matrix == NULL: # TODO: should never happen now, right
             return
@@ -205,7 +205,14 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     # def __copy__(self):
     # def _multiply_classical(left, matrix.Matrix _right):
     # def _list(self):
-    # def _dict(self):    
+    # def _dict(self):
+    def __copy__(self):
+        cdef Matrix_modn_dense A
+        A = Matrix_modn_dense.__new__(Matrix_modn_dense, self._parent,
+                                      0, 0, 0)
+        memcpy(A._entries, self._entries, sizeof(uint)*self._nrows*self._ncols)
+        return A
+        
     
 
     ########################################################################

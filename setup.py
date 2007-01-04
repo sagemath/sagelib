@@ -356,6 +356,9 @@ ext_modules = [ \
               libraries=['ntl'],
               include_dirs=['sage/libs/ntl/']), \
 
+    Extension('sage.rings.polynomial_element_pyx',
+              sources = ['sage/rings/polynomial_element.pyx']), \
+
     Extension('sage.rings.polynomial_pyx',
               sources = ['sage/rings/polynomial_pyx.pyx',
                          'sage/ext/arith_gmp.pyx'],
@@ -678,6 +681,8 @@ setup(name        = 'sage',
                      'sage.functions',
 
                      'sage.geometry',
+
+                     'sage.games',
 
                      'sage.gsl',
                      
