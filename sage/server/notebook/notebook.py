@@ -1281,6 +1281,12 @@ Output
         return grid + "\n</ul>"
 
 
+import sage.interfaces.sage0
+import time
+
+## IMPORTANT!!! If you add any new input variable to notebook,
+## you *must* similarly modify the restart_on_crash block
+## at the beginning of the definition of notebook!!
 def notebook(dir         ='sage_notebook',
              port        = 8000,
              address     = 'localhost',
@@ -1296,7 +1302,8 @@ def notebook(dir         ='sage_notebook',
              warn        = True,
              ignore_lock = False,
              log_server = False,
-             kill_idle   = 0):
+             kill_idle   = 0,
+             restart_on_crash = False):
     r"""
     Start a SAGE notebook web server at the given port.
 
@@ -1329,6 +1336,13 @@ def notebook(dir         ='sage_notebook',
         splashpage -- whether or not to show a splash page when no worksheet is specified.
                       you can place a file named index.html into the notebook directory that
                       will be shown in place of the default.
+
+        restart_on_crash -- if True (the default is False), the server
+                      will be automatically restarted if it crashes in
+                      any way.  Use this on a public servers that many
+                      people might use, and which might be subjected
+                      to intense usage.  NOTE: Log messages are only displayed
+                      every 5 seconds in this mode. 
 
     NOTES:
 
@@ -1372,6 +1386,37 @@ def notebook(dir         ='sage_notebook',
     and in "Open links from other apps" select the middle button
     instead of the bottom button.
     """
+    if restart_on_crash:
+        # Start a new subprocess
+        def f(x):  # format for passing on
+            if x is None:
+                return 'None'
+            elif isinstance(x, str):
+                return "'%s'"%x
+            else:
+                return str(x)
+        while True:
+            S = sage.interfaces.sage0.Sage()
+            time.sleep(1)
+            S.eval("from sage.server.notebook.notebook import notebook")
+            cmd = "notebook(dir=%s,port=%s, address=%s, open_viewer=%s, max_tries=%s, username=%s, password=%s, color=%s, system=%s, jsmath=%s, show_debug=%s, splashpage=%s, warn=%s, ignore_lock=%s, log_server=%s, kill_idle=%s, restart_on_crash=False)"%(
+                f(dir), f(port), f(address), f(open_viewer), f(max_tries), f(username),
+                f(password), f(color), f(system), f(jsmath), f(show_debug), f(splashpage),
+                f(warn), f(ignore_lock), f(log_server), f(kill_idle)
+                )
+            print cmd
+            S._send(cmd)
+            while True:
+                s = S._get()[1].strip()
+                if len(s) > 0:
+                    print s
+                if not S.is_running():
+                    break
+                time.sleep(5)
+        # end while
+        S.quit()
+        return
+    
     if os.path.exists(dir):
         if not os.path.isdir(dir):
             raise RuntimeError, '"%s" is not a valid SAGE notebook directory (it is not even a directory).'%dir
@@ -1438,7 +1483,34 @@ def notebook(dir         ='sage_notebook',
     return nb
     
 
-
- 
-
-
+########################################################################
+# NOTES ABOUT THE restart_on_crash option to notebook.
+## I made some changes to the notebook command so it has the option of running
+## the server as a completely separate process, which will restart it if it
+## dies in any way.   I installed this on sage.math and started those servers
+## running with this.  So if anybody has any systematic way to crash the notebook 
+## servers, please try it!  (The only one I have is to tell a computer lab
+## full of 40 high school students to all try to crash the server at once...)
+##
+## Basically what happens is this:
+##
+##   1. You start a Python process then run the notebook command with the
+##      restart_on_kill option True. 
+##   2. The notebook command starts another Python running, and in that
+##      it runs the notebook command.  This uses the Sage0 pexpect interface. 
+##   3. It then monitors the process started in 2 -- if the process dies 
+##      or terminates, then 2 occurs again.  The server log output
+##      is updated every 5 seconds.   If ctrl-c is received,
+##      then everything cleans up and terminates. 
+##
+## This means that the SAGE notebook can only currently be totally
+## crashed if the Python simple http server gets into a hung state.
+## From looking at the server logs after past crashes, this doesn't
+## seem to ever happen.  So now instead of the server crashing
+## under crazy loads, etc., it will automatically reset within seconds --
+## this would of course kill all running worksheets (which is bad), 
+## but is much better than having the whole sage notebook go down 
+## until it is manually restarted!   In the long run, of course, using
+## Twisted for the web server should hopefully mean that it doesn't
+## crash...
+###############################################################

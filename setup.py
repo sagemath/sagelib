@@ -178,9 +178,9 @@ matrix_rational_sparse = Extension('sage.matrix.matrix_rational_sparse',
 matrix_cyclo_sparse = Extension('sage.matrix.matrix_cyclo_sparse',
                                    ['sage/matrix/matrix_cyclo_sparse.pyx'])
 
-complex_number2 = Extension('sage.rings.complex_number2',
-			    ['sage/rings/complex_number2.pyx'],
-			    libraries = ['gmp'])
+complex_number = Extension('sage.rings.complex_number',
+			    ['sage/rings/complex_number.pyx'],
+			    libraries = ['mpfr', 'gmp'])
 
 free_module_element = Extension('sage.modules.free_module_element',
                                 ['sage/modules/free_module_element.pyx'])
@@ -288,7 +288,7 @@ ext_modules = [ \
     real_double,
     complex_double,
 
-    # complex_number2, \
+    complex_number,
 
     Extension('sage.ext.sig',
               sources = ['sage/ext/sig.pyx']), \
