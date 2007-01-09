@@ -465,14 +465,22 @@ class Maxima(Expect):
             #print "in = '%s'"%line
             E.sendline(line)
             self._expect.expect(end)
-            self._expect.expect(end)
-            out = self._expect.before
+            # We have timeouts below, since getting the end above
+            # means the computation completed, but on some systems
+            # (Cygwin) the expect interface can sometimes hang getting
+            # the final prompts. 
+            try:
+                self._expect.expect(end, timeout=1)
+                out = self._expect.before
+                self._expect.expect(self._prompt, timeout=1)
+                out += self._expect.before
+            except pexpect.TIMEOUT:
+                out = self._expect.before
             #print "out = '%s'"%out
-            self._expect.expect(self._prompt)
-            out += self._expect.before
+
         except EOF:
-          if self._quit_string() in line:
-             return ''
+            if self._quit_string() in line:
+                return ''
         except KeyboardInterrupt:
             self._keyboard_interrupt()
             return ''
