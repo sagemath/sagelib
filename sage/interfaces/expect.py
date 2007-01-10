@@ -272,6 +272,7 @@ class Expect(ParentWithBase):
 ##                  self._install_hints(), self.__name)
         
         if self.__verbose_start:
+            print cmd
             print "Starting %s"%cmd.split()[0]
             
         try:
@@ -285,15 +286,18 @@ class Expect(ParentWithBase):
             failed_to_start.append(self.__name)
             raise RuntimeError, "Unable to start %s because the command '%s' failed.\n%s"%(
                 self.__name, cmd, self._install_hints())
-        
+
         os.chdir(current_path)
         self._expect.timeout = self.__max_startup_time
         #self._expect.setmaxread(self.__maxread)
         self._expect.maxread = self.__maxread
         self._expect.delaybeforesend = 0
         try:
+            print 1
             self._expect.expect(self._prompt)
+            print 2
         except (pexpect.TIMEOUT, pexpect.EOF), msg:
+            print 3
             self._expect = None
             self._session_number = BAD_SESSION
             failed_to_start.append(self.__name)
