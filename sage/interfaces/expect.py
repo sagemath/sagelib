@@ -255,7 +255,7 @@ class Expect(ParentWithBase):
                 raise RuntimeError, alt_message
             else:
                 raise RuntimeError, 'Unable to start %s (%s failed to start during this SAGE session; not attempting to start again)\n%s'%(self.__name, self.__name, self._install_hints())
-        
+
         self._session_number += 1
         current_path = os.path.abspath('.')
         dir = self.__path
@@ -293,11 +293,8 @@ class Expect(ParentWithBase):
         self._expect.maxread = self.__maxread
         self._expect.delaybeforesend = 0
         try:
-            print 1
             self._expect.expect(self._prompt)
-            print 2
         except (pexpect.TIMEOUT, pexpect.EOF), msg:
-            print 3
             self._expect = None
             self._session_number = BAD_SESSION
             failed_to_start.append(self.__name)
