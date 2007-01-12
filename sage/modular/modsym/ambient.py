@@ -763,7 +763,7 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
         EXAMPLES:
             sage: M = ModularSymbols(Gamma0(22), 2); M
             Modular Symbols space of dimension 7 for Gamma_0(22) of weight 2 with sign 0 over Rational Field
-            sage: for b, e in M.factorization():
+            sage: M.factorization():
             ...    print b.dimension(), b.level(), e
             1 11 2
             1 11 2
@@ -797,7 +797,7 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
             1 26 1
             2 26 1
             2 26 1
-            
+
         An example with level divisible by a square:
             sage: M = ModularSymbols(Gamma0(2*9),2); M
             ???
@@ -1109,7 +1109,6 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
         self.__integral_structure = A.span(X)
         return self.__integral_structure
     
-            
 
 class ModularSymbolsAmbient_wtk_g0(ModularSymbolsAmbient):
     r"""
