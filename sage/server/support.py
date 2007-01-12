@@ -16,6 +16,7 @@ import sage.misc.pager
 
 import sage.misc.sagedoc as sagedoc
 import sage.misc.sageinspect as sageinspect
+
 from sage.misc.preparser import preparse
 
 ######################################################################
