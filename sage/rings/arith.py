@@ -1317,6 +1317,15 @@ def factor(n, proof=True, int_=False, algorithm='pari', verbose=0):
                    e.g., set to 4 or 8 to see lots of output during factorization.
     OUTPUT:
         factorization of n
+
+    NOTES:
+        The qsieve and ecm commands give access to highly optimized
+        implementations of algorithms for doing certain integer
+        factorization problems.  These implementation are not used by
+        the generic factor command, which currently just calls PARI
+        (note that PARI also implements sieve and ecm algorithms, but
+        they aren't as optimized).  Thus you might consider using them
+        instead for certain numbers.
         
     EXAMPLES:
         sage: factor(500)
