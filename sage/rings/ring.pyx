@@ -623,7 +623,7 @@ cdef class FiniteField(Field):
             True
         """
         raise NotImplementedError
-
+        
     def _latex_(self):
         r"""
         EXAMPLES:

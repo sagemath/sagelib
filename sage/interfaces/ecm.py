@@ -159,6 +159,7 @@ class ECM:
         kwds['one'] = ''
         kwds['cofdec'] = ''
         self.__cmd = self._ECM__startup_cmd(B1, None, kwds)
+        self.last_params = { 'B1' : B1 }
         child = pexpect.spawn(self.__cmd)
 	child.__del__ = nothing   # program around studid exception ignored error
         child.sendline(str(n))
@@ -175,7 +176,7 @@ class ECM:
                                          'sigma' : child.match.groups()[4] }
                 elif info[7] != None:
                     child.kill(0)
-                    self.primality = [false]
+                    self.primality = [False]
                     return [n]
                 else:
                     p = Integer(info[6])
@@ -196,7 +197,7 @@ class ECM:
                         
             except pexpect.EOF:
                 child.kill(0)
-                self.primality = [false]
+                self.primality = [False]
                 return [n]
         child.kill(0)
 
