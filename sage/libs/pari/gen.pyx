@@ -5183,7 +5183,7 @@ cdef class PariInstance:
         g = gp_read_str(t)
         _sig_off
         return self.new_gen(g)
-
+        
     def _coerce_(self, x):
         """
         Implicit canonical coercion into a PARI object.
