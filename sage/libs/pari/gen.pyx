@@ -883,8 +883,6 @@ cdef class gen:
             2-dimensional column vector the quotient and the
             remainder, with respect to v (to main variable if v is
             omitted).
-
-        sage: 
         """
         t0GEN(y)
         _sig_on        
@@ -5185,7 +5183,7 @@ cdef class PariInstance:
         g = gp_read_str(t)
         _sig_off
         return self.new_gen(g)
-
+        
     def _coerce_(self, x):
         """
         Implicit canonical coercion into a PARI object.

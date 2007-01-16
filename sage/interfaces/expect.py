@@ -65,6 +65,13 @@ tmp='%s/tmp'%SAGE_TMP_INTERFACE
 ##     if len(t) == 0:
 ##         raise RuntimeError
 ##     return ' '.join([t] + c[1:])
+
+
+# . in user's path causes *HUGE* trouble, e.g., pexpect will try to
+# run a directory name!
+p = os.environ['PATH'].split(':')
+os.environ['PATH'] = ':'.join([v for v in p if v.strip() != '.'])
+
     
 
 class Expect(ParentWithBase):
@@ -255,7 +262,7 @@ class Expect(ParentWithBase):
                 raise RuntimeError, alt_message
             else:
                 raise RuntimeError, 'Unable to start %s (%s failed to start during this SAGE session; not attempting to start again)\n%s'%(self.__name, self.__name, self._install_hints())
-        
+
         self._session_number += 1
         current_path = os.path.abspath('.')
         dir = self.__path
@@ -272,6 +279,7 @@ class Expect(ParentWithBase):
 ##                  self._install_hints(), self.__name)
         
         if self.__verbose_start:
+            print cmd
             print "Starting %s"%cmd.split()[0]
             
         try:
@@ -285,7 +293,7 @@ class Expect(ParentWithBase):
             failed_to_start.append(self.__name)
             raise RuntimeError, "Unable to start %s because the command '%s' failed.\n%s"%(
                 self.__name, cmd, self._install_hints())
-        
+
         os.chdir(current_path)
         self._expect.timeout = self.__max_startup_time
         #self._expect.setmaxread(self.__maxread)
@@ -862,6 +870,9 @@ class ExpectElement(RingElement):
         t = P._true_symbol()
         cmd = '%s %s %s'%(self._name, P._equality_symbol(), t)
         return P.eval(cmd) == t
+
+    def __bool__(self):
+        return self.bool()
 
 
     def __long__(self):
