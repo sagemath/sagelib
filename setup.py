@@ -429,6 +429,11 @@ ext_modules = [ \
               ['sage/rings/integer_mod.pyx'],
               libraries = ['gmp']
               ), \
+
+    Extension('sage.combinat.expnums',
+              ['sage/combinat/expnums.pyx'],
+              libraries = ['gmp']
+              ), \
                             
     ]
     

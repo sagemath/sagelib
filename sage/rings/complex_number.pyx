@@ -1,9 +1,10 @@
 """
-Complex Numbers
+Arbitrary Precision Complex Numbers
 
 AUTHOR:
     -- William Stein (2006-01-26): complete rewrite
     -- Joel B. Mohler (2006-12-16): naive rewrite into pyrex
+    -- William Stein(2007-01): rewrite of Mohler's rewrite
 """
 
 #################################################################################

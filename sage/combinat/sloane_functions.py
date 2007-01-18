@@ -34,6 +34,11 @@ You can also change how a sequence prints:
     sage: d.reset_name()
     sage: d
     The integer sequence tau(n), which is the number of divisors of n.
+
+AUTHORS:
+    -- William Stein: framework
+    -- Jaap Spies: most sequences
+    -- Nick Alexander: updated framework
 """
 
 ########################################################################
@@ -47,8 +52,6 @@ You can also change how a sequence prints:
 #                assume has as input a *positive* SAGE integer (offset > 0). 
 #                Each sequence in the OEIS has an offset >= 0, indicating the
 #                value of the first index. The default offset = 1.
-#                In the case that offset = 0 use a different __call__ method.
-#                See below.
 #            (b) define the list method if there is a faster
 #                way to compute the terms of the sequence than
 #                just calling _eval (which is the default definition
@@ -89,39 +92,68 @@ from sage.structure.sage_object import SageObject
 from sage.misc.misc import srange
 
 class SloaneSequence(SageObject):
+    r"""Base class for a Slone integer sequence.
+
+    EXAMPLES:
+    We create a dummy sequence:
+    
+    """
+    def __init__(self, offset=1):
+        r"""
+        A sequence starting at offset (=1 by default).
+        """
+        self.offset = Integer(offset)
+    
     def _repr_(self):
         raise NotImplementedError
-    
-    def __getitem__(self, n):
-        return self(n)
-
-    offset = 1 
-        # this is the default value
 
     def __call__(self, n):
         m = Integer(n)
-        if m <= 0:
-            raise ValueError, "input n (=%s) must be a positive integer"%n
+        if m < self.offset:
+            if self.offset == 1:
+                raise ValueError, "input n (=%s) must be a positive integer" % (n)
+            else:
+                raise ValueError, "input n (=%s) must be an integer >= %s" % (n, self.offset)
         return self._eval(m)
 
-#    Use this for offset = 0
-#    offset = 0 
-#
-#    def __call__(self, n):
-#        m = Integer(n)
-#        if m < 0:
-#            raise ValueError, "input n (=%s) must be a non negative integer"%n
-#        return self._eval(m)
-#
     def _eval(self, n):
         # this is what you implement in the derived class
-        # the input n is assumed to be a *SAGE* integer >= 1
+        # the input n is assumed to be a *SAGE* integer >= offset
         raise NotImplementedError
-    
+
     def list(self, n):
-        # this works for all offsets >= 0
-        # returns a list of n elements
+        r"""Return n terms of the sequence: sequence[offset], sequence[offset+1], ... , sequence[offset+n-1].
+        """
         return [self._eval(i) for i in srange(self.offset, n+self.offset)]
+    
+    # The Python default tries repeated __getitem__ calls, which will succeed,
+    # but is probably not what is wanted.
+    # This prevents list(sequence) from wandering off.
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __getitem__(self, n):
+        r"""Return sequence[n].
+
+        We interpret slices as best we can, but our sequences
+        are infinite so we want to prevent some mis-incantations.
+
+        Therefore, we abitrarily cap slices to be at most
+        LENGTH=100000 elements long.  Since many Sloane sequences
+        are costly to compute, this is probably not an unreasonable
+        decision, but just in case, list does not cap length.        
+        """
+        if not isinstance(n, slice):
+            return self(n)
+
+        LENGTH = 100000
+        (start, stop, step) = n.indices(2*LENGTH)
+        if abs(stop - start) > LENGTH:
+            raise IndexError, "slice (=%s) too long"%n
+        # The dirty work of generating indices is left to a range list
+        # This could be slow but in practice seems fine
+        # NOTE: n is a SLICE, not an index
+        return [ self(i) for i in range(0, LENGTH)[n] if i >= self.offset ]
 
 ########################################################################
 # II. Actual implementations of Sloane sequences.
@@ -130,9 +162,42 @@ class SloaneSequence(SageObject):
 # You may have to import more here when defining new sequences
 import sage.rings.arith as arith
 from sage.rings.integer import Integer
-from sage.matrix.matrix_space import *
-from sage.rings.rational_field import *
+from sage.matrix.matrix_space import MatrixSpace
+from sage.rings.rational_field import QQ
 
+class A000027(SloaneSequence):
+    r"""
+    The natural numbers. Also called the whole numbers, the counting
+    numbers or the positive integers.
+
+    The following examples are tests of SloaneSequence more than A000027.
+    
+    EXAMPLES:
+    sage: s = sloane.A000027; s
+    The natural numbers.
+    sage: s(10)
+    10
+
+    Index n is interpreted as _eval(n):
+    sage: s[10]
+    10
+    
+    Slices are interpreted with absolute offsets, so the following returns the terms of the sequence up to but not including the third term:
+    sage: s[:3]
+    [1, 2]
+    sage: s[3:6]
+    [3, 4, 5]
+    sage: s.list(5)
+    [1, 2, 3, 4, 5]
+    """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
+
+    def _repr_(self):
+        return "The natural numbers."
+
+    def _eval(self, n):
+        return n
 
 class A000005(SloaneSequence):
     r"""
@@ -163,17 +228,14 @@ class A000005(SloaneSequence):
         -- Jaap Spies (2006-12-10)
         -- William Stein (2007-01-08)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
+    
     def _repr_(self):
         return "The integer sequence tau(n), which is the number of divisors of n."
 
-    offset = 1
-
     def _eval(self, n):
         return arith.number_of_divisors(n)
-
-#    def list(self, n):
-#       return [self(i) for i in range(self.offset,n+1)]
-
 
 class A000010(SloaneSequence):
     r"""
@@ -214,13 +276,14 @@ class A000010(SloaneSequence):
     AUTHOR:
         -- Jaap Spies (2007-01-12)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
+
     def _repr_(self):
         return "Euler's totient function"
 
     def _eval(self, n):
         return arith.euler_phi(n)
-
-    offset = 1 
 
 class A000045(SloaneSequence):
     r"""
@@ -255,18 +318,11 @@ class A000045(SloaneSequence):
         -- Jaap Spies (2007-01-13)
     """
     def __init__(self):
+        SloaneSequence.__init__(self, offset=0)
         self._b = []
         
     def _repr_(self):
         return "Fibonacci number with index n >= 0"
-
-    offset = 0
-
-    def __call__(self, n):
-        m = Integer(n)
-        if m < 0:
-            raise ValueError, "input n (=%s) must be a non-negative integer"%n
-        return self._eval(m)
 
     def _precompute(self, how_many=500):
         try:
@@ -296,7 +352,6 @@ class A000045(SloaneSequence):
         self._eval(n)   # force computation
         return self._b[:n]
     
-
 class A000203(SloaneSequence):
     r"""
     The sequence $\sigma(n)$, where $\sigma(n)$ is the sum of the
@@ -329,16 +384,15 @@ class A000203(SloaneSequence):
     AUTHOR:
         -- Jaap Spies (2007-01-13)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
 
     def _repr_(self):
         return "sigma(n) = sum of divisors of n. Also called sigma_1(n)."
 
-    offset = 1
-
     def _eval(self, n):
         return sum(arith.divisors(n))
  
-
 class A001227(SloaneSequence):
     r"""
     Number of odd divisors of $n$.
@@ -379,15 +433,14 @@ class A001227(SloaneSequence):
         AUTHOR:
             - Jaap Spies (2007-01-14)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
 
     def _repr_(self):
         return "Number of odd divisors of n"
 
-    offset = 1
-
     def _eval(self, n):
         return sum(i%2 for i in arith.divisors(n))
-
 
 class A001694(SloaneSequence):
     r"""
@@ -423,14 +476,14 @@ class A001694(SloaneSequence):
         ...
         ValueError: input n (=-1) must be a positive integer
 
-
     AUTHOR:
         -- Jaap Spies (2007-01-14)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
+
     def _repr_(self):
         return "Powerful Numbers (also called squarefull, square-full or 2-full numbers)."
-
-    offset = 1
 
     def _precompute(self, how_many=150):
         try:
@@ -438,7 +491,7 @@ class A001694(SloaneSequence):
             n = self._n
         except AttributeError:
             self._b = []
-            n = self.offset
+            n = 1
             self._n = n
         self._b += [i for i in range(self._n, self._n+how_many) if self.is_powerful(i)]
         self._n += how_many
@@ -492,77 +545,75 @@ class A001694(SloaneSequence):
                 return False
         return True
 
-class A001836(SloaneSequence):
+
+
+
+
+def is_power_of_two(n):
     r"""
-    Numbers $n$ such that $\phi(2n-1) < \phi(2n)$, where $\phi$ is Euler's totient function
+    This function returns True if and only if $n$ is a power of 2
 
-
-       INPUT:
-        n -- positive integer
+    INPUT:
+        n -- integer
 
     OUTPUT:
-        integer -- function value
+        True -- if n is a power of 2
+        False -- if not
 
     EXAMPLES:
-        sage: a = sloane.A001836; a
-        Numbers n such that phi(2n-1) < phi(2n), where phi is Euler's totient function
-        sage: a.offset
-        1
-        sage: a(1)
-        53
-        sage: a(200)
-        11828
-        sage: a.list(12)
-        [53, 83, 158, 263, 293, 368, 578, 683, 743, 788, 878, 893]
-        sage: a(0)
-        Traceback (most recent call last):
-        ...
-        ValueError: input n (=0) must be a positive integer
+        sage: from sage.combinat.sloane_functions import is_power_of_two
+        
+        sage: is_power_of_two(1024)
+        True
 
-        Compare
-        Searching Sloane's online database...
-        Numbers n such that phi(2n-1) < phi(2n), where phi is Eler's totient function A000010.
-        [53, 83, 158, 263, 293, 368, 578, 683, 743, 788, 878, 893]
+        sage: is_power_of_two(1)
+        True
+
+        sage: is_power_of_two(24)
+        False
+
+        sage: is_power_of_two(0)
+        False
+
+        sage: is_power_of_two(-4)
+        False
 
     AUTHOR:
-        -- Jaap Spies (2007-01-17)
+        -- Jaap Spies (2006-12-09)
+
     """
-    def _repr_(self):
-        return "Numbers n such that phi(2n-1) < phi(2n), where phi is Euler's totient function"
-
-    offset = 1
-
-    def _precompute(self, how_many=150):
-        try:
-            self._b
-            n = self._n
-        except AttributeError:
-            self._b = []
-            n = self.offset
-            self._n = n
-        self._b += [i for i in range(self._n, self._n+how_many) if arith.euler_phi(2*i-1) < arith.euler_phi(2*i)] 
-        self._n += how_many
-
-    def _eval(self, n):
-        try:
-            return self._b[n-1]
-        except (AttributeError, IndexError):
-            self._precompute()
-            # try again
-            return self._eval(n)
-
-    def list(self, n):
-        try:
-            if len(self._b) < n:
-                raise IndexError
-            else:
-                return self._b[:n]
-        except (AttributeError, IndexError):
-            self._precompute()
-            # try again
-            return self.list(n)
+    # modification of is2pow(n) from the Programming Guide
+    while n > 0 and n%2 == 0: 
+        n = n >> 1
+    return n == 1
 
 
+def perm_mh(m, h):
+    """
+    INPUT:
+        m -- positive integer
+        h -- non negative integer
+
+    OUTPUT:
+        permanent of the m x (m+h) matrix, etc.
+
+    EXAMPLE:
+        sage: from sage.combinat.sloane_functions import perm_mh
+        sage: perm_mh(3,3)
+        36
+        sage: perm_mh(3,4)
+        76
+
+    AUTHOR: Jaap Spies (2006)
+    """    
+    n = m + h
+    M = MatrixSpace(QQ, m, n)
+    A = M(0)
+    for i in range(m):
+        for j in range(n):
+            if i <= j and j <= i + h:
+                A[i,j] = 1
+    return A.permanent()
 
 class A079922(SloaneSequence):
     r"""
@@ -587,14 +638,12 @@ class A079922(SloaneSequence):
         Solutions to the Dancing School problem with n girls and n+3 boys
         sage: a.offset
         1
-        sage: a.perm(3,3)
-        36
         sage: a(1)
         4
         sage: a(8)
         2227
-        sage: a.list(12)
-        [4, 13, 36, 90, 212, 478, 1044, 2227, 4664, 9627, 19640, 39684]
+        sage: a.list(8)
+        [4, 13, 36, 90, 212, 478, 1044, 2227]
 
         Compare:
         Searching Sloane's online database...
@@ -616,34 +665,8 @@ class A079922(SloaneSequence):
     offset = 1
 
     def _eval(self, n):
-        return self.perm(n, 3)
+        return perm_mh(n, 3)
 
-    def perm(self,m, h):
-        """
-        This function returs $f(g,h)$ from Sloan's A079908-A079928    
-
-        INPUT:
-            m -- positive integer
-            h -- non negative integer
-
-        OUTPUT:
-            permanent of the m x (m+h) matrix, etc.
-
-        EXAMPLE:
-        sage: a = sloane.A079922
-        sage: a.perm(3,3)
-        36
-
-        AUTHOR: Jaap Spies (2006)
-        """    
-        n = m + h
-        M = MatrixSpace(QQ, m, n)
-        A = M([0 for i in range(m*n)])
-        for i in range(m):
-            for j in range(n):
-                if i <= j and j <= i + h:
-                    A[i,j] = 1
-        return A.permanent()
 
 
 class A079923(SloaneSequence):
@@ -672,8 +695,8 @@ class A079923(SloaneSequence):
         5
         sage: a(8)
         15458
-        sage: a.list(9)
-        [5, 21, 76, 246, 738, 2108, 5794, 15458, 40296]
+        sage: a.list(8)
+        [5, 21, 76, 246, 738, 2108, 5794, 15458]
 
         Compare:
         Searching Sloane's online database...
@@ -695,81 +718,8 @@ class A079923(SloaneSequence):
     offset = 1
 
     def _eval(self, n):
-        return self.perm(n, 4)
+        return perm_mh(n, 4)
 
-    def perm(self,m, h):
-        """
-        This function returs $f(g,h)$ from Sloan's A079908-A079928    
-
-        INPUT:
-            m -- positive integer
-            h -- non negative integer
-
-        OUTPUT:
-            permanent of the m x (m+h) matrix, etc.
-
-        EXAMPLE:
-        sage: a = sloane.A079923
-        sage: a.perm(3,4)
-        76
-
-        AUTHOR: Jaap Spies (2006)
-        """    
-        n = m + h
-        M = MatrixSpace(QQ, m, n)
-        A = M([0 for i in range(m*n)])
-        for i in range(m):
-            for j in range(n):
-                if i <= j and j <= i + h:
-                    A[i,j] = 1
-        return A.permanent()
-
-
-
-
-
-
-
-
-def is_power_of_two(n):
-    r"""
-    This function returns True if and only if $n$ is a power of 2
-
-    This function could/should be in sage.rings.arith??
-
-    INPUT:
-        n -- integer
-
-    OUTPUT:
-        True -- if n is a power of 2
-        False -- if not
-
-    EXAMPLES:
-        sage: from sage.databases.sloane_functions import is_power_of_two
-        
-        sage: is_power_of_two(1024)
-        True
-
-        sage: is_power_of_two(1)
-        True
-
-        sage: is_power_of_two(24)
-        False
-
-        sage: is_power_of_two(0)
-        False
-
-        sage: is_power_of_two(-4)
-        False
-
-    AUTHOR:
-        -- Jaap Spies (2006-12-09)
-
-    """
-    # modification of is2pow(n) from the Programming Guide
-    while n > 0 and n%2 == 0: 
-        n = n >> 1
-    return n == 1
 
 class A111774(SloaneSequence):
     r"""
@@ -814,10 +764,11 @@ class A111774(SloaneSequence):
     AUTHOR:
         -- Jaap Spies (2007-01-13)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
+
     def _repr_(self):
         return "Numbers that can be written as a sum of at least three consecutive positive integers."
-
-    offset = 1
 
     def _precompute(self, how_many=150):
         try:
@@ -825,7 +776,7 @@ class A111774(SloaneSequence):
             n = self._n
         except AttributeError:
             self._b = []
-            n = self.offset
+            n = 1
             self._n = n
         self._b += [i for i in range(self._n, self._n+how_many) if self.is_number_of_the_third_kind(i)]
         self._n += how_many
@@ -937,17 +888,11 @@ class A111775(SloaneSequence):
     AUTHOR:
         -- Jaap Spies (2006-12-09)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=0)
+
     def _repr_(self):
         return "Number of ways n can be written as a sum of at least three consecutive integers."
-
-    offset = 0
-
-    def __call__(self, n):
-        m = Integer(n)
-        if m < 0:
-            raise ValueError, "input n (=%s) must be a non negative integer"%n
-        return self._eval(m)
-
 
     def _eval(self, n):
         if n == 1 or n == 0:
@@ -957,7 +902,6 @@ class A111775(SloaneSequence):
             return k-1
         else:
             return k-2
-
 
 class A111776(SloaneSequence):
     r"""
@@ -981,16 +925,11 @@ class A111776(SloaneSequence):
     AUTHOR:
         -- Jaap Spies (2007-01-13)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=0)
+
     def _repr_(self):
         return "a(n) is the largest k such that n can be written as sum of k consecutive integers."
-
-    offset = 0
-
-    def __call__(self, n):
-        m = Integer(n)
-        if m < 0:
-            raise ValueError, "input n (=%s) must be a non negative integer"%n
-        return self._eval(m)
 
     def _eval(self, n):
         if n == 1 or n == 0:
@@ -1001,7 +940,6 @@ class A111776(SloaneSequence):
             if k > m:
                 m = k
         return Integer(m)
-
 
 class A111787(SloaneSequence):
     r"""
@@ -1049,13 +987,14 @@ class A111787(SloaneSequence):
         ...
         ValueError: input n (=-1) must be a positive integer
 
-        AUTHOR:
-            - Jaap Spies (2007-01-14)
+    AUTHOR:
+        - Jaap Spies (2007-01-14)
     """
+    def __init__(self):
+        SloaneSequence.__init__(self, offset=1)
+
     def _repr_(self):
         return "a(n) is the least k >= 3 such that n can be written as sum of k consecutive integers. a(n)=0 if such a k does not exist."
-
-    offset = 1
 
     def _eval(self, n):
         if arith.is_prime(n) or is_power_of_two(n):
@@ -1066,7 +1005,103 @@ class A111787(SloaneSequence):
                     return min(d, 2*n/d)
 
 
+class ExponentialNumbers(SloaneSequence):
+    r"""
+    A sequence of Exponential numbers.
+    """
+    def __init__(self, a):
+        SloaneSequence.__init__(self, offset=0)
+        self.a = a
 
+    def _repr_(self):
+        return "Sequence of Exponential numbers around %s" % self.a
+
+    def _eval(self, n):
+        if hasattr(self, '__n'):
+            if n < self.__n:
+                return self.__data[n]        
+        from sage.combinat.expnums import expnums
+        self.__data = expnums(n+1, self.a)
+        self.__n = n+1
+        return self.__data[n]
+
+class A000110(ExponentialNumbers):
+    r"""
+    The sequence of Bell numbers.
+
+    The Bell number $B_n$ counts the number of ways to put $n$
+    distinguishable things into indistinguishable boxes such that no
+    box is empty.
+
+    Let $S(n, k)$ denote the Stirling number of the second kind.  Then
+    $$B_n = \sum{k=0}^{n} S(n, k) .$$
+
+    INPUT:
+        n -- integer >= 0
+
+    OUTPUT:
+        integer -- $B_n$
+
+    EXAMPLES:
+        sage: a = sloane.A000110; a
+        Sequence of Bell numbers
+        sage: a.offset
+        0
+        sage: a(0)
+        1
+        sage: a(100)
+        47585391276764833658790768841387207826363669686825611466616334637559114497892442622672724044217756306953557882560751
+        sage: a.list(10)
+        [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147]
+
+    AUTHOR:
+        -- Nick Alexander
+    """
+    def __init__(self):
+        ExponentialNumbers.__init__(self, a=1)
+
+    def _repr_(self):
+        return "Sequence of Bell numbers"        
+        
+
+class A000587(ExponentialNumbers):
+    r"""
+    The sequence of Uppuluri-Carpenter numbers.
+
+    The Uppuluri-Carpenter number $C_n$ counts the imbalance in the
+    number of ways to put $n$ distinguishable things into an even
+    number of indistinguishable boxes versus into an odd number of
+    indistinguishable boxes, such that no box is empty.
+
+    Let $S(n, k)$ denote the Stirling number of the second kind.  Then
+    $$C_n = \sum{k=0}^{n} (-1)^k S(n, k) .$$
+
+    INPUT:
+        n -- integer >= 0
+
+    OUTPUT:
+        integer -- $C_n$
+
+    EXAMPLES:
+        sage: a = sloane.A000587; a
+        Sequence of Uppuluri-Carpenter numbers
+        sage: a.offset
+        0
+        sage: a(0)
+        1
+        sage: a(100)
+        397577026456518507969762382254187048845620355238545130875069912944235105204434466095862371032124545552161
+        sage: a.list(10)
+        [1, -1, 0, 1, 1, -2, -9, -9, 50, 267]
+        
+    AUTHOR:
+        -- Nick Alexander
+    """
+    def __init__(self):
+        ExponentialNumbers.__init__(self, a=-1)
+
+    def _repr_(self):
+        return "Sequence of Uppuluri-Carpenter numbers"        
 
 #############################################################
 # III. Create the Sloane object, off which all the sequence
@@ -1079,15 +1114,16 @@ sloane = Sloane()
 
 sloane.A000005 = A000005()
 sloane.A000010 = A000010()
+sloane.A000027 = A000027()
 sloane.A000045 = A000045()
+sloane.A000110 = A000110()
 sloane.A000203 = A000203()
+sloane.A000587 = A000587()
 sloane.A001227 = A001227()
 sloane.A001694 = A001694()
-sloane.A001836 = A001836()
 sloane.A079922 = A079922()
 sloane.A079923 = A079923()
 sloane.A111774 = A111774()
 sloane.A111775 = A111775()
 sloane.A111776 = A111776()
 sloane.A111787 = A111787()
-
