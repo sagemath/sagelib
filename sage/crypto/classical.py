@@ -88,7 +88,7 @@ class SubstitutionCryptosystem(SymmetricKeyCryptosystem):
 	EXAMPLES:
 	    sage: S = AlphabeticStrings()
             sage: E = SubstitutionCryptosystem(S)
-            sage: K = E.random_key()
+            sage: K = E.random_key()        
             sage: L = E.inverse_key(K)
 	    sage: M = S("THECATINTHEHAT")
 	    sage: e = E(K)
