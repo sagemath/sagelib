@@ -1667,7 +1667,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         EXAMPLES:
             sage: E = EllipticCurve('37b')
             sage: E.Lseries_at1(100)
-            (0.725681061935999, 0.00000000000000000000000000000000000000000000152437502288999)
+            (0.725681061936000, 0.00000000000000000000000000000000000000000000152437502288999)
         """
         if self.root_number() == -1:
             return 0
@@ -1793,7 +1793,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         EXAMPLES:
             sage: E = EllipticCurve('389a')
             sage: E.Lambda(1.4+0.5*I, 50)
-            -0.354172680515557 + 0.874518681718910*I
+            -0.354172680515556 + 0.874518681718910*I
         """
         s = C(s)
         N = self.conductor()
@@ -1826,7 +1826,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             sage: E.Lseries_extended(1 + I, 50)
             -0.638409959098257 + 0.715495262191409*I
             sage: E.Lseries_extended(1 + 0.1*I, 50)
-            -0.00761216538769283 + 0.000434885704642064*I
+            -0.00761216538769225 + 0.000434885704642038*I
 
         NOTE: You might also want to use Tim Dokchitser's
         L-function calculator, which is available by typing
@@ -3754,7 +3754,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             sage: g = EllipticCurve([-1*(2**4), 3*(2**6)]).padic_sigma(5, 10)
             sage: t = f.parent().gen()
             sage: f(2*t)/2
-             (1 + O(5^7))*t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + O(5^7))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + O(5^7))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
+             (1 + ... + O(5^7))*t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + O(5^7))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + O(5^7))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
             sage: g
              t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + 5^7 + 2*5^8 + O(5^9))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + 2*5^7 + 3*5^8 + O(5^9))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
         
