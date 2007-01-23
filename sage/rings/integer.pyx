@@ -190,9 +190,6 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             495949209809328523
             sage: Integer(Mod(3,7))
             3
-
-        Integers also support the standard arithmetic operations, such
-        as +,-,*,/,^, \code{abs}, \code{mod}, \code{float}:
             sage: 2^3
             8
         """
@@ -802,9 +799,9 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
            sage: x = 3^100000
            sage: log(x, 3)
-           100000.000000000
+           99999.9999999999
            sage: log(x + 100000, 3)
-           100000.000000000
+           99999.9999999999
 
            sage: x.exact_log(3)
            100000
@@ -1325,6 +1322,20 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             False
         """
         return bool(self._pari_().isprime())
+
+    def is_pseudoprime(self):
+        r"""
+        Retuns \code{True} if self is a pseudoprime
+
+        EXAMPLES:
+            sage: z = 2^31 - 1
+            sage: z.is_pseudoprime()
+            True
+            sage: z = 2^31
+            sage: z.is_pseudoprime()
+            False
+        """
+        return bool(self._pari_().ispseudoprime())
 
     def square_free_part(self):
         """
