@@ -216,7 +216,7 @@ class NumberField_generic(field.Field):
             sage: k.<a> = NumberField(f)
             sage: v = k.complex_embeddings()
             sage: [phi(k.0^2) for phi in v]
-            [2.97572074037667, 0.921039066973046 - 3.07553311884577*I, 0.921039066973046 + 3.07553311884577*I, -2.40889943716138 + 1.90254105303505*I, -2.40889943716138 - 1.90254105303505*I]
+            [2.97572074037667, 0.921039066973046 - 3.07553311884577*I, 0.921039066973046 + 3.07553311884577*I, -2.40889943716138 + 1.90254105303505*I, -2.40889943716138 - 1.90254105303505*I]            
         """
         try:
             return self.__complex_embeddings[prec]
@@ -1197,7 +1197,7 @@ class NumberField_cyclotomic(NumberField_generic):
         n = K.zeta_order()
         m = self.zeta_order()
         if m % n == 0:   # easy case
-            e = m/n
+            e = m // n
             f = x.polynomial()
             X = f.parent().gen()
             g = f(X**e)
