@@ -512,7 +512,10 @@ def prime_range(start, stop=None, leave_pari=False):
     """
     if stop is None:
         start, stop = 2, start
-    v = pari.primes_up_to_n(stop-1)
+    try:
+        v = pari.primes_up_to_n(stop-1)
+    except OverflowError:
+        return list(primes(start, stop))  # lame but works.
     Z = sage.rings.integer.Integer
     if leave_pari:
         if start != 2:
@@ -1723,6 +1726,8 @@ def binomial(x,m):
         10
         sage: binomial(2,0)
         1
+        sage: binomial(1/2, 0)
+        1
         sage: binomial(3,-1)
         0
         sage: binomial(20,10)
@@ -1738,7 +1743,7 @@ def binomial(x,m):
         P = x.parent()
     except AttributeError:
         P = type(x)
-    if m <= 0:
+    if m < 0:
         return P(0)
     return misc.prod([x-i for i in xrange(m)]) / P(factorial(m))
 
