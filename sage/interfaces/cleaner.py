@@ -20,6 +20,5 @@ def cleaner(pid, cmd):
     o = open(F,'a')
     o.write('%s %s\n'%(pid, cmd))
     o.close()
-    
 
     
