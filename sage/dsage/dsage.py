@@ -41,6 +41,11 @@ class DistributedSage(object):
         This drops you into the dsage ipython console
 
         To do something simple, type:
+        
+        sage: P = DSage()
+
+        This creates a connection to the remote server.  To do a simple
+        evaluation, type:
 
         sage: job1 = P.eval('print 2+2', 'testjob')
 
