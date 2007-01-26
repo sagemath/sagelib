@@ -1952,7 +1952,7 @@ cdef class Matrix(matrix1.Matrix):
             
         pivots = strassen.strassen_echelon(self.matrix_window(), cutoff)
         self._set_pivots(pivots)
-        
+
 
     def matrix_window(self, Py_ssize_t row=0, Py_ssize_t col=0,
                       Py_ssize_t nrows=-1, Py_ssize_t ncols=-1):
@@ -1974,3 +1974,24 @@ cdef class Matrix(matrix1.Matrix):
 
 cdef decomp_seq(v):
     return Sequence(v, universe=tuple, check=False, cr=True)
+    
+    
+def cmp_pivots(x,y):
+    """
+    Compare two sequences of pivot columns.
+    If x is short than y, return -1, i.e., x < y, "not as good".
+    If x is longer than y, x > y, "better"
+    If the length is the same then x is better, i.e., x > y
+        if the entries of x are correspondingly >= those of y with
+        one being greater.
+    """
+    if len(x) < len(y):
+        return -1
+    if len(x) > len(y):
+        return 1
+    if x < y:
+        return 1
+    elif x == y:
+        return 0
+    else:
+        return -1
