@@ -253,7 +253,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
                 # make the function prototype have return type void*, but
                 # then how do we make Pyrex handle the reference counting?
                 set_from_Integer(self, (<object> PyObject_GetAttrString(x, "_integer_"))())
-                
+
             else:
                 raise TypeError, "unable to coerce element to an integer"
     
