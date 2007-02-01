@@ -8,7 +8,8 @@ from distutils.core import setup, Extension
 if os.environ.has_key('SAGE_CBLAS'):
     CBLAS=os.environ['SAGE_CBLAS']
 else:
-    CBLAS='gslcblas'  # possibly (?) slow but *guaranteed* to be available
+    # TODO: CHANGE BACK!
+    CBLAS='cblas'  # possibly (?) slow but *guaranteed* to be available
 
 if len(sys.argv) > 1 and sys.argv[1] == "sdist":
     sdist = True
