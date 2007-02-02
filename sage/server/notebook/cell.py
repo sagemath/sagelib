@@ -77,6 +77,9 @@ class TextCell(Cell_generic):
 
     def __cmp__(self, right):
         return cmp(self.id(), right.id())
+
+    def set_cell_output_type(self, typ='wrap'):
+        pass # ignored
                    
 
 class Cell(Cell_generic):
