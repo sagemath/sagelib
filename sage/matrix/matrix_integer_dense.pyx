@@ -17,6 +17,10 @@ include "../ext/interrupt.pxi"
 include "../ext/stdsage.pxi"
 include "../ext/gmp.pxi"
 
+cdef extern from "matrix_integer_dense_linbox.h":
+    void linbox_minpoly(mpz_t* *minpoly, size_t* degree, size_t n, mpz_t** matrix)
+    void linbox_delete_array(mpz_t* f)
+    
 ctypedef unsigned int uint
 
 from sage.ext.multi_modular cimport MultiModularBasis
@@ -297,7 +301,8 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             IndexError: matrix index out of range
         """
         cdef Integer z
-        z = PY_NEW(Integer)
+        #z = PY_NEW(Integer)
+        z = Integer.__new__(Integer)
         mpz_set(z.value, self._matrix[i][j])
         return z
 
@@ -371,7 +376,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     # LEVEL 1 helpers:
     #   These function support the implementation of the level 1 functionality.
     ########################################################################    
-    cdef void _zero_out_matrix(self):
+    cdef _zero_out_matrix(self):
         """
         Set this matrix to be the zero matrix.
         This is only for internal use. 
@@ -545,6 +550,29 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     #    * Other functions (list them here):
     #    * Specialized echelon form
     ########################################################################
+
+    def minimal_polynomial(self, var='x'):
+        if self._nrows != self._ncols:
+            raise ValueError, "matrix must be square"
+        if self._nrows == 0:
+            return self.characteristic_polynomial(var)
+        cdef mpz_t* minpoly
+        cdef size_t n
+        cdef size_t degree
+        _sig_on
+        linbox_minpoly(&minpoly, &degree, self._nrows, self._matrix)
+        _sig_off
+        v = []
+        cdef Integer k
+        for n from 0 <= n <= degree:
+            k = PY_NEW(Integer)
+            mpz_set(k.value, minpoly[n])
+            mpz_clear(minpoly[n])
+            v.append(k)
+        linbox_delete_array(minpoly)
+        R = self._base_ring[var]
+        return R(v)
+            
 
     def height(self):
         """
@@ -1092,12 +1120,30 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
                 mpz_add(s, s, self._matrix[row][c])
             mpz_mul(pr, pr, s)
         cdef Integer z
-        z = PY_NEW(Integer)
+        #z = PY_NEW(Integer)
+        z = Integer.__new__(Integer)        
         mpz_set(z.value, pr)
         mpz_clear(s)
         mpz_clear(pr)
         return z
         
+##     def _linbox(self):
+##         cdef Py_ssize_t i, j
+##         s = '%s %s M\n'%(self._nrows, self._ncols)
+##         for i from 0 <= i < self._nrows:
+##             for j from 0 <= j < self._ncols:
+##                 if mpz_cmp_si(self._matrix[i][j], 0):
+##                     s += '%s %s %s\n'%(i+1,j+1,self.get_unsafe(i,j))
+##         return s
+                
+    def _linbox(self):
+        cdef Py_ssize_t i, j
+        s = '%s %s x'%(self._nrows, self._ncols)
+        for i from 0 <= i < self._nrows:
+            for j from 0 <= j < self._ncols:
+                if mpz_cmp_si(self._matrix[i][j], 0):
+                    s += ' %s'%self.get_unsafe(i,j)
+        return s
 
 
 ###########################################

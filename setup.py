@@ -5,10 +5,18 @@ import distutils.sysconfig, os, sys
 from distutils.core import setup, Extension
 
 
+## Choose cblas library -- note -- make sure to update sage/misc/sagex.py
+## if you change this!! 
 if os.environ.has_key('SAGE_CBLAS'):
     CBLAS=os.environ['SAGE_CBLAS']
+elif os.path.exists('/usr/lib/libcblas.dylib') or \
+     os.path.exists('/usr/lib/libcblas.so'):
+    CBLAS='cblas'
+elif os.path.exists('/usr/lib/libblas.dll.a'):   # untested.
+    CBLAS='blas'
 else:
-    CBLAS='gslcblas'  # possibly (?) slow but *guaranteed* to be available
+    # This is very slow  (?), but *guaranteed* to be available. 
+    CBLAS='gslcblas'  
 
 if len(sys.argv) > 1 and sys.argv[1] == "sdist":
     sdist = True
@@ -144,9 +152,15 @@ matrix_pid_dense = Extension('sage.matrix.matrix_pid_dense',
 matrix_pid_sparse = Extension('sage.matrix.matrix_pid_sparse',
                        ['sage/matrix/matrix_pid_sparse.pyx'])
 
+linbox = Extension('sage.matrix.linbox', ['sage/matrix/linbox.pyx', 'sage/matrix/linbox_cpp.cpp'],
+                   libraries = ['givaro', 'gmpxx', 'gmp', 'ntl', 'linbox', 'stdc++' ],
+                   language='c++'
+                   )
+
 matrix_integer_dense = Extension('sage.matrix.matrix_integer_dense',
-                                 ['sage/matrix/matrix_integer_dense.pyx'],
-                                 libraries = ['gmp'])
+                                 ['sage/matrix/matrix_integer_dense.pyx',
+                                  'sage/matrix/matrix_integer_dense_linbox.cpp'],
+                                 libraries = ['gmp', 'gmpxx', 'ntl', 'givaro', 'linbox', 'stdc++', CBLAS])
 
 matrix_integer_sparse = Extension('sage.matrix.matrix_integer_sparse',
                                   ['sage/matrix/matrix_integer_sparse.pyx'],
@@ -157,7 +171,10 @@ matrix_integer_2x2 = Extension('sage.matrix.matrix_integer_2x2',
                                  libraries = ['gmp'])
 
 matrix_modn_dense = Extension('sage.matrix.matrix_modn_dense',
-                              ['sage/matrix/matrix_modn_dense.pyx'])
+                              ['sage/matrix/matrix_modn_dense.pyx',
+                               'sage/matrix/matrix_modn_dense_linbox.cpp'],
+                              libraries = ['gmp', 'gmpxx', 'ntl', 'givaro', 'linbox', 'stdc++', CBLAS])
+
 
 matrix_modn_sparse = Extension('sage.matrix.matrix_modn_sparse',
                                ['sage/matrix/matrix_modn_sparse.pyx'])
@@ -189,6 +206,7 @@ matrix_cyclo_dense = Extension('sage.matrix.matrix_cyclo_dense',
 matrix_rational_sparse = Extension('sage.matrix.matrix_rational_sparse',
                                    ['sage/matrix/matrix_rational_sparse.pyx'],
                                    libraries = ['gmp'])
+
 matrix_cyclo_sparse = Extension('sage.matrix.matrix_cyclo_sparse',
                                    ['sage/matrix/matrix_cyclo_sparse.pyx'])
 
@@ -259,7 +277,7 @@ ext_modules = [ \
 
     matrix,
 
-    cf, 
+    #cf, 
 
     matrix_dense,
     matrix_generic_dense,
