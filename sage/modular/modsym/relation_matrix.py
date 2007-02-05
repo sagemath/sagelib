@@ -203,7 +203,8 @@ def gens_to_basis_matrix(syms, relation_matrix, mod, field, sparse):
     if not isinstance(mod, list):
         raise TypeError, "mod must be a list"
         
-    tm = misc.verbose() 
+    misc.verbose(str(relation_matrix.parent()))
+    tm = misc.verbose("putting relation matrix in echelon form")
     A = relation_matrix.echelon_form()
     A.set_immutable()
     
@@ -306,11 +307,11 @@ def compute_presentation(syms, sign, field, weight):
            
     """
     R, mod = relation_matrix_wtk_g0(syms, sign, field, weight)
-    if weight==2:
+    #if weight==2:
         # heuristically the hecke operators are quite dense for weight > 2
-        sparse = True
-    else:
-        sparse = False
+    #    sparse = True
+    #else:
+    sparse = False
     B, basis = gens_to_basis_matrix(syms, R, mod, field, sparse)
     return B, basis, mod
 

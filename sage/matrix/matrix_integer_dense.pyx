@@ -3,7 +3,7 @@ Dense matrices over the integer ring.
 """
 
 ######################################################################
-#       Copyright (C) 2006 William Stein
+#       Copyright (C) 2006,2007 William Stein
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
@@ -17,6 +17,15 @@ include "../ext/interrupt.pxi"
 include "../ext/stdsage.pxi"
 include "../ext/gmp.pxi"
 
+cdef extern from "matrix_integer_dense_linbox.h":
+    void linbox_integer_dense_minpoly(mpz_t* *minpoly, size_t* degree,
+                                      size_t n, mpz_t** matrix, int do_minpoly)
+    void linbox_integer_dense_charpoly(mpz_t* *charpoly, size_t* degree,
+                                       size_t n, mpz_t** matrix)
+    void linbox_integer_dense_delete_array(mpz_t* f)
+    int linbox_integer_dense_matrix_matrix_multiply(mpz_t** ans, mpz_t **A, mpz_t **B,
+                                      size_t A_nr, size_t A_nc, size_t B_nr, size_t B_nc)
+    
 ctypedef unsigned int uint
 
 from sage.ext.multi_modular cimport MultiModularBasis
@@ -417,7 +426,36 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     # def __copy__(self):
     # def _multiply_classical(left, matrix.Matrix _right):
     # def _list(self):
-    # def _dict(self):    
+    # def _dict(self):
+
+    def _multiply_linbox(self, Matrix right):
+        """
+        Multiply matrices over ZZ using linbox.
+
+        WARNING: This is very slow right now, i.e., linbox is very slow. 
+
+        EXAMPLES:
+            sage: A = matrix(ZZ,2,3,range(6))
+            sage: A*A.transpose()
+            [ 5 14]
+            [14 50]
+            sage: A._multiply_linbox(A.transpose())
+            [ 5 14]
+            [14 50]        
+        """
+        cdef int e
+        cdef Matrix_integer_dense ans, B
+        ans = self.new_matrix(nrows = self.nrows(), ncols = right.ncols())
+        B = right
+        _sig_on
+        e = linbox_integer_dense_matrix_matrix_multiply(ans._matrix, self._matrix, B._matrix,
+                                          self._nrows, self._ncols,
+                                          right._nrows, right._ncols)
+        _sig_off
+        if e:
+            raise RuntimeError
+        return ans
+
     
     def _multiply_classical(self, Matrix right):
         """
@@ -465,7 +503,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
                     mpz_mul(z, v[k], _right._matrix[k][j])
                     mpz_add(s, s, z)
                 mpz_init_set(entries[l], s)
-                l = l + 1
+                l += 1
         _sig_off
         mpz_clear(s)
         mpz_clear(z)
@@ -545,6 +583,98 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     #    * Other functions (list them here):
     #    * Specialized echelon form
     ########################################################################
+
+    def charpoly(self, var='x', algorithm='linbox'):
+        """
+       INPUT:
+            var -- a variable name
+            algorithm -- 'linbox' (default)
+                         'generic'
+
+        EXAMPLES:
+            sage: A = matrix(ZZ,6, range(36))
+            sage: f = A.charpoly(); f
+            x^6 - 105*x^5 - 630*x^4
+            sage: f(A) == 0
+            True
+            sage: n=20; A = Mat(ZZ,n)(range(n^2))
+            sage: A.charpoly()
+            x^20 - 3990*x^19 - 266000*x^18
+            sage: A.minpoly()
+            x^3 - 3990*x^2 - 266000*x
+        """
+        if algorithm == 'linbox':
+            g = self._charpoly_linbox(var)
+        elif algorithm == 'generic':
+            g = matrix_dense.Matrix_dense.charpoly(self, var)
+        else:
+            raise ValueError, "no algorithm '%s'"%algorithm
+        self.cache('charpoly_%s_%s'%(algorithm, var), g)
+        return g
+
+    def minpoly(self, var='x', algorithm='linbox'):
+        """
+        INPUT:
+            var -- a variable name
+            algorithm -- 'linbox' (default)
+                         'generic'
+
+        EXAMPLES:
+            sage: A = matrix(ZZ,6, range(36))
+            sage: A.minpoly()
+            x^3 - 105*x^2 - 630*x
+            sage: n=6; A = Mat(ZZ,n)([k^2 for k in range(n^2)])
+            sage: A.minpoly()
+            x^4 - 2695*x^3 - 257964*x^2 + 1693440*x
+        """
+        if algorithm == 'linbox':
+            g = self._minpoly_linbox(var)
+        elif algorithm == 'generic':
+            g = self._minpoly_generic(var)
+        else:
+            raise ValueError, "no algorithm '%s'"%algorithm
+        self.cache('minpoly_%s_%s'%(algorithm, var), g)
+        return g
+
+    def _minpoly_linbox(self, var='x'):
+        return self._poly_linbox(var=var, typ='minpoly')
+
+    def _charpoly_linbox(self, var='x'):
+        return self._poly_linbox(var=var, typ='charpoly')
+
+    def _poly_linbox(self, var='x', typ='minpoly'):
+        """
+        INPUT:
+            var -- 'x'
+            typ -- 'minpoly' or 'charpoly'
+        """
+        if self._nrows != self._ncols:
+            raise ValueError, "matrix must be square"
+        if self._nrows <= 1:
+            return matrix_dense.Matrix_dense.charpoly(self, var)
+        cdef mpz_t* poly
+        cdef size_t n
+        cdef size_t degree
+        if typ == 'minpoly':
+            _sig_on
+            linbox_integer_dense_minpoly(&poly, &degree, self._nrows, self._matrix, 1)
+            _sig_off
+        else:
+            _sig_on
+            linbox_integer_dense_charpoly(&poly, &degree, self._nrows, self._matrix)
+            _sig_off
+            
+        v = []
+        cdef Integer k
+        for n from 0 <= n <= degree:
+            k = PY_NEW(Integer)
+            mpz_set(k.value, poly[n])
+            mpz_clear(poly[n])
+            v.append(k)
+        linbox_integer_dense_delete_array(poly)
+        R = self._base_ring[var]
+        return R(v)
+            
 
     def height(self):
         """
@@ -1098,6 +1228,23 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         mpz_clear(pr)
         return z
         
+##     def _linbox(self):
+##         cdef Py_ssize_t i, j
+##         s = '%s %s M\n'%(self._nrows, self._ncols)
+##         for i from 0 <= i < self._nrows:
+##             for j from 0 <= j < self._ncols:
+##                 if mpz_cmp_si(self._matrix[i][j], 0):
+##                     s += '%s %s %s\n'%(i+1,j+1,self.get_unsafe(i,j))
+##         return s
+                
+    def _linbox(self):
+        cdef Py_ssize_t i, j
+        s = '%s %s x'%(self._nrows, self._ncols)
+        for i from 0 <= i < self._nrows:
+            for j from 0 <= j < self._ncols:
+                if mpz_cmp_si(self._matrix[i][j], 0):
+                    s += ' %s'%self.get_unsafe(i,j)
+        return s
 
 
 ###########################################
