@@ -11,15 +11,17 @@ Dense matrices over the integer ring.
 #                  http://www.gnu.org/licenses/
 ######################################################################
 
-from sage.misc.misc import verbose, get_verbose
+from sage.misc.misc import verbose, get_verbose, UNAME
 
 include "../ext/interrupt.pxi"
 include "../ext/stdsage.pxi"
 include "../ext/gmp.pxi"
 
 cdef extern from "matrix_integer_dense_linbox.h":
-    void linbox_integer_dense_minpoly(mpz_t* *minpoly, size_t* degree,
+    void linbox_integer_dense_minpoly_hacked(mpz_t* *minpoly, size_t* degree,
                                       size_t n, mpz_t** matrix, int do_minpoly)
+    void linbox_integer_dense_minpoly(mpz_t* *minpoly, size_t* degree,
+                                      size_t n, mpz_t** matrix)
     void linbox_integer_dense_charpoly(mpz_t* *charpoly, size_t* degree,
                                        size_t n, mpz_t** matrix)
     void linbox_integer_dense_delete_array(mpz_t* f)
@@ -37,7 +39,7 @@ from sage.rings.rational_field import QQ
 from sage.rings.integer_ring import ZZ
 from sage.rings.integer_mod_ring import IntegerModRing
 from sage.rings.polynomial_ring import PolynomialRing
-from sage.structure.element cimport ModuleElement
+from sage.structure.element cimport ModuleElement, RingElement
 
 from matrix_modn_dense import Matrix_modn_dense
 from matrix_modn_dense cimport Matrix_modn_dense
@@ -409,7 +411,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     # LEVEL 2 functionality
     # x * cdef _add_c_impl         
     # x * cdef _sub_c_impl         
-    #   * cdef _mul_c_impl
+    # x * cdef _mul_c_impl
     #   * cdef _cmp_c_impl
     #   * __neg__
     #   * __invert__
@@ -507,6 +509,24 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         _sig_off
         mpz_clear(s)
         mpz_clear(z)
+        return M
+
+    cdef ModuleElement _lmul_c_impl(self, RingElement right):
+        """
+        EXAMPLES:
+            sage: a = matrix(QQ,2,range(6))
+            sage: (3/4) * a
+            [   0  3/4  3/2]
+            [ 9/4    3 15/4]
+        """
+        cdef Py_ssize_t i
+        cdef Integer _x
+        _x = Integer(right)
+        cdef Matrix_integer_dense M
+        M = Matrix_integer_dense.__new__(Matrix_integer_dense, self._parent, None, None, None)
+        for i from 0 <= i < self._nrows * self._ncols:
+            mpz_init(M._entries[i])
+            mpz_mul(M._entries[i], self._entries[i], _x.value)
         return M
 
     cdef ModuleElement _add_c_impl(self, ModuleElement right):
@@ -655,14 +675,24 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         cdef mpz_t* poly
         cdef size_t n
         cdef size_t degree
-        if typ == 'minpoly':
-            _sig_on
-            linbox_integer_dense_minpoly(&poly, &degree, self._nrows, self._matrix, 1)
-            _sig_off
+        if UNAME == "Darwin":
+            if typ == 'minpoly':
+                _sig_on
+                linbox_integer_dense_minpoly_hacked(&poly, &degree, self._nrows, self._matrix,1)
+                _sig_off
+            else:
+                _sig_on
+                linbox_integer_dense_minpoly_hacked(&poly, &degree, self._nrows, self._matrix,0)
+                _sig_off
         else:
-            _sig_on
-            linbox_integer_dense_charpoly(&poly, &degree, self._nrows, self._matrix)
-            _sig_off
+            if typ == 'minpoly':
+                _sig_on
+                linbox_integer_dense_minpoly(&poly, &degree, self._nrows, self._matrix)
+                _sig_off
+            else:
+                _sig_on
+                linbox_integer_dense_charpoly(&poly, &degree, self._nrows, self._matrix)
+                _sig_off
             
         v = []
         cdef Integer k
@@ -764,7 +794,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             for j from 0 <= j < self._ncols:
                 res_row[j] = mpz_fdiv_ui(self_row[j], p)
         return res
-        
+
     def _lift_crt(self, residues):
 
         cdef size_t n, i, j, k
@@ -1246,6 +1276,14 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
                     s += ' %s'%self.get_unsafe(i,j)
         return s
 
+    def rational_reconstruction(self, N):
+        """
+        Use rational reconstruction to lift self to a matrix over the
+        rational numbers (if possible), where we view self as a matrix
+        modulo N.
+        """
+        import misc
+        return misc.matrix_integer_dense_rational_reconstruction(self, N)
 
 ###########################################
 # Helper code for Echelon form algorithm.
