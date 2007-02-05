@@ -25,7 +25,7 @@ include "../ext/stdsage.pxi"
 include "../ext/python_bool.pxi"
 
 from sage.structure.parent_gens cimport ParentWithGens
-import random
+from random import randint, randrange
 
 cdef class Ring(ParentWithGens):
     """
@@ -129,6 +129,15 @@ cdef class Ring(ParentWithGens):
               "in Python, and has the wrong precedence."
 
     def base_extend(self, R):
+        """
+        EXAMPLES:
+            sage: QQ.base_extend(GF(7))
+            Traceback (most recent call last):
+            ...
+            TypeError: no base extension defined
+            sage: ZZ.base_extend(GF(7))
+            Finite Field of size 7
+        """
         if R.has_coerce_map_from(self):
             return R
         raise TypeError, 'no base extension defined'
@@ -271,23 +280,47 @@ cdef class Ring(ParentWithGens):
     def zeta_order(self):
         return self.zeta().multiplicative_order()
 
-    def random_element(self, bound=None):
+    def random_element(self, bound=2):
         """
         Return a random integer coerced into this ring, where the
         integer is chosen uniformly from the interval [-bound,bound].
 
         INPUT:
-            bound -- int or None; (default: None, which defaults to 2.)
+            bound -- integer (default: 2)
+
+            
+        ALGORITHM:
+             -- uses numpy's randint.
         """
-        if bound is None:
-            bound = 2
-        return self(random.randrange(-bound, bound+1))
+        return self(randint(-bound,bound))        
 
 
 cdef class CommutativeRing(Ring):
     """
     Generic commutative ring.
     """
+    def fraction_field(self):
+        """
+        Return the fraction field of self.
+
+        EXAMPLES:
+            sage: R = Integers(389)['x,y']
+            sage: Frac(R)
+            Fraction Field of Polynomial Ring in x, y over Ring of integers modulo 389
+            sage: R.fraction_field()
+            Fraction Field of Polynomial Ring in x, y over Ring of integers modulo 389            
+        """
+        if not self.is_integral_domain():
+            raise TypeError, "self must be an integral domain."
+        if self.__fraction_field is not None:
+            return self.__fraction_field
+        else:
+            import sage.rings.fraction_field
+            K = sage.rings.fraction_field.FractionField_generic(self)
+            self.__fraction_field = K
+            K._assign_names(self.variable_names())
+        return self.__fraction_field
+
     def __pow__(self, n, _):
         """
         Return the free module of rank $n$ over this ring.
@@ -399,19 +432,6 @@ cdef class IntegralDomain(CommutativeRing):
         """
         return True
     
-    def fraction_field(self):
-        """
-        Return the fraction field of self.
-        """
-        if self.__fraction_field is not None:
-            return self.__fraction_field
-        else:
-            import sage.rings.fraction_field
-            K = sage.rings.fraction_field.FractionField_generic(self)
-            self.__fraction_field = K
-            K._assign_names(self.variable_names())
-        return self.__fraction_field
-
     def is_field(self):
         """
         Return True if this ring is a field.
@@ -623,7 +643,7 @@ cdef class FiniteField(Field):
             True
         """
         raise NotImplementedError
-
+        
     def _latex_(self):
         r"""
         EXAMPLES:
@@ -860,7 +880,7 @@ cdef class FiniteField(Field):
             a^9 + a
         """
         if self.degree() == 1:
-            return self(random.randrange(self.order()))
+            return self(randrange(self.order()))
         v = self.vector_space().random_element()
         return self(v)
 
@@ -904,6 +924,9 @@ cdef class Algebra(Ring):
     """
     Generic algebra
     """
+    def __init__(self, base_ring, names=None, normalize=True):
+        ParentWithGens.__init__(self, base_ring, names=names, normalize=normalize)
+
     def characteristic(self):
         """
         Return the characteristic of this algebra, which is the same

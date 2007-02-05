@@ -1,6 +1,8 @@
 r"""
-Rubik's cube(TM) group functions (TM=Rubik's cube is trademarked).
+Rubik's cube group functions
+\label{sec:rubik}
 
+NOTE: ``Rubik's cube'' is trademarked.
 
 AUTHOR:
     - David Joyner (2006-10-21): first version

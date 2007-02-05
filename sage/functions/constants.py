@@ -22,7 +22,7 @@ Mathematica, Maple, Octave, and Singular:
     sage: khinchin      # Khinchin's constant
     khinchin
 
-Suppose for coercion into the various systems means that if, e.g.,
+Support for coercion into the various systems means that if, e.g.,
 you want to create $\pi$ in Maxima and Singular, you don't have
 to figure out the special notation for each system.  You just
 type the following:
@@ -57,7 +57,7 @@ can be coerced into other systems or evaluated.
     sage: maxima(a)
     %pi + 4*%e/5
     sage: a.str(15)      # 15 *bits* of precision
-    '5.315'
+    '5.316'
     sage: gp(a)
     5.316218116357029426750873360            # 32-bit
     5.3162181163570294267508733603616328824  # 64-bit
@@ -110,9 +110,9 @@ EXAMPLES: Arithmetic with constants
     sage: s = (1 + e^pi);s
     (1 + (e^pi))
     sage: R(s)
-    24.140692632779269005729086367948547380266106242600211993444
+    24.140692632779269005729086367948547380266106242600211993445
     sage: R(s-1)
-    23.140692632779269005729086367948547380266106242600211993444
+    23.140692632779269005729086367948547380266106242600211993445
 
     sage: l = (1-log2)/(1+log2);l
     ((1 - log2)/(1 + log2))
@@ -176,7 +176,7 @@ class ConstantRing_class(FunctionRing_class):
 
     def _coerce_impl(self, x):
         if isinstance(x, (sage.rings.integer.Integer,
-                          sage.rings.rational.Rational)):
+                          sage.rings.rational.Rational, int, long)):
             return Constant_gen(x)
         raise TypeError, 'no canonical coercion of element into self.'
 

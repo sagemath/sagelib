@@ -18,13 +18,28 @@ import os, sys
 
 from misc import SPYX_TMP, SAGE_ROOT
 
+def cblas():
+    if os.environ.has_key('SAGE_CBLAS'):
+        return os.environ['SAGE_CBLAS']
+    elif os.path.exists('/usr/lib/libcblas.dylib') or \
+         os.path.exists('/usr/lib/libcblas.so'):
+        return 'cblas'
+    elif os.path.exists('/usr/lib/libblas.dll.a'):   # untested.
+        return 'blas'
+    else:
+        # This is very slow  (?), but *guaranteed* to be available. 
+        return 'gslcblas'  
+    
+
 include_dirs = ['%s/local/include'%SAGE_ROOT,  \
                 '%s/local/include/python%s'%(SAGE_ROOT, sys.version[:3]), \
                 '%s/devel/sage/sage/ext'%SAGE_ROOT, \
                 '%s/devel/sage/'%SAGE_ROOT, \
                 '%s/devel/sage/sage/gsl'%SAGE_ROOT]
 
-standard_libs = ['mpfr', 'gmp', 'gmpxx', 'stdc++', 'pari', 'm', 'mwrank', 'gsl', 'gslcblas', 'ntl', 'csage']
+
+standard_libs = ['mpfr', 'gmp', 'gmpxx', 'stdc++', 'pari', 'm', \
+                 'mwrank', 'gsl', cblas(), 'ntl', 'csage']
 
 offset = 0
 
@@ -78,6 +93,9 @@ def pyx_preparse(s):
     inc = [environ_parse(x.replace('"','').replace("'","")) for x in v] + include_dirs
     s = """
 include "cdefs.pxi"
+""" + s
+    if lang != "c++": # has issues with init_csage()
+        s = """
 include "interrupt.pxi"  # ctrl-c interrupt block support
 include "stdsage.pxi"  # ctrl-c interrupt block support
 """ + s
@@ -103,7 +121,8 @@ def sagex(filename, verbose=False, compile_message=False,
     if filename[-5:] != '.spyx':
         print "File (=%s) must have extension .spyx"%filename
 
-    base = os.path.split(os.path.splitext(filename)[0])[1]
+    clean_filename = sanitize(filename)
+    base = os.path.split(os.path.splitext(clean_filename)[0])[1]
 
     build_dir = '%s/%s'%(SPYX_TMP, base)
     if os.path.exists(build_dir):
@@ -148,8 +167,8 @@ def sagex(filename, verbose=False, compile_message=False,
     # increment the sequence number so will use a different one next time.
     sequence_number[base] += 1
 
-    additional_source_files = ",".join(["'"+os.path.abspath(os.curdir)+"/"+filename+"'" \
-                                        for filename in additional_source_files])
+    additional_source_files = ",".join(["'"+os.path.abspath(os.curdir)+"/"+fname+"'" \
+                                        for fname in additional_source_files])
     
     pyx = '%s/%s.pyx'%(build_dir, name)
     open(pyx,'w').write(F)
@@ -331,3 +350,25 @@ def f(%s):
                                          create_local_c_file=False)
     return d['f']
     
+
+
+def sanitize(f):
+    """
+    Given a filename f, replace it by a filename that is a valid Python
+    module name.
+
+    This means that the characters are all alphanumeric or _'s and
+    doesn't begin with a numeral.
+    """
+    s = ''
+    if f[0].isdigit():
+        s += '_'
+    for a in f:
+        if a.isalnum():
+            s += a
+        else:
+            s += '_'
+    return s
+
+
+

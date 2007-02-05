@@ -58,7 +58,8 @@ Further examples:
 #                  http://www.gnu.org/licenses/
 ####################################################################################
 
-import random, weakref
+import random
+import weakref
 
 import arith
 import field
@@ -87,11 +88,11 @@ from sage.structure.parent_gens import normalize_names, ParentWithGens
 
 import sage.interfaces.gap
 
-import weakref
 
 cache = {}
 
-def FiniteField(order, name=None, modulus=None, names=None, elem_cache=False):
+def FiniteField(order, name=None, modulus=None, names=None,
+                elem_cache=False, check_irreducible=True):
     """
     Return the globally unique finite field of given order with generator
     labeled by the given name and possibly with given modulus.
@@ -103,7 +104,11 @@ def FiniteField(order, name=None, modulus=None, names=None, elem_cache=False):
                    generator of the field will be a root of this
                    polynomial; if not specified the choice of
                    definining polynomials can be arbitrary.
-        elem_cache -- cache all elements to avoid creation time  (default:False)
+        elem_cache -- cache all elements to avoid creation time  (default: order<500)
+        check_irreducible -- verify that the polynomial modulus is irreducible
+
+    ALIAS:
+        You can also use GF instead of FiniteField -- they are identical.
 
     EXAMPLES:
         sage: k.<a> = FiniteField(9); k
@@ -113,11 +118,45 @@ def FiniteField(order, name=None, modulus=None, names=None, elem_cache=False):
         sage: charpoly(a, 'y')
         y^2 + 2*y + 2
 
-    You can also use GF instead of FiniteField -- they are identical.
+        sage: F.<x> = GF(5)[]
+        sage: K.<a> = GF(5**5, name='a', modulus=x^5 - x +1 )
+        sage: f = K.modulus(); f
+        x^5 + 4*x + 1
+        sage: type(f)
+        <class 'sage.rings.polynomial_element_generic.Polynomial_dense_mod_p'>
+
+    The modulus must be irreducible:
+        sage: K.<a> = GF(5**5, name='a', modulus=x^5 - x )
+        Traceback (most recent call last):
+        ...
+        ValueError: finite field modulus must be irreducible but it is not
+
+    You can't accidently fool the constructor into thinking the
+    modulus is irreducible when it isn't mod p, since it actually
+    tests irreducibility modulo p.
+    
+        sage: F.<x> = QQ[]
+        sage: factor(x^5+2)
+        x^5 + 2
+        sage: K.<a> = GF(5**5, name='a', modulus=x^5 + 2 )
+        Traceback (most recent call last):
+        ...
+        ValueError: finite field modulus must be irreducible but it is not
+
+    If you wish to live dangerously, you can tell the constructor not
+    to test irreducibility using check_irreducible=False, but this
+    can easily lead to crashes and hangs -- so do not do it unless
+    you know that the modulus really is irreducible!
+
+        sage: F.<x> = GF(5)[]
+        sage: K.<a> = GF(5**2, name='a', modulus=x^2 + 2, check_irreducible=False)
     """
     if not names is None: name = names
     order = int(order)
     name = normalize_names(1,name)
+    
+    if elem_cache is None:
+        elem_cahce = order < 500
 
     key = (order, name, modulus)
     if cache.has_key(key):
@@ -127,6 +166,12 @@ def FiniteField(order, name=None, modulus=None, names=None, elem_cache=False):
     if arith.is_prime(order):
         K = FiniteField_prime_modn(order)
     else:
+        if check_irreducible and polynomial_element.is_Polynomial(modulus):
+            if modulus.parent().base_ring().characteristic() == 0:
+                p = arith.factor(order)[0][0]
+                modulus = modulus.change_ring(FiniteField(p))
+            if not modulus.is_irreducible():
+                raise ValueError, "finite field modulus must be irreducible but it is not"
         if name is None:
             raise TypeError, "you must specify the generator name"
         if order < 2**16:  

@@ -104,7 +104,26 @@ cdef object the_rational_ring
 the_rational_ring = sage.rings.rational_field.Q
     
 cdef class Rational(sage.structure.element.FieldElement):
+    """
+    A Rational number.
 
+    Rational numbers are implemented using the GMP C library.
+
+    EXAMPLES:
+        sage: a = -2/3
+        sage: type(a)
+        <type 'sage.rings.rational.Rational'>
+        sage: parent(a)
+        Rational Field
+        sage: Rational('1/0')
+        Traceback (most recent call last):
+        ...
+        TypeError: unable to convert 1/0 to a rational        
+        sage: Rational(1.5)
+        3/2
+        sage: Rational('9/6')
+        3/2
+    """
     def __new__(self, x=None, int base=0):
         global the_rational_ring
         mpq_init(self.value)
@@ -149,21 +168,25 @@ cdef class Rational(sage.structure.element.FieldElement):
 
         elif isinstance(x, long):
             mpz_set_pylong(mpq_numref(self.value), x)
-            #s = "%x"%x
-            #mpq_set_str(self.value, s, 16)
             
         elif isinstance(x, integer.Integer):
             set_from_Integer(self, x)
 
         elif isinstance(x, sage.rings.real_mpfr.RealNumber):
+            
             if x == 0:
                 mpq_set_si(self.value, 0, 1)
                 return
             if not base:
                 v = x._pari_().contfrac().contfracpnqn()
                 s = '%s/%s'%(hex(v[0,0]), hex(v[1,0]))
-                if mpq_set_str(self.value, s, 16):
+                n = mpq_set_str(self.value, s, 16)
+                # this mpq_denref business is to program around a bug in GMP, where
+                # it doesn't correctly return an error code in mpq_set_str (or canonicalalize)
+                # for strings with a 0 in the denominator.   In fact, it crashes horribly.
+                if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                     raise TypeError, "unable to convert %s to a rational"%x
+                mpq_canonicalize(self.value)                                    
             else:
                 xstr = x.str(base)
                 if '.' in xstr:
@@ -171,21 +194,21 @@ cdef class Rational(sage.structure.element.FieldElement):
                     p = base**exp
                     pstr = '1'+'0'*exp
                     s = xstr.replace('.','') +'/'+pstr
-                    if mpq_set_str( self.value, s, base):
+                    n = mpq_set_str( self.value, s, base)
+                    if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                         raise TypeError, "unable to convert %s to a rational"%x
                     mpq_canonicalize(self.value)                    
                 else:
-                    if mpq_set_str(self.value, xstr, base):
+                    n = mpq_set_str(self.value, xstr, base)
+                    if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                         raise TypeError, "unable to convert %s to a rational"%x
                     mpq_canonicalize(self.value)
             
         elif isinstance(x, str):
-            _sig_on
-            if mpq_set_str(self.value, x, base):
-                _sig_off
+            n = mpq_set_str(self.value, x, base)
+            if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                 raise TypeError, "unable to convert %s to a rational"%x
             mpq_canonicalize(self.value)
-            _sig_off
             
         elif hasattr(x, "_rational_"):
             set_from_Rational(self, x._rational_())
@@ -194,12 +217,10 @@ cdef class Rational(sage.structure.element.FieldElement):
             s = "%s/%s"%x
             if x[1] == 0:
                 raise ValueError, "denominator must not be 0"
-            _sig_on
             n = mpq_set_str(self.value, s, 0)
-            mpq_canonicalize(self.value)
-            _sig_off
-            if i:
+            if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                 raise TypeError, "unable to convert %s to a rational"%s
+            mpq_canonicalize(self.value)
 
         elif isinstance(x, list) and len(x) == 1:
             self.__set_value(x[0], base)
@@ -207,7 +228,8 @@ cdef class Rational(sage.structure.element.FieldElement):
         elif isinstance(x, sage.libs.pari.all.pari_gen):
             # TODO: figure out how to convert to pari integer in base 16
             s = str(x)
-            if mpq_set_str(self.value, s, 0):
+            n = mpq_set_str(self.value, s, 0)
+            if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                 raise TypeError, "Unable to coerce %s (%s) to Rational"%(x,type(x))
             
         else:
@@ -284,9 +306,6 @@ cdef class Rational(sage.structure.element.FieldElement):
                 mathml(abs(self.numer())), mathml(self.denom()))
             return t
 
-    def _mpfr_(self, R):
-        return R(self.numerator()) / R(self.denominator())
-    
     def _im_gens_(self, codomain, im_gens):
         return codomain._coerce_(self)
 
@@ -389,7 +408,7 @@ cdef class Rational(sage.structure.element.FieldElement):
             return x.sqrt()
         else:
             R = sage.rings.real_mpfr.RealField(bits)
-            return self._mpfr_(R).sqrt()
+            return R(self).sqrt()
 
     def square_root(self):
         r"""
@@ -543,8 +562,10 @@ cdef class Rational(sage.structure.element.FieldElement):
 
     def set_str(self, s, base=10):
         valid = mpq_set_str(self.value, s, base)
-        if valid != 0:
-            raise ValueError, "invalid literal:" + s
+        if valid != 0 or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
+            mpq_set_si(self.value, 0, 1)  # so data is valid -- but don't waste time making backup.
+            raise ValueError, "invalid literal (%s); object set to 0"%s
+        mpq_canonicalize(self.value)
 
     ################################################################
     # Optimized arithmetic
@@ -755,6 +776,17 @@ cdef class Rational(sage.structure.element.FieldElement):
         QQ = self.parent()
         return QQ['x']([-self,1])
 
+    cdef integer.Integer _integer_c(self):
+        if not mpz_cmp_si(mpq_denref(self.value), 1) == 0:
+            raise TypeError, "no coercion of this rational to integer"
+        cdef integer.Integer n
+        n = PY_NEW(integer.Integer)
+        n.set_from_mpz(mpq_numref(self.value))
+        return n
+
+    def _integer_(self):
+        return self._integer_c()
+
     def numer(self):
         """
         Return the numerator of this rational number.
@@ -765,7 +797,7 @@ cdef class Rational(sage.structure.element.FieldElement):
             -5
         """
         cdef integer.Integer n
-        n = integer.Integer()
+        n = PY_NEW(integer.Integer)
         n.set_from_mpz(mpq_numref(self.value))
         return n
     
@@ -782,7 +814,11 @@ cdef class Rational(sage.structure.element.FieldElement):
             sage: x.numerator()
             3
         """
-        return self.numer()
+        cdef integer.Integer n
+        n = PY_NEW(integer.Integer)
+        n.set_from_mpz(mpq_numref(self.value))
+        return n
+
         
     def __int__(self):
         """
@@ -835,7 +871,7 @@ cdef class Rational(sage.structure.element.FieldElement):
             1
         """
         cdef integer.Integer n
-        n = integer.Integer()
+        n = PY_NEW(integer.Integer)
         n.set_from_mpz(mpq_denref(self.value))
         return n
 
@@ -851,7 +887,10 @@ cdef class Rational(sage.structure.element.FieldElement):
             sage: x.denominator()
             1
         """
-        return self.denom()
+        cdef integer.Integer n
+        n = PY_NEW(integer.Integer)
+        n.set_from_mpz(mpq_denref(self.value))
+        return n
 
     def factor(self):
         return sage.rings.rational_field.factor(self)

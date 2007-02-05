@@ -64,9 +64,8 @@ from sage.rings.integer_ring import ZZ
 from sage.rings.integer import Integer
 from sage.rings.arith import factor
 from sage.rings.rational_field import QQ
-from sage.rings.real_field import RR
-from sage.rings.complex_field import CC
-I = CC.gen()
+from sage.rings.real_mpfr import RR
+from sage.rings.all import CC, I
 from math import sin
 from math import cos
 from sage.functions.constants import Pi
@@ -312,9 +311,9 @@ class IndexedSequence(SageObject):
             sage: J = range(5)
             sage: A = [exp(-2*pi*i*I/5) for i in J]
             sage: s = IndexedSequence(A,J)
-            sage: s.dct()
-            Indexed sequence: [2.50000000000011 + 0.00000000000000571764857681955*I, 2.50000000000011 + 0.00000000000000571764857681955*I, 2.50000000000011 + 0.00000000000000571764857681955*I, 2.50000000000011 + 0.00000000000000571764857681955*I, 2.50000000000011 + 0.00000000000000571764857681955*I]
-                indexed by [0, 1, 2, 3, 4]
+            sage: s.dct()    # discrete cosine
+            Indexed sequence: [2.50000000000011 + 0.00000000000000582867087928207*I, 2.50000000000011 + 0.00000000000000582867087928207*I, 2.50000000000011 + 0.00000000000000582867087928207*I, 2.50000000000011 + 0.00000000000000582867087928207*I, 2.50000000000011 + 0.00000000000000582867087928207*I]
+               indexed by [0, 1, 2, 3, 4]
         """
         F = self.base_ring()   ## elements must be coercible into RR
         J = self.index_object()   ## must be = range(N)
@@ -331,8 +330,8 @@ class IndexedSequence(SageObject):
             sage: J = range(5)
             sage: A = [exp(-2*pi*i*I/5) for i in J]
             sage: s = IndexedSequence(A,J)
-            sage: s.dst()
-            Indexed sequence: [0.0000000000000170974345792274 - 2.49999999999915*I, 0.0000000000000170974345792274 - 2.49999999999915*I, 0.0000000000000170974345792274 - 2.49999999999915*I, 0.0000000000000170974345792274 - 2.49999999999915*I, 0.0000000000000170974345792274 - 2.49999999999915*I]
+            sage: s.dst()        # discrete sine
+            Indexed sequence: [0.0000000000000171529457304586 - 2.49999999999915*I, 0.0000000000000171529457304586 - 2.49999999999915*I, 0.0000000000000171529457304586 - 2.49999999999915*I, 0.0000000000000171529457304586 - 2.49999999999915*I, 0.0000000000000171529457304586 - 2.49999999999915*I]
                 indexed by [0, 1, 2, 3, 4]            
         """
         F = self.base_ring()   ## elements must be coercible into RR

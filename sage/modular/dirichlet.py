@@ -413,7 +413,7 @@ class DirichletCharacter(MultiplicativeGroupElement):
             return self.__bernoulli[k]
         N = self.modulus()
         K = self.base_ring()
-        
+
         if N != 1 and self(-1) != K((-1)**k):
             return K(0)
 
@@ -437,10 +437,9 @@ class DirichletCharacter(MultiplicativeGroupElement):
         t = R.gen()
         # g(t) = t/(e^{Nt}-1)
         g = t/((N*t).exp(prec) - 1)
-
+        
         # h(n) = g(t)*e^{nt}
-        h = [0] + [g * ((n*t).exp(prec)) for n in range(1,N+1)]   
-
+        h = [0] + [g * ((n*t).exp(prec)) for n in range(1,N+1)]
         ber = sum([self(a)*h[a][k] for a in range(1,N+1)]) * arith.factorial(k)
         
         self.__bernoulli[k] = ber        
@@ -662,15 +661,15 @@ class DirichletCharacter(MultiplicativeGroupElement):
             sage: G = DirichletGroup(3)
             sage: e = G.0
             sage: e.gauss_sum_numerical()
-            0.000000000000000388578058618804 + 1.73205080756887*I
+            0.000000000000000555111512312578 + 1.73205080756887*I
             sage: abs(e.gauss_sum_numerical())
             1.73205080756887
             sage: sqrt(3)
             1.73205080756887
             sage: e.gauss_sum_numerical(a=2)
-            -0.000000000000000777156117237609 - 1.73205080756887*I
+            -0.00000000000000111022302462515 - 1.73205080756887*I
             sage: e.gauss_sum_numerical(a=2, prec=100)
-            -0.0000000000000000000000000000094663308626521416649407427833 - 1.7320508075688772935274463415*I
+            0.0000000000000000000000000000047331654313260708324703713916 - 1.7320508075688772935274463415*I
             sage: G = DirichletGroup(13)
             sage: e = G.0
             sage: e.gauss_sum_numerical()

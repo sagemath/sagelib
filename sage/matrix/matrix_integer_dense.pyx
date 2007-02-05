@@ -1,5 +1,5 @@
 """
-Dense matrices over the integers
+Dense matrices over the integer ring.
 """
 
 ######################################################################
@@ -17,17 +17,28 @@ include "../ext/interrupt.pxi"
 include "../ext/stdsage.pxi"
 include "../ext/gmp.pxi"
 
+ctypedef unsigned int uint
+
+from sage.ext.multi_modular cimport MultiModularBasis
+cdef MultiModularBasis mm
+mm = MultiModularBasis()
+
 from sage.rings.integer cimport Integer
 from sage.rings.rational_field import QQ
 from sage.rings.integer_ring import ZZ
+from sage.rings.integer_mod_ring import IntegerModRing
 from sage.rings.polynomial_ring import PolynomialRing
 from sage.structure.element cimport ModuleElement
+
+from matrix_modn_dense import Matrix_modn_dense
+from matrix_modn_dense cimport Matrix_modn_dense
 
 import sage.modules.free_module
 
 from matrix cimport Matrix
 
 import matrix_space
+
 
 cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     r"""
@@ -194,7 +205,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             except TypeError:
                 try:
                     # Try to coerce entries to a scalar (an integer)
-                    x = Integer(entries)
+                    x = ZZ(entries)
                     is_list = 0
                 except TypeError:
                     raise TypeError, "entries must be coercible to a list or integer"
@@ -209,7 +220,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             if coerce:
                 for i from 0 <= i < self._nrows * self._ncols:
                     # TODO: Should use an unsafe un-bounds-checked array access here.
-                    x = Integer(entries[i])
+                    x = ZZ(entries[i])
                     # todo -- see integer.pyx and the TODO there; perhaps this could be
                     # sped up by creating a mpz_init_set_sage function.
                     mpz_init_set(self._entries[i], x.value)
@@ -286,7 +297,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             IndexError: matrix index out of range
         """
         cdef Integer z
-        z = Integer.__new__(Integer)
+        z = PY_NEW(Integer)
         mpz_set(z.value, self._matrix[i][j])
         return z
 
@@ -360,7 +371,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     # LEVEL 1 helpers:
     #   These function support the implementation of the level 1 functionality.
     ########################################################################    
-    cdef void _zero_out_matrix(self):
+    cdef _zero_out_matrix(self):
         """
         Set this matrix to be the zero matrix.
         This is only for internal use. 
@@ -470,6 +481,12 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             [ 0  2  4]
             [ 6  8 10]
             [12 14 16]
+            sage: b = MatrixSpace(ZZ,3)(range(9))
+            sage: b.swap_rows(1,2)
+            sage: a+b
+            [ 0  2  4]
+            [ 9 11 13]
+            [ 9 11 13]
         """
         cdef Py_ssize_t i
         
@@ -524,7 +541,6 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     #    * cdef _sub_c_impl
     #    * __deepcopy__
     #    * __invert__
-    #    * _multiply_classical
     #    * Matrix windows -- only if you need strassen for that base
     #    * Other functions (list them here):
     #    * Specialized echelon form
@@ -588,6 +604,70 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         mpz_clear(x)
         
         return 0   # no error occured.
+        
+    def _multiply_multi_modular(left, Matrix_integer_dense right):
+    
+        cdef Integer h
+        cdef mod_int *moduli
+        cdef int i, n
+        
+        h = left.height() * right.height()
+        n = mm.moduli_list_c(&moduli, h.value)
+        res = []
+        for i from 0 <= i < n:
+            res.append(left._mod_int_c(moduli[i]) * right._mod_int_c(moduli[i]))
+        sage_free(moduli)
+        return left._lift_crt(res)
+            
+    def _mod_int(self, modulus):
+        return self._mod_int_c(modulus)
+
+    cdef _mod_int_c(self, mod_int p):
+        cdef Py_ssize_t i, j
+        cdef Matrix_modn_dense res
+        cdef mpz_t* self_row
+        cdef mod_int* res_row
+        res = Matrix_modn_dense.__new__(Matrix_modn_dense, matrix_space.MatrixSpace(IntegerModRing(p), self._nrows, self._ncols, sparse=False), None, None, None)
+        for i from 0 <= i < self._nrows:
+            self_row = self._matrix[i]
+            res_row = res.matrix[i]
+            for j from 0 <= j < self._ncols:
+                res_row[j] = mpz_fdiv_ui(self_row[j], p)
+        return res
+        
+    def _lift_crt(self, residues):
+
+        cdef size_t n, i, j, k
+        cdef Py_ssize_t nr, nc
+        
+        n = len(residues)
+        nr = residues[0].nrows()
+        nc = residues[0].ncols()
+        
+        for b in residues:
+            if not PY_TYPE_CHECK(b, Matrix_modn_dense):
+                raise TypeError, "Can only perform CRT on list of type Matrix_modn_dense."
+        cdef PyObject** res
+        res = FAST_SEQ_UNSAFE(residues)
+
+        cdef mod_int **row_list
+        row_list = <mod_int**>sage_malloc(sizeof(mod_int*) * n)
+        if row_list == NULL:
+            raise MemoryError, "out of memory allocating multi-modular coefficent list"
+        
+        cdef Matrix_integer_dense M
+        M = Matrix_integer_dense.__new__(Matrix_integer_dense, self.matrix_space(nr, nc), None, None, None)
+        
+        _sig_on
+        for i from 0 <= i < nr:
+            for k from 0 <= k < n:
+                row_list[k] = (<Matrix_modn_dense>res[k]).matrix[i]
+            mm.mpz_crt_vec(M._matrix[i], row_list, n, nc)
+        _sig_off
+        
+        sage_free(row_list)
+        return M
+        
 
     def _echelon_in_place_classical(self):
         cdef Matrix_integer_dense E
@@ -996,6 +1076,28 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
                 U[i,n-1] = - U[i,n-1]
         return U
 
+    def prod_of_row_sums(self, cols):
+        cdef Py_ssize_t c, row
+        cdef mpz_t s, pr
+        mpz_init(s)
+        mpz_init(pr)
+
+        mpz_set_si(pr, 1)
+        for row from 0 <= row < self._nrows:
+            tmp = []
+            mpz_set_si(s, 0)
+            for c in cols:
+                if c<0 or c >= self._ncols:
+                    raise IndexError, "matrix column index out of range"
+                mpz_add(s, s, self._matrix[row][c])
+            mpz_mul(pr, pr, s)
+        cdef Integer z
+        z = PY_NEW(Integer)
+        mpz_set(z.value, pr)
+        mpz_clear(s)
+        mpz_clear(pr)
+        return z
+        
 
 
 ###########################################

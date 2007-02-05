@@ -1,2 +1,2 @@
 """nodoctests"""
-version='1.7-ubuntu-32bit'; date='2007-01-12'
+version='2.0'; date='2007-01-28'

@@ -151,63 +151,6 @@ cdef void late_import():
 def get_mpol():
     return MPolynomial
 
-cdef class FiniteField_givaro(FiniteField) #forward declaration
-
-cdef extern from "givaro/givrandom.h":
-    ctypedef struct GivRandom "GivRandom":
-        pass
-
-cdef extern from "givaro/givgfq.h":
-    ctypedef struct intvec "std::vector<unsigned int>":
-        void (* push_back)(int elem)
-
-    ctypedef struct constintvec "const std::vector<unsigned int>"
-
-    intvec intvec_factory "std::vector<unsigned int>"(int len)
-
-cdef extern from "givaro/givgfq.h":
-
-    ctypedef struct GivaroGfq "GFqDom<int>":
-        #attributes
-        unsigned int one
-        unsigned int zero
-        
-        # methods
-        int (* mul)(int r, int a, int b)
-        int (* add)(int r, int a, int b)
-        int (* sub)(int r, int a, int b)
-        int (* div)(int r, int a, int b)
-        int (* inv)(int r, int x)
-        int (* neg)(int r, int x)
-        int (* mulin)(int a, int b)
-        unsigned int (* characteristic)()
-        unsigned int (* cardinality)()
-        int (* exponent)()
-        int (* random)(GivRandom gen, int res)
-        int (* initi "init")(int res, int e)
-        int (* initd "init")(int res, double e)
-        int (* axpyin)(int r, int a, int x)
-        int (* sage_generator)() # SAGE specific method, not found upstream
-        int (* write)(int r, int p)
-        int (* read)(int r, int p)
-        int (* axpy)(int r, int a, int b, int c)
-        int (* axmy)(int r, int a, int b, int c)
-        int (* amxy)(int r, int a, int b, int c)
-        int (* isZero)(int e)
-        int (* isOne)(int e)
-        int (* isunit)(int e)
-
-    GivaroGfq *gfq_factorypk "new GFqDom<int>" (unsigned int p, unsigned int k)
-    # SAGE specific method, not found upstream
-    GivaroGfq *gfq_factorypkp "new GFqDom<int>" (unsigned int p, unsigned int k, intvec poly)
-    GivaroGfq *gfq_factorycopy "new GFqDom<int>"(GivaroGfq orig)
-    GivaroGfq  gfq_deref "*"(GivaroGfq *orig)
-    void delete "delete "(void *o)
-    int gfq_element_factory "GFqDom<int>::Element"()
-
-
-
-cdef class FiniteField_givaroElement(FiniteFieldElement) # forward declaration
 
 cdef FiniteField_givaro parent_object(Element o):
     return <FiniteField_givaro>(o._parent)
@@ -218,18 +161,6 @@ cdef class FiniteField_givaro(FiniteField):
     cardinality must be < 2^16. See FiniteField_ext_pari for larger
     cardinalities.
     """
-
-    # so it is possible to make weakrefs to this finite field     
-    cdef object __weakref__
-    
-    cdef GivaroGfq *objectptr # C++ object
-    
-    cdef object _polynomial_ring 
-    cdef object _prime_subfield
-    cdef object _array
-    cdef object _is_conway
-    cdef object _hash
-    cdef int repr
 
     def __init__(FiniteField_givaro self, q, name="a",  modulus=None, repr="poly", cache=False):
         """
@@ -268,7 +199,7 @@ cdef class FiniteField_givaro(FiniteField):
             sage: -a ^ k.degree()
             a^4 + a^3 + a^2 + 1
             sage: f = k.modulus(); f 
-            a^8 + a^4 + a^3 + a^2 + 1
+            x^8 + x^4 + x^3 + x^2 + 1
 
 
             You may enforce a modulus:
@@ -277,7 +208,7 @@ cdef class FiniteField_givaro(FiniteField):
             sage: f = x^8 + x^4 + x^3 + x + 1 # Rijndael Polynomial
             sage: k.<a> = GF(2^8, modulus=f)
             sage: k.modulus()
-            a^8 + a^4 + a^3 + a + 1
+            x^8 + x^4 + x^3 + x + 1
             sage: a^(2^8)
             a
 
@@ -345,7 +276,7 @@ cdef class FiniteField_givaro(FiniteField):
         if PY_TYPE_CHECK(modulus, list) or PY_TYPE_CHECK(modulus, tuple):
 
             for i from 0 <= i < len(modulus):
-                cPoly.push_back(int(modulus[i]))
+                cPoly.push_back(int( modulus[i] % p ))
 
             _sig_on
             self.objectptr = gfq_factorypkp(p, k,cPoly)
@@ -402,7 +333,7 @@ cdef class FiniteField_givaro(FiniteField):
             sage: type(n)
             <type 'sage.rings.integer.Integer'>        
         """
-        return int(self.order_c())
+        return Integer(self.order_c())
 
     cdef order_c(FiniteField_givaro self):
         return self.objectptr.cardinality()
@@ -838,31 +769,33 @@ cdef class FiniteField_givaro(FiniteField):
             sage: k.polynomial()
             a^4 + 2*a^3 + 2        
         """
-        quo = int(-(self.gen()**(self.degree())))
-        b   = int(self.characteristic())
+        if self._polynomial is None:
+            quo = int(-(self.gen()**(self.degree())))
+            b   = int(self.characteristic())
 
-        ret = []
-        for i in range(self.degree()):
-            ret.append(quo%b)
-            quo = quo/b
-        ret = ret + [1]
-        R = self.polynomial_ring_c()
-        return R(ret)
+            ret = []
+            for i in range(self.degree()):
+                ret.append(quo%b)
+                quo = quo/b
+            ret = ret + [1]
+            R = self.polynomial_ring_c(None)
+            self._polynomial = R(ret)
+        return self._polynomial
 
     def modulus(self):
         r"""
         Return the minimal polynomial of the generator of self in
-        \code{self.polynomial_ring()}.   This is a synonym for
-        \cdoe{self.polynomial()}.
+        \code{self.polynomial_ring('x')}.
 
         EXAMPLES:
-            sage: k = GF(3^4, 'a')
+            sage: k = GF(3^5, 'a')
             sage: k.modulus()
-            a^4 + 2*a^3 + 2
+            x^5 + 2*x + 1
+
             sage: k.polynomial()
-            a^4 + 2*a^3 + 2        
+            a^5 + 2*a + 1        
         """
-        return self.polynomial()
+        return self.polynomial_ring_c("x")(self.polynomial().list())
 
     def _pari_modulus(self):
         """
@@ -873,11 +806,15 @@ cdef class FiniteField_givaro(FiniteField):
         f = pari(str(self.modulus()))
         return f.subst('x', 'a') * pari("Mod(1,%s)"%self.characteristic())
 
-    cdef polynomial_ring_c(self):
+    cdef polynomial_ring_c(self, variable_name):
         if self._polynomial_ring is None:
             from sage.rings.polynomial_ring import PolynomialRing
-            self._polynomial_ring = PolynomialRing(self.prime_subfield_C(),self.variable_name())
-            return self._polynomial_ring
+            if variable_name is None:
+                # todo: is this cache necessary?
+                self._polynomial_ring = PolynomialRing(self.prime_subfield_C(),self.variable_name())
+                return self._polynomial_ring
+            else:
+                return PolynomialRing(self.prime_subfield_C(), variable_name)
         else:
             return self._polynomial_ring
 
@@ -890,7 +827,7 @@ cdef class FiniteField_givaro(FiniteField):
             sage: GF(3^4,'z').polynomial_ring()
             Univariate Polynomial Ring in z over Finite Field of size 3
         """
-        return self.polynomial_ring_c()
+        return self.polynomial_ring_c(None)
 
     def _finite_field_ext_pari_(self):  # todo -- cache
         """
@@ -1171,8 +1108,6 @@ cdef class FiniteField_givaro_iterator:
         a + 1
         1
     """
-    cdef int iterator
-    cdef FiniteField_givaro _parent
     
     def __init__(self, FiniteField_givaro parent):
         self._parent = parent
@@ -1204,8 +1139,6 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
     """
     An element of a (Givaro) finite field.
     """
-    cdef int element
-    cdef object __multiplicative_order
     
     def __init__(FiniteField_givaroElement self, parent ):
         """
@@ -1225,6 +1158,9 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
         """
         self._parent = <ParentWithBase> parent  # explicit case required for C++
         self.element = 0
+        
+    cdef FiniteField_givaroElement _new_c(self, int value):
+        return make_FiniteField_givaroElement(parent_object(self), value)
 
     def __dealloc__(FiniteField_givaroElement self):
         pass
@@ -1409,47 +1345,64 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
         (<FiniteField_givaro>self._parent).objectptr.inv(r, self.element)
         return make_FiniteField_givaroElement((<FiniteField_givaro>self._parent),r)
         
-
-    def __pow__(FiniteField_givaroElement self, int exp, other):
+    def __pow__(FiniteField_givaroElement self, exp, other):
         """
-        Return a power of this element.
-
-        EXAMPLES:
-            sage: k.<a> = GF(9); k
-            Finite Field in a of size 3^2
-            sage: a^5
-            2*a
-            sage: a*a*a*a*a
-            2*a        
+        EXAMPLE: 
+            sage: K.<a> = GF(3^3, 'a')
+            sage: a^3 == a*a*a
+            True
+            sage: b = a+1
+            sage: b^5 == b^2 * b^3
+            True
+            sage: b^(-1) == 1/b
+            True
+            sage: b = K(-1)
+            sage: b^2 == 1
+            True
+            
+        ALGORITHM: 
+            Givaro objects are stored as integers $i$ such that $self=a^i$, where
+            $a$ is a generator of $K$ (though necissarily the one returned by K.gens()). 
+            Now it is trivial to compute $(a^i)^exp = a^(i*exp)$, and reducing the exponent
+            mod the multiplicative order of $K$. 
+            
+        AUTHOR: 
+            Robert Bradshaw
         """
-        #There doesn't seem to exist a power function for FiniteField_givaro. So we
-        #had to write one. It is pretty clumbsy (read: slow) right now
+        _exp = int(exp)
+        if _exp != exp:
+            raise ValueError, "exponent must be an integer"
+        exp = _exp
         
-        cdef int power
-        cdef int i
-        cdef int epow2
-        cdef GivaroGfq *field
+        cdef int r
+        cdef int order
+        cdef FiniteField_givaro field
+        field = <FiniteField_givaro>self._parent
 
-        field = (<FiniteField_givaro>self._parent).objectptr
-
-        exp = exp % ((<FiniteField_givaro>self._parent).order_c()-1)
-        
-        if field.isOne(self.element):
+        if (field.objectptr).isOne(self.element):
             return self
 
-        if exp==0:
-            return make_FiniteField_givaroElement((<FiniteField_givaro>self._parent),field.one)
+        elif exp == 0:
+            return make_FiniteField_givaroElement(field, field.objectptr.one)
 
-        power = field.one
-        i = 0;
-        epow2 = self.element;
-        while (exp>>i) > 0:
-            if (exp>>i) & 1: 
-                field.mulin(power,epow2)
-            field.mulin(epow2,epow2)
-            i = i + 1
+        elif (field.objectptr).isZero(self.element):
+            return make_FiniteField_givaroElement(field, field.objectptr.zero)
+        
+        order = (field.order_c()-1)
+        exp = exp % order
+        
+        r = exp
+        if r == 0:
+            return make_FiniteField_givaroElement(field, field.objectptr.one)
+            
+        r = (r * self.element) % order
+        if r < 0:
+            r = r + order
+        if r == 0:
+            return make_FiniteField_givaroElement(field, field.objectptr.one)
+            
+        return make_FiniteField_givaroElement(field, r)
 
-        return make_FiniteField_givaroElement((<FiniteField_givaro>self._parent),power)
 
 ##     def add(FiniteField_givaroElement self,FiniteField_givaroElement other):
 ##         """
@@ -1540,10 +1493,10 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
         """
         return Integer((<FiniteField_givaro>self._parent).log_to_int(self.element))
 
-    def log(FiniteField_givaroElement self, a):
+    def log(FiniteField_givaroElement self, base):
         """
-        Return the log to the base a of self, i.e., an integer n
-        such that a^n = self.
+        Return the log to the base b of self, i.e., an integer n
+        such that b^n = self.
 
         WARNING:  TODO -- This is currently implemented by solving the discrete
         log problem -- which shouldn't be needed because of how finit field
@@ -1557,7 +1510,8 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
             7        
         """
         q = (<FiniteField_givaro> self.parent()).order_c() - 1
-        return sage.rings.arith.discrete_log_generic(self, a, q)
+        b = self.parent()(base)
+        return sage.rings.arith.discrete_log_generic(self, b, q)
 
     def int_repr(FiniteField_givaroElement self):
         r"""
@@ -1609,7 +1563,7 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
             sage: f = (b^2+1).polynomial(); f
             b + 4
             sage: type(f)
-            <class 'sage.rings.polynomial_element.Polynomial_dense_mod_p'>
+            <class 'sage.rings.polynomial_element_generic.Polynomial_dense_mod_p'>
             sage: parent(f)
             Univariate Polynomial Ring in b over Finite Field of size 5        
         """
@@ -1812,7 +1766,7 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
             return '0*Z(%s)'%F.order_c()
         assert F.degree() > 1
         g = F.multiplicative_generator()
-        n = g.log(self)
+        n = self.log(g)
         return 'Z(%s)^%s'%(F.order_c(), n)
 
     def charpoly(FiniteField_givaroElement self, var):

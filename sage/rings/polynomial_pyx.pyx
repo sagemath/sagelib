@@ -1,5 +1,7 @@
 """
-Polynomial rings.
+Polynomial over QQ
+
+NOTE -- this is no longer used ?! 
 
 AUTHOR:
     -- William Stein (2004): first version
@@ -484,15 +486,19 @@ cdef class Polynomial_modint:
         Pmodint_init(&self.poly, self.poly.p, len(v)+1)
         for i from 0 <= i < len(v):
             self[i] = v[i]
+
     def __pow__(self, n, m):
+        _n = int(n)
+        if _n != n:
+            raise ValueError, "exponent must be an integer"
         ans = Polynomial_modint(self.prime())
         ans[0] = 1
         apow = self
-        while n != 0:
-            if n%2 != 0:
+        while _n != 0:
+            if _n%2 != 0:
                 ans = ans * apow
             apow = apow * apow
-            n = n/2   
+            _n = _n/2   
         return ans
             
 
@@ -1075,9 +1081,6 @@ cdef class Polynomial_rational(sage.structure.element.RingElement):
 
     def __new__(self):
         PQ_init(&self.pq, -1)
-
-    def __init__(self):
-        pass
 
     def __dealloc__(self):
         PQ_clear(&self.pq)

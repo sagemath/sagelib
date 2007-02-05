@@ -581,10 +581,17 @@ cdef class ModuleElement(Element):
     cdef ModuleElement _rmultiply_by_scalar(self, left):
         # left * self, where left need not be a ring element in the base ring
         # This does type checking and canonical coercion then calls _rmul_c_impl.
+        #
+        # INPUT:
+        #    self -- a module element
+        #    left -- a scalar
+        # OUTPUT:
+        #    left * self
+        #
         if PY_TYPE_CHECK(left, Element):
             if (<Element>self)._parent is self._parent._base:
                 # No coercion needed
-                return self._rmul_c(right)
+                return self._rmul_c(left)
             else:
                 # Otherwise we do an explicit canonical coercion.
                 try:
@@ -682,8 +689,7 @@ cdef class ModuleElement(Element):
 
     def _lmul_(self, right):
         return self._lmul_c_impl(right)
-    
-    
+        
     cdef RingElement coerce_to_base_ring(self, x):
         if PY_TYPE_CHECK(x, Element) and (<Element>x)._parent is self._parent._base:
             return x
@@ -831,35 +837,47 @@ cdef class MonoidElement(Element):
         """
         raise NotImplementedError
     
-    def __pow__(self, n, dummy):
-        cdef int i
+    def __pow__(self, nn, dummy):
+        """
+        Retern the (integral) power of self. 
+        """
+        cdef int cn
 
-        if PyFloat_Check(n):
-            raise TypeError, "raising %s to the power of the float %s not defined"%(self, n)
-
-        n = int(n)
+        n = int(nn)
+        if n != nn:
+            raise NotImplementedError, "non-integral exponents not supported"
 
         a = self
-        power = None
         if n < 0:
             n = -n
             a = ~self
-        elif n == 0:
-            return self.parent()(1)
 
-        power = (<Element>self)._parent(1)
+        if n < 4:
+            # These cases will probably be called often
+            # and don't benifit from the code below
+            cn = n
+            if cn == 0:
+                return (<Element>a)._parent(1)
+            elif cn == 1:
+                return a
+            elif cn == 2:
+                return a*a
+            elif cn == 3:
+                return a*a*a
+                
+        # One multiplication can be saved by starting with
+        # the smallest power needed rather than with 1
         apow = a
-        while True:
-            if n&1 > 0:
-                if power is None:
-                    power = apow
-                else:
-                    power = power*apow
+        while n&1 == 0:
+            apow = apow*apow
             n = n >> 1
-            if n != 0:
-                apow = apow*apow
-            else:
-                break
+        power = apow
+        n = n >> 1
+        
+        while n != 0:
+            apow = apow*apow
+            if n&1 != 0: power = power*apow
+            n = n >> 1
             
         return power
 
@@ -888,24 +906,42 @@ cdef class AdditiveGroupElement(ModuleElement):
         
     cdef ModuleElement _lmul_c_impl(self, RingElement right):
         cdef int m
-        m = int(right)  # a little worrisome.
-        if m<0:
-            return (-self)*(-m)
-        if m==1:
-            return self
-        P = self.scheme()(0)
-        if m==0:
-            return P
-        power = P
-        i = 0
-        apow2 = self
-        while ((m>>i) > 0):
-            if((m>>i) & 1):
-                power = power + apow2
-            apow2 = apow2 + apow2
-            i = i + 1
-        return power
-
+        try:
+            m = int(right)  # a little worrisome.
+            if m<0:
+                return (-self)*(-m)
+            if m==1:
+                return self
+            P = self.scheme()(0)
+            if m==0:
+                return P
+            power = P
+            i = 0
+            apow2 = self
+            while ((m>>i) > 0):
+                if((m>>i) & 1):
+                    power = power + apow2
+                apow2 = apow2 + apow2
+                i = i + 1
+            return power
+        except OverflowError:
+            m0 = int(right)
+            if m0<0:
+                return (-self)*(-m0)
+            if m0==1:
+                return self
+            P = self.scheme()(0)
+            if m0==0:
+                return P
+            power = P
+            i = 0
+            apow2 = self
+            while ((m0>>i) > 0):
+                if((m0>>i) & 1):
+                    power = power + apow2
+                apow2 = apow2 + apow2
+                i = i + 1
+            return power
 
 def is_MultiplicativeGroupElement(x):
     """
@@ -994,21 +1030,26 @@ cdef class RingElement(ModuleElement):
         # VERY important special case:
         # (ring element) * (module element that is not a ring element)
         # We don't have to do the other direction, since it is
-        # done in module element __mul__. 
-        if PY_TYPE_CHECK(right, ModuleElement) and not PY_TYPE_CHECK(right, RingElement):
-            # Now self must be a ring element:
-            # If the parent is the same as the base ring, good
-            if (<RingElement>self)._parent is (<ModuleElement>right)._parent._base:
-                return (<ModuleElement>right)._rmul_c(self)
-            else:
-                # Otherwise we have to do an explicit canonical coercion.
-                try:
-                    return (<ModuleElement>right)._rmul_c(
-                        (<Parent>(<ModuleElement>right)._parent._base)._coerce_c(self))
-                except TypeError:
-                    # that failed -- try to base extend right then do the multiply:
-                    right = right.base_extend((<RingElement>self)._parent)
+        # done in module element __mul__.
+        if PY_TYPE_CHECK(right, ModuleElement):
+            if not PY_TYPE_CHECK(right, RingElement):
+                # Now self must be a ring element:
+                # If the parent is the same as the base ring, good
+                if (<RingElement>self)._parent is (<ModuleElement>right)._parent._base:
                     return (<ModuleElement>right)._rmul_c(self)
+                elif PY_TYPE_CHECK(right, Matrix):
+                    return (<Matrix>right)._rmultiply_by_scalar(left)
+                else:
+                    # Otherwise we have to do an explicit canonical coercion.
+                    try:
+                        return (<ModuleElement>right)._rmul_c(
+                            (<Parent>(<ModuleElement>right)._parent._base)._coerce_c(self))
+                    except TypeError:
+                        # that failed -- try to base extend right then do the multiply:
+                        right = right.base_extend((<RingElement>self)._parent)
+                        return (<ModuleElement>right)._rmul_c(self)
+            elif PY_TYPE_CHECK(right, Matrix):  # matrix is a ring element
+                return (<Matrix>right)._rmultiply_by_scalar(self)
         
         # General case. 
         return bin_op_c(self, right, operator.mul)
@@ -1038,6 +1079,74 @@ cdef class RingElement(ModuleElement):
         See extensive documentation at the top of element.pyx.        
         """
         return self._mul_c_impl(right)
+        
+    def __pow__(self, m, dummy):
+        """
+        Retern the (integral) power of self. 
+        
+        EXAMPLE: 
+            sage: a = Integers(389)['x']['y'](37)
+            sage: a^2
+            202
+            sage: a^388
+            1
+            sage: a^(2^120)
+            81
+            sage: a^0
+            1
+            sage: a^1 == a
+            True
+            sage: a^2 * a^3 == a^5
+            True
+            sage: (a^3)^2 == a^6
+            True
+            sage: a^57 * a^43 == a^100
+            True
+            sage: a^(-1) == 1/a
+            True
+            sage: a^200 * a^(-64) == a^136
+            True
+        """
+        cdef int cn
+
+        n = int(m)
+        if n != m:
+            raise ValueError, "n must be an integer"
+
+        if n < 0:
+            n = -n
+            a = ~self
+        else:
+            a = self
+
+        if n < 4:
+            # These cases will probably be called often
+            # and don't benifit from the code below
+            cn = n
+            if cn == 0:
+                return (<Element>a)._parent(1)
+            elif cn == 1:
+                return a
+            elif cn == 2:
+                return a*a
+            elif cn == 3:
+                return a*a*a
+                
+        # One multiplication can be saved by starting with
+        # the smallest power needed rather than with 1
+        apow = a
+        while n&1 == 0:
+            apow = apow*apow
+            n = n >> 1
+        power = apow
+        n = n >> 1
+        
+        while n != 0:
+            apow = apow*apow
+            if n&1 != 0: power = power*apow
+            n = n >> 1
+            
+        return power
 
 
     ##################################
@@ -1133,34 +1242,6 @@ cdef class RingElement(ModuleElement):
         if self.is_zero():
             return True
         raise NotImplementedError
-    
-    def __pow__(self, n, dummy):
-        cdef int i
-        if PyFloat_Check(n):
-            raise TypeError, "raising %s to the power of the float %s not defined"%(self, n)
-
-        n = int(n)
-        try:
-            return self._pow(n)
-        except AttributeError:
-            pass
-
-        a = self
-        power = self.parent()(1)
-        if n < 0:
-            n = -n
-            a = ~self
-        elif n == 0:
-            return power
-        i = 0
-        apow2 = a
-        while (n>>i) > 0:
-            if (n>>i) & 1:
-                power = power * apow2
-            if n == 0: break   # to not waste time doing an extra multiplication/increment
-            apow2 = apow2 * apow2
-            i = i+1
-        return power
 
 
 
@@ -1302,7 +1383,7 @@ cdef have_same_base(Element x, Element y):
 def is_Vector(x):
     return IS_INSTANCE(x, Vector)
 
-cdef class Matrix(ModuleElement):
+cdef class Matrix(AlgebraElement):
     cdef int is_sparse_c(self):
         raise NotImplementedError
     
@@ -1759,6 +1840,7 @@ cdef bin_op_c(x, y, op):
         x1, y1 = canonical_coercion_c(x, y)
         return op(x1,y1)        
     except TypeError, msg:
+        # print msg  # this can be useful for debugging.
         if not op is operator.mul:
             raise TypeError, arith_error_message(x,y,op)
 
@@ -1852,4 +1934,54 @@ def gcd(x,y):
 def xgcd(x,y):
     from sage.rings.arith import xgcd
     return xgcd(x,y)
+
+
+
+
+######################
+
+def generic_power(m, dummy):
+    return generic_power_c(m, dummy)
+
+cdef generic_power_c(m, dummy):
+    cdef int cn
+
+    n = int(m)
+    if n != m:
+        raise ValueError, "n must be an integer"
+
+    if n < 0:
+        n = -n
+        a = ~self
+    else:
+        a = self
+
+    if n < 4:
+        # These cases will probably be called often
+        # and don't benifit from the code below
+        cn = n
+        if cn == 0:
+            return (<Element>a)._parent(1)
+        elif cn == 1:
+            return a
+        elif cn == 2:
+            return a*a
+        elif cn == 3:
+            return a*a*a
+
+    # One multiplication can be saved by starting with
+    # the smallest power needed rather than with 1
+    apow = a
+    while n&1 == 0:
+        apow = apow*apow
+        n = n >> 1
+    power = apow
+    n = n >> 1
+
+    while n != 0:
+        apow = apow*apow
+        if n&1 != 0: power = power*apow
+        n = n >> 1
+
+    return power
 

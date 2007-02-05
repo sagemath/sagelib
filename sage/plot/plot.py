@@ -44,6 +44,7 @@ We construct a plot involving several graphics objects:
 
     sage: G = plot(cos, -5, 5, thickness=5, rgbcolor=(0.5,1,0.5))
     sage: P = polygon([[1,2], [5,6], [5,0]], rgbcolor=(1,0,0))
+    sage: P.save()
 
 Next we construct the reflection of the above polygon about the
 $y$-axis by iterating over the qlist of first-coordinates of the first
@@ -51,6 +52,7 @@ graphic element of $P$ (which is the actual Polygon; note that $P$ is
 a Graphics object, which consists of a single polygon):
 
     sage: Q = polygon([(-x,y) for x,y in P[0]], rgbcolor=(0,0,1))
+    sage: Q.save()
 
 We combine together different graphics objects using "+":
 
@@ -63,6 +65,7 @@ We combine together different graphics objects using "+":
     Polygon defined by 3 points
     sage: list(H[1])
     [(1.0, 2.0), (5.0, 6.0), (5.0, 0.0)]
+    sage: H.save()
 
 We can put text in a graph:
 
@@ -81,6 +84,7 @@ see the first few zeros:
     sage: p2 = plot(lambda t: abs(zeta(0.5+t*I)), 1,27,rgbcolor=hue(0.7))
     sage: p1+p2
     Graphics object consisting of 2 graphics primitives
+    sage: (p1+p2).save()
 
 Here is a pretty graph:
     sage: g = Graphics()
@@ -89,7 +93,7 @@ Here is a pretty graph:
     ...                rgbcolor=hue(i/40+0.4), alpha=0.2)
     ...    g = g + p
     ...
-    sage.: g.show(dpi=200, axes=False)
+    sage: g.save(dpi=200, axes=False)
     
 AUTHORS:
     -- Alex Clemesha and William Stein (2006-04-10): initial version
@@ -695,7 +699,7 @@ class Graphics(SageObject):
 
         #The line below takes away the excessive whitespace around
         #images.  ('figsize' and  'dpi' still work as expected):
-        figure.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95)
+        figure.subplots_adjust(left=0.04, bottom=0.04, right=0.96, top=0.96)
         
         #the incoming subplot instance
         subplot = sub
@@ -709,10 +713,11 @@ class Graphics(SageObject):
 
         ##################################################
         # The below is a work in progress ... trying to
-        # making add axes general ... more work needs to
-        # factor this all out into its own general function
+        # make adding axes general and convient.
+        # possibly more work needs to be done in factoring
+        # this all out into several general functions
         # but for now it will stay here until it is decided
-        # what is the best way for all this -Alex
+        # what is the best way to do this -Alex
         ###################################################
         
         #add all the primitives to the subplot
@@ -736,28 +741,31 @@ class Graphics(SageObject):
             axes = self.__show_axes
 
         self.axes_label(l=axes_label)
-        if axes:
-            #an axes instance
-            sage_axes = Axes(color=self.__axes_color, fontsize=self.__fontsize, axes_label=self.__axes_label, 
-                            axes_label_color=self.__axes_label_color, tick_color=self.__tick_color, 
-                            tick_label_color=self.__tick_label_color, linewidth=self.__axes_width)
+        #construct an Axes instance, see 'axes.py' for relevant code
+        sage_axes = Axes(color=self.__axes_color, fontsize=self.__fontsize, axes_label=self.__axes_label, 
+                         axes_label_color=self.__axes_label_color, tick_color=self.__tick_color, 
+                         tick_label_color=self.__tick_label_color, linewidth=self.__axes_width)
 
         #adjust the xy limits and draw the axes:
-        if not (contour or plotfield or matrixplot) and axes: #the plot is not a contour or field plot
-            if frame: #add the frame axes and the normal axes with no ticks
-                xmin, xmax = self.__xmin, self.__xmax
-                ymin, ymax = self.__ymin, self.__ymax
-                subplot.set_xlim([xmin - 0.05*abs(xmax - xmin), xmax + 0.05*abs(xmax - xmin)])
-                subplot.set_ylim([ymin - 0.05*abs(ymax - ymin), ymax + 0.05*abs(ymax - ymin)])
-                #add a frame to the plot
+        if not (contour or plotfield or matrixplot): #the plot is a 'regular' plot 
+            if frame: #add the frame axes 
+                xmin,xmax,ymin,ymax = self._prepare_axes(xmin, xmax, ymin, ymax)
+                axmin, axmax = xmin - 0.04*abs(xmax - xmin), xmax + 0.04*abs(xmax - xmin)
+                aymin, aymax = ymin - 0.04*abs(ymax - ymin), ymax + 0.04*abs(ymax - ymin)
+                subplot.set_xlim([axmin, axmax])
+                subplot.set_ylim([aymin, aymax])
+                #add a frame to the plot and possibly 'axes_with_no_ticks'
                 sage_axes.add_xy_frame_axes(subplot, xmin, xmax, ymin, ymax, 
-                                        axes_with_no_ticks=True, axes_label=axes_label)
-            else: #regular plot with regular axes
+                                        axes_with_no_ticks=axes, axes_label=axes_label)
+            elif not frame and axes: #regular plot with regular axes
                 xmin,xmax,ymin,ymax = self._prepare_axes(xmin, xmax, ymin, ymax)
                 subplot.set_xlim(xmin, xmax)
                 subplot.set_ylim(ymin, ymax)
                 sage_axes.add_xy_axes(subplot, xmin, xmax, ymin, ymax, axes_label=axes_label)
-
+            else: #regular plot with no axes
+                xmin,xmax,ymin,ymax = self._prepare_axes(xmin, xmax, ymin, ymax)
+                subplot.set_xlim(xmin, xmax)
+                subplot.set_ylim(ymin, ymax)
         elif (contour or plotfield): #contour or field plot in self.__objects, so adjust axes accordingly
             xmin, xmax = self.__xmin, self.__xmax
             ymin, ymax = self.__ymin, self.__ymax
@@ -765,17 +773,13 @@ class Graphics(SageObject):
             subplot.set_ylim([ymin - 0.05*abs(ymax - ymin), ymax + 0.05*abs(ymax - ymin)])
             if axes: #axes=True unless user specifies axes=False
                 sage_axes.add_xy_frame_axes(subplot, xmin, xmax, ymin, ymax, axes_label=axes_label)
-        elif matrixplot: #we have a matrix plot in self.__objects, so adjust axes accordingly
+        else: #we have a 'matrix_plot' in self.__objects, so adjust axes accordingly
             xmin, xmax = self.__xmin, self.__xmax
             ymin, ymax = self.__ymin, self.__ymax
             subplot.set_xlim([xmin - 0.05*abs(xmax - xmin), xmax + 0.05*abs(xmax - xmin)])
             subplot.set_ylim([ymin - 0.05*abs(ymax - ymin), ymax + 0.05*abs(ymax - ymin)])
             if axes: #axes=True unless user specifies axes=False
                 sage_axes.add_xy_matrix_frame_axes(subplot, xmin, xmax, ymin, ymax)
-        else: #regular plot with no axes
-            xmin,xmax,ymin,ymax = self._prepare_axes(xmin, xmax, ymin, ymax)
-            subplot.set_xlim(xmin, xmax)
-            subplot.set_ylim(ymin, ymax)
 
         # You can output in PNG, PS, EPS, PDF, or SVG format, depending on the file extension. 
         # matplotlib looks at the file extension to see what the renderer should be.
@@ -1265,7 +1269,7 @@ class GraphicPrimitive_NetworkXGraph(GraphicPrimitive):
                 2: [ 1.125     ,-0.12867615,],
                 3: [ 0.12743933,-1.125     ,],
                 4: [-1.125     ,-0.50118505,]   }
-        with_labels -- determines whether labels for nodes are plotted
+        vertex_labels -- determines whether labels for nodes are plotted
         node_size -- node size
     
     EXAMPLE:
@@ -1278,12 +1282,12 @@ class GraphicPrimitive_NetworkXGraph(GraphicPrimitive):
         sage: g.axes(False)
         sage: g.save('sage.png')
     """
-    def __init__(self, graph, pos=None, with_labels=True, node_size=300):
+    def __init__(self, graph, pos=None, vertex_labels=True, node_size=300):
         self.__nxg = graph
         if len(self.__nxg) != 0:
             import networkx as NX
             self.__node_size = node_size
-            self.__with_labels = with_labels
+            self.__vertex_labels = vertex_labels
             if pos is None:
                 self.__pos = NX.drawing.spring_layout(self.__nxg)
             else:
@@ -1316,7 +1320,7 @@ class GraphicPrimitive_NetworkXGraph(GraphicPrimitive):
             node_size = float(self.__node_size)
             NX.draw_networkx_nodes(G=self.__nxg, pos=self.__pos, ax=subplot, node_size=node_size)
             NX.draw_networkx_edges(G=self.__nxg, pos=self.__pos, ax=subplot, node_size=node_size)
-            if self.__with_labels:
+            if self.__vertex_labels:
                 labels = {}
                 for v in self.__nxg:
                     labels[v] = str(v)

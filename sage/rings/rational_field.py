@@ -11,7 +11,6 @@ import field
 import ring
 import sage.rings.rational
 import sage.structure.factorization
-import complex_field
 import infinity
 
 from sage.structure.parent_gens import ParentWithGens
@@ -151,7 +150,7 @@ class RationalField(_uniq, field.Field):
         Here's a nice example involving elliptic curves:
             sage: E = EllipticCurve('11a')
             sage: L = E.Lseries_at1(300)[0]; L
-            0.253841860855999
+            0.253841860856000
             sage: O = E.omega(); O
             1.269209304279553421688794              # 32-bit
             1.269209304279553421688794616754547     # 64-bit
@@ -187,9 +186,10 @@ class RationalField(_uniq, field.Field):
                 yield d/n
 
     def complex_embedding(self, prec=53):
+        import complex_field
         CC = complex_field.ComplexField(prec)
         return self.hom([CC(1)])
-    
+
     def gens(self):
         return (self(1), )
 
@@ -248,7 +248,7 @@ class RationalField(_uniq, field.Field):
         """
         return infinity.infinity
     
-    def random_element(self, num_bound=1, den_bound=1):
+    def random_element(self, num_bound=2, den_bound=2):
         """
         EXAMPLES:
             sage: QQ.random_element(10,10)

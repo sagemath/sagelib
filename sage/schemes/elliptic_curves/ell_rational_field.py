@@ -25,6 +25,7 @@ AUTHORS:
 #*****************************************************************************
 
 import ell_point
+import formal_group
 from ell_field import EllipticCurve_field
 
 import sage.groups.all
@@ -36,6 +37,11 @@ import sage.functions.constants as constants
 import sage.modular.modform.constructor
 import sage.modular.modform.element
 from sage.misc.functional import log
+
+# Use some interval arithmetic to guaranty correctness.  We assume
+# that alpha is computed to the precision of a float.
+IR = rings.RIF
+#from sage.rings.interval import IntervalRing; IR = IntervalRing()
 
 import sage.matrix.all as matrix
 import sage.databases.cremona
@@ -576,9 +582,9 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
         EXAMPLES:
             sage: E = EllipticCurve('389a')
-            sage: E.analytic_rank(algorithm='cremona')
-            2
             sage: E.analytic_rank(algorithm='ec')
+            2
+            sage: E.analytic_rank(algorithm='cremona')
             2
             sage: E.analytic_rank(algorithm='rubinstein')
             2
@@ -1340,15 +1346,32 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
     def omega(self):
         """
-        Returns the real period.  This is the correct period in the BSD
-        conjecture, i.e., it is the least real period * 2 when the period
-        lattice is rectangular.
+        Returns the real period.
+
+        If self is given by a \emph{minimal Weierstrass equation} then
+        this is the correct period in the BSD conjecture, i.e., it is
+        the least real period * 2 when the period lattice is
+        rectangular.  
 
         EXAMPLES:
             sage: E = EllipticCurve('37a')
             sage: E.omega()
             5.986917292463919259664019               # 32-bit
             5.986917292463919259664019958905016      # 64-bit
+
+        
+        This is not a minimal model.
+            sage: E = EllipticCurve([0,-432*6^2])
+            sage: E.omega()
+            0.48610938571005642989723045             # 32-bit
+            0.48610938571005642989723045617382554    # 64-bit
+
+        If you were to plug the above omega into the BSD conjecture, you
+        would get nonsense.   The following works though:
+            sage: F = E.minimal_model()
+            sage: F.omega()
+            0.97221877142011285979446091             # 32-bit
+            0.97221877142011285979446091234765108    # 64-bit
         """
         return self.period_lattice()[0] * self.real_components()
 
@@ -1651,7 +1674,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         EXAMPLES:
             sage: E = EllipticCurve('37b')
             sage: E.Lseries_at1(100)
-            (0.725681061935999, 0.00000000000000000000000000000000000000000000152437502288999)
+            (0.725681061936000, 0.00000000000000000000000000000000000000000000152437502288999)
         """
         if self.root_number() == -1:
             return 0
@@ -1777,7 +1800,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         EXAMPLES:
             sage: E = EllipticCurve('389a')
             sage: E.Lambda(1.4+0.5*I, 50)
-            -0.354172680515557 + 0.874518681718910*I
+            -0.354172680515554 + 0.874518681718912*I  
         """
         s = C(s)
         N = self.conductor()
@@ -1808,9 +1831,9 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         EXAMPLES:
             sage: E = EllipticCurve('389a')
             sage: E.Lseries_extended(1 + I, 50)
-            -0.638409959098257 + 0.715495262191409*I
+            -0.638409959098255 + 0.715495262191407*I        
             sage: E.Lseries_extended(1 + 0.1*I, 50)
-            -0.00761216538769283 + 0.000434885704642064*I
+            -0.00761216538769246 + 0.000434885704642074*I   
 
         NOTE: You might also want to use Tim Dokchitser's
         L-function calculator, which is available by typing
@@ -2540,6 +2563,11 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             sage: E.sha_an()
             4
 
+        In this case the input curve is not minimal, and if this function didn't
+        transform it to be minimal, it would give nonsense:
+            sage: E = EllipticCurve([0,-432*6^2])
+            sage: E.sha_an()
+            1
         """
 #            sage: e = EllipticCurve([1, 0, 0, -19491080, -33122512122])   # 15834T2
 #            sage: e.sha_an()                          # takes a long time (way too long!!)
@@ -2551,14 +2579,17 @@ class EllipticCurve_rational_field(EllipticCurve_field):
                 self.__sha_an = int(round(float(self.database_curve().db_extra[4])))
                 return self.__sha_an
             except RuntimeError, AttributeError:
-                pass            
-        eps = self.root_number()
+                pass
+
+        # it's critical to switch to the minimal model.
+        E = self.minimal_model()  
+        eps = E.root_number()
         if eps == 1:
-            L1_over_omega = self.L_ratio()
+            L1_over_omega = E.L_ratio()
             if L1_over_omega == 0:
                 return 0
-            T = self.torsion_subgroup().order()
-            Sha = (L1_over_omega * T * T) / Q(self.tamagawa_product())
+            T = E.torsion_subgroup().order()
+            Sha = (L1_over_omega * T * T) / Q(E.tamagawa_product())
             try:
                 Sha = Z(Sha)
             except ValueError:
@@ -2567,18 +2598,20 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             if not arith.is_square(Sha):
                 raise RuntimeError, \
                       "There is a bug in sha_an, since the computed conjectural order of Sha is %s, which is not a square."%Sha
+            E.__sha_an = Sha
             self.__sha_an = Sha
             return Sha
         
         else:  # rank > 0  (Not provably correct)
-            L1, error_bound = self.Lseries_deriv_at1(10*sqrt(self.conductor()) + 10)
+            L1, error_bound = E.Lseries_deriv_at1(10*sqrt(E.conductor()) + 10)
             if abs(L1) < error_bound:
+                E.__sha_an = 0
                 self.__sha_an = 0
                 return 0   # vanishes to order > 1, to computed precision
-            regulator = self.regulator()   # this could take a *long* time; and could fail...?
-            T = self.torsion_subgroup().order()
-            omega = self.omega()
-            Sha = int(round ( (L1 * T * T) / (self.tamagawa_product() * regulator * omega) ))
+            regulator = E.regulator()   # this could take a *long* time; and could fail...?
+            T = E.torsion_subgroup().order()
+            omega = E.omega()
+            Sha = int(round ( (L1 * T * T) / (E.tamagawa_product() * regulator * omega) ))
             try:
                 Sha = Z(Sha)
             except ValueError:
@@ -2587,6 +2620,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             if not arith.is_square(Sha):
                 raise RuntimeError, \
                       "There is a bug in sha_an, since the computed conjectural order of Sha is %s, which is not a square."%Sha
+            E.__sha_an = Sha
             self.__sha_an = Sha
             return Sha
             
@@ -2812,11 +2846,8 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         EXAMPLE:
             sage: E = EllipticCurve('11a')
             sage: E.heegner_point_height(-7)
-            [0.222270926217, 0.222273662409]
+            [0.22226977 ... 0.22227479]
         """
-        # Use interval arithmetic to guaranty correctness.  We assume
-        # that alpha is computed to the precision of a float.
-        IR = rings.IntervalRing()
 
         if not self.satisfies_heegner_hypothesis(D):
             raise ArithmeticError, "Discriminant (=%s) must be a fundamental discriminant that satisfies the Heegner hypothesis."%D
@@ -2832,6 +2863,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         k_E = prec*sqrt(E.conductor()) + 20
         k_F = prec*sqrt(F.conductor()) + 20
 
+        IR = rings.RealIntervalField(20)  
         MIN_ERR = R('1e-6')   # we assume that regulator and
                             # discriminant, etc., computed to this accuracy.
                             # this should be made more intelligent / rigorous relative
@@ -2853,18 +2885,15 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
     def heegner_index(self, D,  min_p=3, prec=5, verbose=False):
         """
-        Returns the index of the Heegner point on the quadratic twist
-        by D, as computed using the Gross-Zagier formula and/or
-        a point search.
-        
-        Return (an interval that contains) the square of the index of
+        Return an interval that contains the SQUARE of the index of
         the Heegner point in the group of K-rational points *modulo
-        torsion* on the twist of the elliptic curve by D.
-
+        torsion* on the twist of the elliptic curve by D, computed
+        using the Gross-Zagier formula and/or a point search.
+        
         WARNING: This function uses the Gross-Zagier formula.
         When E is 681b and D=-8 for some reason the returned index
         is 9/4 which is off by a factor of 4.   Evidently the
-        GZ formula must be modified in this case.
+        GZ formula must be modified when D=-8.
 
         If 0 is in the interval of the height of the Heegner point
         computed to the given prec, then this function returns 0.
@@ -2887,13 +2916,13 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             sage: E.heegner_discriminants(50)
             [-7, -8, -19, -24, -35, -39, -40, -43]
             sage: E.heegner_index(-7)
-            [0.999993856229, 1.00000616632]
+            [0.99998760 ... 1.0000134]
 
             sage: E = EllipticCurve('37b')
             sage: E.heegner_discriminants(100)
             [-3, -4, -7, -11, -40, -47, -67, -71, -83, -84, -95]
             sage: E.heegner_index(-95)          # long time (1 second)
-            [3.99999236227, 4.00000791569]
+            [3.9999771 ... 4.0000229]
 
         Current discriminants -3 and -4 are not supported:
             sage: E.heegner_index(-3)
@@ -2911,8 +2940,6 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         ht = h0/2
         misc.verbose('Height of heegner point = %s'%ht, tm)
         
-        IR = rings.IntervalRing()
-
         if self.root_number() == 1:
             F = self.quadratic_twist(D)
         else:
@@ -3011,7 +3038,6 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             return -1, D
             
         misc.verbose("Searching up to height = %s"%c)
-        IR = rings.IntervalRing()
         eps = 10e-5
 
         def _bound(P):
@@ -3132,10 +3158,6 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         k_F = 2*sqrt(F.conductor()) + 10
         #k_E = 2
         #k_F = 2
-
-        # Use interval arithmetic to guaranty correctness.  We assume
-        # that alpha is computed to the precision of a float.
-        IR = rings.IntervalRing()
 
         MIN_ERR = 1e-10   # we assume that regulator and
                           # discriminant, etc., computed to this accuracy.
@@ -3554,7 +3576,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         # Find an integer B such that A*B*P reduces to the identity mod p.
         # This is necessary to be able to evaluate sigma(A*B*P) by substituting
         # into the series for sigma.
-        B = arith.LCM(A, self.change_ring(rings.GF(p)).cardinality()) / A
+        B = arith.LCM(A, self.change_ring(rings.GF(p)).cardinality()) // A
         
         # Later, we will be computing $h(P) = h(AB*P)/(AB)^2$. But if $AB$ is
         # divisible by a power of $p$, then this will affect the resulting
@@ -3727,9 +3749,9 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             sage: g = EllipticCurve([-1*(2**4), 3*(2**6)]).padic_sigma(5, 10)
             sage: t = f.parent().gen()
             sage: f(2*t)/2
-             (1 + O(5^7))*t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + O(5^7))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + O(5^7))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
+            (1 + ... + O(5^7))*t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + O(5^7))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + O(5^7))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
             sage: g
-             t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + 5^7 + 2*5^8 + O(5^9))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + 2*5^7 + 3*5^8 + O(5^9))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
+            t + (4 + 3*5 + 3*5^2 + 3*5^3 + 4*5^4 + 4*5^5 + 3*5^6 + 5^7 + 2*5^8 + O(5^9))*t^3 + (3 + 3*5^2 + 5^4 + 2*5^5 + 3*5^6 + 2*5^7 + 3*5^8 + O(5^9))*t^5 + (4 + 5 + 3*5^3 + 2*5^4 + 2*5^5 + 5^6 + O(5^7))*t^7 + (4 + 2*5 + 4*5^2 + 2*5^4 + 4*5^5 + 5^6 + O(5^7))*t^9 + O(t^11)
         
           Test that it returns consistent results over a range of precision:
             sage: max_N = 30   # get up to at least p^2         # long time
@@ -3823,11 +3845,8 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         # in particular we reorganise things to skip the series reversions
         # and compositions (which are inherently asymptotically slower
         # than the other operations).
-
-        # todo: inefficient: the formal differential *includes*
-        # computation of formal_x
-        x = X.formal_x(N+1)               # x = t^{-2} + ...
-        f = X.formal_differential(N+1)    # f = 1 + ...
+        x = X.formal_group().x(N+1)               # x = t^{-2} + ...
+        f = X.formal_group().differential(N+1)    # f = 1 + ...
 
         # todo: I would like to write:
         #     A = -f * ((x + c) * f).integral()
@@ -3898,10 +3917,11 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             # convert x and f to have coefficients over p-adics, so that
             # SAGE keeps track of precision for us (this code is so damn
             # ugly... todo: get some decent coercions written...)
-            x_coeffs = x.unit_part().list()
+            x_coeffs = x.valuation_zero_part().list()
             f_coeffs = f.list()
             xK = S([K(r.lift()) for r in x_coeffs], N+1 - x.valuation())
-            xK = xK * S.gen()**(x.valuation())
+            f = S.gen()**(x.valuation())
+            xK = xK * f
             xK = xK.add_bigoh(N+1)
             fK = S([K(r.lift()) for r in f_coeffs]).add_bigoh(N+1)
             

@@ -187,6 +187,8 @@ class Worksheet:
             C.set_input_text(input)
             C.set_output_text(output, '')
             cells.append(C)
+        if len(cells) == 0:   # there must be at least one cell.
+            cells = [self._new_cell()]
         self.__cells = cells
             
 ##         lines = text.split('\n')
@@ -406,7 +408,15 @@ class Worksheet:
         return len(self.__cells)
 
     def __getitem__(self, n):
-        return self.__cells[n]
+        try:
+            return self.__cells[n]
+        except IndexError:
+            if n >= 0:  # this should never happen -- but for robustness we cover this case.
+                for k in range(len(self.__cells),n+1):
+                    self.__cells.append(self._new_cell())
+                return self.__cells[n]
+            raise IndexError
+            
 
     def get_cell_with_id(self, id):
         for c in self.__cells:
@@ -811,8 +821,11 @@ class Worksheet:
         out = out.rstrip()
         if C.introspect():
             return out
+
+        # this isn't needed anymore !
         # the python error message for list indices is not good enough.
-        out = out.replace('indices must be integers', 'indices must be of type Python int.\n(Hint: Use int(n) to make n into a Python int.)')
+        # out = out.replace('indices must be integers', 'indices must be of type Python int.\n(Hint: Use int(n) to make n into a Python int.)')
+
         out = out.replace("NameError: name 'os' is not defined", "NameError: name 'os' is not defined\nTHERE WAS AN ERROR LOADING THE SAGE LIBRARIES.  Try starting SAGE from the command line to see what the error is.")
 
         try:
@@ -846,7 +859,7 @@ class Worksheet:
         return t
 
     def preparse(self, s):
-        s = preparse_file(s, magic=False, do_time=False,
+        s = preparse_file(s, magic=False, do_time=True,
                           ignore_prompts=False)
         return s
 
@@ -931,16 +944,19 @@ class Worksheet:
             return '%s = load("%s");'%(name, filename)
 
         if filename in files_seen_so_far:
-            return "print 'WARNING: Not loading %s -- would create recursive load'"%filename
+            t = "print 'WARNING: Not loading %s -- would create recursive load'"%filename
         try:
             F = open(filename).read()
         except IOError:
-            t = "print 'Error loading %s -- file not found'"%filename
+            return "print 'Error loading %s -- file not found'"%filename
         else:
             if filename[-3:] == '.py':
                 t = F
             elif filename[-5:] == '.sage':
                 t = self.preparse(F)
+            else:
+                t = "print 'Loading of file \"%s\" has type not implemented.'"%filename
+                
         t = self.do_sage_extensions_preparsing(t,
                           files_seen_so_far + [this_file], filename)
         return t
@@ -1022,6 +1038,10 @@ class Worksheet:
         return s
 
     def check_for_system_switching(self, s, C):
+        r"""
+        Check for input cells that start with \code{%foo},
+        where foo is an object with an eval method.
+        """
         z = s
         s = s.lstrip()
         S = self.system()
@@ -1124,7 +1144,8 @@ class Worksheet:
                 input = '\n'.join(input)
                 
             input += '\n'
-            
+
+        print input
         return input
 
     def notebook(self):
@@ -1209,6 +1230,8 @@ class Worksheet:
             menu += '    <a class="evaluate" onClick="evaluate_all()">Evaluate</a>' + vbar
             menu += '    <a class="hide" onClick="hide_all()">Hide</a>' + vbar
             menu += '    <a class="hide" onClick="show_all()">Show</a>' + vbar
+            #menu += '     <a onClick="show_upload_worksheet_menu()" class="upload_worksheet">Upload</a>' + vbar
+            menu += '     <a href="__upload__.html" class="upload_worksheet">Upload</a>' + vbar
             menu += '    <a class="download_sws" href="%s.sws">Download</a>'%self.filename()
             menu += '  </span>'
 
@@ -1235,11 +1258,17 @@ class Worksheet:
 
     def show_all(self):
         for C in self.__cells:
-            C.set_cell_output_type('wrap')
+            try:
+                C.set_cell_output_type('wrap')
+            except AttributeError:   # for backwards compatibility
+                pass
 
     def hide_all(self):
         for C in self.__cells:
-            C.set_cell_output_type('hidden')
+            try:
+                C.set_cell_output_type('hidden')
+            except AttributeError:
+                pass
 
 
 def ignore_prompts_and_output(s):

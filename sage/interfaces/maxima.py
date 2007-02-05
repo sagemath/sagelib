@@ -477,6 +477,8 @@ class Maxima(Expect):
             except pexpect.TIMEOUT:
                 out = self._expect.before
             #print "out = '%s'"%out
+            if not '(%o' in out:
+                self._expect.expect(self._prompt)
 
         except EOF:
             if self._quit_string() in line:
@@ -1093,7 +1095,7 @@ class MaximaElement(ExpectElement):
             sage: CC(maxima('1+%i'))
              1.00000000000000 + 1.00000000000000*I
             sage: CC(maxima('2342.23482943872+234*%i'))
-             2342.23482943871 + 234.000000000000*I
+             2342.23482943872 + 234.000000000000*I
             sage: ComplexField(10)(maxima('2342.23482943872+234*%i'))
              2300 + 230*I
         """

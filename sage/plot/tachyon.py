@@ -1,10 +1,11 @@
-r""" Interface to the Tachyon Ray Tracer
+r"""
+3D Ray Tracer
 
 AUTHOR:
-    -- John E. Stone (johns@megapixel.com) -- wrote tachyon ray tracer
-    -- William Stein -- sage-tachyon interface
-    -- Joshua Kantor -- 3d function plotting
-    -- Tom Boothby -- 3d function plotting n'stuff
+    -- John E. Stone (johns@megapixel.com): wrote tachyon ray tracer
+    -- William Stein: sage-tachyon interface
+    -- Joshua Kantor: 3d function plotting
+    -- Tom Boothby: 3d function plotting n'stuff
 
 TODO:
    -- clean up trianglefactory stuff

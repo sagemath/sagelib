@@ -201,7 +201,7 @@ def bell_number(n):
     Returns the n-th Bell number (the number of ways to partition a
     set of n elements into pairwise disjoint nonempty subsets).
 
-    If $n\leq 1$, returns $1$.
+    If $n \leq 0$, returns $1$.
     
     Wraps GAP's Bell.
     
@@ -217,7 +217,7 @@ def bell_number(n):
         sage: bell_number(1/3)
         Traceback (most recent call last):
         ...
-        TypeError: Unable to coerce rational (=1/3) to an Integer.
+        TypeError: no coercion of this rational to integer
     """
     ans=gap.eval("Bell(%s)"%ZZ(n))
     return eval(ans)
@@ -337,7 +337,7 @@ def fibonacci(n, algorithm="pari"):
         sage: fibonacci(1/2)
         Traceback (most recent call last):
         ...
-        TypeError: Unable to coerce rational (=1/2) to an Integer.
+        TypeError: no coercion of this rational to integer
     """
     n = ZZ(n)
     if algorithm == 'pari':

@@ -72,7 +72,7 @@ from sage.interfaces.macaulay2 import is_Macaulay2Element
 
 from sage.structure.sage_object import SageObject
 
-from sage.rings.integer_ring import IntegerRing
+from sage.rings.integer_ring import is_IntegerRing
 from sage.rings.integer import Integer
 
 from sage.rings.polynomial_singular_interface import PolynomialRing_singular_repr
@@ -105,7 +105,7 @@ class MPolynomialRing_macaulay2_repr:
                     base_str = "QQ"
                 else:
                     base_str = "ZZ/" + str(self.characteristic())
-            elif isinstance(self.base_ring(), IntegerRing):
+            elif is_IntegerRing(self.base_ring()):
                 base_str = "ZZ"
             else:
                 raise TypeError, "no conversion of to a Macaulay2 ring defined"
@@ -407,7 +407,14 @@ class MPolynomialRing_polydict( MPolynomialRing_macaulay2_repr, MPolynomialRing_
 
         Coerce works and gets the right parent. 
             sage: parent(S2._coerce_(S.0)) is S2
-            True        
+            True
+
+        Coercion to reduce modulo a prime between rings with different variable names:
+            sage: R.<x,y> = PolynomialRing(QQ,2)
+            sage: S.<a,b> = PolynomialRing(GF(7),2)
+            sage: f = x^2 + 2/3*y^3
+            sage: S(f)
+            3*b^3 + a^2        
         """
         if isinstance(x, multi_polynomial_element.MPolynomial_polydict):
             P = x.parent()
@@ -415,13 +422,19 @@ class MPolynomialRing_polydict( MPolynomialRing_macaulay2_repr, MPolynomialRing_
                 return x
             elif P == self:
                 return multi_polynomial_element.MPolynomial_polydict(self, x.element().dict())
-            elif P.variable_names() == self.variable_names():
+            elif len(P.variable_names()) == len(self.variable_names()):
+                # Map the variables in some crazy way (but in order,
+                # of course).  This is here since R(blah) is supposed
+                # to be "make an element of R if at all possible with
+                # no guarantees that this is mathematically solid."
                 K = self.base_ring()
                 D = x.element().dict()
                 for i, a in D.iteritems():
                     D[i] = K(a)
                 return multi_polynomial_element.MPolynomial_polydict(self, D)
-            raise TypeError
+            else:
+                raise TypeError
+
         elif isinstance(x, polydict.PolyDict):
             return multi_polynomial_element.MPolynomial_polydict(self, x)
         elif isinstance(x, fraction_field_element.FractionFieldElement) and x.parent().ring() == self:
