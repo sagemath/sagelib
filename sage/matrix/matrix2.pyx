@@ -29,6 +29,8 @@ import matrix_space
 import berlekamp_massey
 from sage.modules.free_module_element import is_FreeModuleElement
 
+from random import randint
+
 cdef class Matrix(matrix1.Matrix):
     def prod_of_row_sums(self, cols):
         r"""
@@ -1985,10 +1987,71 @@ cdef class Matrix(matrix1.Matrix):
             [3 4 5]
             [6 7 8]
         """
+        return self.matrix_window_c(row, col, nrows, ncols)
+    
+    cdef matrix_window_c(self, Py_ssize_t row, Py_ssize_t col,
+                         Py_ssize_t nrows, Py_ssize_t ncols):
         if nrows == -1:
             nrows = self._nrows - row
             ncols = self._ncols - col
         return matrix_window.MatrixWindow(self, row, col, nrows, ncols)
 
+    def randomize(self, density=1, *args, **kwds):
+        """
+        Randomize density proportion of the entries of this matrix,
+        leaving the rest unchanged.
+
+        INPUT:
+            density -- integer (default: 1) rough measure of the proportion of nonzero
+                       entries in the random matrix
+            *args, **kwds -- rest of parameters may be passed to the random_element function
+                   of the base ring.
+        """
+        density = float(density)
+        if density == 0:
+            return 
+        self.check_mutability()
+        self.clear_cache()
+        
+        R = self.base_ring()
+        zero = R(0)
+
+        cdef Py_ssize_t i, j, nc, num_per_row
+
+        if density == 1:
+            for i from 0 <= i < self._nrows:
+                for j from 0 <= j < self._ncols:
+                    self.set_unsafe(i, j, R.random_element(*args, **kwds))
+        else:
+            nc = self._ncols
+            num_per_row = int(density * nc) + 1
+            for i from 0 <= i < self._nrows:
+                for j from 0 <= j < num_per_row:
+                    self.set_unsafe(i, randint(0,nc-1), R.random_element(*args, **kwds))
+
+
+        
+
 cdef decomp_seq(v):
     return Sequence(v, universe=tuple, check=False, cr=True)
+    
+    
+def cmp_pivots(x,y):
+    """
+    Compare two sequences of pivot columns.
+    If x is short than y, return -1, i.e., x < y, "not as good".
+    If x is longer than y, x > y, "better"
+    If the length is the same then x is better, i.e., x > y
+        if the entries of x are correspondingly >= those of y with
+        one being greater.
+    """
+    if len(x) < len(y):
+        return -1
+    if len(x) > len(y):
+        return 1
+    if x < y:
+        return 1
+    elif x == y:
+        return 0
+    else:
+        return -1

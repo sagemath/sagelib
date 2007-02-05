@@ -19,7 +19,8 @@ Relation matrices for ambient modular symbols spaces.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-SPARSE = True
+#SPARSE = True
+SPARSE = False
 
 import sage.matrix.matrix_space as matrix_space
 import sage.matrix.all

@@ -49,6 +49,17 @@ We compute in a quotient of a polynomial ring over Z/17*Z:
     b^17 + a*b^16
     sage: S(17) == 0                                            # optional
     True
+
+Working with a polynomial ring over ZZ:
+    sage: R.<x,y,z,w> = ZZ['x,y,z,w']             
+    sage: i = ideal(x^2 + y^2 - z^2 - w^2, x-y)
+    sage: j = i^2
+    sage: j.groebner_basis()                                    # optional
+    [y^2 - 2*x*y + x^2, y*w^2 + y*z^2 - 2*y^3 - x*w^2 - x*z^2 + 2*x*y^2, w^4 + 2*z^2*w^2 + z^4 - 4*y^2*w^2 - 4*y^2*z^2 + 4*y^4]
+    sage: y^2 - 2*x*y + x^2 in j                                # optional
+    True
+    sage: 0 in j                                                # optional
+    True
 """
 
 #*****************************************************************************
@@ -189,10 +200,14 @@ class MPolynomialIdeal_singular_repr:
             sage: x^3 + 2*y in I
             True
         """
-        S = singular_default
-        f = S(f)
-        I = self._singular_(S).groebner()
-        g = f.reduce(I, 1)  # 1 avoids tail reduction (page 67 of singular book)
+
+        if self.base_ring() == sage.rings.integer_ring.ZZ:
+            g = self._reduce_using_macaulay2(f)
+        else:
+            S = singular_default
+            f = S(f)
+            I = self._singular_(S).groebner()
+            g = f.reduce(I, 1)  # 1 avoids tail reduction (page 67 of singular book)
         return g.is_zero()
         
     def plot(self):
@@ -514,18 +529,6 @@ class MPolynomialIdeal_singular_repr:
             return f
         return self.ring()(h)
 
-    def _reduce_using_macaulay2(self, f):
-        I = self._macaulay2_()
-        M2 = I.parent()
-        R = self.ring()
-        g = M2(R(f))
-        try:
-            k = M2('%s %% %s'%(g.name(), I.name()))
-        except TypeError:
-            # This is OK, since f is in the right ring -- type error
-            # just means it's in base ring (e.g., a constant)
-            return f
-        return R(k)
 
     def syzygy_module(self):
         r"""
@@ -742,6 +745,18 @@ class MPolynomialIdeal_macaulay2_repr:
             self.__groebner_basis = B
             return B
             
+    def _reduce_using_macaulay2(self, f):
+        I = self._macaulay2_()
+        M2 = I.parent()
+        R = self.ring()
+        g = M2(R(f))
+        try:
+            k = M2('%s %% %s'%(g.name(), I.name()))
+        except TypeError:
+            # This is OK, since f is in the right ring -- type error
+            # just means it's in base ring (e.g., a constant)
+            return f
+        return R(k)
 
 
 class MPolynomialIdeal( MPolynomialIdeal_singular_repr, \

@@ -2311,6 +2311,45 @@ class EllipticCurve_rational_field(EllipticCurve_field):
     ##########################################################
     # Galois Representations
     ##########################################################
+
+    def is_reducible(self, p):
+        """
+        Return True if the mod-p representation attached
+        to E is reducible.
+
+        EXAMPLES:
+            sage: E = EllipticCurve('121a'); E
+            Elliptic Curve defined by y^2 + x*y + y = x^3 + x^2 - 30*x - 76 over Rational Field
+            sage: E.is_reducible(7)
+            False
+            sage: E.is_reducible(11)
+            True
+            sage: EllipticCurve('11a').is_reducible(5)
+            True
+            sage: e = EllipticCurve('11a2')
+            sage: e.is_reducible(5)
+            True
+            sage: e.torsion_order()
+            1        
+        """
+        # we do is_surjective first, since this is
+        # much easier than computing isogeny_class
+        t, why = self.is_surjective(p)  
+        if t == True:
+            return False  # definitely not reducible
+        isogeny_matrix = self.isogeny_class()[ 1 ]
+        v = isogeny_matrix[0]  # first row
+        for a in v:
+            if a != 0 and a % p == 0:
+                return True
+        return False
+
+    def is_irreducible(self, p):
+        """
+        Return True if the mod p represenation is irreducible.
+        """
+        return not self.is_reducible()
+        
     def is_surjective(self, p, A=1000):
         """
         Return True if the mod-p representation attached to E
@@ -2542,7 +2581,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             ell = p
         return self.ap(ell) % p != 0
 
-    def is_good(self, p):
+    def is_good(self, p, check=True):
         """
         Return True if $p$ is a prime of good reduction for $E$.
 
@@ -2551,7 +2590,19 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
         OUTPUT:
             bool
+
+        EXAMPLES:
+            sage: e = EllipticCurve('11a')
+            sage: e.is_good(-8)
+            Traceback (most recent call last):
+            ...
+            ValueError: p must be prime
+            sage: e.is_good(-8, check=False)
+            True
         """
+        if check:
+            if not arith.is_prime(p):
+                raise ValueError, "p must be prime"
         return self.conductor() % p != 0
         
 
@@ -2713,7 +2764,47 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             E.__sha_an = Sha
             self.__sha_an = Sha
             return Sha
-            
+
+    def sha_an_padic(self, p):
+        """
+        Return the power of p that divides Sha(E)(p), according to the
+        p-adic analogue of the BSD conjecture.
+
+        INPUT:
+            p -- a prime 
+
+        OUTPUT:
+            integer -- power of p that conjecturally equals #Sha(E)(p)
+
+        Note that in many cases this conjecture has been proved.
+        """
+        try:
+            return self.__sha_an_padic[p]
+        except AttributeError:
+            self.__sha_an_padic = {}
+        except KeyError:
+            pass
+        
+        if self.is_ordinary(p) and self.is_good(p):
+            S = self._sha_an_padic_good_ordinary(p)
+        else:
+            raise NotImplementedError, "only the good ordinary case is implemented."
+        self.__sha_an_padic[p] = S
+        return S
+
+    def _sha_an_padic_good_ordinary(self, p):
+        """
+        Return the power of p that divides Sha(E)(p), according to the
+        p-adic analogue of the BSD conjecture.
+
+        INPUT:
+            p -- a prime of good ordinary reduction for E
+
+        OUTPUT:
+            integer -- power of p that conjecturally equals #Sha(E)(p)
+        """
+        
+        
         
     def L_ratio(self):
         r"""
@@ -2878,7 +2969,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         Returns a bound on the dimension of Sha(E)[2], computed using
         a 2-descent.
         """
-        S = self.two_selmer_rank()
+        S = self.selmer_rank_bound()
         r = self.rank()
         t = self.two_torsion_rank()
         b = S - r - t
@@ -3144,7 +3235,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             ind = ind2.sqrt()
             misc.verbose("index = %s"%ind)
             # Compute upper bound on square root of index.
-            if ind.length() < 1:
+            if ind.absolute_diameter() < 1:
                 t, i = ind.is_int()
                 if t:   # unique integer in interval, so we've found exact index squared.
                     return arith.prime_divisors(i), D
@@ -3171,7 +3262,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
     def shabound_kolyvagin(self, D=0, regulator=None,
                            ignore_nonsurj_hypothesis=False):
         """
-        Given a fundamental discriminant D (=-3,-4) that satisfies the
+        Given a fundamental discriminant D (!= -3,-4) that satisfies the
         Heegner hypothesis, return a list of primes so that
         Kolyvagin's theorem (as in Gross's paper) implies that any
         prime divisor of $\#Sha$ is in this list.
@@ -3224,6 +3315,27 @@ class EllipticCurve_rational_field(EllipticCurve_field):
                 computed to precision at least $10^{-10}$, i.e., they are
                 correct up to addition or a real number with absolute
                 value less than $10^{-10}$.
+
+        EXAMPLES:
+            sage: E = EllipticCurve('37a')
+            sage: E.shabound_kolyvagin()
+            ([2], 1)
+            sage: E = EllipticCurve('141a')
+            sage: E.sha_an()
+            1
+            sage: E.shabound_kolyvagin()
+            ([2, 7], 49)
+
+        We get no information the curve has rank $2$.
+            sage: E = EllipticCurve('389a')
+            sage: E.shabound_kolyvagin()
+            (0, 0)
+            sage: E = EllipticCurve('681b')
+            sage: E.sha_an()
+            9
+            sage: E.shabound_kolyvagin()
+            ([2, 3], 9)        
+        
         """
         if self.has_cm():
             return 0, 0
@@ -3288,7 +3400,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             t, n = I.is_int()
             if t:
                 break
-            elif I.length() < 1:
+            elif I.absolute_diameter() < 1:
                 raise RuntimeError, "Problem in shabound_kolyvagin; square of index is not an integer -- D=%s, I=%s."%(D,I)
             misc.verbose("Doubling bounds")
             k_E *= 2
@@ -3316,9 +3428,10 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
     def shabound_kato(self):
         """
-        Returns a list p of primes such tha theorems of Kato's and
-        others (e.g., as explained in a paper/thesis of Grigor Grigorov)
-        imply that if p divides $\\#Sha(E)$ then $p$ is in the list.
+        Returns a list p of primes such that the theorems of Kato's
+        and others (e.g., as explained in a paper/thesis of Grigor
+        Grigorov) imply that if p divides $\\#Sha(E)$ then $p$ is in
+        the list.
 
         If L(E,1) = 0, then Kato's theorem gives no information, so
         this function returns False.
@@ -3485,16 +3598,20 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             sage: E.padic_regulator(5, 10)
             1 + 5 + 5^2 + 3*5^5 + 4*5^6 + 5^8 + 5^9 + O(5^10)
 
-          An anomalous case:
+        A rank zero example:
+            sage: EllipticCurve('11a').padic_regulator(3)
+            1        
+
+        An anomalous case:
             sage: E.padic_regulator(53, 10)
             26*53^-2 + 30*53^-1 + 20 + 47*53 + 10*53^2 + 32*53^3 + 9*53^4 + 22*53^5 + 35*53^6 + 30*53^7 + 17*53^8 + 48*53^9 + O(53^10)
 
-          An anomalous case where the precision drops some:
+        An anomalous case where the precision drops some:
             sage: E = EllipticCurve("5077a")
             sage: E.padic_regulator(5, 10)
             5^-2 + 5^-1 + 4 + 2*5 + 2*5^2 + 2*5^3 + 4*5^4 + 2*5^5 + 5^6 + O(5^8)
 
-          Check that answers agree over a range of precisions:
+        Check that answers agree over a range of precisions:
             sage: max_prec = 30    # make sure we get past p^2    # long time
             sage: full = E.padic_regulator(5, max_prec)           # long time
             sage: for prec in range(1, max_prec):                 # long time
@@ -3565,10 +3682,9 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         K = rings.pAdicField(p, prec=prec)
 
         rank = self.rank()
+        M = matrix.matrix(K, rank, rank, 0)
         if rank == 0:
-
-
-            return K(1)
+            return M
 
         basis = self.gens()
 
@@ -3578,7 +3694,6 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         # Use <P, Q> = h(P) + h(Q) - h(P + Q)
 
         point_height = [height(P) for P in basis]
-        M = matrix.matrix(K, rank, rank, 0)
         for i in range(rank):
             for j in range(i, rank):
                 M[i, j] = M[j, i] = point_height[i] + point_height[j] \

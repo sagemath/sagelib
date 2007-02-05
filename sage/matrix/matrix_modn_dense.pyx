@@ -74,9 +74,10 @@ We create a matrix group and coerce it to GAP:
 include "../ext/interrupt.pxi"
 include "../ext/cdefs.pxi"
 include '../ext/stdsage.pxi'
-
-MAX_MODULUS = 46340
+include '../ext/random.pxi'
     
+MAX_MODULUS = 46340
+
 import matrix_window_modn_dense
 
 from sage.rings.arith import is_prime
@@ -84,6 +85,10 @@ from sage.rings.arith import is_prime
 cimport matrix_dense
 cimport matrix
 cimport matrix0
+
+from linbox cimport Linbox
+cdef Linbox linbox
+linbox = Linbox()
 
 from sage.structure.element cimport Matrix
 
@@ -99,7 +104,8 @@ cdef extern from "matrix_modn_dense_linbox.h":
     int  linbox_modn_dense_matrix_matrix_multiply(unsigned long modulus, mod_int **ans, mod_int **A, mod_int **B,
                                                   size_t A_nr, size_t A_nc, size_t B_nr, size_t B_nc)
 
-
+    int linbox_modn_dense_rank(unsigned long modulus,  
+                               mod_int** matrix, size_t nrows, size_t ncols)
 
 from sage.structure.element import ModuleElement
 
@@ -119,6 +125,7 @@ ai = arith_int()
 #                  http://www.gnu.org/licenses/
 ##############################################################################
 
+
 cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):  
     ########################################################################
     # LEVEL 1 functionality
@@ -130,6 +137,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     # x * __richcmp__    -- always the same
     ########################################################################
     def __new__(self, parent, entries, copy, coerce):
+    
         matrix_dense.Matrix_dense.__init__(self, parent)
 
         cdef mod_int p
@@ -137,14 +145,16 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         self.p = p
         if p >= MOD_INT_MAX:
             raise OverflowError, "p (=%s) must be < %s"%(p, MOD_INT_MAX)
-        self.gather = MOD_INT_MAX/(p*p)
-            
+        self.gather = MOD_INT_OVERFLOW/(p*p)
+
+        _sig_on
         self._entries = <mod_int *> sage_malloc(sizeof(mod_int)*self._nrows*self._ncols)
+        _sig_off
         if self._entries == NULL:
            raise MemoryError, "Error allocating matrix"        
 
-        self.matrix = <mod_int **> sage_malloc(sizeof(mod_int*)*self._nrows)
-        if self.matrix == NULL:
+        self._matrix = <mod_int **> sage_malloc(sizeof(mod_int*)*self._nrows)
+        if self._matrix == NULL:
             sage_free(self._entries)
             raise MemoryError, "Error allocating memory"
 
@@ -152,14 +162,14 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         cdef Py_ssize_t i
         k = 0
         for i from 0 <= i < self._nrows:
-            self.matrix[i] = self._entries + k
+            self._matrix[i] = self._entries + k
             k = k + self._ncols
 
     def __dealloc__(self):
-        if self.matrix == NULL: # TODO: should never happen now, right
+        if self._matrix == NULL: # TODO: should never happen now, right
             return
         sage_free(self._entries)
-        sage_free(self.matrix)
+        sage_free(self._matrix)
         
     def __init__(self, parent, entries, copy, coerce):
         
@@ -175,7 +185,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             e = entries   # coerce to an unsigned int
             if e != 0:
                 for i from 0 <= i < self._nrows:
-                    self.matrix[i][i] = e
+                    self._matrix[i][i] = e
             _sig_off
             return
 
@@ -192,14 +202,14 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         if coerce: 
             for i from 0 <= i < self._nrows:
                 if PyErr_CheckSignals(): raise KeyboardInterrupt
-                v = self.matrix[i]
+                v = self._matrix[i]
                 for j from 0 <= j < self._ncols:
                     v[j] = R( <object> w[k])
                     k = k + 1
         else:
             for i from 0 <= i < self._nrows:
                 if PyErr_CheckSignals(): raise KeyboardInterrupt
-                v = self.matrix[i]
+                v = self._matrix[i]
                 for j from 0 <= j < self._ncols:
                     v[j] = int( <object> w[k])
                     k = k + 1
@@ -211,13 +221,13 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         return self._hash()
     
     cdef set_unsafe(self, Py_ssize_t i, Py_ssize_t j, value):
-        self.matrix[i][j] = (<IntegerMod_int> value).ivalue
+        self._matrix[i][j] = (<IntegerMod_int> value).ivalue
 
     cdef get_unsafe(self, Py_ssize_t i, Py_ssize_t j):
         cdef IntegerMod_int n
         n =  IntegerMod_int.__new__(IntegerMod_int)
         IntegerMod_abstract.__init__(n, self._base_ring)
-        n.ivalue = self.matrix[i][j]
+        n.ivalue = self._matrix[i][j]
         return n
 
     ########################################################################
@@ -272,6 +282,9 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             right -- Matrix
 
         """
+        if get_verbose() >= 2:
+            verbose('inbox multiply of %s x %s matrix by %s x %s matrix modulo %s'%(
+                self._nrows, self._ncols, right._nrows, right._ncols, self.p))
         cdef int e
         cdef Matrix_modn_dense ans, B
         
@@ -282,13 +295,15 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
 
         B = right
         _sig_on
-        e = linbox_modn_dense_matrix_matrix_multiply(self.p, ans.matrix, self.matrix, B.matrix,
+        e = linbox_modn_dense_matrix_matrix_multiply(self.p, ans._matrix, self._matrix, B._matrix,
                                           self._nrows, self._ncols,
                                           right._nrows, right._ncols)
         _sig_off
         if e:
             raise RuntimeError
         return ans
+    def _multiply_classical(left, right):
+        return left._multiply_strassen(right, left._ncols + left._nrows)
     
 
     ########################################################################
@@ -351,17 +366,9 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             var -- a variable name
             algorithm -- 'linbox' (default if self.base_ring() is a field)
                          'generic'
-
-        NOTE: Right now, LinBox is disabled until some bugs there (in
-        our wrapper?) are fixed. If you are desparate, call
-        self._charpoly_linbox() directly.
-
-
         """
-
-
         #Disabling LinBox for now
-        if algorithm=='linbox':# and not self.base_ring().is_field():
+        if algorithm=='linbox' and not self.base_ring().is_field():
             algorithm='generic' #LinBox only supports fields
 
         if algorithm == 'linbox':
@@ -401,22 +408,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             raise ValueError, "matrix must be square"
         if self._nrows <= 1:
             return matrix_dense.Matrix_dense.charpoly(self, var)
-        cdef mod_int* poly
-        cdef size_t n
-        cdef size_t degree
-        if typ == 'minpoly':
-            _sig_on
-            linbox_modn_dense_minpoly(self.p, &poly, &degree, self._nrows, self.matrix, 1)
-            _sig_off
-        else:
-            _sig_on
-            linbox_modn_dense_minpoly(self.p, &poly, &degree, self._nrows, self.matrix, 0)
-            _sig_off
-            
-        v = []
-        for n from 0 <= n <= degree:
-            v.append(poly[n])
-        linbox_modn_dense_delete_array(poly)
+        v = linbox.modn_dense_poly(self.p, self._nrows, self._matrix, typ == 'minpoly')
         R = self._base_ring[var]
         return R(v)
 
@@ -447,7 +439,6 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             [ 0  0  0  0]            
             sage: a.pivots()
             [0, 1]
-
         """
 
         if self.p == 2 and algorithm=='linbox':
@@ -460,6 +451,8 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             raise NotImplementedError, "Echelon form not implemented over '%s'."%self.base_ring()
 
         self.check_mutability()
+        self.clear_cache()        
+        
         if algorithm == 'linbox':
             self._echelonize_linbox()
         elif algorithm == 'gauss':
@@ -470,18 +463,15 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     def _echelonize_linbox(self):
         """
         Puts self in row echelon form using LinBox.
-        
         """
         self.check_mutability()
+        self.clear_cache()        
 
         t = verbose('calling linbox echelonize mod %s'%self.p)
-        _sig_on
-        r = linbox_modn_dense_echelonize(self.p,
-                                         self.matrix,
-                                         self._nrows, self._ncols)
-        _sig_off
-        verbose('done with echelonize',t)
-        
+        r = linbox.modn_dense_echelonize(self.p,
+                                    self._matrix,
+                                    self._nrows, self._ncols)
+        verbose('done with linbox mod-p echelonize',t)
         self.cache('in_echelon_form',True)
         self.cache('rank', r)
         self.cache('pivots', self._pivots())
@@ -495,7 +485,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         cdef mod_int* row
         i = 0
         while i < self._nrows: 
-            row = self.matrix[i]
+            row = self._matrix[i]
             for j from i <= j < nc:
                 if row[j] != 0:
                     pivots.append(j)
@@ -507,6 +497,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
 
     def _echelon_in_place_classical(self):
         self.check_mutability()
+        self.clear_cache()        
 
         cdef Py_ssize_t start_row, c, r, nr, nc, i
         cdef mod_int p, a, a_inverse, b
@@ -514,7 +505,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
 
         start_row = 0
         p = self.p
-        m = self.matrix
+        m = self._matrix
         nr = self._nrows
         nc = self._ncols
         pivots = []
@@ -552,7 +543,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         cdef mod_int* v
         cdef Py_ssize_t i
         p = self.p
-        v = self.matrix[row]
+        v = self._matrix[row]
         for i from start_col <= i < self._ncols:
             v[i] = (v[i]*multiple) % p
 
@@ -596,7 +587,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         cdef Py_ssize_t i
         p = self.p
         for i from start_row <= i < self._nrows:
-            self.matrix[i][col] = (self.matrix[i][col]*multiple) % p
+            self._matrix[i][col] = (self._matrix[i][col]*multiple) % p
 
     cdef add_multiple_of_row_c(self,  Py_ssize_t row_to, Py_ssize_t row_from, multiple,
                                Py_ssize_t start_col):
@@ -608,8 +599,8 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         cdef mod_int *v_from, *v_to
 
         p = self.p
-        v_from = self.matrix[row_from]
-        v_to = self.matrix[row_to]
+        v_from = self._matrix[row_from]
+        v_to = self._matrix[row_to]
 
         cdef Py_ssize_t i, nc
         nc = self._ncols
@@ -625,7 +616,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         cdef mod_int  p
         cdef mod_int **m
         
-        m = self.matrix
+        m = self._matrix
         p = self.p
         
         cdef Py_ssize_t i, nr
@@ -635,15 +626,15 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
 
     cdef swap_rows_c(self, Py_ssize_t row1, Py_ssize_t row2):
         cdef mod_int* temp
-        temp = self.matrix[row1]
-        self.matrix[row1] = self.matrix[row2]
-        self.matrix[row2] = temp
+        temp = self._matrix[row1]
+        self._matrix[row1] = self._matrix[row2]
+        self._matrix[row2] = temp
     
     cdef swap_columns_c(self, Py_ssize_t col1, Py_ssize_t col2):
         cdef Py_ssize_t i, nr
         cdef mod_int t
         cdef mod_int **m
-        m = self.matrix
+        m = self._matrix
         nr = self._nrows
         for i from 0 <= i < self._nrows:
             t = m[i][col1]
@@ -665,7 +656,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         n = self._nrows
 
         cdef mod_int **h
-        h = self.matrix
+        h = self._matrix
 
         cdef mod_int p, r, t, t_inv, u
         cdef Py_ssize_t i, j, m
@@ -751,29 +742,68 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         
         cdef Matrix_modn_dense c
         c = self.new_matrix(nrows=n+1,ncols=n+1)    # the 0 matrix
-        c.matrix[0][0] = 1
+        c._matrix[0][0] = 1
         for m from 1 <= m <= n:
             # Set the m-th row of c to (x - H[m-1,m-1])*c[m-1] = x*c[m-1] - H[m-1,m-1]*c[m-1]
             # We do this by hand by setting the m-th row to c[m-1]
             # shifted to the right by one.  We then add
             # -H[m-1,m-1]*c[m-1] to the resulting m-th row.
             for i from 1 <= i <= n:
-                c.matrix[m][i] = c.matrix[m-1][i-1]
+                c._matrix[m][i] = c._matrix[m-1][i-1]
             # the p-.. below is to keep scalar normalized between 0 and p.
-            c._add_multiple_of_row_c(m, m-1, p - H.matrix[m-1][m-1], 0)
+            c._add_multiple_of_row_c(m, m-1, p - H._matrix[m-1][m-1], 0)
             t = 1
             for i from 1 <= i < m:
-                t = (t*H.matrix[m-i][m-i-1]) % p
+                t = (t*H._matrix[m-i][m-i-1]) % p
                 # Set the m-th row of c to c[m] - t*H[m-i-1,m-1]*c[m-i-1]
-                c._add_multiple_of_row_c(m, m-i-1, p - (t*H.matrix[m-i-1][m-1])%p, 0)
+                c._add_multiple_of_row_c(m, m-i-1, p - (t*H._matrix[m-i-1][m-1])%p, 0)
                 
         # The answer is now the n-th row of c.
         v = []
         for i from 0 <= i <= n:
-            v.append(int(c.matrix[n][i]))
+            v.append(int(c._matrix[n][i]))
         R = self._base_ring[var]    # polynomial ring over the base ring
         return R(v)
+
+    def rank(self):
+        if self.p > 2:
+            x = self.fetch('rank')
+            if not x is None:
+                return x
+            r = linbox_modn_dense_rank(self.p, self._matrix, self._nrows, self._ncols)
+            self.cache('rank', r)
+            return r
+        else:
+            # linbox is very buggy for p=2
+            return matrix_dense.Matrix_dense.rank(self)
     
+    def randomize(self, density=1):
+        """
+        Randomize density proportion of the entries of this matrix,
+        leaving the rest unchanged.
+        """
+        density = float(density)
+        if density == 0:
+            return 
+
+        self.check_mutability()
+        self.clear_cache()
+
+        cdef int nc
+        if density == 1:
+            for i from 0 <= i < self._nrows*self._ncols:
+                self._entries[i] = random() % self.p
+        else:
+            density = float(density)
+            nc = self._ncols
+            num_per_row = int(density * nc)
+            _sig_on
+            for i from 0 <= i < self._nrows:
+                for j from 0 <= j < num_per_row:
+                    k = random()%nc
+                    self._matrix[i][k] = random() % self.p
+            _sig_off
+
     cdef int _strassen_default_cutoff(self, matrix0.Matrix right) except -2:
         # TODO: lots of testing
         return 100
@@ -781,8 +811,9 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     # TODO: TEMPORARILY DISABLED due to bug on 64-bit sage.math:
     #  A = matrix(Integers(389),4,range(16)); A._echelon_strassen(4)
     # *** glibc detected *** free(): invalid next size (fast): 0x0000000000fb15e0 ***
-    def xxx_matrix_window(self, Py_ssize_t row=0, Py_ssize_t col=0,
-                      Py_ssize_t nrows=-1, Py_ssize_t ncols=-1):
+    # due to error in set_to memcpy on 64-bit
+    cdef matrix_window_c(self, Py_ssize_t row, Py_ssize_t col,
+                        Py_ssize_t nrows, Py_ssize_t ncols):
         """
         Return the requested matrix window.
 
@@ -806,4 +837,6 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             nrows = self._nrows - row
             ncols = self._ncols - col
         return matrix_window_modn_dense.MatrixWindow_modn_dense(self, row, col, nrows, ncols)
+
+
 

@@ -129,7 +129,7 @@ givaro_gfq = Extension('sage.rings.finite_field_givaro',
 
 qd = Extension('sage.rings.real_qdrf',
                        sources = ["sage/rings/real_qdrf.pyx"],
-                       libraries = ['qd', 'm', 'stdc++', ], 
+                       libraries = ['qd', 'm', 'stdc++', ],
                        language='c++'
                        )
 
@@ -171,10 +171,15 @@ matrix_integer_2x2 = Extension('sage.matrix.matrix_integer_2x2',
                                  ['sage/matrix/matrix_integer_2x2.pyx'],
                                  libraries = ['gmp'])
 
+linbox = Extension('sage.matrix.linbox',
+                   ['sage/matrix/linbox.pyx',
+                    'sage/matrix/matrix_modn_dense_linbox.cpp'],
+                   libraries = ['linbox', 'ntl', 'gmp', 'gmpxx', 'stdc++', 'givaro', CBLAS])
+
 matrix_modn_dense = Extension('sage.matrix.matrix_modn_dense',
                               ['sage/matrix/matrix_modn_dense.pyx',
                                'sage/matrix/matrix_modn_dense_linbox.cpp'],
-                              libraries = ['gmp', 'gmpxx', 'ntl', 'linbox', 'stdc++', 'givaro', CBLAS])
+                              libraries = ['linbox', 'ntl', 'gmp', 'gmpxx', 'stdc++', 'givaro', CBLAS])
 
 matrix_modn_sparse = Extension('sage.matrix.matrix_modn_sparse',
                                ['sage/matrix/matrix_modn_sparse.pyx'])
@@ -188,12 +193,12 @@ matrix_field_sparse = Extension('sage.matrix.matrix_field_sparse',
 matrix_rational_dense = Extension('sage.matrix.matrix_rational_dense',
                                   ['sage/matrix/matrix_rational_dense.pyx',
                                    'sage/matrix/matrix_rational_dense_linbox.cpp'],
-                                  libraries = ['gmp', 'gmpxx', 'ntl', 'linbox', 'stdc++', 'givaro', CBLAS])
+                                 libraries = ['linbox', 'ntl', 'gmp', 'gmpxx', 'stdc++', 'givaro', CBLAS])
 
 matrix_integer_dense = Extension('sage.matrix.matrix_integer_dense',
                                  ['sage/matrix/matrix_integer_dense.pyx',
                                   'sage/matrix/matrix_integer_dense_linbox.cpp'],
-                                 libraries = ['gmp', 'gmpxx', 'ntl', 'linbox', 'stdc++', 'givaro', CBLAS])
+                                  libraries = ['linbox', 'ntl', 'gmp', 'gmpxx', 'stdc++', 'givaro', CBLAS])
 
 matrix_real_double_dense=Extension('sage.matrix.matrix_real_double_dense',
    ['sage/matrix/matrix_real_double_dense.pyx'],libraries=['gsl',CBLAS],
@@ -225,6 +230,9 @@ free_module_element = Extension('sage.modules.free_module_element',
                                 ['sage/modules/free_module_element.pyx'])
 
 ################ GSL wrapping ######################
+gsl_probability=Extension('sage.gsl.probability_distribution',['sage/gsl/probability_distribution.pyx'],define_macros=[('GSL_DISABLE_DEPRECATED','1')])
+gsl_integration=Extension('sage.gsl.integration',['sage/gsl/integration.pyx'],define_macros=[('GSL_DISABLE_DEPRECATED','1')], libraries=['gsl',CBLAS])
+
 gsl_ode = Extension('sage.gsl.ode',['sage/gsl/ode.pyx'],libraries=['gsl',CBLAS],define_macros=[('GSL_DISABLE_DEPRECATED','1')])
 
 gsl_fft = Extension('sage.gsl.fft',
@@ -310,6 +318,7 @@ ext_modules = [ \
      matrix_real_double_dense,
      matrix_complex_double_dense,
      solve,
+     linbox,
      matrix_modn_dense,
      matrix_modn_sparse,
      givaro_gfq, \
@@ -326,10 +335,11 @@ ext_modules = [ \
     gsl_fft,
     gsl_interpolation,
     gsl_callback,
-
+    #gsl_probability,
+    gsl_integration,
     real_double,
     complex_double,
-    #qd,   # not worth it, since it is slower than mpfr!
+    #qd,   
 
     complex_number,
 

@@ -39,10 +39,10 @@ def matrix_modn_dense_lift(Matrix_modn_dense A):
     cdef mod_int* A_row
     for i from 0 <= i < A._nrows:
         L_row = L._matrix[i]
-        A_row = A.matrix[i]
+        A_row = A._matrix[i]
         for j from 0 <= j < A._ncols:
             mpz_init_set_si(L_row[j], A_row[j])
-            
+    L._initialized = 1        
     return L
     
 
@@ -127,12 +127,13 @@ def matrix_rational_echelon_form_multimodular(Matrix self, height_guess=None, pr
     else:
         M = height_guess + 1
 
-    p = previous_prime(matrix_modn_dense.MAX_MODULUS + 1)
+    p = matrix_modn_dense.MAX_MODULUS + 1
     X = []
     best_pivots = []        
     prod = 1
     problem = 0
     while True:
+        p = previous_prime(p)
         while prod < M:
             problem = problem + 1
             if problem > 50:
@@ -145,6 +146,20 @@ def matrix_rational_echelon_form_multimodular(Matrix self, height_guess=None, pr
             t = verbose("time to reduce matrix mod p:",t, level=2)
             A.echelonize()
             t = verbose("time to put reduced matrix in echelon form:",t, level=2)
+
+            # a very worthwhile check (we will extend the algorithm to
+            # switch to a system solving method in the nonsquare full
+            # rank case at some point).
+            if self._nrows == self._ncols and len(A.pivots()) == self._nrows:
+                verbose("done: the echelon form mod p is the identity matrix")
+                E = self.parent().identity_matrix()
+                E.cache('pivots', range(self._nrows))
+                E.cache('in_echelon_form', True)
+                self.cache('in_echelon_form', True)
+                self.cache('echelon_form', E)
+                self.cache('pivots', range(self._nrows))
+                return E
+                
             c = cmp_pivots(best_pivots, A.pivots())
             if c <= 0:
                 best_pivots = A.pivots()
@@ -154,26 +169,28 @@ def matrix_rational_echelon_form_multimodular(Matrix self, height_guess=None, pr
                 # do not save A since it is bad.
                 if LEVEL > 1:            
                     verbose("Excluding this prime (bad pivots).")
-            p = previous_prime(p)
             t = verbose("time for pivot compare", t, level=2)
+            p = previous_prime(p)
         # Find set of best matrices.
         Y = []
         # recompute product, since may drop bad matrices            
         prod = 1    
         for i in range(len(X)):                
             if cmp_pivots(best_pivots, X[i].pivots()) <= 0:
-                Y.append(X[i])
+                Y.append((matrix_modn_dense_lift(X[i]), X[i].base_ring().order()))
                 prod = prod * X[i].base_ring().order()
         try:                
-            t = verbose("start crt and rr", level=2)
-            a = CRT_basis([w[i].base_ring().order() for w in Y])
+            t = verbose("start crt linear combination", level=2)
+            a = CRT_basis([w[1] for w in Y])
             # take the linear combination of the lifts of the elements
             # of Y times coefficients in a
-            L = a[0]*(Y[0].lift())
+            L = a[0]*(Y[0][0])
             for j in range(1,len(Y)):
-                L += a[j]*(Y[j].lift())
-            verbose("crt and rr time is",t, level=2)                
+                L += a[j]*(Y[j][0])
+            t = verbose("crt time is",t, level=2)
             E = L.rational_reconstruction(prod)
+            L = 0  # free memory
+            verbose('rational reconstruction time is', t, level=2)
         except ValueError, msg:
             verbose("Redoing with several more primes", level=2)                
             M = prod * p*p*p

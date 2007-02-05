@@ -11,7 +11,7 @@ Dense matrices over the integer ring.
 #                  http://www.gnu.org/licenses/
 ######################################################################
 
-from sage.misc.misc import verbose, get_verbose, UNAME
+from sage.misc.misc import verbose, get_verbose, cputime, UNAME
 
 include "../ext/interrupt.pxi"
 include "../ext/stdsage.pxi"
@@ -30,9 +30,8 @@ cdef extern from "matrix_integer_dense_linbox.h":
     
 ctypedef unsigned int uint
 
+from sage.ext.multi_modular import MultiModularBasis
 from sage.ext.multi_modular cimport MultiModularBasis
-cdef MultiModularBasis mm
-mm = MultiModularBasis()
 
 from sage.rings.integer cimport Integer
 from sage.rings.rational_field import QQ
@@ -47,6 +46,8 @@ from matrix_modn_dense cimport Matrix_modn_dense
 import sage.modules.free_module
 
 from matrix cimport Matrix
+
+cimport sage.structure.element
 
 import matrix_space
 
@@ -105,7 +106,9 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         self._pivots = None
 
         # Allocate an array where all the entries of the matrix are stored.
+        _sig_on
         self._entries = <mpz_t *>sage_malloc(sizeof(mpz_t) * (self._nrows * self._ncols))
+        _sig_off
         if self._entries == NULL:
             raise MemoryError, "out of memory allocating a matrix"
 
@@ -130,8 +133,10 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         A = Matrix_integer_dense.__new__(Matrix_integer_dense, self._parent,
                                          0, 0, 0)
         cdef Py_ssize_t i
+        _sig_on
         for i from 0 <= i < self._nrows * self._ncols:
             mpz_init_set(A._entries[i], self._entries[i])
+        _sig_off
         return A
     
     def  __dealloc__(self):
@@ -511,6 +516,17 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         mpz_clear(z)
         return M
 
+    cdef sage.structure.element.Matrix _matrix_times_matrix_c_impl(self, sage.structure.element.Matrix right):
+        # see the tune_multiplication function below.
+        n = max(self._nrows, self._ncols, right._nrows, right._ncols)
+        if n <= 20:
+            return self._multiply_classical(right)
+        a = self.height(); b = right.height()
+        if float(max(a,b)) / float(n) >= 0.70:
+            return self._multiply_classical(right)
+        else:
+            return self._multiply_multi_modular(right)
+
     cdef ModuleElement _lmul_c_impl(self, RingElement right):
         """
         EXAMPLES:
@@ -527,6 +543,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         for i from 0 <= i < self._nrows * self._ncols:
             mpz_init(M._entries[i])
             mpz_mul(M._entries[i], self._entries[i], _x.value)
+        M._initialized = 1
         return M
 
     cdef ModuleElement _add_c_impl(self, ModuleElement right):
@@ -606,11 +623,13 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
 
     def charpoly(self, var='x', algorithm='linbox'):
         """
-       INPUT:
+        INPUT:
             var -- a variable name
             algorithm -- 'linbox' (default)
                          'generic'
 
+        NOTE: Linbox only used on Darwin OS X right now.
+        
         EXAMPLES:
             sage: A = matrix(ZZ,6, range(36))
             sage: f = A.charpoly(); f
@@ -620,13 +639,16 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             sage: n=20; A = Mat(ZZ,n)(range(n^2))
             sage: A.charpoly()
             x^20 - 3990*x^19 - 266000*x^18
-            sage: A.minpoly()
+            sage: A.minpoly()                # optional -- os x only right now
             x^3 - 3990*x^2 - 266000*x
         """
         key = 'charpoly_%s_%s'%(algorithm, var)
         x = self.fetch(key)
         if x: return x
         
+        if UNAME != "Darwin" and algorithm == "linbox":
+            algorithm = 'generic'
+
         if algorithm == 'linbox':
             g = self._charpoly_linbox(var)
         elif algorithm == 'generic':
@@ -644,22 +666,27 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             algorithm -- 'linbox' (default)
                          'generic'
 
+        NOTE: Linbox only used on Darwin OS X right now.
+
         EXAMPLES:
             sage: A = matrix(ZZ,6, range(36))
-            sage: A.minpoly()
+            sage: A.minpoly()           # optional -- os x only right now
             x^3 - 105*x^2 - 630*x
             sage: n=6; A = Mat(ZZ,n)([k^2 for k in range(n^2)])
-            sage: A.minpoly()
+            sage: A.minpoly()           # optional -- os x only right now
             x^4 - 2695*x^3 - 257964*x^2 + 1693440*x
         """
         key = 'minpoly_%s_%s'%(algorithm, var)
         x = self.fetch(key)
         if x: return x
 
+        if UNAME != "Darwin" and algorithm == "linbox":
+            algorithm = 'generic'
+
         if algorithm == 'linbox':
             g = self._minpoly_linbox(var)
         elif algorithm == 'generic':
-            g = self._minpoly_generic(var)
+            g = matrix_dense.Matrix_dense.minpoly(self, var)
         else:
             raise ValueError, "no algorithm '%s'"%algorithm
         
@@ -782,15 +809,19 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     
         cdef Integer h
         cdef mod_int *moduli
-        cdef int i, n
+        cdef int i, n, k
         
         h = left.height() * right.height()
-        n = mm.moduli_list_c(&moduli, h.value)
-        res = []
-        for i from 0 <= i < n:
-            res.append(left._mod_int_c(moduli[i]) * right._mod_int_c(moduli[i]))
-        sage_free(moduli)
-        return left._lift_crt(res)
+        mm = MultiModularBasis(h)
+        res = left._reduce(mm)
+        res_right = right._reduce(mm)
+        k = len(mm)
+        for i in range(k):  # yes, I could do this with zip, but to conserve memory...
+            t = cputime()
+            res[i] *= res_right[i]
+            verbose('multiplied matrices modulo a prime (%s/%s)'%(i+1,k), t)
+        result = _lift_crt(res, mm)
+        return result
             
     def _mod_int(self, modulus):
         return self._mod_int_c(modulus)
@@ -803,44 +834,49 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         res = Matrix_modn_dense.__new__(Matrix_modn_dense, matrix_space.MatrixSpace(IntegerModRing(p), self._nrows, self._ncols, sparse=False), None, None, None)
         for i from 0 <= i < self._nrows:
             self_row = self._matrix[i]
-            res_row = res.matrix[i]
+            res_row = res._matrix[i]
             for j from 0 <= j < self._ncols:
                 res_row[j] = mpz_fdiv_ui(self_row[j], p)
         return res
+        
+    def _reduce(self, moduli):
+        
+        if isinstance(moduli, (int, long, Integer)):
+            return self._mod_int(moduli)
+        elif isinstance(moduli, list):
+            moduli = MultiModularBasis(moduli)
 
-    def _lift_crt(self, residues):
+        cdef MultiModularBasis mm
+        mm = moduli                
 
-        cdef size_t n, i, j, k
+        res = [Matrix_modn_dense.__new__(Matrix_modn_dense, 
+                                         matrix_space.MatrixSpace(IntegerModRing(p), self._nrows, self._ncols, sparse=False), 
+                                         None, None, None) for p in mm]
+
+        cdef size_t i, k, n
         cdef Py_ssize_t nr, nc
         
-        n = len(residues)
-        nr = residues[0].nrows()
-        nc = residues[0].ncols()
-        
-        for b in residues:
-            if not PY_TYPE_CHECK(b, Matrix_modn_dense):
-                raise TypeError, "Can only perform CRT on list of type Matrix_modn_dense."
-        cdef PyObject** res
-        res = FAST_SEQ_UNSAFE(residues)
+        n = len(mm)
+        nr = self._nrows
+        nc = self._ncols
 
         cdef mod_int **row_list
         row_list = <mod_int**>sage_malloc(sizeof(mod_int*) * n)
         if row_list == NULL:
             raise MemoryError, "out of memory allocating multi-modular coefficent list"
-        
-        cdef Matrix_integer_dense M
-        M = Matrix_integer_dense.__new__(Matrix_integer_dense, self.matrix_space(nr, nc), None, None, None)
-        
+
+        cdef PyObject** res_seq
+        res_seq = FAST_SEQ_UNSAFE(res)
+
         _sig_on
         for i from 0 <= i < nr:
             for k from 0 <= k < n:
-                row_list[k] = (<Matrix_modn_dense>res[k]).matrix[i]
-            mm.mpz_crt_vec(M._matrix[i], row_list, n, nc)
+                row_list[k] = (<Matrix_modn_dense>res_seq[k])._matrix[i]
+            mm.mpz_reduce_vec(self._matrix[i], row_list, nc)
         _sig_off
         
         sage_free(row_list)
-        return M
-        
+        return res
 
     def _echelon_in_place_classical(self):
         cdef Matrix_integer_dense E
@@ -1271,22 +1307,22 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         mpz_clear(pr)
         return z
         
-##     def _linbox(self):
-##         cdef Py_ssize_t i, j
-##         s = '%s %s M\n'%(self._nrows, self._ncols)
-##         for i from 0 <= i < self._nrows:
-##             for j from 0 <= j < self._ncols:
-##                 if mpz_cmp_si(self._matrix[i][j], 0):
-##                     s += '%s %s %s\n'%(i+1,j+1,self.get_unsafe(i,j))
-##         return s
+    def _linbox_sparse(self):
+        cdef Py_ssize_t i, j
+        s = '%s %s +\n'%(self._nrows, self._ncols)
+        for i from 0 <= i < self._nrows:
+            for j from 0 <= j < self._ncols:
+                if mpz_cmp_si(self._matrix[i][j], 0):
+                    s += '%s %s %s\n'%(i+1,j+1,self.get_unsafe(i,j))
+        s += '0 0 0\n'
+        return s
                 
-    def _linbox(self):
+    def _linbox_dense(self):
         cdef Py_ssize_t i, j
         s = '%s %s x'%(self._nrows, self._ncols)
         for i from 0 <= i < self._nrows:
             for j from 0 <= j < self._ncols:
-                if mpz_cmp_si(self._matrix[i][j], 0):
-                    s += ' %s'%self.get_unsafe(i,j)
+                s += ' %s'%self.get_unsafe(i,j)
         return s
 
     def rational_reconstruction(self, N):
@@ -1298,6 +1334,62 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         import misc
         return misc.matrix_integer_dense_rational_reconstruction(self, N)
 
+    def randomize(self, density=1, x=None, y=None):
+        """
+        Randomize density proportion of the entries of this matrix,
+        leaving the rest unchanged.
+
+        The randomized entries of this matrix to be between x and y
+        and have density 1.
+        """
+        self.check_mutability()
+        self.clear_cache()
+
+        cdef int _min, _max
+        if y is None:
+            if x is None:
+                min = -2
+                max = 3
+            else:
+                min = 0
+                max = x
+        else:
+            min = x
+            max = y
+        
+        density = float(density)
+
+        cdef int min_is_zero
+        min_is_nonzero = (min != 0)
+
+        cdef Integer n_max, n_min, n_width
+        n_max = Integer(max)
+        n_min = Integer(min)
+        n_width = n_max - n_min
+        
+        cdef Py_ssize_t i, j, k, nc, num_per_row
+        global state
+
+        _sig_on
+        if density == 1:
+            for i from 0 <= i < self._nrows*self._ncols:
+                mpz_urandomm(self._entries[i], state, n_width.value)
+                if min_is_nonzero:
+                    mpz_add(self._entries[i], self._entries[i], n_min.value)
+        else:
+            nc = self._ncols
+            num_per_row = int(density * nc) 
+            for i from 0 <= i < self._nrows:
+                for j from 0 <= j < num_per_row:
+                    k = random()%nc
+                    mpz_urandomm(self._matrix[i][k], state, n_width.value)
+                    if min_is_nonzero:                    
+                        mpz_add(self._matrix[i][k], self._matrix[i][j], n_min.value)
+        _sig_off
+
+
+###############################################################
+                
 ###########################################
 # Helper code for Echelon form algorithm.
 ###########################################
@@ -1336,3 +1428,88 @@ def convert_parimatrix(z):
     return _parimatrix_to_strlist(z)
 
 
+
+def _lift_crt(residues, moduli=None):
+
+    cdef size_t n, i, j, k
+    cdef Py_ssize_t nr, nc
+    
+    n = len(residues)
+    nr = residues[0].nrows()
+    nc = residues[0].ncols()
+
+    if moduli is None:
+        moduli = MultiModularBasis([m.base_ring().order() for m in residues])
+    else:
+        if len(residues) != len(moduli):
+            raise IndexError, "Number of residues (%s) does not match number of moduli (%s)"%(len(residues), len(moduli))
+            
+    cdef MultiModularBasis mm
+    mm = moduli
+    
+    for b in residues:
+        if not PY_TYPE_CHECK(b, Matrix_modn_dense):
+            raise TypeError, "Can only perform CRT on list of type Matrix_modn_dense."
+    cdef PyObject** res
+    res = FAST_SEQ_UNSAFE(residues)
+
+    cdef mod_int **row_list
+    row_list = <mod_int**>sage_malloc(sizeof(mod_int*) * n)
+    if row_list == NULL:
+        raise MemoryError, "out of memory allocating multi-modular coefficent list"
+    
+    cdef Matrix_integer_dense M
+    M = Matrix_integer_dense.__new__(Matrix_integer_dense, residues[0].matrix_space(nr, nc), None, None, None)
+    
+    _sig_on
+    for i from 0 <= i < nr:
+        for k from 0 <= k < n:
+            row_list[k] = (<Matrix_modn_dense>res[k])._matrix[i]
+        mm.mpz_crt_vec(M._matrix[i], row_list, nc)
+    _sig_off
+    
+    sage_free(row_list)
+    return M
+
+##########################################################
+# Setup the c-library and GMP random number generators. 
+# seed it when module is loaded.
+from random import randrange
+cdef extern from "stdlib.h":
+    long random()
+    void srandom(unsigned int seed)
+k = randrange(0,2**32)
+srandom(k)
+
+cdef gmp_randstate_t state
+gmp_randinit_mt(state)
+gmp_randseed_ui(state,k)
+
+#######################################################
+
+# Conclusions:
+#  On OS X Intel, at least:
+#    - if log_2(height) >= 0.70 * nrows, use classical
+
+def tune_multiplication(k, nmin=10, nmax=200, bitmin=2,bitmax=64):
+    from constructor import random_matrix
+    from sage.rings.integer_ring import ZZ
+    for n in range(nmin,nmax,10):
+        for i in range(bitmin, bitmax, 4):
+            A = random_matrix(ZZ, n, n, x = 2**i)
+            B = random_matrix(ZZ, n, n, x = 2**i)
+            t0 = cputime()
+            for j in range(k//n + 1):
+                C = A._multiply_classical(B)
+            t0 = cputime(t0)
+            t1 = cputime()
+            for j in range(k//n+1):
+                C = A._multiply_multi_modular(B)
+            t1 = cputime(t1)
+            print n, i, float(i)/float(n)
+            if t0 < t1:
+                print 'classical'
+            else:
+                print 'multimod'
+                
+            

@@ -12,12 +12,12 @@
 #include <linbox/solutions/minpoly.h>
 #include <linbox/solutions/charpoly.h>
 #include <linbox/ring/givaro-polynomial.h>
+#include <linbox/field/modular.h>
 
 
 using namespace LinBox;
 using namespace std;
 
-#include <linbox/field/modular.h>
 
 /** local header **/
 
@@ -26,15 +26,14 @@ typedef Modular<double> ModInt;
 typedef GivPolynomialRing<ModInt::Element,Dense> ModIntPolRing;
 
 
-static DenseMatrix<ModInt> linbox_new_modn_matrix(unsigned long moddulus, mod_int** matrix, size_t nrows, size_t ncols);
+static DenseMatrix<ModInt> linbox_new_modn_matrix(mod_int modulus, mod_int** matrix, size_t nrows, size_t ncols);
 static void linbox_set_modn_matrix(mod_int** matrix, DenseMatrix<ModInt>& A, size_t nrows, size_t ncols);
 
 
 /* NOTE: There are many echelon form functions, possible base rings, etc.  Strangely,
    most don't build.  This combination below does though.
 */
-
-int linbox_modn_dense_echelonize(unsigned long modulus,  
+int linbox_modn_dense_echelonize(mod_int modulus,  
 				 mod_int** matrix, size_t nrows, size_t ncols) {
 
 
@@ -51,7 +50,7 @@ int linbox_modn_dense_echelonize(unsigned long modulus,
     DenseMatrix<ModInt> A(F, nrows, ncols);
     DenseMatrix<ModInt> E(F, nrows, ncols);
 
-    unsigned long* row;
+    mod_int* row;
     for (size_t i=0; i < nrows; i++) {
 	row = matrix[i];
 	for (size_t j=0; j < ncols; j++)
@@ -66,8 +65,27 @@ int linbox_modn_dense_echelonize(unsigned long modulus,
     return rank;
 }
 
+int linbox_modn_dense_rank(mod_int modulus,  
+			   mod_int** matrix, size_t nrows, size_t ncols) {
 
-void linbox_modn_dense_minpoly(unsigned long modulus, mod_int **mp, size_t* degree, size_t n, mod_int **matrix, int do_minpoly) {
+    ModInt F((double)modulus);
+    EchelonFormDomain< ModInt > EF(F);
+    DenseMatrix<ModInt> A(F, nrows, ncols);
+
+    mod_int* row;
+    for (size_t i=0; i < nrows; i++) {
+	row = matrix[i];
+	for (size_t j=0; j < ncols; j++)
+	    A.setEntry(i, j, (double)row[j]);
+	}
+
+    unsigned long r;
+    rank(r, A);
+    return r;
+}
+
+
+void linbox_modn_dense_minpoly(mod_int modulus, mod_int **mp, size_t* degree, size_t n, mod_int **matrix, int do_minpoly) {
     /* We program around a bizarre bug in linbox, where minpoly doesn't work
        on matrices that are n x n with n divisible by 4!
     */
@@ -127,7 +145,7 @@ void linbox_modn_dense_delete_array(mod_int *f) {
     delete[] f;
 }
 
-static DenseMatrix<ModInt> linbox_new_modn_matrix(unsigned long modulus, mod_int** matrix, size_t nrows, size_t ncols) {
+static DenseMatrix<ModInt> linbox_new_modn_matrix(mod_int modulus, mod_int** matrix, size_t nrows, size_t ncols) {
 
     ModInt F((double)modulus);
 
@@ -151,24 +169,53 @@ static void linbox_set_modn_matrix(mod_int** matrix, DenseMatrix<ModInt>& A, siz
     }
 };
 
+/*************************************************************************
+    Modular<int> versions of everything: much faster for this.
+**********************************************************************/
 
-int linbox_modn_dense_matrix_matrix_multiply(unsigned long modulus, mod_int **ans, mod_int **A, mod_int **B,
+typedef Modular<int> Mod_int;
+
+static DenseMatrix<Mod_int> linbox_new_modn_matrix2(mod_int modulus, mod_int** matrix, size_t nrows, size_t ncols) {
+
+    Mod_int F((double)modulus);
+
+    DenseMatrix<Mod_int> A (F, nrows, ncols);
+
+    size_t i, j, k;
+    for (i=0; i < nrows; i++) {
+	for (j=0; j < ncols; j++) {
+	    A.setEntry(i, j, matrix[i][j]);
+	}
+    }
+    return A;
+};
+
+static void linbox_set_modn_matrix2(mod_int** matrix, DenseMatrix<Mod_int>& A, size_t nrows, size_t ncols) {
+    size_t i, j, k;
+    for (i=0; i < nrows; i++) {
+	for (j=0; j < ncols; j++) {
+	    matrix[i][j] = (mod_int)A.getEntry(i,j);
+	}
+    }
+};
+
+int linbox_modn_dense_matrix_matrix_multiply(mod_int modulus, mod_int **ans, mod_int **A, mod_int **B,
 					     size_t A_nr, size_t A_nc, size_t B_nr, size_t B_nc) 
 {
 
-    ModInt F((double)modulus);
+    Mod_int F(modulus);
 
-    DenseMatrix<ModInt> AA(linbox_new_modn_matrix(modulus, A, A_nr, A_nc));
-    DenseMatrix<ModInt> BB(linbox_new_modn_matrix(modulus, B, B_nr, B_nc));
+    DenseMatrix<Mod_int> AA(linbox_new_modn_matrix2(modulus, A, A_nr, A_nc));
+    DenseMatrix<Mod_int> BB(linbox_new_modn_matrix2(modulus, B, B_nr, B_nc));
     if (A_nc != B_nr)
 	return -1;   // error
-    DenseMatrix<ModInt> CC(F, A_nr, B_nc);
+    DenseMatrix<Mod_int> CC(F, A_nr, B_nc);
 
-    MatrixDomain<ModInt> MD(F);
+    MatrixDomain<Mod_int> MD(F);
 
     MD.mul(CC, AA, BB);
 
-    linbox_set_modn_matrix(ans, CC, A_nr, B_nc);
+    linbox_set_modn_matrix2(ans, CC, A_nr, B_nc);
     
     return 0;
 }
