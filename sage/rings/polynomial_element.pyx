@@ -29,6 +29,7 @@ import integer_mod_ring
 import polynomial_pyx
 import rational_field
 import complex_field
+import padic_field
 from infinity import infinity
 import sage.misc.misc as misc
 from sage.misc.sage_eval import sage_eval
@@ -978,6 +979,10 @@ cdef class Polynomial(CommutativeAlgebraElement):
                 G = list((pari(R.gen())*self._pari_('x')).factor())
             else:
                 G = self._pari_('x').factor()
+
+        elif padic_field.is_pAdicField(R):
+            G = list(self._pari_('x').factorpadic(R.prime(), R.prec()))
+            
         if G is None:
             raise NotImplementedError
         
