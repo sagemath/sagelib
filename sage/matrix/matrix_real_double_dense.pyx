@@ -100,7 +100,7 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
     ########################################################################
     def __new__(self, parent, entries, copy, coerce):
         matrix_dense.Matrix_dense.__init__(self,parent)
-        self._matrix= <gsl_matrix *> gsl_matrix_calloc(self._nrows, self._ncols)
+        self._matrix= <gsl_matrix *> gsl_matrix_alloc(self._nrows, self._ncols)
         if self._matrix == NULL:
             raise MemoryError, "unable to allocate memory for matrix "
         self._LU = <gsl_matrix *> NULL
@@ -123,28 +123,20 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
     
     def __init__(self, parent, entries, copy, coerce):
         cdef double z
-        cdef Py_ssize_t i,j   
+        cdef Py_ssize_t i,j
         if isinstance(entries,list):
             if len(entries)!=self._nrows*self._ncols:
                     raise TypeError, "entries has wrong length"
             
-            if coerce:
-                
-                for i from 0<=i<self._nrows:
-                    for j from 0<=j<self._ncols:
-                        z= float(entries[i*self._ncols+j])
-                        gsl_matrix_set(self._matrix, i,j,z)
-                
-            else:
-                
-                for i from 0<=i<self._nrows:
-                    for j from 0<=j<self._ncols:
-                        gsl_matrix_set(self._matrix, i,j,entries[i*self._ncols +j])
-                
+            for i from 0<=i<self._nrows:
+                for j from 0<=j<self._ncols:
+                    z = float(entries[i*self._ncols+j])
+                    gsl_matrix_set(self._matrix, i,j,z)
 
         else:
             try:
                 z=float(entries)
+                gsl_matrix_set_zero(self._matrix)
             except TypeError:
                 raise TypeError, "entries must to coercible to list or real double " 
             if z != 0:
@@ -181,7 +173,7 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
             raise ValueError, "GSL routine had an error"
         # todo -- check error code
         return M
-         
+        
 
     cdef ModuleElement _sub_c_impl(self, ModuleElement right): #matrix.Matrix right):
         cdef Matrix_real_double_dense M,_right,_left

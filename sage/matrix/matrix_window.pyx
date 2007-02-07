@@ -26,7 +26,7 @@ cdef class MatrixWindow:
         """
         cdef MatrixWindow M
         M = <MatrixWindow>PY_NEW(PY_TYPE(self))
-        M._matrix = matrix  
+        M._matrix = matrix
         M._row = row
         M._col = col
         M._nrows = n_rows
@@ -225,6 +225,3 @@ cdef class MatrixWindow:
         
     cdef int element_is_zero(MatrixWindow self, Py_ssize_t i, Py_ssize_t j):
         return self._matrix.get_unsafe(i+self._row, j+self._col) == self._zero
-
-
-
