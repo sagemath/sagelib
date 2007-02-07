@@ -623,13 +623,18 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             sage: A.minpoly()
             x^3 - 3990*x^2 - 266000*x
         """
+        key = 'charpoly_%s_%s'%(algorithm, var)
+        x = self.fetch(key)
+        if x: return x
+        
         if algorithm == 'linbox':
             g = self._charpoly_linbox(var)
         elif algorithm == 'generic':
             g = matrix_dense.Matrix_dense.charpoly(self, var)
         else:
             raise ValueError, "no algorithm '%s'"%algorithm
-        self.cache('charpoly_%s_%s'%(algorithm, var), g)
+
+        self.cache(key, g)
         return g
 
     def minpoly(self, var='x', algorithm='linbox'):
@@ -647,13 +652,18 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             sage: A.minpoly()
             x^4 - 2695*x^3 - 257964*x^2 + 1693440*x
         """
+        key = 'minpoly_%s_%s'%(algorithm, var)
+        x = self.fetch(key)
+        if x: return x
+
         if algorithm == 'linbox':
             g = self._minpoly_linbox(var)
         elif algorithm == 'generic':
             g = self._minpoly_generic(var)
         else:
             raise ValueError, "no algorithm '%s'"%algorithm
-        self.cache('minpoly_%s_%s'%(algorithm, var), g)
+        
+        self.cache(key, g)
         return g
 
     def _minpoly_linbox(self, var='x'):
@@ -793,7 +803,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         res = Matrix_modn_dense.__new__(Matrix_modn_dense, matrix_space.MatrixSpace(IntegerModRing(p), self._nrows, self._ncols, sparse=False), None, None, None)
         for i from 0 <= i < self._nrows:
             self_row = self._matrix[i]
-            res_row = res.matrix[i]
+            res_row = res._matrix[i]
             for j from 0 <= j < self._ncols:
                 res_row[j] = mpz_fdiv_ui(self_row[j], p)
         return res
@@ -824,7 +834,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         _sig_on
         for i from 0 <= i < nr:
             for k from 0 <= k < n:
-                row_list[k] = (<Matrix_modn_dense>res[k]).matrix[i]
+                row_list[k] = (<Matrix_modn_dense>res[k])._matrix[i]
             mm.mpz_crt_vec(M._matrix[i], row_list, n, nc)
         _sig_off
         
@@ -1288,6 +1298,60 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         import misc
         return misc.matrix_integer_dense_rational_reconstruction(self, N)
 
+    def randomize(self, density=1, x=None, y=None):
+        """
+        Randomize density proportion of the entries of this matrix,
+        leaving the rest unchanged.
+
+        The randomized entries of this matrix to be between x and y
+        and have density 1.
+        """
+        self.check_mutability()
+        self.clear_cache()
+
+        cdef int _min, _max
+        if y is None:
+            if x is None:
+                min = -2
+                max = 3
+            else:
+                min = 0
+                max = x
+        else:
+            min = x
+            max = y
+        
+        density = float(density)
+
+        cdef int min_is_zero
+        min_is_nonzero = (min != 0)
+
+        cdef Integer n_max, n_min, n_width
+        n_max = Integer(max)
+        n_min = Integer(min)
+        n_width = n_max - n_min
+        
+        cdef Py_ssize_t i, j, k, nc, num_per_row
+        global state
+        
+        if density == 1:
+            for i from 0 <= i < self._nrows*self._ncols:
+                mpz_urandomm(self._entries[i], state, n_width.value)
+                if min_is_nonzero:
+                    mpz_add(self._entries[i], self._entries[i], n_min.value)
+        else:
+            nc = self._ncols
+            num_per_row = int(density * nc) 
+            for i from 0 <= i < self._nrows:
+                for j from 0 <= j < num_per_row:
+                    k = random()%nc
+                    mpz_urandomm(self._matrix[i][k], state, n_width.value)
+                    if min_is_nonzero:                    
+                        mpz_add(self._matrix[i][k], self._matrix[i][j], n_min.value)                    
+
+
+###############################################################
+                
 ###########################################
 # Helper code for Echelon form algorithm.
 ###########################################
@@ -1325,4 +1389,18 @@ def convert_parimatrix(z):
     z = z.vecextract(r)
     return _parimatrix_to_strlist(z)
 
+
+##########################################################
+# Setup the c-library and GMP random number generators. 
+# seed it when module is loaded.
+from random import randrange
+cdef extern from "stdlib.h":
+    long random()
+    void srandom(unsigned int seed)
+k = randrange(0,2**32)
+srandom(k)
+
+cdef gmp_randstate_t state
+gmp_randinit_mt(state)
+gmp_randseed_ui(state,k)
 
