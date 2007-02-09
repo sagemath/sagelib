@@ -202,6 +202,8 @@ from expect import Expect, ExpectElement, ExpectFunction, FunctionElement, tmp
 
 import pexpect
 
+import commands
+
 from sage.misc.misc import verbose, DOT_SAGE
 from sage.misc.pager import pager
 
@@ -338,7 +340,7 @@ command-line version of Maple.
     def _commands(self):
         """
         Return list of all commands defined in maple.
-        """        
+        """
         v = sum([self.completions(chr(65+n)) for n in range(26)], []) + \
             sum([self.completions(chr(97+n)) for n in range(26)], [])
         v.sort()
