@@ -77,6 +77,9 @@ class TextCell(Cell_generic):
 
     def __cmp__(self, right):
         return cmp(self.id(), right.id())
+
+    def set_cell_output_type(self, typ='wrap'):
+        pass # ignored
                    
 
 class Cell(Cell_generic):
@@ -620,7 +623,8 @@ def math_parse(s):
             txt = s[i+2:j]
         else:
             txt = s[i+1:j]
-        t += s[:i] + '<%s class="math">%s</%s>'%(typ, txt, typ)
+        t += s[:i] + '<%s class="math">%s</%s>'%(typ,
+                      ' '.join(txt.splitlines()), typ)
         s = s[j+1:]
         if typ == 'div':
             s = s[1:]
