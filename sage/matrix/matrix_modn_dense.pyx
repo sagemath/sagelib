@@ -75,9 +75,9 @@ include "../ext/interrupt.pxi"
 include "../ext/cdefs.pxi"
 include '../ext/stdsage.pxi'
 include '../ext/random.pxi'
-
-MAX_MODULUS = 46340
     
+MAX_MODULUS = 46340
+
 import matrix_window_modn_dense
 
 from sage.rings.arith import is_prime
@@ -121,6 +121,7 @@ ai = arith_int()
 #                  http://www.gnu.org/licenses/
 ##############################################################################
 
+
 cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):  
     ########################################################################
     # LEVEL 1 functionality
@@ -132,6 +133,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     # x * __richcmp__    -- always the same
     ########################################################################
     def __new__(self, parent, entries, copy, coerce):
+    
         matrix_dense.Matrix_dense.__init__(self, parent)
 
         cdef mod_int p
@@ -139,7 +141,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         self.p = p
         if p >= MOD_INT_MAX:
             raise OverflowError, "p (=%s) must be < %s"%(p, MOD_INT_MAX)
-        self.gather = MOD_INT_MAX/(p*p)
+        self.gather = MOD_INT_OVERFLOW/(p*p)
 
         _sig_on
         self._entries = <mod_int *> sage_malloc(sizeof(mod_int)*self._nrows*self._ncols)
@@ -293,6 +295,8 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         if e:
             raise RuntimeError
         return ans
+    def _multiply_classical(left, right):
+        return left._multiply_strassen(right, left._ncols + left._nrows)
     
 
     ########################################################################
@@ -827,8 +831,9 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     # TODO: TEMPORARILY DISABLED due to bug on 64-bit sage.math:
     #  A = matrix(Integers(389),4,range(16)); A._echelon_strassen(4)
     # *** glibc detected *** free(): invalid next size (fast): 0x0000000000fb15e0 ***
-    def xxx_matrix_window(self, Py_ssize_t row=0, Py_ssize_t col=0,
-                      Py_ssize_t nrows=-1, Py_ssize_t ncols=-1):
+    # due to error in set_to memcpy on 64-bit
+    cdef matrix_window_c(self, Py_ssize_t row, Py_ssize_t col,
+                        Py_ssize_t nrows, Py_ssize_t ncols):
         """
         Return the requested matrix window.
 
@@ -852,5 +857,3 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             nrows = self._nrows - row
             ncols = self._ncols - col
         return matrix_window_modn_dense.MatrixWindow_modn_dense(self, row, col, nrows, ncols)
-
-
