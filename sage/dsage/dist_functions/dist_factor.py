@@ -1,11 +1,11 @@
-from sage.dsage.database.job import Job
-from sage.dsage.dist_functions.dist_function import DistributedFunction
+from dsage.database.job import Job
+from dsage.dist_functions.dist_function import DistributedFunction
 
-from sage.misc.all import *
+from sage.all import *
 
 class DistributedFactor(DistributedFunction):
     r"""
-    DistributedFactor uses ECM and QSIEVE to find factors of numbers. 
+    DistributedFactor uses ECM and QSIEVE to find factors of numbers.
        
        DistributedFactor will first perform trial division on the number and
        then use ECM.
@@ -14,23 +14,24 @@ class DistributedFactor(DistributedFunction):
            Robert Bradshaw
            Yi Qiang
     """
-    def __init__(self, DSage, n, concurrent=10, verbosity=0, 
+    def __init__(self, DSage, n, concurrent=10, verbosity=0,
                  trial_division_limit=10000, name='DistributedFactor'):
         r"""
-        Parameters: 
+        Parameters:
             DSage -- an instance of a dsage connection
             n -- the square-free number to be factored
             concurrent -- number of parallel jobs to run
-            trial_division_limit -- perform trial division up to this number 
-                                    before attempting ecm. Defaults to 10000 
-                                    which finishes quite quickly Set to -1 
-                                    to skip (if the number is known to 
+            trial_division_limit -- perform trial division up to this number
+                                    before attempting ecm. Defaults to 10000
+                                    which finishes quite quickly Set to -1
+                                    to skip (if the number is known to
                                     contain no small factors)
             name, verbosity  -- obvious
-            
+        
         """
+        
         DistributedFunction.__init__(self, DSage)
-        self.id = "ecm_factor(%s)" % (n)
+        # self.id = "ecm_factor(%s)" % (n)
         self.n = n
         self.prime_factors = []
         self.cur_B1 = 2000
@@ -38,7 +39,7 @@ class DistributedFactor(DistributedFunction):
         self.concurrent = concurrent
         self.verbosity = verbosity
         self.name = name
-
+        
         # Trial division first to peel off some factors
         for d in prime_range(2, trial_division_limit):
             while d.divides(n):
@@ -51,10 +52,10 @@ class DistributedFactor(DistributedFunction):
             self.outstanding_jobs = [self.qsieve_job()]
             for i in range(concurrent-1):
                 self.outstanding_jobs.append(self.ecm_job())
-
+    
     def next_job(self):
         return self.ecm_job()
-            
+    
     def qsieve_job(self):
         n = max(self.composite_factors)
         if n < 10**40:
@@ -69,10 +70,10 @@ else:
     save(result, 'result')
     DSAGE_RESULT = 'result.sobj'
 """ % n, name='qsieve')
-        job.n = str(n) # otherwise get some weird twisted class
+        job.n = int(n) # otherwise get some weird twisted class
         job.algorithm = 'qsieve'
         return job
-
+    
     def ecm_job(self):
         try:
             self.i += 1
@@ -91,20 +92,18 @@ save(result, 'result')
 DSAGE_RESULT = 'result.sobj'
 
 """ % (n, self.cur_B1, self.curve_count, rate_multiplier), name='ecm' )
-        job.n = n
+        job.n = int(n)
         job.algorithm = 'ecm'
         return job
-        
-
-
+    
     def process_result(self, job):
         r"""
         For each factor m of n found by the worker, record them by
             1) Dividing each element x of composite_factors by gcd(x,m)
-            2) Storing (non-trivial) gcd(x,m) to the composite factor list. 
-            3) Storing m in prime_factors or composite_factors according to 
+            2) Storing (non-trivial) gcd(x,m) to the composite factor list.
+            3) Storing m in prime_factors or composite_factors according to
                its classification given by the worker.
-        If the factorization is not yet complete, spawn another job. 
+        If the factorization is not yet complete, spawn another job.
         
         """
         if prod(self.prime_factors) == self.n:
@@ -116,8 +115,8 @@ DSAGE_RESULT = 'result.sobj'
             print job.result
         result = job.result
         if self.verbosity > 1:
-            print "factors:", self.prime_factors, self.composite_factors        
-
+            print "factors:", self.prime_factors, self.composite_factors
+        
         # If result is unexpected...
         try:
             factors, primality, params, algorithm = result
@@ -128,15 +127,15 @@ DSAGE_RESULT = 'result.sobj'
             self.cur_B1 = max(self.cur_B1, int(params['B1']))
         except KeyError:
             pass
-            
+        
         found_new_factors = False
         
-        if len(factors) > 1 or primality[0]: 
+        if len(factors) > 1 or primality[0]:
             if self.n % prod(factors) != 0:
                 self.prime_factors.append("BAD FACTORS")
             # switch the order of indices
-            result = [(result[0][i], 
-                       result[1][i]) for i in range(len(result[0]))] 
+            result = [(result[0][i],
+                       result[1][i]) for i in range(len(result[0]))]
             # Only works for square-free numbers
             for r, is_prime_factor in result:
                 for p in self.prime_factors:
@@ -154,7 +153,7 @@ DSAGE_RESULT = 'result.sobj'
                             if r.divides(m):
                                 self.composite_factors.remove(m)
                                 # we know m != p from above
-                                self.composite_factors.append(m//r)  
+                                self.composite_factors.append(m//r)
                                 self.prime_factors.append(r)
                                 break
                         else:
@@ -170,7 +169,7 @@ DSAGE_RESULT = 'result.sobj'
                                     break
             if self.verbosity > 1:
                 print "factors:", self.prime_factors, self.composite_factors
-            
+        
         if len(self.composite_factors) == 0:
             self.result = self.prime_factors
             self.done = True
