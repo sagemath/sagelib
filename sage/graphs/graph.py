@@ -6,33 +6,41 @@ AUTHOR:
     -- William Stein (2006-12-05): Editing
     -- Robert L. Miller (2006-01-13): refactoring, adjusting for
         NetworkX-0.33, fixed plotting bugs
-    -- Robert L. Miller (2006-01-23): basic tutorial, edge labels, loops,
+                        (2006-01-23): basic tutorial, edge labels, loops,
         multiple edges & arcs
+                        (2007-02-07): graph6 and sparse6 formats, matrix input
 
 TUTORIAL:
 
     I. The Basics
     
         1. Graph Format
+        
+            A. The SAGE Graph Class: NetworkX plus
+            
             SAGE graphs are actually NetworkX graphs, wrapped in a SAGE class.
-        In fact, any graph can produce its underlying NetworkX graph as
-        follows:
-        
-            sage: G = graphs.PetersenGraph()
-            sage: N = G.networkx_graph()
-            sage: N  # random output
-            <networkx.graph.Graph object at 0xa6bf1d0>
-        
-        The NetworkX graph is essentially a dictionary of dictionaries:
-        
-            sage: N.adj
-            {0: {1: None, 4: None, 5: None}, 1: {0: None, 2: None, 6: None}, 2: {1: None, 3: None, 7: None}, 3: {8: None, 2: None, 4: None}, 4: {0: None, 9: None, 3: None}, 5: {0: None, 8: None, 7: None}, 6: {8: None, 1: None, 9: None}, 7: {9: None, 2: None, 5: None}, 8: {3: None, 5: None, 6: None}, 9: {4: None, 6: None, 7: None}}
+            In fact, any graph can produce its underlying NetworkX graph. For example,
+            
+                sage: import networkx
+                sage: G = graphs.PetersenGraph()
+                sage: N = G.networkx_graph()
+                sage: isinstance(N, networkx.graph.Graph)
+                True
+            
+            The NetworkX graph is essentially a dictionary of dictionaries:
+            
+                sage: N.adj
+                {0: {1: None, 4: None, 5: None}, 1: {0: None, 2: None, 6: None}, 2: {1: None, 3: None, 7: None}, 3: {8: None, 2: None, 4: None}, 4: {0: None, 9: None, 3: None}, 5: {0: None, 8: None, 7: None}, 6: {8: None, 1: None, 9: None}, 7: {9: None, 2: None, 5: None}, 8: {3: None, 5: None, 6: None}, 9: {4: None, 6: None, 7: None}}
 
-        Each dictionary key is a vertex label, and each key in the following
-        dictionary is a neighbor of that vertex. In undirected graphs, there
-        is reduncancy. For example, the dictionary containing the entry
-        1: {2: None} implies it must contain 2: {1: None}. The innermost entry
-        of None is related to edge labelling (see section I.3.).
+            Each dictionary key is a vertex label, and each key in the following
+            dictionary is a neighbor of that vertex. In undirected graphs, there
+            is reduncancy: for example, the dictionary containing the entry
+            1: {2: None} implies it must contain 2: {1: None}. The innermost entry
+            of None is related to edge labelling (see section I.3.).
+        
+            B. Supported formats
+            
+            TODO
         
         2. Databases
         
@@ -263,7 +271,7 @@ class Graph(GenericGraph):
 
     ### Note: NetworkX function print_dna not wrapped.
 
-    def __init__(self, data=None, pos=None, loops=False, **kwds):
+    def __init__(self, data=None, pos=None, loops=False, format=None, **kwds):
         """
         Create a graph object.
 
@@ -275,6 +283,8 @@ class Graph(GenericGraph):
                 4. A numpy matrix or ndarray
                 5. A pygraphviz agraph
                 6. A scipy sparse matrix
+                7. A graph6 or sparse6 string
+                8. A SAGE adjacency matrix
 
             pos -- a positioning dictionary: for example, the
             spring layout from NetworkX for the 5-cycle is
@@ -289,7 +299,13 @@ class Graph(GenericGraph):
             the Graph class)
             multiedges -- boolean, whether to allow multiple edges (ignored if data is
             an instance of the Graph class)
-
+            format -- if None, Graph tries to guess- can be several values, including:
+                'graph6' -- Brendan McKay's graph6 format, in a string (if the string has
+                            multiple graphs, the first graph is taken)
+                'sparse6' -- Brendan McKay's sparse6 format, in a string (if the string has
+                            multiple graphs, the first graph is taken)
+                TODO: format = 'matrix'
+            
         EXAMPLES:
         We illustrate the first four input formats (the other two
         involve packages that are currently not standard in SAGE):
@@ -324,16 +340,109 @@ class Graph(GenericGraph):
             Petersen graph: a simple graph on 10 vertices (no loops, no multiple edges)            
         """
         import networkx
-        if isinstance(data, Graph):
-            self._nxg = data.networkx_graph()
-        elif isinstance(data, networkx.Graph):
-            self._nxg = networkx.XGraph(data, selfloops=loops, **kwds)
-        elif isinstance(data, networkx.XGraph):
-            self._nxg = data
-        else:
-            self._nxg = networkx.XGraph(data, selfloops=loops, **kwds)
-            if kwds.has_key('name'):
-                self._nxg.name = kwds['name']
+        from sage.structure.element import is_Matrix
+        if format is None:
+            if isinstance(data, str):
+                if data[0] == ':':
+                    format = 'sparse6'
+                else:
+                    format = 'graph6'
+            elif is_Matrix(data):
+                if data.is_square(): # adjacency matrix
+                    format = 'adjacency_matrix'
+                else: # incidence matrix
+                    format = 'incidence_matrix'
+            elif isinstance(data, Graph):
+                self._nxg = data.networkx_graph()
+            elif isinstance(data, networkx.Graph):
+                self._nxg = networkx.XGraph(data, selfloops=loops, **kwds)
+            elif isinstance(data, networkx.XGraph):
+                self._nxg = data
+            else:
+                self._nxg = networkx.XGraph(data, selfloops=loops, **kwds)
+        if format == 'graph6':
+            if not isinstance(data, str):
+                raise ValueError, 'If input format is graph6, then data must be a string'
+            from sage.rings.integer import Integer
+            n = data.find('\n')
+            if n == -1:
+                n = len(data)
+            s = data[:n]
+            n, s = N_inverse(s)
+            m = R_inverse(s, n)
+            d = {}
+            k = 0
+            for i in range(n):
+                for j in range(i):
+                    if m[k] == '1':
+                        if d.has_key(i):
+                            d[i][j] = None
+                        else:
+                            d[i] = {j : None}
+                    k += 1
+            self._nxg = networkx.XGraph(d)
+        elif format == 'sparse6':
+            from sage.rings.integer import Integer
+            from sage.rings.arith import ceil, floor
+            from sage.misc.functional import log
+            from sage.rings.integer_ring import ZZ
+            n = data.find('\n')
+            if n == -1:
+                n = len(data)
+            s = data[:n]
+            n, s = N_inverse(s[1:])
+            k = ceil(log(n,2))
+            l = [Integer(ord(i)-63).binary() for i in s]
+            for i in range(len(l)):
+                l[i] = '0'* (6-len(l[i])) + l[i]
+            bits = ''.join(l)
+            b = []
+            x = []
+            for i in range(floor(len(bits)/(k+1))):
+                b.append(ZZ(bits[(k+1)*i:(k+1)*i+1],base=2))
+                x.append(ZZ(bits[(k+1)*i+1:(k+1)*i+k+1],base=2))
+            v = 0
+            edges = []
+            for i in range(len(b)):
+                if b[i] == 1:
+                    v += 1
+                if x[i] > v:
+                    v = x[i]
+                else:
+                    if v < n:
+                        edges.append((x[i],v))
+            d = {}
+            for i,j in edges:
+                if d.has_key(i):
+                    if d[i].has_key(j):
+                        if d[i][j] is None:
+                            d[i][j] = [None,None]
+                        else:
+                            d[i][j].append(None)
+                    d[i][j] = None
+                else:
+                    d[i] = {j : None}
+            for i in [j for j in range(n) if not d.has_key(j)]:
+                d[i] = {}
+            self._nxg = networkx.XGraph(d, selfloops = True, multiedges = True)
+        elif format == 'adjacency_matrix':
+            # assumes nonmultiple edges (there is a relevant NetworkX bug, see ticket #87)
+            d = {}
+            for i,j in data.nonzero_positions():
+                if d.has_key(i):
+                    if d[i].has_key(j):
+                        pass
+                    else:
+                        d[i][j] = None
+                else:
+                    d[i] = {j : None}
+            self._nxg = networkx.XGraph(d, selfloops = loops, **kwds)
+        elif format == 'incidence_matrix':
+            # TODO not implemented
+            pass
+        # TODO weighted matrices
+        if kwds.has_key('name'):
+            self._nxg.name = kwds['name']
         self.__pos = pos
 
     def _repr_(self):
@@ -675,7 +784,7 @@ class Graph(GenericGraph):
 
     def adjacency_matrix(self, sparse=True):
         """
-        Returns the adjacency matrix of the digraph. Each vertex is
+        Returns the adjacency matrix of the graph. Each vertex is
         represented by its position in the list returned by the vertices()
         function.
         """
@@ -686,12 +795,113 @@ class Graph(GenericGraph):
             i,j,l = e
             i = verts.index(i)
             j = verts.index(j)
-            D[(i,j)] = 1
-            D[(j,i)] = 1
+            if D.has_key((i,j)) and self.multiple_edges():
+                D[(i,j)] += 1
+                D[(j,i)] += 1
+            else:
+                D[(i,j)] = 1
+                D[(j,i)] = 1
         from sage.rings.integer_mod_ring import IntegerModRing
+        from sage.rings.integer_ring import IntegerRing
         from sage.matrix.constructor import matrix
-        M = matrix(IntegerModRing(2), n, n, D, sparse=sparse)
+        if self.multiple_edges:
+            R = IntegerRing()
+        else:
+            R = IntegerModRing(2)
+        M = matrix(R, n, n, D, sparse=sparse)
         return M
+
+    def __bit_vector(self):
+        vertices = self.vertices()
+        n = len(vertices)
+        nc = n*(n - 1)/2
+        bit_vector = '0'*int(nc)
+        for e in self.edge_iterator():
+            a,b = min(vertices.index(e[0]), vertices.index(e[1])), max(vertices.index(e[0]), vertices.index(e[1]))
+            p = b*(b - 1)/2 + a
+            bit_vector = bit_vector[:p] + '1' + bit_vector[p+1:]
+        return bit_vector
+
+    def graph6_string(self):
+        """
+        Returns the graph6 representation of the graph as an ASCII string. Only valid
+        for simple (no loops, multiple edges) graphs on 0 to 262143 vertices.
+        """
+        n = self.order()
+        if n > 262143:
+            raise ValueError, 'graph6 format supports graphs on 0 to 262143 vertices only.'
+        elif self.loops() or self.multiple_edges():
+            raise ValueError, 'graph6 format supports only simple graphs (no loops, no multiple edges)'
+        else:
+            return N(n) + R(self.__bit_vector())
+
+    def sparse6_string(self):
+        """
+        Returns the sparse6 representation of the graph as an ASCII string. Only valid
+        for undirected graphs on 0 to 262143 vertices, but loops and multiple edges are
+        permitted.
+        """
+        n = self.order()
+        if n > 262143:
+            raise ValueError, 'sparse6 format supports graphs on 0 to 262143 vertices only.'
+        else:
+            vertices = self.vertices()
+            n = len(vertices)
+            edges = self.edges(labels=False)
+            for e in edges: # replace edge labels with natural numbers (by index in vertices)
+                e = (vertices.index(e[0]),vertices.index(e[1]))
+            # order edges
+            def cmp(x, y):
+                if x[1] < y[1]:
+                    return -1
+                elif x[1] > y[1]:
+                    return 1
+                elif x[1] == y[1]:
+                    if x[0] < y[0]:
+                        return -1
+                    if x[0] > y[0]:
+                        return 1
+                    else:
+                        return 0
+            edges.sort(cmp)
+
+            # encode bit vector
+            from sage.rings.integer import Integer
+            from sage.rings.arith import ceil
+            from sage.misc.functional import log
+            from sage.rings.integer_ring import ZZ
+            k = ceil(log(n,2))
+            v = 0
+            i = 0
+            m = 0
+            s = ''
+            while m < len(edges):
+                if edges[m][1] > v + 1:
+                    sp = Integer(edges[m][1]).binary()
+                    sp = '0'*(k-len(sp)) + sp
+                    s += '1' + sp
+                    v = edges[m][1]
+                elif edges[m][1] == v + 1:
+                    sp = Integer(edges[m][0]).binary()
+                    sp = '0'*(k-len(sp)) + sp
+                    s += '1' + sp
+                    v += 1
+                    m += 1
+                else:
+                    sp = Integer(edges[m][0]).binary()
+                    sp = '0'*(k-len(sp)) + sp
+                    s += '0' + sp
+                    m += 1
+
+            # encode s as a 6-string, as in R(x), but padding with 1's
+            # pad on the right to make a multiple of 6
+            s = s + ( '1' * ((6 - len(s))%6) )
+
+            # split into groups of 6, and convert numbers to decimal, adding 63
+            six_bits = ''
+            for i in range(len(s)/6):
+                six_bits += chr( ZZ( s[6*i:6*(i+1)], base=2) + 63 )
+            return ':' + N(n) + six_bits
 
     ### Construction
 
@@ -765,6 +975,11 @@ class Graph(GenericGraph):
             else:
                 NGP = GraphicPrimitive_NetworkXGraph(self._nxg, pos=self.__pos, vertex_labels=vertex_labels, node_size=node_size)
         GG.append(NGP)
+        xmin = min([NGP._GraphicPrimitive_NetworkXGraph__pos[i][0] for i in range(len(NGP._GraphicPrimitive_NetworkXGraph__pos))])
+        xmax = max([NGP._GraphicPrimitive_NetworkXGraph__pos[i][0] for i in range(len(NGP._GraphicPrimitive_NetworkXGraph__pos))])
+        ymin = min([NGP._GraphicPrimitive_NetworkXGraph__pos[i][1] for i in range(len(NGP._GraphicPrimitive_NetworkXGraph__pos))])
+        ymax = max([NGP._GraphicPrimitive_NetworkXGraph__pos[i][1] for i in range(len(NGP._GraphicPrimitive_NetworkXGraph__pos))])
+        GG.range(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
         GG.axes(False)
         return GG
 
@@ -1259,26 +1474,125 @@ class DiGraph(GenericGraph):
     def show(self, pos=None, vertex_labels=True, node_size=200):
         self.plot(pos, vertex_labels, node_size).show()
 
-class Network(GenericGraph):
-    """
-    Weighted multigraph: directed or undirected, allowing loops (non-hyper).
-    """
-    pass
+def graph(data, format = None):
+    # TODO documentation
+    if format is None:
+        if isinstance(data, str):
+            if data[0] == ':':
+                format = 'sparse6'
+            else:
+                format = 'graph6'
 
-### Hypergraphs and Complexes
+    if format == 'graph6':
+        if not isinstance(data, str):
+            raise ValueError, 'If input format is graph6, then data must be a string'
+        from sage.rings.integer import Integer
+        data = data.split('\n')
+        Glist = []
+        for s in data:
+            n, s = N_inverse(s)
+            m = R_inverse(s, n)
+            G = Graph()
+            k = 0
+            for i in range(n):
+                for j in range(i):
+                    if m[k] == '1':
+                        G.add_edge(j,i)
+                    k += 1
+            Glist.append(G)
+        if len(Glist) == 1:
+            return Glist[0]
+        else:
+            return Glist
+    elif format == 'sparse6':
+        from sage.rings.integer import Integer
+        from sage.rings.arith import ceil, floor
+        from sage.misc.functional import log
+        from sage.rings.integer_ring import ZZ
+        data = data.split('\n')
+        Glist = []
+        for s in data:
+            n, s = N_inverse(s[1:])
+            k = ceil(log(n,2))
+            l = [Integer(ord(i)-63).binary() for i in s]
+            for i in range(len(l)):
+                l[i] = '0'* (6-len(l[i])) + l[i]
+            bits = ''.join(l)
+            b = []
+            x = []
+            for i in range(floor(len(bits)/(k+1))):
+                b.append(ZZ(bits[(k+1)*i:(k+1)*i+1],base=2))
+                x.append(ZZ(bits[(k+1)*i+1:(k+1)*i+k+1],base=2))
+            v = 0
+            edges = []
+            for i in range(len(b)):
+                if b[i] == 1:
+                    v += 1
+                if x[i] > v:
+                    v = x[i]
+                else:
+                    if v < n:
+                        edges.append((x[i],v))
+            G = Graph(loops=True, multiedges=True)
+            G.add_vertices([i for i in range(n)])
+            for e in edges:
+                G.add_edge(e)
+            Glist.append(G)
+        if len(Glist) == 1:
+            return Glist[0]
+        else:
+           return Glist
 
-class HyperGraph(SageObject):
-    """
-    Edges are simply subsets of the vertex set.
-    """
-    pass
+def R(x): # Helper function for graph6
+    from sage.rings.integer_ring import ZZ
+    # pad on the right to make a multiple of 6
+    x = x + ( '0' * ((6 - len(x))%6) )
 
-class GenericComplex(SageObject):
-    pass
+    # split into groups of 6, and convert numbers to decimal, adding 63
+    six_bits = ''
+    for i in range(len(x)/6):
+        six_bits += chr( ZZ( x[6*i:6*(i+1)], base=2) + 63 )
+    return six_bits
 
-class SimplicialComplex(GenericComplex):
-    pass
+def N(n): # Helper function for graph6
+    if n in range(63):
+        return chr(n + 63)
+    else:
+        from sage.rings.integer import Integer
+        # get 18-bit rep of n
+        n = Integer(n).binary()
+        n = '0'*(18-len(n)) + n
+        return chr(126) + R(n)
 
-class CubicalComplex(GenericComplex):
-    pass
+def N_inverse(s): # Helper function for graph6
+    from sage.rings.integer_ring import ZZ
+    from sage.rings.integer import Integer
+    if s[0] == chr(126): # first four bytes are N
+        n = ZZ(Integer(ord(s[1])-63).binary() + Integer(ord(s[2])-63).binary() + Integer(ord(s[3])-63).binary(),base=2)
+        s = s[4:]
+    else: # only first byte is N
+        n = ord(s[0]) - 63
+        s = s[1:]
+    return n, s
+
+def R_inverse(s, n): # Helper function for graph6
+    from sage.rings.integer import Integer
+    
+    l = [Integer(ord(i)-63).binary() for i in s]
+    for i in range(len(l)):
+        l[i] = '0'* (6-len(l[i])) + l[i]
+    m = ''
+    for i in l:
+        m += i
+    m = m[:(n*(n-1)/2)]
+    return m
+
+
+
+
+
+
+
+
+
 
