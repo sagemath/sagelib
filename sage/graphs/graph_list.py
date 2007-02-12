@@ -140,27 +140,77 @@ def to_sparse6(list, file = None):
 
 def to_graphics_arrays(list):
     """
-    use this if too many graphs for show function
-    max graphs per array = 20 (5 rows of 4)
-    appends graphics arrays in list
-    then enter list and index and .show()
+    Use this if too many graphs for show_graphs function.
+    Max graphs per array = 20 (5 rows of 4).
+    Appends graphics arrays in a list.
+    Then enter list and index and .show()
     """
     from sage.plot.plot import graphics_array
     from sage.graphs import graph
     plist = []
+    g_arrays = []
     for i in range (len(list)):
         if ( isinstance( list[i], graph.Graph ) ):
-            plist.append(list[i].plot(node_size=50, vertex_labels=False, graph_border=True))
+            pos = list[i].__get_pos__()
+            if ( pos is None and list[i].order() < 10 ): 
+                plist.append(list[i].plot(pos='database', node_size=50, vertex_labels=False, graph_border=True))
+            else: plist.append(list[i].plot(pos=pos, node_size=50, vertex_labels=False, graph_border=True))
         else:  raise TypeError, 'Param list must be a list of SAGE graphs.'
     
     num_arrays = len(plist)/20
     if ( len(plist)%20 > 0 ): num_arrays += 1
+    rows = 5
+    cols = 4
 
-    return plist        
+    for i in range (num_arrays-1):
+        glist = []
+        for j in range (rows*cols):
+            glist.append(plist[ i*rows*cols + j ])
+        ga = graphics_array(glist, rows, cols)
+        ga.__set_figsize__([8,10])
+        g_arrays.append(ga)
     
+    last = len(plist)%20
+    index = (num_arrays-1)*rows*cols
+    last_rows = last/cols
+    if ( last%cols > 0 ): last_rows += 1
+    
+    glist = []
+    for i in range (last):
+        glist.append(plist[ i + index])
+    ga = graphics_array(glist, last_rows, cols)
+    ga.__set_figsize__([8, 2*last_rows])
+    g_arrays.append(ga)
+    
+    return g_arrays
     
 def show_graphs(list):
-    if ( len(list) > 24 ):  
-        raise ValueError, 'List is too long to display in a graphics array.  Try using the to_graphics_array function.'
-    return
+    """
+    Will show max 20 graphs from list in a sage graphics array.
+    Raises ValueError if too many graphs are in the list.
+    Try to_graphics_arrays if too many graphs for this function.
+    """
+    if ( len(list) > 20 ):  
+        raise ValueError, 'List is too long to display in a graphics array.  Try using the to_graphics_arrays function.'
+
+    from sage.plot.plot import graphics_array
+    from sage.graphs import graph
     
+    plist = []
+    for i in range (len(list)):
+        if ( isinstance( list[i], graph.Graph ) ):
+            pos = list[i].__get_pos__()
+            if ( pos is None and list[i].order() < 10 ): 
+                plist.append(list[i].plot(pos='database', node_size=50, vertex_labels=False, graph_border=True))
+            else: plist.append(list[i].plot(pos=pos, node_size=50, vertex_labels=False, graph_border=True))
+        else:  raise TypeError, 'Param list must be a list of SAGE graphs.'
+        
+    rows = len(list)/4
+    if ( len(list)%4 > 0 ): rows += 1
+    
+    ga = graphics_array(plist, rows, 4)
+    ga.__set_figsize__([8, 2*rows])
+    
+    ga.show()
+    return
+
