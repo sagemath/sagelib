@@ -4,11 +4,12 @@ Graph Theory
 AUTHOR:
     -- Robert L. Miller (2006-10-22): initial version
     -- William Stein (2006-12-05): Editing
-    -- Robert L. Miller (2006-01-13): refactoring, adjusting for
+    -- Robert L. Miller (2007-01-13): refactoring, adjusting for
         NetworkX-0.33, fixed plotting bugs
-                        (2006-01-23): basic tutorial, edge labels, loops,
+                        (2007-01-23): basic tutorial, edge labels, loops,
         multiple edges & arcs
                         (2007-02-07): graph6 and sparse6 formats, matrix input
+    -- Emily Kirkmann (2007-02-11): added graph_border option to plot and show
 
 TUTORIAL:
 
@@ -148,8 +149,25 @@ class GenericGraph(SageObject):
     def _latex_(self):
         return repr(self)
 
-    def _matrix_(self):
-        return self.am()
+    def _matrix_(self, R=None):
+        """
+        EXAMPLES:
+            sage: G = graphs.CompleteBipartiteGraph(2,3)
+            sage: m = matrix(G); m.parent()
+            Full MatrixSpace of 5 by 5 sparse matrices over Integer Ring
+            sage: m
+            [0 0 1 1 1]
+            [0 0 1 1 1]
+            [1 1 0 0 0]
+            [1 1 0 0 0]
+            [1 1 0 0 0]
+            sage: factor(m.charpoly())
+            (x^2 - 6) * x^3
+        """
+        if R is None:
+            return self.am()
+        else:
+            return self.am().change_ring(R)
 
     def networkx_graph(self):
         """
@@ -1014,7 +1032,7 @@ class Graph(GenericGraph):
 
     ### Visualization
 
-    def plot(self, pos=None, vertex_labels=True, node_size=200):
+    def plot(self, pos=None, vertex_labels=True, node_size=200, graph_border=False):
         GG = Graphics()
         if pos is None:
             if self.__pos is None:
@@ -1025,20 +1043,30 @@ class Graph(GenericGraph):
             NGP = GraphicPrimitive_NetworkXGraph(self._nxg, pos=pos, vertex_labels=vertex_labels, node_size=node_size)
         GG.append(NGP)
         pos = NGP._GraphicPrimitive_NetworkXGraph__pos
-        xmin = min([pos[i][0] for i in pos])
-        xmax = max([pos[i][0] for i in pos])
-        ymin = min([pos[i][1] for i in pos])
-        ymax = max([pos[i][1] for i in pos])
+        xmin = NGP._xmin
+        xmax = NGP._xmax
+        ymin = NGP._ymin
+        ymax = NGP._ymax
         GG.range(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
         GG.axes(False)
+        if ( graph_border ):
+            from sage.plot.plot import line
+            dx = (xmax - xmin)/10
+            dy = (ymax - ymin)/10
+            border = (line([( xmin - dx, ymin - dy), ( xmin - dx, ymax + dy ), ( xmax + dx, ymax + dy ), ( xmax + dx, ymin - dy ), ( xmin - dx, ymin - dy )], thickness=1.3))
+            border.range(xmin = (xmin - dx), xmax = (xmax + dx), ymin = (ymin - dy), ymax = (ymax + dy))
+            BGG = GG + border
+            BGG.axes(False)
+            return BGG
         return GG
 
-    def show(self, pos=None, vertex_labels=True, node_size=200, **kwds):
+    def show(self, pos=None, vertex_labels=True, node_size=200, graph_border=False, **kwds):
         """
         INPUT:
             pos -- ??
             with_labels -- bool (default: True)
             node_size -- how big the nodes are
+            graph_border -- bool (default: False)
             other named options -- All other options are passed onto
             the show command; e.g., dpi=50 will make a small plot.
 
@@ -1047,7 +1075,7 @@ class Graph(GenericGraph):
             Simple graph on 5 vertices (no loops, no multiple edges)
             sage: g.plot().save('sage.png')
         """
-        self.plot(pos=pos, vertex_labels=vertex_labels, node_size=node_size).show(**kwds)
+        self.plot(pos=pos, vertex_labels=vertex_labels, node_size=node_size,  graph_border=graph_border).show(**kwds)
 
 class DiGraph(GenericGraph):
     """

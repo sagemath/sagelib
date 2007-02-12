@@ -44,6 +44,7 @@ We construct a plot involving several graphics objects:
 
     sage: G = plot(cos, -5, 5, thickness=5, rgbcolor=(0.5,1,0.5))
     sage: P = polygon([[1,2], [5,6], [5,0]], rgbcolor=(1,0,0))
+    sage: P.save()
 
 Next we construct the reflection of the above polygon about the
 $y$-axis by iterating over the qlist of first-coordinates of the first
@@ -51,6 +52,7 @@ graphic element of $P$ (which is the actual Polygon; note that $P$ is
 a Graphics object, which consists of a single polygon):
 
     sage: Q = polygon([(-x,y) for x,y in P[0]], rgbcolor=(0,0,1))
+    sage: Q.save()
 
 We combine together different graphics objects using "+":
 
@@ -63,6 +65,7 @@ We combine together different graphics objects using "+":
     Polygon defined by 3 points
     sage: list(H[1])
     [(1.0, 2.0), (5.0, 6.0), (5.0, 0.0)]
+    sage: H.save()
 
 We can put text in a graph:
 
@@ -81,6 +84,7 @@ see the first few zeros:
     sage: p2 = plot(lambda t: abs(zeta(0.5+t*I)), 1,27,rgbcolor=hue(0.7))
     sage: p1+p2
     Graphics object consisting of 2 graphics primitives
+    sage: (p1+p2).save()
 
 Here is a pretty graph:
     sage: g = Graphics()
@@ -89,7 +93,7 @@ Here is a pretty graph:
     ...                rgbcolor=hue(i/40+0.4), alpha=0.2)
     ...    g = g + p
     ...
-    sage.: g.show(dpi=200, axes=False)
+    sage: g.save(dpi=200, axes=False)
     
 AUTHORS:
     -- Alex Clemesha and William Stein (2006-04-10): initial version
@@ -1309,6 +1313,28 @@ class GraphicPrimitive_NetworkXGraph(GraphicPrimitive):
             for v in nodelist:
                 self.__pos[v][0] = ((2 + (2*st))/(xmax-xmin))*(self.__pos[v][0] - xmax) + st + 1
                 self.__pos[v][1] = ((2 + (2*st))/(ymax-ymin))*(self.__pos[v][1] - ymax) + st + 1
+            xes = [self.__pos[v][0] for v in nodelist]
+            ys = [self.__pos[v][1] for v in nodelist]
+            xmin = min(xes)
+            xmax = max(xes)
+            ymin = min(ys)
+            ymax = max(ys)
+            if xmax == xmin:
+                xmax += 1
+                xmin -= 1
+            if ymax == ymin:
+                ymax += 1
+                ymin -= 1
+            self._xmin = xmin
+            self._xmax = xmax
+            self._ymin = ymin
+            self._ymax = ymax
+        else:
+            self.__pos = {}
+            self._xmin = 0
+            self._xmax = 1
+            self._ymin = 0
+            self._ymax = 1
 
     def _render_on_subplot(self, subplot):
         if len(self.__nxg) != 0:

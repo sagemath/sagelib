@@ -206,6 +206,9 @@ class IntegerModRing_generic(quotient_ring.QuotientRing_generic):
             cache = order < 500
         if cache:
             self._precompute_table()
+
+    def krull_dimension(self):
+        return integer.Integer(0)
         
     def _precompute_table(self):
         self._pyx_order.precompute_table(self)

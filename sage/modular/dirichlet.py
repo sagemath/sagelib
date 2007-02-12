@@ -413,7 +413,7 @@ class DirichletCharacter(MultiplicativeGroupElement):
             return self.__bernoulli[k]
         N = self.modulus()
         K = self.base_ring()
-        
+
         if N != 1 and self(-1) != K((-1)**k):
             return K(0)
 
@@ -437,10 +437,9 @@ class DirichletCharacter(MultiplicativeGroupElement):
         t = R.gen()
         # g(t) = t/(e^{Nt}-1)
         g = t/((N*t).exp(prec) - 1)
-
+        
         # h(n) = g(t)*e^{nt}
-        h = [0] + [g * ((n*t).exp(prec)) for n in range(1,N+1)]   
-
+        h = [0] + [g * ((n*t).exp(prec)) for n in range(1,N+1)]
         ber = sum([self(a)*h[a][k] for a in range(1,N+1)]) * arith.factorial(k)
         
         self.__bernoulli[k] = ber        
@@ -1204,7 +1203,7 @@ def DirichletGroup(modulus, base_ring=None, zeta=None, zeta_order=None, names=No
         try:
             zeta = base_ring.zeta(e)
             zeta_order = zeta.multiplicative_order()
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, ArithmeticError):
             zeta = base_ring.zeta()
             n = zeta.multiplicative_order()
             zeta_order = arith.GCD(e,n)
