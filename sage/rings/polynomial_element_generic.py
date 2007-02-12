@@ -1327,7 +1327,13 @@ class Polynomial_integer_dense(Polynomial_generic_domain,
             sage: (x - 2)*(x^2 - 8*x + 16)
             x^3 - 10*x^2 + 32*x - 32
         """
-        return self.parent()(self.__poly * right.__poly, construct=True)        
+        return self.parent()(self.__poly * right.__poly, construct=True)
+
+    def _lmul_(self, right):
+        return self.parent()(ZZX([right]) * self.__poly, construct=True)
+
+    def _rmul_(self, left):
+        return self.parent()(ZZX([left]) * self.__poly, construct=True)
 
     def _sub_(self, right):
         return self.parent()(self.__poly - right.__poly, construct=True)
