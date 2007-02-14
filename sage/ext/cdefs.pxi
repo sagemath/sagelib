@@ -37,6 +37,7 @@ cdef extern from "gmp.h":
     void gmp_randinit_default(gmp_randstate_t state)
     int gmp_randinit_mt (gmp_randstate_t state)    
     size_t mpz_sizeinbase(mpz_t op, int base)
+    size_t mpz_size(mpz_t op)
 
     # The mpz type
     void mpz_abs (mpz_t rop, mpz_t op)
@@ -57,10 +58,11 @@ cdef extern from "gmp.h":
     void mpz_fdiv_r  (mpz_t r, mpz_t n, mpz_t d)
     void mpz_cdiv_q(mpz_t q, mpz_t n, mpz_t d)
     void mpz_cdiv_qr (mpz_t q, mpz_t r, mpz_t n, mpz_t d)
-    void mpz_tdiv_qr (mpz_t q, mpz_t r, mpz_t n, mpz_t d)    
-    double mpz_get_d (mpz_t op) 
+    void mpz_tdiv_qr (mpz_t q, mpz_t r, mpz_t n, mpz_t d)
+    double mpz_get_d (mpz_t op)
     unsigned long int mpz_fdiv_ui (mpz_t n, unsigned long int d)
     unsigned long int mpz_fdiv_q_ui(mpz_t q, mpz_t n, unsigned long int d)    
+    void mpz_fdiv_q_2exp(mpz_t q, mpz_t n, unsigned long int b)    
     void mpz_gcd(mpz_t rop, mpz_t op1, mpz_t op2)
     void mpz_gcdext(mpz_t g, mpz_t s, mpz_t t, mpz_t a, mpz_t b)
     signed long int mpz_get_si(mpz_t op)
