@@ -163,12 +163,12 @@ class GraphDatabase():
             Simple graph on 5 vertices (no loops, no multiple edges)
             sage.: glist[8].show(layout='circular')
             
-            # Now we can use functions from the graphs_list module.
+            # Now we can use functions from the graphs_list.
             # Convert to graph6 format:
-            sage: graph6list = graphs_list.to_graph6(glist)
+            sage: graph6list = graphs_list.to_graph6(glist, output_list=True)
             
             # View the graph6 format of the first graph:
-            sage: graph6list.split('\n')[0]
+            sage: graph6list[0]
             'Dl{'
             
             # Convert to list of graphics arrays:
