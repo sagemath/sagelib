@@ -127,7 +127,7 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
     
     def __init__(self, parent, entries, copy, coerce):
         cdef double z
-        cdef Py_ssize_t i,j   
+        cdef Py_ssize_t i,j
         if isinstance(entries,list):
             if len(entries)!=self._nrows*self._ncols:
                     raise TypeError, "entries has wrong length"
@@ -149,6 +149,7 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
         else:
             try:
                 z=float(entries)
+                gsl_matrix_set_zero(self._matrix)
             except TypeError:
                 raise TypeError, "entries must to coercible to list or real double " 
             if z != 0:
@@ -185,7 +186,7 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
             raise ValueError, "GSL routine had an error"
         # todo -- check error code
         return M
-         
+        
 
     cdef ModuleElement _sub_c_impl(self, ModuleElement right): #matrix.Matrix right):
         cdef Matrix_real_double_dense M,_right,_left
