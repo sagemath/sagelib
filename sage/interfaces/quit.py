@@ -34,6 +34,7 @@ def kill_spawned_jobs():
             else:
                 j += 1
                 if j > 5:
+                    os.kill(int(pid), 9)
                     break
             
 def is_running(pid):
