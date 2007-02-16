@@ -16,22 +16,16 @@
 #                  http://www.gnu.org/licenses/
 ############################################################################
 
-"""This is a dummy class that keeps a list of connected workers. """
+#import unittest
+#import os
 
-worker_list = []
-
-def add(avatar):
-    r"""
-    Adds an avatar to worker_list.
-    
-    """
-    
-    worker_list.append(avatar)
-
-def remove(avatar):
-    r"""
-    Removes the avatar from the worker_list. 
-    
-    """
-    
-    worker_list.remove(avatar)
+#class ServerTestCase(unittest.TestCase):
+#    def testgetAuthorizedKeys(self):
+#        cur = os.getcwd() 
+#        os.chdir('../dsage/tests/data') 
+#        authorized_keys = getAuthorizedKeys('authorized_keys.db')
+#        for username, key in authorized_keys.iteritems():
+#            self.assert_(isinstance(username, str))
+#            self.assert_(isinstance(key, str))
+#        os.chdir(cur)
+#
