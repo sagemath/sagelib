@@ -32,7 +32,12 @@ def kill_spawned_jobs():
                 os.killpg(int(pid), 9)
             except OSError, msg:
                 pass
-
+            else:
+                j += 1
+                if j > 5:
+                    os.kill(int(pid), 9)
+                    break
+            
 def is_running(pid):
     """
     Return True if and only if there is a process with id pid running.
