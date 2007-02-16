@@ -1,5 +1,3 @@
-"""nodoctest
-"""
 ############################################################################
 #                                                                     
 #   DSAGE: Distributed SAGE                     
@@ -18,4 +16,16 @@
 #                  http://www.gnu.org/licenses/
 ############################################################################
 
-version='0.2'
+#import unittest
+#import os
+
+#class ServerTestCase(unittest.TestCase):
+#    def testgetAuthorizedKeys(self):
+#        cur = os.getcwd() 
+#        os.chdir('../dsage/tests/data') 
+#        authorized_keys = getAuthorizedKeys('authorized_keys.db')
+#        for username, key in authorized_keys.iteritems():
+#            self.assert_(isinstance(username, str))
+#            self.assert_(isinstance(key, str))
+#        os.chdir(cur)
+#
