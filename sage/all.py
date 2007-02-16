@@ -247,6 +247,10 @@ def quit_sage(verbose=True):
     from twisted.internet import reactor
     if reactor.running:
         reactor.callFromThread(reactor.stop)
+        
+    # if we are in dsage mode, set to false.
+    import sage.dsage.scripts.dsage_activate as activate
+    activate.in_dsage_mode = False
 
 def _quit_sage_(self):
     import sage.misc.preparser_ipython

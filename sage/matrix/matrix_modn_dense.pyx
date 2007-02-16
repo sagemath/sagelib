@@ -1,6 +1,10 @@
 r"""
 Dense matrices over $\Z/n\Z$ for $n$ small.
 
+AUTHORS:
+    -- William Stein
+    -- Robert Bradshaw
+
 This is a compiled implementation of dense matrices over $\Z/n\Z$
 for $n$ small.
 
@@ -66,10 +70,6 @@ We create a matrix group and coerce it to GAP:
           [ 0*Z(3), 0*Z(3), Z(3)^0 ] ] ])
 """
 
-#
-# LinBox bugs to address:
-#  * echelon form over GF(2) -> crash, worked around by using native 'gauss' in that case
-#  * charpoly and minpoly don't work randomly
 
 include "../ext/interrupt.pxi"
 include "../ext/cdefs.pxi"
@@ -86,7 +86,7 @@ cimport matrix_dense
 cimport matrix
 cimport matrix0
 
-from linbox cimport Linbox_modn_dense
+from sage.libs.linbox.linbox cimport Linbox_modn_dense
 cdef Linbox_modn_dense linbox
 linbox = Linbox_modn_dense()
 
@@ -353,7 +353,6 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             algorithm -- 'linbox' (default if self.base_ring() is a field)
                          'generic'
         """
-        #Disabling LinBox for now
         if algorithm == 'linbox' and (self.p == 2 or not self.base_ring().is_field()):        
             algorithm='generic' #LinBox only supports fields
 
@@ -399,7 +398,10 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         
         self._init_linbox()
         _sig_on
-        v = linbox.poly(typ == 'minpoly')
+        if typ == 'minpoly':
+            v = linbox.minpoly()
+        else:
+            v = linbox.charpoly()
         _sig_off
         R = self._base_ring[var]
         return R(v)
@@ -432,7 +434,6 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             sage: a.pivots()
             [0, 1]
         """
-
         if self.p == 2 and algorithm=='linbox':
             # TODO: LinBox crashes if working over GF(2)
             algorithm ='gauss'
