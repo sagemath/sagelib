@@ -61,6 +61,9 @@ from sage.misc.all       import *         # takes a while
 from sage.libs.all       import *
 from sage.rings.all      import *
 from sage.matrix.all     import *
+
+pmem_malloc()
+
 from sage.modules.all    import *
 from sage.monoids.all    import *
 from sage.algebras.all   import *
@@ -240,6 +243,11 @@ def quit_sage(verbose=True):
     from sage.misc.misc import delete_tmpfiles
     delete_tmpfiles()
 
+    # stop the twisted reactor
+    from twisted.internet import reactor
+    if reactor.running:
+        reactor.callFromThread(reactor.stop)
+        
 def _quit_sage_(self):
     import sage.misc.preparser_ipython
     if sage.misc.preparser_ipython.interface != None:
