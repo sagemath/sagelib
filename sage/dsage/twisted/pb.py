@@ -110,7 +110,7 @@ class DefaultPerspective(pb.Avatar):
     """
 
     current_connections = 0
-
+    
     def perspectiveMessageReceived(self, broker, message, args, kw):
         self.broker = broker
 
