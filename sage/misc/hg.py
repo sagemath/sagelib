@@ -561,7 +561,7 @@ class HG:
         Use this to find changsets that are in your branch, but not in the
         specified destination repository. If no destination is specified, the
         official repository is used.
-        
+
         From the Mercurial documentation:
             Show changesets not found in the specified destination repository or the
             default push location. These are the changesets that would be pushed if
