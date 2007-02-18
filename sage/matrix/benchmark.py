@@ -91,8 +91,6 @@ s := Cputime(t);
         return float(magma.eval('s'))
     else:
         raise ValueError, 'unknown system "%s"'%system
-        
-
 
 
 def rank_ZZ(n=500, min=0, max=9, system='sage'):
