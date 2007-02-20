@@ -14,10 +14,13 @@ cdef class MultiModularBasis_base:
     cdef mod_int* moduli
     cdef mpz_t*   partial_products
     cdef mod_int* C # precomputed values for CRT
+    cdef mpz_t    product
+    cdef mpz_t    half_product
     
     cdef mod_int last_prime(self)
     cdef int _extend_moduli_to_height_c(self, mpz_t height) except -1
     cdef void _refresh_products(self, int start)
+    cdef void _refresh_prod(self)
     cdef void _refresh_precomputations(self, int start)
     cdef int min_moduli_count(self, mpz_t height) except -1
     cdef int moduli_list_c(self, mod_int** moduli)
