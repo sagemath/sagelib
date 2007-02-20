@@ -247,7 +247,7 @@ def quit_sage(verbose=True):
     from twisted.internet import reactor
     if reactor.running:
         reactor.callFromThread(reactor.stop)
-
+        
 def _quit_sage_(self):
     import sage.misc.preparser_ipython
     if sage.misc.preparser_ipython.interface != None:

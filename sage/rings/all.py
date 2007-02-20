@@ -64,7 +64,7 @@ Integers = IntegerModRing
 # Finite fields
 from finite_field import (FiniteField, is_FiniteField, GF, 
                           conway_polynomial, exists_conway_polynomial)
-from finite_field_element import FiniteFieldElement
+from finite_field_element import FiniteFieldElement, is_FiniteFieldElement
 
 # Number field
 from number_field.all import *
@@ -138,6 +138,8 @@ from bernoulli_mod_p import bernoulli_mod_p
 from morphism import is_RingHomomorphism
 
 from homset import is_RingHomset
+
+#from fast_polynomial.compiled_polynomial import compiled_polynomial
 
 CC = ComplexField()
 I = CC.gen()
