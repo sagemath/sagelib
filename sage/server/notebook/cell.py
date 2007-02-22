@@ -85,8 +85,8 @@ class TextCell(Cell_generic):
 class Cell(Cell_generic):
     def __init__(self, id, input, out, worksheet):
         self.__id    = int(id)
-        self.__in    = str(input)
-        self.__out   = str(out)
+        self.__in    = str(input).replace('\r','')
+        self.__out   = str(out).replace('\r','')
         self.__worksheet = worksheet
         self.__interrupted = False
         self.__completions = False
@@ -281,7 +281,6 @@ class Cell(Cell_generic):
             else:
                 output = output[:MAX_OUTPUT/2] + '...\n\n...' + output[-MAX_OUTPUT/2:]
         self.__out = output
-        self.__out_html = html
         self.__sage = sage
 
     def sage(self):
@@ -340,7 +339,7 @@ class Cell(Cell_generic):
                 t += format(s[:i]) + s[i+6:j]
                 s = s[j+7:]
             s = t
-            if not self.is_html() and len(s.strip()) > 0:
+            if not self.is_html():
                 s = '<pre class="shrunk">' + s.strip('\n') + '</pre>'
 #                s = s.strip('\n')
 
