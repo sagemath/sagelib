@@ -339,9 +339,8 @@ class Cell(Cell_generic):
                 t += format(s[:i]) + s[i+6:j]
                 s = s[j+7:]
             s = t
-            if not self.is_html():
+            if not self.is_html() and len(s.strip()) > 0:
                 s = '<pre class="shrunk">' + s.strip('\n') + '</pre>'
-#                s = s.strip('\n')
 
 
         return s.strip('\n')
