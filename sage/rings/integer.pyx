@@ -210,8 +210,11 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         # Then this function becomes the one liner:
         #     mpz_init_set_sage(self.value, x)
         
-        
-        if not (x is None):
+        if x is None:
+            if mpz_sgn(self.value) != 0:
+                mpz_set_si(self.value, 0)
+            
+        else:
             # First do all the type-check versions; these are fast.
 
             if PY_TYPE_CHECK(x, Integer):
@@ -1970,7 +1973,7 @@ cdef extern from *:
     
     ctypedef struct RichPyObject "PyObject"
  
-    # We need a PyTypeObject with elements such that we can
+    # We need a PyTypeObject with elements so we can
     # get and set tp_new, tp_dealloc, tp_flags, and tp_basicsize
     ctypedef struct RichPyTypeObject "PyTypeObject":
 
@@ -1989,13 +1992,13 @@ cdef extern from *:
         # sizeof(Object)
         size_t tp_basicsize
 
-        # We set those flags to circumvent the memory manager
+        # We set a flag here to circumvent the memory manager
         long tp_flags 
 
     cdef long Py_TPFLAGS_HAVE_GC
 
     # We need a PyObject where we can get/set the refcnt directly
-    # and the type.
+    # and access the type.
     ctypedef struct RichPyObject "PyObject":
         int ob_refcnt
         RichPyTypeObject* ob_type
@@ -2010,7 +2013,12 @@ cdef extern from *:
     void PyObject_FREE(PyObject*)
 
 
-# We need a couple of internal GMP datatypes
+# We need a couple of internal GMP datatypes. 
+
+# This may be potentialy very dangerous as it reaches
+# deeply into the internal structure of GMP which may not
+# be consistant across future versions of GMP.
+# See extensive note in the fast_tp_new() function below. 
 
 cdef extern from "gmp.h":
     ctypedef void* mp_ptr #"mp_ptr"
@@ -2018,11 +2026,13 @@ cdef extern from "gmp.h":
     # We allocate _mp_d directly (mpz_t is typedef of this in GMP) 
     ctypedef struct __mpz_struct "__mpz_struct":
         mp_ptr _mp_d
+        size_t _mp_alloc
+        size_t _mp_size
 
     # sets the three free, alloc, and realloc function pointers to the
     # memory management functions set in GMP. Accepts NULL pointer.
     # Potentially dangerous if changed by calling
-    # mp_set_memory_functions after we initialized this module.
+    # mp_set_memory_functions again after we initialized this module.
     void mp_get_memory_functions (void *(**alloc) (size_t), void *(**realloc)(void *, size_t, size_t), void (**free) (void *, size_t))
 
     # GMP's configuration of how many Bits are stuffed into a limb
@@ -2044,6 +2054,9 @@ global_dummy_Integer = Integer()
 #
 # To avoid this we calculate the byte offset of the value member and
 # remember it in this variable.
+#
+# Eventually this may be rendered obsolete by a change in SageX allowing 
+# non-reference counted extension types. 
 cdef long mpz_t_offset
 
 
@@ -2053,75 +2066,140 @@ cdef void * (* mpz_alloc)(size_t)
 # stores the GMP free function
 cdef void (* mpz_free)(void *, size_t)
 
+# A global  pool for performance when integers are rapidly created and destroyed. 
+# It operates on the following principles:
+#
+# - The pool starts out empty. 
+# - When an new integer is needed, one from the pool is returned 
+#   if available, otherwise a new Integer object is created
+# - When an integer is collected, it will add it to the pool 
+#   if there is room, otherwise it will be deallocated. 
+    
+cdef enum:
+    integer_pool_size = 100 # Pyrex has no way of defining constants
+    
+cdef PyObject* integer_pool[integer_pool_size]
+cdef int integer_pool_count = 0
 
-# The signature of tp_new is PyObject* tp_new(RichPyTypeObject *t,
-# PyObject *a, PyObject *k). However we only use t in this
-# implementation.
+# used for profiling the pool
+cdef int total_alloc = 0
+cdef int use_pool = 0
+
+# The signature of tp_new is 
+# PyObject* tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k). 
+# However we only use t in this implementation.
 #
 # t in this case is the Integer TypeObject.
 
 cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
-     cdef RichPyObject* new
 
-     # allocate enough room for the Integer, sizeof_Integer is
-     # sizeof(Integer). This assumes that Integers are not garbage
-     # collected, i.e. they do not pocess references to other Python
-     # objects. See below for a more detailed description.
-     
-     new = PyObject_MALLOC( sizeof_Integer )
+    global integer_pool, integer_pool_count, total_alloc, use_pool
 
-     # Now set every member as set in z, the global dummy Integer
-     # created before this tp_new started to operate.
+    cdef RichPyObject* new
 
-     memcpy(new, (<void*>global_dummy_Integer), sizeof_Integer )
- 
-     # The global_dummy_Integer may have a reference count larger than
-     # one, but it is expected that newly created objects have a
-     # reference count of one. This is potentially unneeded if
-     # everybody plays nice, because the gobal_dummy_Integer has only
-     # one reference in that case.
+    # for profiling pool usage
+    # total_alloc += 1
+    
+    # If there is a ready integer in the pool, we will 
+    # decrement the counter and return that. 
 
-     new.ob_refcnt = 1
+    if integer_pool_count > 0:
+    
+        # for profiling pool usage
+        # use_pool += 1
+        
+        integer_pool_count -= 1
+        new = <RichPyObject *> integer_pool[integer_pool_count]
+      
+    # Otherwise, we have to create one.  
 
-     # This line is only needed if Python is compiled in debugging
-     # mode './configure --with-pydebug'. If that is the case a Python
-     # object has a bunch of debugging fields which are initialized
-     # with this macro. For speed reasons, we don't call it if Python
-     # is not compiled in debug mode. So uncomment the following line
-     # if you are debugging Python.
-     
-     #PyObject_INIT(new, (<RichPyObject*>global_dummy_Integer).ob_type)
+    else:
 
-     # We take the address 'new' and move mpz_t_offset bytes (chars)
-     # to the address of 'value'. We treat that address as a pointer
-     # to a mpz_t struct and allocate memory for the _mp_d element of
-     # that struct. We allocate one limb.
-     #
-     # What is done here is potentialy very dangerous as it reaches
-     # deeply into the internal structure of GMP. Consequently things
-     # may break if a new release of GMP changes some internals. To
-     # emphazise this, this is what the GMP manual has to say about
-     # the documentation for the struct we are using:
-     #
-     #  "This chapter is provided only for informational purposes and the
-     #  various internals described here may change in future GMP releases.
-     #  Applications expecting to be compatible with future releases should use
-     #  only the documented interfaces described in previous chapters."
-     #
-     # If this line is used: SAGE is no such application.
-     # The safe and slower version of the following line is
-     #
-     #  mpz_init(( <mpz_t>(<char *>new + mpz_t_offset) ) This is slower
-     #
-     # because of a function call and because the rest of the mpz
-     # struct was already copied using the memcpy above.
-     
-     (<__mpz_struct *>( <char *>new + mpz_t_offset) )._mp_d = <mp_ptr>mpz_alloc(__GMP_BITS_PER_MP_LIMB >> 3)
+        # allocate enough room for the Integer, sizeof_Integer is
+        # sizeof(Integer). The use of PyObject_MALLOC directly
+        # assumes that Integers are not garbage collected, i.e. 
+        # they do not pocess references to other Python
+        # objects (Aas indicated by the Py_TPFLAGS_HAVE_GC flag). 
+        # See below for a more detailed description.
 
+        new = PyObject_MALLOC( sizeof_Integer )
 
-     return new
+        # Now set every member as set in z, the global dummy Integer
+        # created before this tp_new started to operate.
+
+        memcpy(new, (<void*>global_dummy_Integer), sizeof_Integer )
+
+        # This line is only needed if Python is compiled in debugging
+        # mode './configure --with-pydebug'. If that is the case a Python
+        # object has a bunch of debugging fields which are initialized
+        # with this macro. For speed reasons, we don't call it if Python
+        # is not compiled in debug mode. So uncomment the following line
+        # if you are debugging Python.
+
+        #PyObject_INIT(new, (<RichPyObject*>global_dummy_Integer).ob_type)
+
+        # We take the address 'new' and move mpz_t_offset bytes (chars)
+        # to the address of 'value'. We treat that address as a pointer
+        # to a mpz_t struct and allocate memory for the _mp_d element of
+        # that struct. We allocate one limb.
+        #
+        # What is done here is potentialy very dangerous as it reaches
+        # deeply into the internal structure of GMP. Consequently things
+        # may break if a new release of GMP changes some internals. To
+        # emphazise this, this is what the GMP manual has to say about
+        # the documentation for the struct we are using:
+        #
+        #  "This chapter is provided only for informational purposes and the
+        #  various internals described here may change in future GMP releases.
+        #  Applications expecting to be compatible with future releases should use
+        #  only the documented interfaces described in previous chapters."
+        #
+        # If this line is used SAGE is not such an application.
+        #
+        # The clean version of the following line is:
+        #
+        #  mpz_init(( <mpz_t>(<char *>new + mpz_t_offset) ) 
+        #
+        # We save time both by avoiding an extra function call and 
+        # because the rest of the mpz struct was already initalized 
+        # fully using the memcpy above.
+
+        (<__mpz_struct *>( <char *>new + mpz_t_offset) )._mp_d = <mp_ptr>mpz_alloc(__GMP_BITS_PER_MP_LIMB >> 3)
+
+    # The global_dummy_Integer may have a reference count larger than
+    # one, but it is expected that newly created objects have a
+    # reference count of one. This is potentially unneeded if
+    # everybody plays nice, because the gobal_dummy_Integer has only
+    # one reference in that case.
+    
+    # Objects from the pool have reference count zero, so this
+    # needs to be set in this case. 
+
+    new.ob_refcnt = 1
+
+    return new
 
 cdef void fast_tp_dealloc(PyObject* o):
+
+    # If there is room in the pool for a used integer object, 
+    # then put it in rather than deallocating it. 
+
+    global integer_pool, integer_pool_count
+    
+    if integer_pool_count < integer_pool_size:
+    
+        # Here we free any extra memory used by the mpz_t by
+        # setting it to a single limb. 
+        if (<__mpz_struct *>( <char *>o + mpz_t_offset))._mp_alloc > 1:
+            _mpz_realloc(<mpz_t *>( <char *>o + mpz_t_offset), 1)
+            
+        # It's cheap to zero out an integer, so do it here. 
+        (<__mpz_struct *>( <char *>o + mpz_t_offset))._mp_size = 0
+        
+        # And add it to the pool. 
+        integer_pool[integer_pool_count] = o
+        integer_pool_count += 1
+        return
 
     # Again, we move to the mpz_t and clear it. See above, why this is evil.
     # The clean version of this line would be:
@@ -2155,6 +2233,7 @@ def hook_fast_tp_functions():
     # it as we always have a module level reference to it. If another
     # attribute is added to the Integer class this flag removal so as
     # the alloc and free functions may not be used anymore.
+    # This object will still be reference counted. 
     flag = Py_TPFLAGS_HAVE_GC
     o.ob_type.tp_flags = <long>(o.ob_type.tp_flags & (~flag))
 
@@ -2162,6 +2241,8 @@ def hook_fast_tp_functions():
     # an Integer which includes reference counting. Reference counting
     # is bad in constructors and destructors as it potentially calls
     # the destructor.
+    # Eventually this may be rendered obsolete by a change in SageX allowing 
+    # non-reference counted extension types. 
     mpz_t_offset = <char *>(&global_dummy_Integer.value) - <char *>o
 
     # store how much memory needs to be allocated for an Integer.
@@ -2173,15 +2254,24 @@ def hook_fast_tp_functions():
 
     mp_get_memory_functions(&mpz_alloc, NULL, &mpz_free)
 
-    # Finally replace the functions called when an Integer is
-    # constructed/destructed.
+    # Finally replace the functions called when an Integer needs
+    # to be constructed/destructed.
     o.ob_type.tp_new = &fast_tp_new
     o.ob_type.tp_dealloc = &fast_tp_dealloc
 
-def time_alloc(n):
+def time_alloc_list(n):
     cdef int i
     l = []
     for i from 0 <= i < n:
         l.append(PY_NEW(Integer))
 
     return l
+
+def time_alloc(n):
+    cdef int i
+    for i from 0 <= i < n:
+        z = PY_NEW(Integer)
+
+def pool_stats():
+    print "Used pool %s / %s times" % (use_pool, total_alloc)
+    print "Pool contains %s / %s items" % (integer_pool_count, integer_pool_size)
