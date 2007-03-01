@@ -14,33 +14,32 @@
 #  The full text of the GPL is available at:
 #
 #                  http://www.gnu.org/licenses/
+#
 ##############################################################################
 
-import threading, sys
-from twisted.internet import defer, reactor
-from twisted.python.failure import Failure
+import unittest
 
-# This code is from 
-# http://twistedmatrix.com/trac/ticket/1042
-def blocking_call_from_thread(func, *args, **kwargs):
-    # print func
-    # print args
-    # print kwargs
-    e = threading.Event()
-    l = []
-    def _got_result(result):
-        # print result
-        l.append(result)
-        e.set()
-        return None
-    def wrapped_func():
-        d = defer.maybeDeferred(func, *args, **kwargs)
-        d.addBoth(_got_result)
-    reactor.callFromThread(wrapped_func)
-    e.wait()
-    result = l[0]
-    if isinstance(result, Failure):
-        # Whee!  Cross-thread exceptions!
-        result.raiseException()
-    else:
-        return result
+from sage.dsage.database.userdb import UserDatabase
+
+class UserDatabaseTestCase(unittest.TestCase):
+    r"""
+    Test cases for DSAGE's UserDatabase
+    
+    """
+    
+    TEST_USERNAMES = ['yi', 'alex', 'dorian', 'robert', 'william', 'martin']
+    TEST_EMAILS = ['foo@bar.com', 'bar@foo.com', '1@2.com', '2@4.com', '5@6.com', '6@7.com' ]
+    TEST_KEYS = ['1', '2', '3', '4', '5', '6']
+    
+    def setUp(self):
+        self.userdb = UserDatabase(test=True)
+    
+    def tearDown(self):
+        self.userdb._shutdown()
+    
+    def testadd_user(self):
+        for user, key, email in zip(self.TEST_USERNAMES, self.TEST_KEYS, self.TEST_EMAILS):
+            self.userdb.add_user(user, key, email)
+
+if __name__ == '__main__':
+	unittest.main()
