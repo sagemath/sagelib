@@ -1,10 +1,10 @@
 ############################################################################
-#                                                                     
-#   DSAGE: Distributed SAGE                     
-#                                                                             
-#       Copyright (C) 2006, 2007 Yi Qiang <yqiang@gmail.com>               
-#                                                                            
-#  Distributed under the terms of the GNU General Public License (GPL)        
+#
+#   DSAGE: Distributed SAGE
+#
+#       Copyright (C) 2006, 2007 Yi Qiang <yqiang@gmail.com>
+#
+#  Distributed under the terms of the GNU General Public License (GPL)
 #
 #    This code is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,6 +23,8 @@ from twisted.conch.ssh import keys
 from twisted.cred import checkers, credentials
 from zope.interface import implements
 from twisted.internet import defer
+from twisted.python import log
+from twisted.spread import pb
 
 class PublicKeyCredentialsChecker(object):
     r"""
@@ -32,21 +34,21 @@ class PublicKeyCredentialsChecker(object):
     
     implements(checkers.ICredentialsChecker)
     credentialInterfaces = (credentials.ISSHPrivateKey,)
-
+    
     def __init__(self, pubkeydb):
         self.authorizedKeys = self.getAuthorizedKeys(pubkeydb)
-
+    
     def requestAvatarId(self, credentials):
         # read the authentication table to make sure we have a fresh copy
         self.authorizedKeys = self.getAuthorizedKeys(self.file_name)
-
+        
         if self.authorizedKeys.has_key(credentials.username):
             userKey = self.authorizedKeys[credentials.username]
             if not credentials.blob == base64.decodestring(userKey):
                 return defer.fail(error.ConchError("Invalid key."))
             if not credentials.signature:
                 return defer.fail(error.ValidPublicKey())
-
+            
             pubKey = keys.getPublicKeyObject(data=credentials.blob)
             if keys.verifySignature(pubKey, credentials.signature,
                                     credentials.sigData):
@@ -55,10 +57,10 @@ class PublicKeyCredentialsChecker(object):
                 return defer.fail(error.ConchError("Invalid signature."))
         else:
             return defer.fail(error.ConchError("Invalid username."))
-
+    
     def getAuthorizedKeys(self, file_name):
         self.file_name = file_name
-        authorized_keys = {} 
+        authorized_keys = {}
         try:
             f = open(file_name)
             for l in f:
@@ -68,39 +70,53 @@ class PublicKeyCredentialsChecker(object):
                 authorized_keys[username] = key
         except:
             raise
-
+        
         return authorized_keys
 
 class PublicKeyCredentialsCheckerDB(object):
     implements(checkers.ICredentialsChecker)
     credentialInterfaces = (credentials.ISSHPrivateKey,)
-
+    
     def __init__(self, userdb):
         self.userdb = userdb
-
+    
     def requestAvatarId(self, credentials):
         try:
             user, key = self.get_user(credentials.username)
         except TypeError:
-            return defer.fail(error.ConchError("Invalid username."))
-    
+            log.msg("Invalid username '%s'" % credentials.username)
+            return defer.fail(AuthenticationError('Login failed.'))
         if user:
             if not credentials.blob == base64.decodestring(key):
-                return defer.fail(error.ConchError("Invalid key."))
+                log.msg('Invalid key.')
+                return defer.fail(AuthenticationError('Login failed.'))
             if not credentials.signature:
-                return defer.fail(error.ValidPublicKey())
-
+                log.msg('No signature.')
+                return defer.fail(AuthenticationError('Login failed.'))
             pub_key = keys.getPublicKeyObject(data=credentials.blob)
             if keys.verifySignature(pub_key, credentials.signature,
                                     credentials.sigData):
-                # If we get to this stage, it means the user successfully 
+                # If we get to this stage, it means the user successfully
                 # logged in
                 self.userdb.update_login_time(credentials.username)
                 return credentials.username
             else:
-                return defer.fail(error.ConchError("Invalid signature."))
+                log.msg('Invalid signature.')
+                return defer.fail(AuthenticationError('Login failed.'))
         else:
-            return defer.fail(error.ConchError("Invalid username."))
-
+            log.msg('Invalid username.')
+            return defer.fail(AuthenticationError('Login failed.'))
+    
     def get_user(self, username):
         return self.userdb.get_user_and_key(username)
+
+class AuthenticationError(pb.Error):
+    r"""
+    Return this when credential checking has failed.
+    
+    """
+    
+    def __init__(self, value, data=None):
+        Exception.__init__(self, value, data)
+        self.value = value
+        self.data = data
