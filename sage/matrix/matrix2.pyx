@@ -2200,8 +2200,6 @@ cdef class Matrix(matrix1.Matrix):
             for i from 0 <= i < self._nrows:
                 for j from 0 <= j < num_per_row:
                     self.set_unsafe(i, randint(0,nc-1), R.random_element(*args, **kwds))
-
-
         
 
 cdef decomp_seq(v):
