@@ -25,6 +25,10 @@ include '../ext/interrupt.pxi'
 include '../gsl/gsl.pxi'
 
 import math, operator
+
+cimport sage.libs.pari.gen
+import sage.libs.pari.gen
+
 from random import random
 
 from sage.misc.sage_eval import sage_eval
@@ -194,6 +198,10 @@ cdef class RealDoubleField_class(Field):
         Return a random element of this real double field in the interval [min, max].
 
         EXAMPLES:
+	    sage: RDF.random_element()
+	    -0.657233364114
+	    sage: RDF.random_element(min=100, max=110)
+	    106.592535785
         """
         return self._new_c((max-min)*random() + min)
     
@@ -432,6 +440,8 @@ cdef class RealDoubleElement(FieldElement):
             sage: a = RDF(-1.5)*RDF(2.5)
             sage: a.__invert__()
             -0.266666666667
+	    sage: ~a
+            -0.266666666667
         """
         return RealDoubleElement(1/self._value)
     
@@ -632,10 +642,11 @@ cdef class RealDoubleElement(FieldElement):
         return sage.rings.complex_field.ComplexField()(self)
 
     def _complex_double_(self):
-        return sage.rings.complex_double.ComplexDoubleField(self)
+        return sage.rings.complex_double.ComplexDoubleField()(self)
 
     def _pari_(self):
-        return sage.libs.pari.all.pari.new_with_bits_prec("%.15e"%self._value, 64)
+        cdef sage.libs.pari.gen.PariInstance P = sage.libs.pari.gen.pari
+        return P.double_to_gen_c(self._value)
         
 
     ###########################################
@@ -679,21 +690,21 @@ cdef class RealDoubleElement(FieldElement):
         be returned (though it will be NaN if self is negative).
 
         EXAMPLES:
-            sage: r = 4.0
+            sage: r = RDF(4.0)
             sage: r.sqrt()
-            2.00000000000000
+            2.0
             sage: r.sqrt()^2 == r
             True
 
-            sage: r = 4344
+            sage: r = RDF(4344)
             sage: r.sqrt()
-            65.9090282131363
+            65.9090282131
             sage: r.sqrt()^2 - r
-            0.000000000000000
+            0.0
 
-            sage: r = -2.0
+            sage: r = RDF(-2.0)
             sage: r.sqrt()
-            1.41421356237310*I
+            1.41421356237*I
             """
         if self >= 0:
             return self.square_root()
@@ -708,11 +719,11 @@ cdef class RealDoubleElement(FieldElement):
         Use self.sqrt() to get a complex number if self is negative.
 
         EXAMPLES:
-            sage: r = -2.0
+            sage: r = RDF(-2.0)
             sage: r.square_root()
-            NaN
+            nan
             sage: r.sqrt()
-            1.41421356237310*I
+            1.41421356237*I
         """
         return self._new_c(sqrt(self._value))
 
@@ -1201,7 +1212,7 @@ cdef class RealDoubleElement(FieldElement):
             sage: r = RDF(2).sqrt(); r
             1.41421356237
             sage: r.algdep(5)
-            x^4 - 2*x^2        
+            x^2 - 2
         """
         return sage.rings.arith.algdep(self,n)
 
@@ -1218,7 +1229,7 @@ cdef class RealDoubleElement(FieldElement):
             sage: r = sqrt(RDF(2)); r
             1.41421356237
             sage: r.algdep(5)
-            x^4 - 2*x^2        
+            x^2 - 2
         """
         return sage.rings.arith.algdep(self,n)
 
