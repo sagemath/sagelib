@@ -32,7 +32,8 @@ def __prep_num(x):
         x = str(x)
     return x
 
-I = complex_field.ComplexField().gen(0)
+CC = complex_field.ComplexField()
+I = CC.gen(0)
 def __eval(x):
     return eval(x)
 
@@ -87,27 +88,44 @@ def exponential_integral_1(x, n=0):
 def gamma(s):
     """
     Gamma function at s.
+
+    EXAMPLES:
+        sage: gamma(CDF(0.5,14))
+        -4.05370307804e-10 - 5.77329983455e-10*I
+        sage: gamma(I)
+        -0.154949828301811 - 0.498015668118356*I
+        sage: gamma(6)
+        120.000000000000
     """
-    if not (is_ComplexNumber(s) or is_RealNumber(s)):
-        s = RealField()(s)
-    return s.gamma()
-    #return complex_field.ComplexField()(pari(s).gamma(prec).python(prec))
+    try:
+        return s.gamma()
+    except AttributeError:
+        return CC(s).gamma()
 
 def gamma_inc(s, t):
     """
     Incomplete Gamma function Gamma(s,t).
-    """
-    if not (is_ComplexNumber(s)):
-        if is_ComplexNumber(t):
-            C = t.parent()
-        else:
-            C = ComplexField()
-        s = C(s)
-    return s.gamma_inc(t)
 
-    #s = pari.new_with_prec(s, prec)
-    #t = pari.new_with_prec(s, prec)
-    #return complex_field.ComplexField()(s.incgam(t, prec).python(prec))
+    EXAMPLES:
+        sage: gamma_inc(CDF(0,1), 3)
+        0.00320857499337 + 0.0124061858119*I
+        sage: gamma_inc(3, 3)
+        0.846380162253687 + 2.52435489670724e-29*I      # 32-bit
+        0.846380162253687                               # 64-bit
+        sage: gamma_inc(RDF(1), 3)
+        0.0497870683678639
+    """
+    try:
+        return s.gamma_inc(t)
+    except AttributeError:
+        if not (is_ComplexNumber(s)):
+            if is_ComplexNumber(t):
+                C = t.parent()
+            else:
+                C = ComplexField()
+            s = C(s)
+        return s.gamma_inc(t)
+
 
 # synonym.
 incomplete_gamma = gamma_inc
@@ -125,10 +143,10 @@ def zeta(s):
     
     EXAMPLES:
         sage: zeta(2)
-        1.64493406684822
+        1.64493406684823
         sage: RR = RealField(200)
         sage: zeta(RR(2))
-        1.6449340668482264364724151666460251892189499012067984377355
+        1.6449340668482264364724151666460251892189499012067984377356
     """
     try:
         return s.zeta()
@@ -163,17 +181,17 @@ def zeta_symmetric(s):
         sage: zeta_symmetric(0.7)
         0.497580414651127
         sage: zeta_symmetric(1-0.7)
-        0.497580414651126
+        0.497580414651127
         sage: RR = RealField(200)
         sage: zeta_symmetric(RR('0.7'))
-        0.49758041465112690357779107525638385212657443284080589766061
+        0.49758041465112690357779107525638385212657443284080589766062
         sage: I = CC.0
         sage: zeta_symmetric(RR('0.5') + I*RR('14.0'))
-        0.000201294444235257 + 0.00000000000000000145689666927739*I
+        0.000201294444235258 + 4.74338450462408e-20*I
         sage: zeta_symmetric(RR('0.5') + I*RR('14.1'))
-        0.0000489893483255689 - 0.0000000000000000000423516473627150*I
+        0.0000489893483255687 + 1.18584612615602e-20*I
         sage: zeta_symmetric(RR('0.5') + I*RR('14.2'))
-        -0.0000868931282618784 - 0.00000000000000000346267068837557*I
+        -0.0000868931282620101 - 2.03287907341032e-20*I
 
     REFERENCE:
       I copied the definition of xi from

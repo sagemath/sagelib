@@ -33,7 +33,7 @@ that in pure Python this would be a syntax error).
     sage: 87.factor()
     3 * 29
     sage: 15.10.sqrt()
-    3.88587184554508
+    3.88587184554509
     sage: preparse('87.sqrt()')
     'Integer(87).sqrt()'
     sage: preparse('15.10.sqrt()')
@@ -408,7 +408,7 @@ def preparse_file(contents, attached={}, magic=True,
                 continue
             loaded_files.append(name_load)
             if name_load[-3:] == '.py':
-                ipmagic('run -i "%s"'%name_load)
+                _ip.magic('run -i "%s"'%name_load)
                 L = ''
             elif name_load[-5:] == '.sage':
                 try:

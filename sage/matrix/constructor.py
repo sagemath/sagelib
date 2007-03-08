@@ -21,6 +21,8 @@ Matrix Constructor.
 import sage.rings.all as rings
 import sage.matrix.matrix_space as matrix_space
 from sage.structure.sequence import Sequence
+from sage.rings.real_double import RDF
+from sage.rings.complex_double import CDF
 
 def matrix(arg0=None, arg1=None, arg2=None, arg3=None, sparse=None):
     """
@@ -42,7 +44,7 @@ def matrix(arg0=None, arg1=None, arg2=None, arg3=None, sparse=None):
                matrix over ring with given number of rows and entries from the flat list
         7. matrix(ring, nrows, ncols, entries, [sparse=True]):
                matrix over the given ring with given number of rows and columns and entries.
-        
+        8. matrix(numpy_array)
     The sparse option is optional, must be explicitly named (i.e.,
     sparse=True), and may be either True or False.
 
@@ -201,7 +203,18 @@ def matrix(arg0=None, arg1=None, arg2=None, arg3=None, sparse=None):
         sage: print a, a.is_sparse()
         [ 0  0  0  0  0]
         [ 0  0 10  0  0]
-        [ 0  0  0  0  0] True    
+        [ 0  0  0  0  0] True
+
+    8. Creating a matrix from a numpy array
+        Any numpy array with a datatype of float or complex may be passed to matrix
+        If the data type is float the result will be a matrix over the real double field.
+        complex numpy arrays will give matrices over the complex double field.
+        The data of the numpy array must be contiguous, so slices of other matrices will raise an exception.        
+        sage: import numpy
+        sage: n=numpy.array([[1,2],[3,4]],float)
+        sage: m=matrix(n)
+        sage: n=numpy.array([[numpy.complex(0,1),numpy.complex(0,2)],[3,4]],complex)
+        sage: m=matrix(n)
     """
     if hasattr(arg0, '_matrix_'):
         if arg1 is None:
@@ -327,9 +340,31 @@ def matrix(arg0=None, arg1=None, arg2=None, arg3=None, sparse=None):
             ncols = int(arg2)
         entries = arg3
         if isinstance(entries, dict):
-            if sparse is None: sparse = True                        
+            if sparse is None: sparse = True
+            
     else:
-        raise TypeError, "unknown matrix constructor format.  Type matrix? for help"
+        import numpy
+        if isinstance(arg0,numpy.ndarray):
+            if str(arg0.dtype).count('float')==1:
+                if arg0.flags.c_contiguous==True or arg0.flags.f_contiguous==True:
+                    m=matrix(RDF,arg0.shape[0],arg0.shape[1],0)
+                    m._replace_self_with_numpy(arg0)
+                    if arg0.flags.c_contiguous:
+                        return m
+                    else:
+                        return m.transpose()
+            elif str(arg0.dtype).count('complex')==1:
+                if arg0.flags.c_contiguous==True or arg0.flags.f_contiguous==True:
+                    m=matrix(CDF,arg0.shape[0],arg0.shape[1],0)
+                    m._replace_self_with_numpy(arg0)
+                    if arg0.flags.c_contiguous:
+                        return m
+                    else:
+                        return m.transpose()
+                    
+
+        else:
+            raise TypeError, "unknown matrix constructor format.  Type matrix? for help"
 
     if sparse is None:
         sparse = False
