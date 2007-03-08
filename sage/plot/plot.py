@@ -2272,7 +2272,7 @@ class PlotFactory(GraphicPrimitiveFactory):
             try:
                 y = f(x)
                 data.append((x, float(y)))
-            except (TypeError, ValueError), msg:
+            except (ZeroDivisionError, TypeError, ValueError), msg:
                 #raise ValueError, "%s\nUnable to compute f(%s)"%(msg, x)
                 pass
         # adaptive refinement

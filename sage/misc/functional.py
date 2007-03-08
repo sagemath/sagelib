@@ -145,7 +145,7 @@ def acos(x):
     """
     Return the arc cosine of x.
 
-   """
+    """
     try: return x.acos()
     except AttributeError: return RDF(x).acos()
 
@@ -285,7 +285,7 @@ def eta(x):
 
     EXAMPLES:
         sage: eta(1+I)
-        0.742048775836564 + 0.198831370229910*I
+        0.742048775836565 + 0.198831370229911*I
     """
     try: return x.eta()
     except AttributeError: return CDF(x).eta()
@@ -589,14 +589,14 @@ def log(x,b=None):
     argument.}
 
     EXAMPLES:
-        sage: log_b(10,2)
+        sage: log(10,2)
         3.32192809489
-        sage: log_b(8,2)
+        sage: log(8,2)
         3.0
-        sage: log_b(10)
+        sage: log(10)
         2.30258509299
-        sage: log_b(2.718)
-        0.999896315728951
+        sage: log(2.718)
+        0.999896315728952
     """
     if b is None:
         if hasattr(x, 'log'):

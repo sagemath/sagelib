@@ -107,17 +107,20 @@ class SymbolicExpression(RingElement):
     def hash(self):
         return hash(maxima(self))
 
-    def plot(self, x=None, *args, **kwds):
+    def plot(self, **kwds):
         from sage.plot.plot import plot
         # see if the user passed a param
-        if not x is None:
-            param = x
         try:
             param = kwds['param']
         except KeyError:
-            return SageObject._plot_(self, *args, **kwds)
+            if isinstance(self.simplify(), SymbolicConstant):
+                return plot(self.simplify()._obj)
+            else:
+                raise TypeError, "Must give an explicit parameter to plot this"\
+                + " expression."
+        
         del kwds['param']
-        return plot(self.function(param), *args, **kwds)
+        return plot(self.function(param), **kwds)
         
 
     def __eq__(self, right):
