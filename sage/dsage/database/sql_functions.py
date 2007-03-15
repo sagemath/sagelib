@@ -14,33 +14,46 @@
 #  The full text of the GPL is available at:
 #
 #                  http://www.gnu.org/licenses/
+#
 ##############################################################################
 
-import threading, sys
-from twisted.internet import defer, reactor
-from twisted.python.failure import Failure
+from twisted.python import log
 
-# This code is from 
-# http://twistedmatrix.com/trac/ticket/1042
-def blocking_call_from_thread(func, *args, **kwargs):
-    # print func
-    # print args
-    # print kwargs
-    e = threading.Event()
-    l = []
-    def _got_result(result):
-        # print result
-        l.append(result)
-        e.set()
-        return None
-    def wrapped_func():
-        d = defer.maybeDeferred(func, *args, **kwargs)
-        d.addBoth(_got_result)
-    reactor.callFromThread(wrapped_func)
-    e.wait()
-    result = l[0]
-    if isinstance(result, Failure):
-        # Whee!  Cross-thread exceptions!
-        result.raiseException()
-    else:
-        return result
+LOG_LEVEL = 5
+def table_exists(con, tablename):
+    """
+    Check if a given table exists.
+    If the below query is not None, then the table exists
+    
+    """
+    
+    query = """SELECT name FROM sqlite_master 
+    WHERE type = 'table' AND name = ?;
+    """
+    
+    cur = con.cursor()
+    cur.execute(query, (tablename,))
+    result = cur.fetchone()
+    return result
+    
+def create_table(con, tablename, query):
+    r"""
+    Creates a table given the connection.
+    
+    """
+    
+    if LOG_LEVEL > 1:
+        print '-' * 50
+        print "CREATE TABLE: "
+        print query
+        print '-' * 50
+    log.msg('Creating table %s ' % tablename)
+    con.execute(query)
+
+def add_trigger(con, trigger):
+    if LOG_LEVEL > 1:
+        print '-' * 50
+        print "ADD TRIGGER: "
+        print trigger
+        print '-' * 50
+    con.execute(trigger)
