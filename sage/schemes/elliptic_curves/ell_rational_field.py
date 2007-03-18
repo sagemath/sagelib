@@ -983,7 +983,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
         EXAMPLES:
             sage: E = EllipticCurve('389a')
-            sage: E.gens()
+            sage: E.gens()                 # random output    
             [(-1 : 1 : 1), (0 : 0 : 1)]
         """
         try:
@@ -4089,7 +4089,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
           Run it with a consistency check:
             sage: EllipticCurve("37a").padic_sigma(5, 10, check=True)
-            (1 + O(5^20))*t + (3 + 2*5^2 + 3*5^3 + 3*5^6 + 4*5^7 + O(5^8))*t^3 + (3 + 2*5 + 2*5^2 + 2*5^3 + 2*5^4 + 2*5^5 + 2*5^6 + O(5^7))*t^4 + (2 + 4*5^2 + 4*5^3 + 5^4 + 5^5 + O(5^6))*t^5 + (2 + 3*5 + 5^4 + O(5^5))*t^6 + (4 + 3*5 + 2*5^2 + O(5^4))*t^7 + (2 + 3*5 + 2*5^2 + O(5^3))*t^8 + (4*5 + 4*5^2 + O(5^3))*t^9 + (1 + O(5))*t^10 + O(t^11)
+            (1 + O(5^20))*t + (3 + 2*5^2 + 3*5^3 + 3*5^6 + 4*5^7 + O(5^8))*t^3 + (3 + 2*5 + 2*5^2 + 2*5^3 + 2*5^4 + 2*5^5 + 2*5^6 + O(5^7))*t^4 + (2 + 4*5^2 + 4*5^3 + 5^4 + 5^5 + O(5^6))*t^5 + (2 + 3*5 + 5^4 + O(5^5))*t^6 + (4 + 3*5 + 2*5^2 + O(5^4))*t^7 + (2 + 3*5 + 2*5^2 + O(5^3))*t^8 + (4*5 + O(5^2))*t^9 + (1 + O(5))*t^10 + O(t^11)
 
           Boundary cases:
             sage: EllipticCurve([1, 1, 1, 1, 1]).padic_sigma(5, 1)
