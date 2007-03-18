@@ -61,6 +61,17 @@ Base ring:
 
     sage: VectorSpace(QQ, 10).base_ring()
     Rational Field
+
+TESTS:
+We intersect a zero-dimensional vector space with
+a 1-dimension submodule.
+    sage: V = (QQ^1).span([])
+    sage: W = ZZ^1
+    sage: V.intersection(W)
+    Free module of degree 1 and rank 0 over Integer Ring
+    Echelon basis matrix:
+    []
+
 """
 
 ####################################################################################
@@ -1860,6 +1871,12 @@ class FreeModule_generic_field(FreeModule_generic_pid):
 
         if self.ambient_vector_space() != other.ambient_vector_space():
             raise ArithmeticError, "self and other must have the same ambient space."
+
+        if self.rank() == 0:
+            return self
+
+        if other.rank() == 0:
+            return other
         
         if self.base_ring() != other.base_ring():
             # Now other is over a ring R whose fraction field K is the base field of V = self.
@@ -1870,7 +1887,7 @@ class FreeModule_generic_field(FreeModule_generic_pid):
             #    with kernel equal to V = self.
             # 2. Compute the kernel over R of Phi restricted to other.  Do this
             #    by clearing denominators, computing the kernel of a matrix with
-            #    entries in R, then restoring denominators to the answer. 
+            #    entries in R, then restoring denominators to the answer.
             K = self.base_ring()
             R = other.base_ring()
             B = self.basis_matrix().transpose()
