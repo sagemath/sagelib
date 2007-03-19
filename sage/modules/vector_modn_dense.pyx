@@ -33,7 +33,17 @@ We multiply a vector by a matrix:
     sage: m = matrix(GF(97),5,range(25))
     sage: a*m
     (53, 63, 73, 83, 93)
-    
+
+TESTS:
+    sage: v = vector(Integers(8), [1,2,3,4,5])
+    sage: loads(dumps(v)) == v
+    True
+    sage: v = vector(Integers(389), [1,2,3,4,5])
+    sage: loads(dumps(v)) == v
+    True
+    sage: v = vector(Integers(next_prime(10^20)), [1,2,3,4,5])
+    sage: loads(dumps(v)) == v
+    True
 """
 
 ###############################################################################
