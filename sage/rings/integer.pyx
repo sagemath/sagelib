@@ -358,7 +358,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
     def  __dealloc__(self):
         mpz_clear(self.value)
-        
+
     def __repr__(self):
         return self.str()
 
@@ -538,6 +538,11 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
     cdef mpz_t* get_value(Integer self):
         return &self.value
+
+    cdef void _to_ZZ(self, ntl_c_ZZ *z):
+        _sig_on
+        mpz_to_ZZ(z, &self.value)
+        _sig_off
 
     cdef ModuleElement _add_c_impl(self, ModuleElement right):
         # self and right are guaranteed to be Integers
