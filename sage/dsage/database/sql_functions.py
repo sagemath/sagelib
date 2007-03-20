@@ -41,13 +41,13 @@ def create_table(con, tablename, query):
     Creates a table given the connection.
     
     """
-    
+
+    log.msg('Creating table %s...' % tablename)    
     if LOG_LEVEL > 1:
         print '-' * 50
         print "CREATE TABLE: "
         print query
         print '-' * 50
-    log.msg('Creating table %s ' % tablename)
     con.execute(query)
 
 def add_trigger(con, trigger):
