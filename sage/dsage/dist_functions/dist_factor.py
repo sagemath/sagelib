@@ -110,7 +110,7 @@ DSAGE_RESULT = 'result.sobj'
         If the factorization is not yet complete, spawn another job.
         
         """
-        
+
         if prod(self.prime_factors) == self.n:
             self.done = True
             return
@@ -123,8 +123,9 @@ DSAGE_RESULT = 'result.sobj'
         # If result is unexpected...
         try:
             factors, primality, params, algorithm = result
-        except:
+        except Exception, msg:
             print 'Error in processing result.'
+            print msg
             return
         try:
             self.cur_B1 = max(self.cur_B1, int(params['B1']))

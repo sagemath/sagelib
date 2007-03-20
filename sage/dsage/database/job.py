@@ -307,7 +307,7 @@ class Job(Persistent):
         # dump and compress the data of the job
         jdict = copy.deepcopy(self.jdict)
         jdict['data'] = cPickle.dumps(self.jdict['data'], 2)
-        # jdict['data'] = zlib.compress(jdict['data'])
+        jdict['data'] = zlib.compress(jdict['data'])
         
         return jdict
 
@@ -319,11 +319,11 @@ def expand_job(jdict):
     
     if jdict is None:
         return None
-        
+    
     job = Job()
     
     # decompress and load data
-    # jdict['data'] = zlib.decompress(jdict['data'])
+    jdict['data'] = zlib.decompress(jdict['data'])
     jdict['data'] = cPickle.loads(jdict['data'])
     
     # swap the jdicts, easy eh?
