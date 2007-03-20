@@ -21,7 +21,12 @@ direction.
     sage: parent(s(1) + r(1))
     Finite Field of size 7
     sage: parent(r(1) + s(1))
-    Finite Field of size 7    
+    Finite Field of size 7
+
+We list the elements of $\Z/3\Z$
+    sage: R = Integers(3)
+    sage: list(R)
+    [0, 1, 2]
 
 AUTHORS
     -- William Stein (initial code)
@@ -442,6 +447,9 @@ class IntegerModRing_generic(quotient_ring.QuotientRing_generic):
 
     def order(self):
         return self.__order
+
+    def cardinality(self):
+        return self.order()
 
     def _pari_order(self):
         try:
