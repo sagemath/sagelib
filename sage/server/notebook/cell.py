@@ -18,7 +18,8 @@ list of cells.
 #    while True:
 #       print "hello world"
 # On the other hand, we don't want to loose the output of big matrices
-# and numbers, so don't make this too small. 
+# and numbers, so don't make this too small.
+
 MAX_OUTPUT = 65536
 
 TRACEBACK = 'Traceback (most recent call last):'
@@ -27,6 +28,8 @@ TRACEBACK = 'Traceback (most recent call last):'
 import os, shutil
 
 from   sage.misc.misc import word_wrap
+
+from colorize import colorize
 
 import notebook
 
@@ -487,12 +490,13 @@ class Cell(Cell_generic):
 
         if r == 0:
             t += ' '
+        t_colorize = colorize(t)
         s += """
            <pre class="%s"
               id         = 'cell_display_%s'
               onClick  = 'cell_focus(%s, false); return true;'
            >%s</pre>
-        """%(cls, id, id, t.replace('<','&lt;'))
+        """%(cls, id, id, t_colorize)
         return s
 
     def files_html(self):
