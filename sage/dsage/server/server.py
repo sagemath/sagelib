@@ -335,6 +335,16 @@ class DSageServer(pb.Root):
             for h in hostinfo_list:
                 if h['uuid'] not in h.values():
                     hostinfo_list.append(h)
+    
+    def write_stats_to_xml(self):
+        r"""
+        Writes the server statistics to a XML file to be consumed by other 
+        programs
+        
+        """
+        
+        raise NotImplementedError
+        
 
 class DSageWorkerServer(DSageServer):
     r"""
