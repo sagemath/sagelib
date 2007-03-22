@@ -138,7 +138,8 @@ class HostInfo(pb.Copyable, pb.RemoteCopy):
             except KeyError:
                 pass
         
-        canonical_info['sage'] = '2.3'
+        import sage.version
+        canonical_info['sage'] = sage.version.version
         
         self.host_info = canonical_info
         return self.host_info
@@ -263,8 +264,9 @@ class ClassicHostInfo(object):
                 canonical_info[unify_info[k]] = v
             except KeyError:
                 pass
-                
-        canonical_info['sage'] = '2.3'
+        
+        import sage.version
+        canonical_info['sage'] = sage.version.version
 
         return canonical_info
 
