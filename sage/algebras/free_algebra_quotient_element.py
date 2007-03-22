@@ -103,7 +103,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
                 return x[:len(x)-2]
             else:
                 return x
-        
+
     def vector(self):
         return self.__vector
 
