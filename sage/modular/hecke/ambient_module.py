@@ -528,7 +528,7 @@ class AmbientHeckeModule(module.HeckeModule_free_module):
             if N % p != 0:
                 raise ValueError, "p must divide the level."
             D = [p]
-            
+
         for q in D:
             NN = N//q
             if NN % f == 0:

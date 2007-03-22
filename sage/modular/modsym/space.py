@@ -1413,11 +1413,82 @@ class ModularSymbolsSpace(hecke.HeckeModule_free_module):
         # image of cuspidal integral submodule
         C = I * D
         if not C.is_one():
+            if not C.is_square():
+                C = (ZZ**C.ncols()).span(C.rows()).basis_matrix()
             D = D * C**(-1)
         D.set_immutable()
         R = IntegralPeriodMapping(self, D)
         self.__integral_period_mapping = R
         return R
+
+    def modular_symbols_of_sign(self, sign, bound=None):
+        """
+        Returns a space of modular symbols with the same defining
+        properties (weight, level, etc.) and Hecke eigenvalues as this
+        space except with given sign.
+
+        INPUT:
+            self -- a cuspidal space of modular symbols
+            sign -- an integer, one of -1, 0, or 1
+            bound -- integer (default: None); if specified only use
+                 Hecke operators up to the given bound.
+
+        EXAMPLES:
+            sage: S = ModularSymbols(Gamma0(11),2,sign=0).cuspidal_subspace()
+            sage: S
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 3 for Gamma_0(11) of weight 2 with sign 0 over Rational Field
+            sage: S.modular_symbols_of_sign(-1)
+            M.odular Symbols space of dimension 1 for Gamma_0(11) of weight 2 with sign -1 over Rational Field
+
+            sage: S = ModularSymbols(43,2,sign=1)[2]; S
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 4 for Gamma_0(43) of weight 2 with sign 1 over Rational Field
+            sage: S.modular_symbols_of_sign(-1)
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 3 for Gamma_0(43) of weight 2 with sign -1 over Rational Field
+
+            sage: S.modular_symbols_of_sign(0)
+            Modular Symbols subspace of dimension 4 of Modular Symbols space of dimension 7 for Gamma_0(43) of weight 2 with sign 0 over Rational Field
+
+            
+            sage: S = ModularSymbols(389,sign=1)[3]; S
+            Modular Symbols subspace of dimension 3 of Modular Symbols space of dimension 33 for Gamma_0(389) of weight 2 with sign 1 over Rational Field
+            sage: S.modular_symbols_of_sign(-1)
+            Modular Symbols subspace of dimension 3 of Modular Symbols space of dimension 32 for Gamma_0(389) of weight 2 with sign -1 over Rational Field
+            sage: S.modular_symbols_of_sign(0)
+            Modular Symbols subspace of dimension 6 of Modular Symbols space of dimension 65 for Gamma_0(389) of weight 2 with sign 0 over Rational Field
+
+            sage: S = ModularSymbols(23,sign=1,weight=4)[2]; S
+            Modular Symbols subspace of dimension 4 of Modular Symbols space of dimension 7 for Gamma_0(23) of weight 4 with sign 1 over Rational Field
+            sage: S.modular_symbols_of_sign(1) is S
+            True
+            sage: S.modular_symbols_of_sign(0)
+            Modular Symbols subspace of dimension 8 of Modular Symbols space of dimension 12 for Gamma_0(23) of weight 4 with sign 0 over Rational Field
+            sage: S.modular_symbols_of_sign(-1)
+            Modular Symbols subspace of dimension 4 of Modular Symbols space of dimension 5 for Gamma_0(23) of weight 4 with sign -1 over Rational Field
+        """
+        if sign == self.sign():
+            return self
+        if not self.is_cuspidal():
+            raise ValueError, "self must be cuspidal for modular symbols space with given sign to be defined."
+        d = self.dimension()
+        if sign != 0:
+            if self.sign() == 0:
+                d = d//2
+        elif sign == 0:      # self has nonzero sign
+            d = 2*d
+        B = self.ambient_module().modular_symbols_of_sign(sign)
+        p = 2
+        if bound is None:
+            bound = self.hecke_bound()
+        while B.dimension() > d and p <= bound:
+            while self.level() % p == 0:
+                p = arith.next_prime(p)
+            f = self.hecke_polynomial(p)
+            g = misc.prod(g for g,_ in f.factor())   # square free part
+            t = B.hecke_operator(p)
+            s = g(t)
+            B = s.kernel()
+            p = arith.next_prime(p)
+        return B
 
 
 class PeriodMapping(SageObject):

@@ -569,7 +569,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
     cdef ModuleElement _neg_c_impl(self):
         cdef Integer x
-        x = Integer()
+        x = PY_NEW(Integer)
         mpz_neg(x.value, self.value)
         return x
 
@@ -582,9 +582,9 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         # self and right are guaranteed to be Integers
         cdef Integer x
         x = PY_NEW(Integer)
-        if  mpz_sizeinbase(self.value, 2) > 1000000:  # some lack of symmetry
-            # We only use the signal handler (to enable ctrl-c out) in case
-            # self is huge, so the product might actually take a while to compute.
+        if mpz_size(self.value) + mpz_size((<Integer>right).value) > 100000:
+            # We only use the signal handler (to enable ctrl-c out) when the
+            # product might take a while to compute
             _sig_on
             mpz_mul(x.value, self.value, (<Integer>right).value)
             _sig_off
@@ -668,28 +668,32 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             ...
             RuntimeError: exponent must be at most 4294967294
         """
-        cdef Integer _self, _n
+        cdef Integer _n
         cdef unsigned int _nval
         if not PY_TYPE_CHECK(self, Integer):
             if isinstance(self, str):
                 return self * n
             else:
                 return self.__pow__(int(n))
+
         try:
+            # todo: should add a fast pathway to deal with n being
+            # an Integer or python int
             _n = Integer(n)
         except TypeError:
             raise TypeError, "exponent (=%s) must be an integer.\nCoerce your numbers to real or complex numbers first."%n
+
         if _n < 0:
             return Integer(1)/(self**(-_n))
         if _n > MAX_UNSIGNED_LONG:
             raise RuntimeError, "exponent must be at most %s"%MAX_UNSIGNED_LONG
-        _self = integer(self)
+        _self = self
         cdef Integer x
-        x = Integer()
+        x = PY_NEW(Integer)
         _nval = _n
 
         _sig_on
-        mpz_pow_ui(x.value, _self.value, _nval)
+        mpz_pow_ui(x.value, (<Integer>self).value, _nval)
         _sig_off
 
         return x
@@ -1874,11 +1878,6 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
 ONE = Integer(1)
 
-def integer(x):
-    if PY_TYPE_CHECK(x, Integer):
-        return x
-    return Integer(x)
-
 
 def LCM_list(v):
     cdef int i, n
@@ -2289,3 +2288,8 @@ def time_alloc(n):
 def pool_stats():
     print "Used pool %s / %s times" % (use_pool, total_alloc)
     print "Pool contains %s / %s items" % (integer_pool_count, integer_pool_size)
+
+cdef integer(x):
+    if PY_TYPE_CHECK(x, Integer):
+        return x
+    return Integer(x)

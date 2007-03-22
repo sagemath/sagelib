@@ -980,7 +980,7 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
     def modular_symbols_of_sign(self, sign):
         """
         Returns a space of modular symbols with the same defining
-        properties (weight, sign, etc.) as this space except with
+        properties (weight, level, etc.) as this space except with
         given sign.
 
         EXAMPLES:
@@ -993,6 +993,8 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
             sage: M.modular_symbols_of_sign(-1)
             Modular Symbols space of dimension 1 for Gamma_1(11) of weight 2 with sign -1 and over Rational Field
         """
+        if sign == self.sign():
+            return self
         return modsym.ModularSymbols(self.group(), self.weight(), sign=sign, base_ring=self.base_ring())
         
 
@@ -1007,8 +1009,9 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
             sage: M.modular_symbols_of_weight(3)
             Modular Symbols space of dimension 4 for Gamma_1(6) of weight 3 with sign 0 and over Rational Field
         """
+        if k == self.weight():
+            return self
         return modsym.ModularSymbols(self.group(), weight=k, sign=self.sign(), base_ring=self.base_ring())        
-    
 
     def _compute_sign_submodule(self, sign, compute_dual=True):
         """

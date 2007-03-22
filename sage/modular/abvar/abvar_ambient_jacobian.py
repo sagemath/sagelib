@@ -8,25 +8,23 @@ TESTS:
     True
 """
 
-from abvar             import ModularAbelianVariety
+from abvar             import ModularAbelianVariety_modsym
 from sage.rings.all    import QQ
 from sage.modular.dims import dimension_cusp_forms
 
 
-class ModAbVar_ambient_jacobian(ModularAbelianVariety):
+class ModAbVar_ambient_jacobian(ModularAbelianVariety_modsym):
     def __init__(self, group):
         self._group = group
-        ModularAbelianVariety.__init__(self, level = group.level(), base_ring = QQ)
-
-    def __cmp__(self, other):
-        if not isinstance(other, ModAbVar_ambient_jacobian):
-            return cmp(type(self), type(other))
-        return cmp((self._group, self.base_ring()), (other._group, other.base_ring()))
+        ModularAbelianVariety_modsym.__init__(self, level = group.level(), base_ring = QQ)
 
     def _repr_(self):
         g = str(self._group)
         g = g.replace('Congruence','congruence').replace('Subgroup','subgroup')
         return "Jacobian of the modular curve associated to the %s"%g
+
+    def ambient_variety(self):
+        return self
 
     def group(self):
         return self._group
@@ -36,6 +34,12 @@ class ModAbVar_ambient_jacobian(ModularAbelianVariety):
         Return the dimension of this modular abelian variety.
         
         EXAMPLES:
+            sage: J0(2007).dimension()
+            221
+            sage: J1(13).dimension()
+            2
+            sage: J1(997).dimension()
+            40920            
             sage: J0(389).dimension()
             32
             sage: JH(389,[4]).dimension()
@@ -49,26 +53,6 @@ class ModAbVar_ambient_jacobian(ModularAbelianVariety):
             d = dimension_cusp_forms(self._group, k=2)
             self._dimension = d
             return d
-
-    def _integral_hecke_matrix(self, n, sign=0):
-        """
-        EXAMPLES:
-            sage: J1(13)._integral_hecke_matrix(2)
-            [-2  0 -1  1]
-            [ 1 -1  0 -1]
-            [ 1  1 -2  0]
-            [ 0  1 -1 -1]
-            sage: J1(13)._integral_hecke_matrix(2,sign=1)
-            [-1  1]
-            [-1 -2]
-            sage: J1(13)._integral_hecke_matrix(2,sign=-1)
-            [-2 -1]
-            [ 1 -1]
-        """
-        return self.modular_symbols(sign).integral_hecke_matrix(n)
-
-    def _rational_hecke_matrix(self, n, sign=0):
-        return self.modular_symbols(sign).hecke_matrix(n)
 
     def modular_symbols(self, sign=0):
         """
@@ -96,7 +80,18 @@ class ModAbVar_ambient_jacobian(ModularAbelianVariety):
         self._modular_symbols[sign] = S
         return S
 
+##     def is_subvariety(self, other):
+##         """
+##         Return True if self is a subvariety of other, as they sit in an ambient
+##         modular abelian variety.
 
-
-
-    
+##         EXAMPLES:
+        
+##         """
+##         if not isinstance(other, ModularAbelianVariety_modsym):
+##             return False
+##         A = other.ambient_variety()
+##         if self != A:
+##             return False
+##         # Now self is the ambient variety, so it's just a dimension check
+##         return self.dimension() == other.dimension()

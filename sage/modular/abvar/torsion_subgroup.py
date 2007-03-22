@@ -5,6 +5,8 @@ TESTS:
     sage: T = J0(54).torsion_subgroup()
     sage: loads(dumps(T)) == T
     True
+
+    
 """
 
 from finite_subgroup            import FiniteSubgroup
@@ -32,6 +34,16 @@ class TorsionSubgroup(FiniteSubgroup):
             self._order = n
             return n
         raise RuntimeError, "Unable to compute order of torsion subgroup (it is in %s)"%O
+
+    def _generators(self):
+        A = self.abelian_variety()
+        if A.dimension() == 0:
+            return []
+        R = A.rational_cuspidal_subgroup()
+        if R.order() == self.multiple_of_order():
+            return R._generators()
+        else:
+            raise ValueError, "no explicit presentation of this finite subgroup is known (unable to compute explicitly)"        
 
     def possible_orders(self):
         try:
