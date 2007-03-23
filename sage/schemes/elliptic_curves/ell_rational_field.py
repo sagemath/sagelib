@@ -95,7 +95,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
     """
     def __init__(self, ainvs, extra=None):
         if extra != None:   # possibility of two arguments (the first would be the field)
-            ainvs = extra   
+            ainvs = extra
         if isinstance(ainvs, str):
             label = ainvs
             X = sage.databases.cremona.CremonaDatabase()[label]
