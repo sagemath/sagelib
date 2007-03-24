@@ -1,14 +1,20 @@
 import weakref
 import sage.rings.padics.padic_field_capped_relative
 import sage.rings.padics.padic_field_lazy
+#import sage.rings.padics.unramified_field_extension_capped_relative
+#import sage.rings.padics.unramified_field_extension_lazy
+
+from extension_factory import ExtensionFactory
 
 Integer = sage.rings.integer.Integer
 pAdicFieldCappedRelative = sage.rings.padics.padic_field_capped_relative.pAdicFieldCappedRelative
 pAdicFieldLazy = sage.rings.padics.padic_field_lazy.pAdicFieldLazy
+#UnramifiedFieldExtensionCappedRelative = sage.rings.padics.unramified_field_extension_capped_relative.UnramifiedFieldExtensionCappedRelative
+#UnramifiedFieldExtensionLazy = sage.rings.padics.unramified_field_extension_lazy.UnramifiedFieldExtensionLazy
 
 
 padic_field_cache = {}
-def Qp(p, prec = 20, type = 'capped-rel', print_mode = None, halt = 40, check = True):
+def Qp(p, prec = 20, type = 'capped-rel', print_mode = 'series', halt = 40, names = None, check = True):
     """
     A creation function for p-adic fields.
 
@@ -37,9 +43,6 @@ def Qp(p, prec = 20, type = 'capped-rel', print_mode = None, halt = 40, check = 
         'val-unit' -- elements are displayed as p^k*u
         'integer' -- elements are displayed as an integer
         'series' -- elements are displayed as series in p
-        'val-unit-p' -- same as val-unit, except that p is written as "p"
-        'integer-p' -- same as integer, except that p is written as "p"
-        'series-p' -- same as series, except that p is written as "p"
     """
     if check:
         p = Integer(p)
@@ -53,24 +56,20 @@ def Qp(p, prec = 20, type = 'capped-rel', print_mode = None, halt = 40, check = 
             raise TypeError, "prec must be an integer"
         elif isinstance(halt, (int, long)):
             halt = Integer(halt)
+    if names is None:
+        names = str(p)
     if type != 'lazy':
-        key = (p, prec, type)
+        key = (p, prec, type, names, print_mode)
     else:
-        key = (p, prec, halt)
+        key = (p, prec, halt, names, print_mode)
     if padic_field_cache.has_key(key):
         K = padic_field_cache[key]()
         if K != None:
-            if print_mode != None:
-                K.set_print_mode(print_mode)
-            else:
-                K.set_print_mode('series')
             return K
-    if print_mode == None:
-        print_mode = 'series'
     if (type == 'capped-rel'):
-        K = pAdicFieldCappedRelative(p, prec, print_mode)
+        K = pAdicFieldCappedRelative(p, prec, print_mode, names)
     elif (type == 'lazy'):
-        K = pAdicFieldLazy(p, prec, print_mode, halt)
+        K = pAdicFieldLazy(p, prec, print_mode, halt, names)
     else:
         raise ValueError, "type must be either 'capped-rel' or 'lazy'"
     padic_field_cache[key] = weakref.ref(K)
@@ -78,8 +77,7 @@ def Qp(p, prec = 20, type = 'capped-rel', print_mode = None, halt = 40, check = 
 
 pAdicField = Qp # for backwards compatibility; and it's not hard.
 
-qadic_field_cache = {}
-def Qq(q, names=None, prec=20, type='capped-rel', print_mode=None, halt=40, modulus=None, check=True):
+def Qq(q, prec = None, type = 'capped-rel', modulus = None, names=None, print_mode="series", halt=40, qp_name = None, check=True):
     r"""
     Given a prime power q = p^n, return the unique unramified extension
     of Qp of degree n.
@@ -89,10 +87,6 @@ def Qq(q, names=None, prec=20, type='capped-rel', print_mode=None, halt=40, modu
     """
 
     from sage.rings.integer import Integer
-    from sage.rings.polynomial_ring import PolynomialRing
-    from sage.rings.padics.unramified_ring_extension import UnramifiedRingExtension
-    from sage.rings.integer_ring import ZZ
-
     if check:
         if names is None:
             raise TypeError, "You must specify the name of the generator."
@@ -116,27 +110,50 @@ def Qq(q, names=None, prec=20, type='capped-rel', print_mode=None, halt=40, modu
     if len(F) != 1:
         raise ValueError, "q must be a prime power"
     if F[0][1] == 1:
-        return Qp(q, prec, type, print_mode, halt)
-
-    if type != 'lazy':
-        key = (q, names, prec, type)
-    else:
-        key = (q, names, prec, halt)
-    if qadic_field_cache.has_key(key):
-        K = qadic_field_cache[key]()
-        if not (K is None):
-            if not (print_mode is None):
-                K.set_print_mode(print_mode)
-            return K
-
+        return Qp(q, prec, type, print_mode, halt, names, check)
+    base = Qp(F[0][0], prec, type, print_mode, halt, qp_name, check = False)
     if modulus is None:
-        check = False
         from sage.rings.finite_field import GF
-        modulus = PolynomialRing(Qp(F[0][0], prec, type, print_mode, halt), names)(GF(q,names).modulus().change_ring(ZZ))
-    if print_mode is None:
-        print_mode = 'series'
-    K = UnramifiedRingExtension(modulus, prec, print_mode, check)
-    qadic_field_cache[key] = weakref.ref(K)
-
-    return K
+        from sage.rings.integer_ring import ZZ
+        if qp_name is None:
+            qp_name = (str(F[0][0]),)
+        modulus = PolynomialRing(base, 'x')(GF(q, names).modulus().change_ring(ZZ))
+    return ExtensionFactory(modulus, prec, print_mode, halt, names, check, unram = True)
         
+
+######################################################
+# Short constructor names for different types
+######################################################
+
+def QpCR(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qp(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'capped-rel')
+
+def QpCA(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qp(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'capped-abs')
+
+def QpFM(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qp(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'fixed-mod')
+
+def QpL(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qp(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'lazy')
+
+
+def QqCR(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qq(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'capped-rel')
+
+def QqCA(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qq(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'capped-abs')
+
+def QqFM(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qq(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'fixed-mod')
+
+def QqL(p, prec = 20, print_mode = 'series', halt = 40, check=True):
+    return Qq(p=p, prec=prec, print_mode=print_mode, halt=halt, check=check,
+              type = 'lazy')

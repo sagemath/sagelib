@@ -35,7 +35,7 @@ infinity = sage.rings.infinity.infinity
 #Zp = sage.rings.padics.padic_ring.Zp
 pAdicRingFixedModElement = sage.rings.padics.padic_ring_fixed_mod_element.pAdicRingFixedModElement
 pAdicGenericElement = sage.rings.padics.padic_generic_element.pAdicGenericElement
-pAdicRingGenericElement = sage.rings.padics.padic_ring_generic_element.pAdicRingGenericElement
+pAdicBaseGenericElement = sage.rings.padics.padic_base_generic_element.pAdicBaseGenericElement
 pAdicFieldGenericElement = sage.rings.padics.padic_field_generic_element.pAdicFieldGenericElement
 pAdicLazyElement = sage.rings.padics.padic_lazy_element.pAdicLazyElement
 #pAdicFieldCappedRelativeElement = sage.rings.padics.padic_ring_capped_relative_element
@@ -46,21 +46,21 @@ PrecisionError = sage.rings.padics.precision_error.PrecisionError
 
 class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
 
-    def __init__(self, parent, x, absprec=None, relprec = None, construct=False):
+    def __init__(self, parent, x, absprec=infinity, relprec = infinity, construct=False):
         sage.rings.commutative_ring_element.CommutativeRingElement.__init__(self,parent)
         if construct:
             (self._value, self._absprec) = x
             return
-        if not absprec is None and not relprec is None:
+        if not absprec is infinity and not relprec is infinity:
             raise ValueError, "can only specify one of absprec and relprec"
-        if relprec is None:
-            if absprec is None or absprec > parent.precision_cap():
+        if relprec is infinity:
+            if absprec > parent.precision_cap():
                 absprec = parent.precision_cap()
 
         if isinstance(x, pAdicGenericElement) and x.valuation() < 0:
             raise ValueError, "element valuation cannot be negative."
         if isinstance(x, pAdicLazyElement):
-            if relprec is None:
+            if relprec is infinity:
                 absprec = min(absprec, parent.precision_cap())
                 try:
                     x.set_precision_absolute(absprec)
@@ -75,8 +75,8 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
                 self._absprec = min(parent.precision_cap(), x.precision_absolute())
             self._value = Mod(x.residue(self._absprec), self.parent().prime_pow(self.parent().precision_cap()))
             return
-        if isinstance(x, pAdicGenericElement):
-            if relprec is None:
+        if isinstance(x, pAdicBaseGenericElement):
+            if relprec is infinity:
                 self._absprec = min(x.precision_absolute(), absprec)
             else:
                 self._absprec = min(x.precision_absolute(), x.valuation() + relprec)
@@ -85,10 +85,7 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
 
         if isinstance(x, pari_gen):
             if x.type() == "t_PADIC":
-                if not absprec is None:
-                    absprec = min(x.padicprec(parent.prime()), absprec)
-                else:
-                    absprec = x.padicprec(parent.prime())
+                absprec = min(x.padicprec(parent.prime()), absprec)
                 x = x.lift()
             if x.type() == "t_INT":
                 x = Integer(x)
@@ -101,10 +98,7 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
             k, p = pari(x.modulus()).ispower()
             if not k or p != parent.prime():
                 raise TypeError, "cannot change primes in creating p-adic elements"
-
-            if absprec is None:
-                absprec = k
-            else:
+            if absprec is infinity and relprec is infinity: #this allows you to lift integer_mod elements to higher precision than they are actually defined.
                 absprec = min(absprec, k)
             x = x.lift()
 
@@ -128,15 +122,10 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
             if val < 0:
                 raise ValueError, "p divides the denominator"
         if isinstance(x, (int, long, Integer, Rational)):
-            if absprec is None:
-                self._absprec = min(val + relprec, parent.precision_cap())
-            elif relprec is None:
-                self._absprec = absprec
-            else:
-                self._absprec = min(absprec, val + relprec, parent.precision_cap())
+            self._absprec = min(absprec, val + relprec, parent.precision_cap())
             self._value = Mod(Mod(x, parent.prime_pow(self._absprec)), parent.prime_pow(parent.precision_cap()))
         else:
-            raise TypeError, "unable to create p-adic element"
+            raise TypeError, "unable to create p-adic element from %s of type %s"%(x, type(x))
         
     def __invert__(self):
         return self.parent().fraction_field()(self).__invert__()
@@ -161,7 +150,7 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
     def __pow__(self, right):
         new = Integer(right) #Need to make sure that this works for p-adic exponents
         val = self.valuation()
-        if (val > 0) and (isinstance(right, pAdicRingGenericElement) or isinstance(right, pAdicFieldGenericElement)):
+        if (val > 0) and isinstance(right, pAdicBaseGenericElement):
             raise ValueError, "Can only have p-adic exponent if base is a unit"
         return pAdicRingCappedAbsoluteElement(self.parent(), (self._value**new, min(self._absprec - val + new * val, self.parent().precision_cap())), construct = True)
 
@@ -191,12 +180,53 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
     #    return pAdicRingCappedAbsoluteElement(self.parent(), (Mod(quotient.lift() % ppow, self.parent().prime_pow(self.parent().precision_cap())), self.parent().precision_cap()), construct = True)
 
     def __lshift__(self, shift):
+        """
+        EXAMPLES:
+        We create a capped relative field:
+            sage: R = Zp(5, 20, 'capped-rel'); a = R(1000); a
+            3*5^3 + 5^4 + O(5^23)
+
+        Shifting to the right is the same as dividing by a power of
+        the uniformizer $p$ of the $p$-adic ring.
+            sage: a >> 1
+            3*5^2 + 5^3 + O(5^22)
+
+        Shifting to the left is the same as multiplying by a power of $p$:
+            sage: a << 2
+            3*5^5 + 5^6 + O(5^25)
+            sage: a*5^2
+            3*5^5 + 5^6 + O(5^25)        
+
+        Shifting by a negative integer to the left is the same as right shifting
+        by the absolute value:
+            sage: a << -3
+            3 + 5 + O(5^20)
+            sage: a >> 3
+            3 + 5 + O(5^20)
+        """
         shift = Integer(shift)
         if shift < 0:
             return self.__rshift__(-shift)
-        return pAdicRingCappedAbsoluteElement(self.parent(), (Mod(self._value.lift() *self.parent().prime_pow(shift), self.parent().prime_pow(self.parent().precision_cap())), self.precision_absolute() + shift), construct = True)
+        return pAdicRingCappedAbsoluteElement(self.parent(),
+                                              (Mod(self._value.lift() *self.parent().prime_pow(shift),
+                                                   self.parent().prime_pow(self.parent().precision_cap())),
+                                               self.precision_absolute() + shift), construct = True)
 
     def __rshift__(self, shift):
+        """
+        EXAMPLES:
+            sage: R = Zp(997, 7, 'capped-rel'); a = R(123456878908); a
+            964*997 + 572*997^2 + 124*997^3 + O(997^8)
+
+        Shifting to the right divides by a power of p, but dropping terms with
+        negative valuation:
+            sage: a >> 3
+            124 + O(997^5)
+
+        Shifting to the left multiplies by that power of p.
+            sage: a << 3
+            964*997^4 + 572*997^5 + 124*997^6 + O(997^11)
+        """
         shift = Integer(shift)
         if shift < 0:
             return self.__lshift__(-shift)
@@ -205,6 +235,10 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
         return pAdicRingCappedAbsoluteElement(self.parent(), (Mod(self._value.lift() // self.parent().prime_pow(shift), self.parent().prime_pow(self.parent().precision_cap())), self.precision_absolute() - shift), construct = True)
 
     def _mul_(self, right):
+        """
+        EXAMPLES:
+        
+        """
         return pAdicRingCappedAbsoluteElement(self.parent(), (self._value * right._value, min(self.valuation() + right.valuation() + min(self.precision_relative(), right.precision_relative()), self.parent().precision_cap())), construct = True)
 
     def _sub_(self, right):
@@ -213,6 +247,7 @@ class pAdicRingCappedAbsoluteElement(pAdicRingFixedModElement):
     def add_bigoh(self, prec):
         """
         Returns a new element with absolute precision decreased to prec
+        
         INPUT:
             self -- a p-adic element
             prec -- an integer
@@ -394,3 +429,10 @@ self -- a p-adic element
                 <class 'sage.rings.padics.padic_ring_capped_absolute_element.pAdicRingCappedAbsoluteElement'>
         """
         return pAdicRingCappedAbsoluteElement(self.parent(), (self._unit_part(), self.precision_relative()), construct = True)
+
+    def valuation(self):
+        val = sage.rings.arith.valuation(self.lift(),self.parent().prime())
+        if val is infinity:
+            return self._absprec
+        else:
+            return val
