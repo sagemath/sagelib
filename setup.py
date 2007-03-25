@@ -9,18 +9,14 @@ from distutils.core import setup, Extension
 ## if you change this!! 
 if os.environ.has_key('SAGE_BLAS'):
     BLAS=os.environ['SAGE_BLAS']
-    LINBOX_BLAS=BLAS
 elif os.path.exists('/usr/lib/libcblas.dylib') or \
      os.path.exists('/usr/lib/libcblas.so'):
     BLAS='cblas'
-    LINBOX_BLAS=BLAS
 elif os.path.exists('/usr/lib/libblas.dll.a'):   
     BLAS='gslcblas'
-    LINBOX_BLAS='gslcblas'   # linbox can only use a CBLAS and Cygwin doesn't have one.
 else:
     # This is very slow  (?), but *guaranteed* to be available. 
     BLAS='gslcblas' 
-    LINBOX_BLAS=BLAS 
 
 if len(sys.argv) > 1 and sys.argv[1] == "sdist":
     sdist = True
@@ -104,7 +100,7 @@ hanke = Extension(name = "sage.libs.hanke.hanke",
                    libraries = ["gmp", "gmpxx", "stdc++"])
 
 ntl = Extension('sage.libs.ntl.ntl',
-                 sources = ["sage/libs/ntl/ntl.pyx", "sage/libs/ntl/ntl_wrap.cc"],
+                 sources = ["sage/libs/ntl/ntl.pyx"],
                  libraries = ["ntl", "gmp", "gmpxx", "m", "stdc++"]
                  )
 
@@ -172,13 +168,21 @@ matrix_integer_2x2 = Extension('sage.matrix.matrix_integer_2x2',
                                  libraries = ['gmp'])
 
 linbox = Extension('sage.libs.linbox.linbox',
-                   ['sage/libs/linbox/linbox.pyx',
-                    'sage/libs/linbox/linbox_wrap.cpp'],
-                   libraries = ['linbox', 'ntl', 'gmp', 'gmpxx', 'stdc++', 'givaro', LINBOX_BLAS],
+                   ['sage/libs/linbox/linbox.pyx'],
+                   libraries = ['linboxwrap', 'linbox', 'ntl', 'gmp', 'gmpxx', 'stdc++', 'givaro'],
+         
                    language = 'c++')
 
 matrix_modn_dense = Extension('sage.matrix.matrix_modn_dense',
                               ['sage/matrix/matrix_modn_dense.pyx'],
+                              libraries = ['gmp'])
+
+matrix_mod2_dense = Extension('sage.matrix.matrix_mod2_dense',
+                              ['sage/matrix/matrix_mod2_dense.pyx',
+                               'sage/libs/m4ri/packedmatrix.c',
+                               'sage/libs/m4ri/matrix.c',
+                               'sage/libs/m4ri/brilliantrussian.c',
+                               'sage/libs/m4ri/grayflex.c',],
                               libraries = ['gmp'])
 
 matrix_modn_sparse = Extension('sage.matrix.matrix_modn_sparse',
@@ -355,6 +359,7 @@ ext_modules = [ \
      linbox,
      matrix_modn_dense,
      matrix_modn_sparse,
+     matrix_mod2_dense,
      givaro_gfq, \
 
 ##     matrix_rational_sparse,
