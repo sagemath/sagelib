@@ -89,6 +89,9 @@ class RationalField(_uniq, field.Field):
     def __init__(self):
         ParentWithGens.__init__(self, self)
         self._assign_names(('x'),normalize=False)
+
+    def __hash__(self):
+        return -11115808
  
     def _repr_(self):
         return "Rational Field"
