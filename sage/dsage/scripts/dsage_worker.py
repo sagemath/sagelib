@@ -699,7 +699,7 @@ def main():
     argv[2] == port
     
     """
-    
+
     if len(sys.argv) == 3:
         hostname, port = sys.argv[1:3]        
         try:
