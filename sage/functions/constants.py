@@ -259,8 +259,7 @@ class Constant_arith(Constant, Function_arith):
     def __init__(self, x, y, op):
         Function_arith.__init__(self, x, y, op)
         Constant.__init__(self)
-        
-
+       
 class Pi(Constant):
     """
     The ratio of a circle's circumference to its diameter.
