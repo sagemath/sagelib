@@ -405,7 +405,7 @@ class Maxima(Expect):
                         name = 'maxima',
                         prompt = '\(\%i[0-9]+\)',
                         command = "maxima --disable-readline",
-                        maxread = 1,    # CRUCIAL to use less buffering for maxima (or get all kinds of hangs on OS X and 64-bit machines, etc!
+                        maxread = 100,    # CRUCIAL to use less buffering for maxima (or get all kinds of hangs on OS X and 64-bit machines, etc!
                         script_subdirectory = script_subdirectory,
                         restart_on_ctrlc = False,
                         verbose_start = False,
@@ -455,6 +455,8 @@ class Maxima(Expect):
 
     def _eval_line(self, line, reformat=True, allow_use_file=False,
                    wait_for_prompt=True):
+        if self._expect is None:
+            self._start()
         if not wait_for_prompt:
             return Expect._eval_line(self, line)
         line = line.rstrip().rstrip(';')
