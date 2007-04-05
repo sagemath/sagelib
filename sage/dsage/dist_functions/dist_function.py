@@ -17,16 +17,12 @@
 ############################################################################
 
 import datetime
-import copy
 import cPickle
 import zlib
 
-from twisted.internet import reactor, task
-from twisted.spread import pb
-
 from sage.dsage.database.job import Job
-from sage.dsage.interface.dsage_interface import JobWrapper, blockingJobWrapper
-from sage.dsage.twisted.misc import blockingCallFromThread
+from sage.dsage.interface.dsage_interface import JobWrapper, BlockingJobWrapper
+from sage.dsage.twisted.misc import blocking_call_from_thread
 
 class DistributedFunction(object):
     r"""
@@ -47,13 +43,14 @@ class DistributedFunction(object):
         self.end_time= None
         self.name = None
         self.job_files = []
-        # self.checker_task = None
         self._done = False
 
     def __getstate__(self):
-        d = copy(self.__dict__)
+        import copy
+        d = copy.copy(self.__dict__)
         d['DSage'] = None
         d['checker_task'] = None
+        
         return d
 
     def get_done(self):
@@ -74,7 +71,7 @@ class DistributedFunction(object):
 
     def save(self, filename=None, compress=True):
         r"""
-        Saves your distributed job to a sobj.
+        Saves your distributed job to disk.
         
         """
         
@@ -88,12 +85,32 @@ class DistributedFunction(object):
         f = open(filename, 'wb')
         f.write(s)
         f.close()
+        
         return filename
 
+    def stop(self, verbose=True):
+        r"""
+        Ends the current DistributedFunction, kills all waiting jobs.
+        
+        """
+        
+        for job in self.waiting_jobs:
+            job.kill()
+            
+        self.done = True
+        
+        if verbose:
+            print 'All waiting jobs have been killed. This job is no more.'
+        
     def restore(self, dsage):
+        r"""
+        Reloads a distributed job from disk.
+        
+        """
+        
+        from twisted.internet import reactor, task
         if dsage.remoteobj is None:
             # XXX This is a hack because dsage.remoteobj is not set yet
-            from twisted.internet import reactor
             reactor.callLater(1.0, self.restore, dsage)
             return
         self.DSage = dsage
@@ -101,12 +118,14 @@ class DistributedFunction(object):
             job.remoteobj = self.DSage.remoteobj
         if not len(self.outstanding_jobs) == 0:
             self.submit_jobs(self.name)
+            
         self.checker_task = task.LoopingCall(self.check_results)
-        self.checker_task.start(2.0, now=True)
+        reactor.callFromThread(self.checker_task.start, 1.0, now=True)
 
     def submit_job(self, job, job_name='job', async=False):
         if async:
             if isinstance(job, Job):
+                job.username = self.DSage.username
                 self.waiting_jobs.append(self.DSage.send_job(job, 
                                                              async=True))
             else:
@@ -115,7 +134,8 @@ class DistributedFunction(object):
                                                          async=True))
         else:
             if isinstance(job, Job):
-                self.waiting_jobs.append(self.DSage.send_job(job))
+                job.username = self.DSage.username
+                self.waiting_jobs.append(self.DSage.send_job(job, async=False))
             else:
                 self.waiting_jobs.append(self.DSage.eval(job,
                                                          job_name=job_name))
@@ -126,24 +146,29 @@ class DistributedFunction(object):
         self.outstanding_jobs = []
 
     def start(self):
+        from twisted.internet import reactor, task
+        if self.DSage is None:
+            print 'Error: Not connected to a DSage server.'
+            return
         self.start_time = datetime.datetime.now()
         reactor.callFromThread(self.submit_jobs, self.name, async=True)
-        self.checker_task = blockingCallFromThread(task.LoopingCall,
-                                                   self.check_results)
-        reactor.callFromThread(self.checker_task.start, 
-                               1.0, now=True)
+        self.checker_task = blocking_call_from_thread(task.LoopingCall, self.check_results)
+        reactor.callFromThread(self.checker_task.start, 1.0, now=True)
+        
     def check_results(self):
+        from twisted.internet import reactor
+        from twisted.spread import pb
         for wrapped_job in self.waiting_jobs:
             if isinstance(wrapped_job, JobWrapper):
                 try:
-                    wrapped_job.getJob()
+                    wrapped_job.get_job()
                 except pb.DeadReferenceError:
-                    print 'Got pb.DeadReferenceError.'
-                    print 'This will be handled in the future.'
-                    reactor.callFromThread(self.checker_task.stop)
+                    print 'Disconnected from the server, stopping checker_task.'
+                    if self.checker_task.running:
+                        reactor.callFromThread(self.checker_task.stop)
                     break
-            else:
-                wrapped_job.async_getJob()
+            elif isinstance(wrapped_job, BlockingJobWrapper):
+                wrapped_job.async_get_job()
             if wrapped_job.status == 'completed': 
                 self.waiting_jobs.remove(wrapped_job)
                 self.process_result(wrapped_job)
@@ -153,21 +178,29 @@ class DistributedFunction(object):
             for wrapped_job in self.waiting_jobs:
                 if isinstance(wrapped_job, JobWrapper):
                     wrapped_job.kill()
-                else:
+                elif isinstance(wrapped_job, BlockingJobWrapper):
                     wrapped_job.async_kill()
             self.waiting_jobs = []
-            reactor.callFromThread(self.checker_task.stop)
-
-        self.done = len(self.waiting_jobs) == 0
+            if self.checker_task.running:
+                reactor.callFromThread(self.checker_task.stop)
         
 class DistributedFunctionTest(DistributedFunction):
+    r"""
+    This is a very simple DistributedFunction.  
+    Only for educational purposes.
+    
+    """
+    
     def __init__(self, DSage, n, name='DistributedFunctionTest'):
         DistributedFunction.__init__(self, DSage)
         self.n = n
         self.name = name
         self.result = 0
         self.results = []
-        self.outstanding_jobs = ["print %s"%i for i in range(1,n+1)]
-
+        self.code = """DSAGE_RESULT=%s"""
+        # self.outstanding_jobs = ["print %s" % (i for i in range(1,n+1))]
+        self.outstanding_jobs = [Job(code=self.code % i, username='yqiang') for i in range(1, n+1)]
+        
     def process_result(self, job):
-        self.result += int(job.output)
+        self.done = len(self.waiting_jobs) == 0
+        self.result += (job.result)

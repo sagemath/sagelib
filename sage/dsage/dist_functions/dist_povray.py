@@ -20,9 +20,6 @@ class DistributedPOVRay(DistributedFunction):
         A number of .ppm files (depending on split) and a final .ppm file 
         which is the combination of all the rendered parts.
 
-    AUTHOR:
-        Yi Qiang 
-        
     """
 
     def __init__(self, DSage, name, files, splits, **kwargs):
@@ -75,7 +72,7 @@ class DistributedPOVRay(DistributedFunction):
 
         self.job_files.append(job_file)
 
-        job = Job(file=job_file, name='%s_%04d.ppm' % (self.name, self.n))
+        job = Job(code=job_file, name='%s_%04d.ppm' % (self.name, self.n))
         
         for file_ in self.files:
             job.attach_file(file_)
