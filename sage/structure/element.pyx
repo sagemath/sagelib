@@ -1766,7 +1766,7 @@ cdef class MinusInfinityElement(InfinityElement):
     pass
 
 
-cdef int have_same_parent(left, right):
+cdef inline int have_same_parent(left, right):
     """
     Return nonzero true value if and only if left and right are
     elements and have the same parent.
@@ -1776,7 +1776,7 @@ cdef int have_same_parent(left, right):
     # Elements.  Otherwise use the slower test via PY_TYPE_CHECK.)
     if PY_TYPE(left) is PY_TYPE(right):
         return (<Element>left)._parent is (<Element>right)._parent
-    
+        
     if PY_TYPE_CHECK(right, Element) and PY_TYPE_CHECK(left, Element):
         return (<Element>left)._parent is (<Element>right)._parent
 
