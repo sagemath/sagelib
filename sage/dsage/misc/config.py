@@ -68,3 +68,4 @@ def get_conf(type):
         print msg
         print "Error reading '%s', run dsage.setup()" % conf_file
 
+        
