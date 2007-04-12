@@ -111,6 +111,7 @@ class DistributedSage(object):
         self.server(blocking=False)
         self.worker(blocking=False)
         from sage.dsage.interface.dsage_interface import BlockingDSage as DSage
+        
         return DSage()
         
     def server(self, blocking=True, logfile=None):

@@ -123,7 +123,7 @@ class DistributedFunction(object):
         self.checker_task = task.LoopingCall(self.check_results)
         reactor.callFromThread(self.checker_task.start, 1.0, now=True)
 
-    def submit_job(self, job, job_name='job', async=False):
+    def submit_job(self, job, job_name='job', async=True):
         """
         Submits a job to the server.
         
@@ -214,7 +214,6 @@ class DistributedFunctionTest(DistributedFunction):
         self.result = 0
         self.results = []
         self.code = """DSAGE_RESULT=%s"""
-        # self.outstanding_jobs = ["print %s" % (i for i in range(1,n+1))]
         self.outstanding_jobs = [Job(code=self.code % i, username='yqiang') for i in range(1, n+1)]
         
     def process_result(self, job):

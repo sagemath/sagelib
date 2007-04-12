@@ -26,6 +26,7 @@ import socket
 
 from optparse import OptionParser
 import ConfigParser
+import socket
 
 from twisted.internet import reactor, error, ssl, task
 from twisted.spread import pb
@@ -90,9 +91,11 @@ def startLogging(log_file):
         log.startLogging(server_log)
 
 def main():
-    """Main execution loop of the server."""
+    """
+    Main execution loop of the server.
     
-    # Begin reading configuration
+    """
+    
     try:
         conf_file = os.path.join(DSAGE_DIR, 'server.conf')
         config = ConfigParser.ConfigParser()
@@ -114,7 +117,6 @@ def main():
         print msg
         print "Error reading %s, run dsage.setup()" % conf_file
         sys.exit(-1)
-    # End reading configuration
     
     # start logging
     startLogging(LOG_FILE)
@@ -150,38 +152,48 @@ def main():
     dsage_server.client_factory = client_factory
     
     attempts = 0
-    err_msg = """Could not find an open port after 50 attempts."""
-    if SSL == 1:
-        ssl_context = ssl.DefaultOpenSSLContextFactory(
-                    SSL_PRIVKEY,
-                    SSL_CERT)
-        while True:
-            if attempts > 50:
-                log.err(err_msg)
-                log.err('Last attempted port: %s' % (CLIENT_PORT))
+    err_msg = "Could not find an open port after 50 attempts."
+    NEW_CLIENT_PORT = CLIENT_PORT
+    while True:
+        if attempts > 50:
+            log.err(err_msg)
+            log.err('Last attempted port: %s' % (NEW_CLIENT_PORT))
+            sys.exit(-1)
+        try:
             try:
-                reactor.listenSSL(CLIENT_PORT,
-                                  client_factory,
-                                  contextFactory = ssl_context)
-                break
-            except error.CannotListenError:
-                attempts += 1
-                CLIENT_PORT += 1
-    else:
-        while True:
-            if attempts > 50:
-                log.err(err_msg)
-                log.err('Last attempted port: %s' % (CLIENT_PORT))
-            try:
-                reactor.listenTCP(CLIENT_PORT, client_factory)
-                break
-            except error.CannotListenError:
-                attempts += 1
-                CLIENT_PORT += 1
-    
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect(('', NEW_CLIENT_PORT))
+                port_used = True
+            except socket.error, msg:
+                port_used = False
+            if not port_used:
+                if SSL:
+                    log.msg('Using SSL...')
+                    ssl_context = ssl.DefaultOpenSSLContextFactory(SSL_PRIVKEY, SSL_CERT)
+                    reactor.listenSSL(NEW_CLIENT_PORT,
+                                      client_factory,
+                                      contextFactory = ssl_context)
+                    break
+                else:
+                    reactor.listenTCP(NEW_CLIENT_PORT, client_factory)
+                    break
+            else:
+                raise SystemError, 'Trying to bind to open port: %s.' % (NEW_CLIENT_PORT)
+        except (SystemError, error.CannotListenError):
+            attempts += 1
+            NEW_CLIENT_PORT += 1
+
+    if CLIENT_PORT != NEW_CLIENT_PORT:
+        log.msg(DELIMITER)
+        log.msg("***NOTICE***")
+        log.msg("Changing listening port in server.conf to %s" % (NEW_CLIENT_PORT))
+        log.msg(DELIMITER)
+        config.set('server', 'client_port', NEW_CLIENT_PORT)
+        config.write(open(conf_file, 'w'))
+        
     log.msg(DELIMITER)
     log.msg('DSAGE Server')
-    log.msg('Listening on %s' % (CLIENT_PORT))
+    log.msg('Listening on %s' % (NEW_CLIENT_PORT))
     log.msg(DELIMITER)
 
     # save pid to a file
@@ -193,8 +205,8 @@ def main():
         os.makedirs(dir)
     open(pid_file,'w').write(str(os.getpid()))
 
-    # start the reactor.
-    reactor.run()
+    # start the reactor.    
+    reactor.run(installSignalHandlers=1)
 
 if __name__ == "__main__":
     main()
