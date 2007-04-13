@@ -44,6 +44,8 @@ import shutil
 import Cookie
 import cPickle
 import base64
+from gzip import GzipFile
+import struct
 from urllib import splittag
 
 #SAGE notebook libraries
@@ -473,7 +475,7 @@ class WebServer(BaseHTTPServer.BaseHTTPRequestHandler):
         #self.wfile.write(notebook.worksheet_list_html())
         #self.wfile.write(notebook.html(W.id(), authorized=self.authorize()))
         self.send_response(302)
-        self.send_header("Location", '/%d'%W.id())
+        self.send_header("Location", '/%d'%W.name())
         self.end_headers()
 
     #######################################################################
@@ -715,6 +717,7 @@ x.innerHTML = prettyPrintOne(x.innerHTML);
         
         This function could be cleaned up?
         """
+        compressed = False
         path = self.path.replace('%20',' ')
         if path[-5:] == '.sobj':
             path = '%s/%s'%(os.path.abspath(notebook.object_directory()), path)
@@ -754,38 +757,62 @@ x.innerHTML = prettyPrintOne(x.innerHTML);
             self.wfile.write(css.css())
             return
 
-        elif path[-5:] == '__.js':
-            if self.path[-18:-7] == '__keyboard_':
-                self.wfile.write(keyboards.get_keyboard(self.path[-7:-5]))
-                return
-            elif path[-13:-3] == '__main__':
-                self.wfile.write(self.main_javascript())
-                return
-        try:
-            if path in static_images: #this list is defined at the top of this file
-                binfile = self.image(path)
-            elif path[:7] == 'jsmath/' or path[:10] == 'highlight/':
-                binfile = open(SAGE_EXTCODE + "/notebook/javascript/" + path, 'rb').read()
+        elif path[-3:] == '.js':
+            try: tempv = self._js_cache
+            except: self._js_cache = {}
+
+            binfile = None
+            if self._js_cache.has_key(path):
+                text, comp = self._js_cache[path]
+                binfile, compressed = self.send_compressed(text, comp)
             else:
-                binfile = open(path, 'rb').read()
-        except IOError, msg:
-            print 'file not found', msg
-            return self.file_not_found(path)
+                text = None
+                if self.path[-18:-7] == '__keyboard_':
+                    text = keyboards.get_keyboard(self.path[-7:-5])
+                elif path[-13:-3] == '__main__':
+                    text = js.javascript()
+                elif path[:7] == 'jsmath/' or path[:10] == 'highlight/':
+                    try:
+                        text = open(SAGE_EXTCODE + "/notebook/javascript/" + path).read()
+                    except: pass
+
+                if text is not None:
+                    comp = gzip_compress(text)
+                    self._js_cache[path] = (text, comp)
+                    binfile, compressed = self.send_compressed(text, comp)
+
+            if binfile is None:
+                print 'file not found', path
+                return self.file_not_found(path)
+
+        else:
+            try:
+                if path in static_images: #this list is defined at the top of this file
+                    binfile = self.image(path)
+                elif path[:7] == 'jsmath/' or path[:10] == 'highlight/':
+                    binfile = open(SAGE_EXTCODE + "/notebook/javascript/" + path, 'rb').read()
+                else:
+                    binfile = open(path, 'rb').read()
+            except IOError, msg:
+                print 'file not found', msg
+                return self.file_not_found(path)
+
         self.send_response(200)
 
         mime_type = mimetypes.guess_type(self.path)[0]
         if mime_type is None:
             mime_type = "text/plain"
         self.send_header("Content-type", mime_type)
+        if compressed:
+            self.send_header("Content-Encoding", 'x-gzip')
         self.send_header("Cache-control", "no-store")
-        
+
         self.end_headers()
 
-        f = StringIO()
+        f = StringIO(binfile)
         f.write(binfile)
         f.flush()
         f.seek(0)
-
     
 
         alarm(3)
@@ -1019,16 +1046,15 @@ x.innerHTML = prettyPrintOne(x.innerHTML);
             self.send_header("Content-type", 'text/html') 
         self.end_headers()
 
-
-    def main_javascript(self):
-        #Because of the javascript compression, it's best to cache here
-        #rather than compress every time the user asks for some javascript
-        try:
-            return self._main_javascript
-        except:
-            self._main_javascript = js.javascript()
-            return self._main_javascript
-
+    def send_compressed(self, text, compressed = None):
+        accept = self.headers.getheader("Accept-Encoding")
+        if accept.find("gzip") >= 0:
+            if compressed is None:
+                return gzip_compress(text, 6), True
+            else:
+                return compressed, True
+        else:
+            return text, False
 
     def image(self, filename):
         try:
@@ -1117,5 +1143,11 @@ class NotebookServer:
             else:
                 notebook.save()
 
-        
-        
+def gzip_compress(data, compresslevel=9):
+    io = StringIO()
+    gz = GzipFile(fileobj = io, mode='w', compresslevel=compresslevel)
+    gz.write(data)
+    gz.close()
+    io.seek(0)
+    return io.read()
+
