@@ -719,7 +719,7 @@ cdef class RealDoubleElement(FieldElement):
             sage: r = RDF(4344)
             sage: r.sqrt()
             65.9090282131
-            sage: r.sqrt()^2 - r
+            sage: r.sqrt()^2 - r             # random low order bits
             0.0
 
             sage: r = RDF(-2.0)
@@ -1035,8 +1035,6 @@ cdef class RealDoubleElement(FieldElement):
         """
         cdef double denom
         cos = gsl_sf_cos(self._value)
-        if cos == 0:
-            return self._new_c(NAN)
         a = self._new_c(gsl_sf_sin(self._value) / cos)
         return a
 
