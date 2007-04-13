@@ -351,6 +351,9 @@ class IntegerModRing_generic(quotient_ring.QuotientRing_generic):
             if F[0][0] == 2:
                 return False
             return True
+            
+        else:
+            return False
 
         
     def multiplicative_generator(self):
