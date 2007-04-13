@@ -35,7 +35,7 @@ import sage.dsage.database.sql_functions as sql_functions
 from sage.dsage.misc.config import get_conf
 
 class JobDatabase(object):
-    r"""
+    """
     Implementation of the job database. 
     Common methods between the implementations should go here.
     
@@ -50,7 +50,7 @@ class JobDatabase(object):
         self.prune_in_days = int(self.conf['prune_in_days'])
         
     def random_string(self, length=10):
-        r"""
+        """
         Returns a random string
         
         Parameters:
@@ -119,7 +119,7 @@ class JobDatabaseZODB(JobDatabase):
             self.__init_globals()
 
     def _shutdown(self):
-        r"""
+        """
         Shuts down the database by closing all DB connections and 
         storages. 
         
@@ -129,7 +129,7 @@ class JobDatabaseZODB(JobDatabase):
         self.db.close()
 
     def get_next_job_id(self):
-        r"""
+        """
         Increments job_id by one and returns the current job_id
         
         """
@@ -152,7 +152,7 @@ class JobDatabaseZODB(JobDatabase):
         self.store_job(gdict)
     
     def get_job(self):
-        r"""
+        """
         Returns the first non completed job in the job database.
 
         This method iterates through the database and returns the first job
@@ -168,7 +168,7 @@ class JobDatabaseZODB(JobDatabase):
                 return None
 
     def get_job_by_id(self, job_id):
-        r"""
+        """
         Returns a job given a job id.
 
         Parameters:
@@ -181,7 +181,7 @@ class JobDatabaseZODB(JobDatabase):
             return self.jobdb[job_id]
 
     def get_jobs_by_username(self, username, is_active, job_name=None):
-        r"""
+        """
         Returns jobs created by author. 
 
         Parameters:
@@ -212,7 +212,7 @@ class JobDatabaseZODB(JobDatabase):
         return jobs
 
     def store_job(self, job):
-        r"""
+        """
         Stores a job in the job database.
 
         Parameters:
@@ -230,7 +230,7 @@ class JobDatabaseZODB(JobDatabase):
                 # log.msg('[DB, store_job] Setting job_id to GLOBALS')
                 job_id = 'GLOBALS'
         elif isinstance(job, Job):
-            job_id = job.id
+            job_id = job.job_id
             if not isinstance(job_id, str):
                 job_id = self.get_next_job_id()
             job.update_time = datetime.datetime.now()
@@ -251,7 +251,7 @@ class JobDatabaseZODB(JobDatabase):
         return job_id
 
     def remove_job(self, job_id):
-        r"""
+        """
         Removes a job from the database.
         
         Parameters:
@@ -270,7 +270,7 @@ class JobDatabaseZODB(JobDatabase):
             raise
 
     def get_active_jobs(self):
-        r"""
+        """
         Returns a list containing active jobs, i.e.
         jobs that are currentl being processed.
         
@@ -280,7 +280,7 @@ class JobDatabaseZODB(JobDatabase):
                 if job.status == 'processing']
   
     def has_job(self, job_id):
-        r"""
+        """
         Checks if the database contains a job corresponding to job id. 
 
         Parameters:
@@ -296,7 +296,7 @@ class JobDatabaseZODB(JobDatabase):
             return False
 
     def get_jobs_list(self):
-        r"""
+        """
         Returns an ordered list of all the jobs in 
         the database.
         
@@ -307,13 +307,13 @@ class JobDatabaseZODB(JobDatabase):
         for job_id, job in self.jobdb.iteritems():
             if job_id == 'GLOBALS': # Skip the GLOBALS job
                 continue
-            sorted_list.append((job.id, job))
+            sorted_list.append((job.job_id, job))
         sorted_list.sort()
         
         return [job[1] for job in sorted_list]
 
     def get_completed_jobs_list(self):
-        r"""
+        """
         Returns an ordered list of all the completed 
         jobs in the database.
         
@@ -323,7 +323,7 @@ class JobDatabaseZODB(JobDatabase):
                 if job.status == 'completed']
 
     def get_in_complete_jobs_list(self):
-        r"""
+        """
         Returns an ordered list of jobs marked as incomplete.
         
         """
@@ -332,14 +332,14 @@ class JobDatabaseZODB(JobDatabase):
                 if job.status == 'incomplete']
 
     def get_killed_jobs_list(self):
-        r"""
+        """
         Returns a list of killed jobs.
         
         """
         return [job for job in self.get_jobs_list() if job.killed]
 
     def new_job(self, job):
-        r"""
+        """
         Stores a new job in the database.
         
         Parameters:
@@ -348,12 +348,12 @@ class JobDatabaseZODB(JobDatabase):
         """
         
         job_id = self.get_next_job_id()
-        job.id = job_id
+        job.job_id = job_id
         
         return self.store_job(job)
 
 class JobDatabaseSQLite(JobDatabase):
-    r"""
+    """
     Implementation of DSage's database using SQLite.
 
     Parameters:
@@ -431,7 +431,7 @@ class JobDatabaseSQLite(JobDatabase):
              (self.random_string(), 1, None, None, None, 1, 
              0, 1, dn(), dn(), None)]
              
-        print 'Sleeping for 0.5 second to test timestamps...'
+        log.msg('Sleeping for 0.5 second to test timestamps...')
         time.sleep(0.5)
         
         D.extend([(self.random_string(), 1, None, None, None, 1, 
@@ -449,7 +449,7 @@ class JobDatabaseSQLite(JobDatabase):
         self.con.close()
     
     def get_job(self, anonymous=False):
-        r"""
+        """
         Returns the first unprocessed job of the highest priority.
         
         """
@@ -487,7 +487,7 @@ class JobDatabaseSQLite(JobDatabase):
         return self.create_jdict(jtuple, cur.description)
     
     def _get_jobs_by_parameter(self, key, value):
-        r"""
+        """
         Returns a particular result given a key and value.
         
         """
@@ -509,7 +509,7 @@ class JobDatabaseSQLite(JobDatabase):
         self.con.commit()
         
     def _update_value(self, job_id, key, value):
-        r"""
+        """
         Sets the appropriate value for a job in the database.
         
         """
@@ -527,7 +527,7 @@ class JobDatabaseSQLite(JobDatabase):
         self.con.commit()
         
     def store_job(self, jdict):
-        r"""
+        """
         Stores a job based on information from Job.jdict.  
         The keys of the dictionary should correspond to the columns in the
         'jobs' table.
@@ -563,7 +563,7 @@ class JobDatabaseSQLite(JobDatabase):
         return self.get_job_by_id(job_id)
     
     def create_jdict(self, jtuple, row_description):
-        r"""
+        """
         Creates a jdict out of a job_tuple.
         
         """
@@ -585,7 +585,7 @@ class JobDatabaseSQLite(JobDatabase):
         return jdict
         
     def get_killed_jobs_list(self):
-        r"""
+        """
         Returns a list of jobs which have been marked as killed.
         
         """
@@ -596,20 +596,24 @@ class JobDatabaseSQLite(JobDatabase):
         return [self.create_jdict(jdict, cur.description) 
                 for jdict in killed_jobs]
     
-    def get_jobs_by_username(self, username):
-        r"""
+    def get_jobs_by_username(self, username, active=True):
+        """
         Returns a list of jobs belonging to 'username'
         
         """
         
-        query = """SELECT * from jobs where username = ? """
+        if active:
+            query = """SELECT * from jobs WHERE username = ? 
+            AND status IN ('new', 'processing')"""
+        else:
+            query = """SELECT * from jobs WHERE username = ? """
         cur = self.con.cursor()
         cur.execute(query, (username,))
         
         return [self.create_jdict(jtuple, cur.description) for jtuple in cur]
         
     def has_job(self, job_id):
-        r"""
+        """
         Checks if the database contains a job with the given uid.
         
         """
@@ -627,12 +631,12 @@ class JobDatabaseSQLite(JobDatabase):
         return self._get_jobs_by_parameter('status', 'processing')
         
 class DatabasePruner(object):
-    r"""
+    """
     DatabasePruner is responsible for cleaning out the database. 
     
     """    
     def __init__(self, jobdb):
-        r"""
+        """
         Parameters:
             jobdb -- a JobDatabase object
             
@@ -641,7 +645,7 @@ class DatabasePruner(object):
         self.jobdb = jobdb
     
     def clean_old_jobs(self):
-        r"""
+        """
         Cleans out jobs that are older than PRUNE_IN_DAYS days.
         
         """
@@ -651,12 +655,12 @@ class DatabasePruner(object):
         for job in jobs:
             delta =  datetime.datetime.now() - job.update_time
             if delta > datetime.timedelta(self.jobdb.prune_in_days):
-                self.jobdb.remove_job(job.id)
+                self.jobdb.remove_job(job.job_id)
                 log.msg('[DatabasePruner, clean_old_jobs] Deleted job ',
-                        job.id)
+                        job.job_id)
     
     def clean_failed_jobs(self):
-        r"""
+        """
         Cleans out jobs which are marked as having failed. 
 
         """
@@ -665,7 +669,7 @@ class DatabasePruner(object):
 
         for job in jobs:
             if job.failures > self.jobdb.job_failure_threshold:
-                self.jobdb.remove_job(job.id)
+                self.jobdb.remove_job(job.job_id)
 
     def prune(self):
         self.clean_old_jobs()

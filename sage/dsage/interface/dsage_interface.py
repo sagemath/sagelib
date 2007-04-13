@@ -36,13 +36,13 @@ class DSageThread(threading.Thread):
             reactor.run(installSignalHandlers=0)
 
 class DSage(object):
-    r"""
+    """
     This object represents a connection to the distributed SAGE server.
     """
     
     def __init__(self, server=None, port=8081, username=None, 
                  pubkey_file=None, privkey_file=None):
-        r"""
+        """
         Parameters:
         server -- str
         port -- int
@@ -109,17 +109,18 @@ class DSage(object):
 
         self.connect()
 
+    def __repr__(self):
+        return self.__str__()
+        
     def __str__(self):
         self.check_connected()
-        self.info_str = 'Connected to DSAGE server at: ' \
-                    + self.server + ':' + str(self.port)
+        self.info_str = 'Connected to: %s:%s' % (self.server, self.port)
         return self.info_str + '\r'
 
     def __call__(self, cmd, globals_=None, job_name=None):
         cmd = ['ans = %s\n' % (cmd),
-               'print ans\n'
-               "save(ans, 'ans')\n"
-               "DSAGE_RESULT = 'ans.sobj'\n"]
+               'print ans\n',
+               "DSAGE_RESULT = ans\n"]
                
         return self.eval(''.join(cmd), globals_=globals_, job_name=job_name)
         
@@ -161,18 +162,18 @@ class DSage(object):
                     for job in jobs if job.name == job_name]
 
     def _killed_job(self, job_id):
-        if job_id:
-            if self.log_level > 2:
-                print str(job_id) + ' was successfully killed.'
+        pass
     
     def restore(self, remoteobj):
-        r"""
-        This method restores a connection to the server.
         """
+        This method restores a connection to the server.
+        
+        """
+        
         self.remoteobj = remoteobj
 
     def connect(self):
-        r"""
+        """
         This methods establishes the conection to the remote server. 
         
         """
@@ -200,7 +201,7 @@ class DSage(object):
         self.remoteobj = None
 
     def eval(self, cmd, globals_=None, job_name=None):
-        r"""
+        """
         eval evaluates a command
 
         Parameters:
@@ -227,7 +228,7 @@ class DSage(object):
         return wrapped_job
 
     def eval_file(self, fname, job_name):
-        r"""
+        """
         eval_file allows you to evaluate the contents of an entire file.
 
         Parameters:
@@ -247,7 +248,7 @@ class DSage(object):
         return wrapped_job
 
     def send_job(self, job):
-        r"""
+        """
         Sends a Job object to the server.
         
         """
@@ -257,8 +258,8 @@ class DSage(object):
         wrapped_job = JobWrapper(self.remoteobj, job)
         return wrapped_job
 
-    def _got_job_id(self, id, job):
-        job.id = id
+    def _got_job_id(self, id_, job):
+        job.job_id = id_
         job.username = self.username
 
         self.jobs.append(job)
@@ -287,7 +288,7 @@ class DSage(object):
         return d_list
 
     def kill(self, job_id):
-        r"""
+        """
         Kills a job given the job id. 
 
         Parameters:
@@ -300,7 +301,7 @@ class DSage(object):
         d.addErrback(self._catch_failure)
     
     def get_my_jobs(self, is_active=False, job_name=None):
-        r"""
+        """
         This method returns a list of jobs that belong to you.
 
         Parameters:
@@ -323,7 +324,7 @@ class DSage(object):
         return d
 
     def cluster_speed(self):
-        r"""
+        """
         Returns the speed of the cluster. 
         
         """
@@ -341,10 +342,12 @@ class DSage(object):
             raise NotConnectedException
 
 class BlockingDSage(DSage):
-    r"""This is the blocking version of DSage
+    """
+    This is the blocking version of the DSage interface.
+    
     """
 
-    def __init__(self, server=None, port=8081, username=None, pubkey_file=None, privkey_file=None):
+    def __init__(self, server=None, port=None, username=None, pubkey_file=None, privkey_file=None):
         from twisted.cred import credentials
         from twisted.conch.ssh import keys
         from twisted.spread import banana
@@ -356,7 +359,11 @@ class BlockingDSage(DSage):
         else:
             self.server = server
         if port is None:
-            self.port = self.conf['port']
+            if self.server == 'localhost':
+                conf = get_conf(type='server')
+                self.port = int(conf['client_port'])
+            else:
+                self.port = int(self.conf['port'])
         else:
             self.port = port
         if username is None:
@@ -396,18 +403,17 @@ class BlockingDSage(DSage):
         self.blob = keys.makePublicKeyBlob(self.pub_key)
         self.signature = keys.signData(self.priv_key, self.data)
         self.creds = credentials.SSHPrivateKey(self.username,
-                                                self.alg_name,
-                                                self.blob, 
-                                                self.data,
-                                                self.signature)
+                                               self.alg_name, 
+                                               self.blob, 
+                                               self.data,
+                                               self.signature)
 
-        self.jobs = []
         self.dsage_thread = DSageThread()
         self.dsage_thread.start()
         self.connect()
         
     def connect(self):
-        r"""
+        """
         This methods establishes the conection to the remote server. 
 
         """
@@ -435,7 +441,7 @@ class BlockingDSage(DSage):
         return d
                             
     def eval(self, cmd, globals_=None, job_name=None, async=False):
-        r"""
+        """
         eval evaluates a command
 
         Parameters:
@@ -467,7 +473,7 @@ class BlockingDSage(DSage):
         return wrapped_job
         
     def send_job(self, job, async=False):
-        r"""
+        """
         Sends a Job object to the server.
 
         Parameters:
@@ -485,12 +491,12 @@ class BlockingDSage(DSage):
 
         return wrapped_job
         
-    def get_my_jobs(self):
-        r"""
+    def get_my_jobs(self, active=True):
+        """
         This method returns a list of jobs that belong to you.
 
         Parameters:
-        is_active -- set to true to get only active jobs (bool)
+        active -- set to true to get only active jobs (bool)
 
         Use this method if you get disconnected from the server and wish to
         retrieve your old jobs back.
@@ -499,15 +505,22 @@ class BlockingDSage(DSage):
 
         self.check_connected()
         
-        jdicts = blocking_call_from_thread(self.remoteobj.callRemote,
-                                           'get_jobs_by_username',
-                                           self.username)
+        if active:
+            jdicts = blocking_call_from_thread(self.remoteobj.callRemote,
+                                               'get_jobs_by_username',
+                                               self.username,
+                                               active)
+        else:
+            jdicts = blocking_call_from_thread(self.remoteobj.callRemote,
+                                               'get_jobs_by_username',
+                                               self.username,
+                                               False)
                                            
         return [expand_job(jdict) for jdict in jdicts]
         
         
     def cluster_speed(self):
-        r"""
+        """
         Returns the speed of the cluster. 
 
         """
@@ -516,8 +529,8 @@ class BlockingDSage(DSage):
 
         return blocking_call_from_thread(self.remoteobj.callRemote, 'get_cluster_speed')
     
-    def list_monitors(self):
-        r"""Returns a list of monitors connected to the server.
+    def get_monitors_list(self):
+        """Returns a list of monitors connected to the server.
         
         """                   
         
@@ -525,17 +538,27 @@ class BlockingDSage(DSage):
         
         return blocking_call_from_thread(self.remoteobj.callRemote, 'get_monitor_list')
     
-    def list_clients(self):
-        r"""
+    def get_clients_list(self):
+        """
         Returns a list of clients connected to the server.
         """
         
         self.check_connected()
         
         return blocking_call_from_thread(self.remoteobj.callRemote, 'get_client_list')
-                                      
+    
+    def get_worker_count(self):
+        """
+        Returns the number of busy and free workers.
+        
+        """
+        
+        self.check_connected()
+        
+        return blocking_call_from_thread(self.remoteobj.callRemote, 'get_worker_count')
+        
 class JobWrapper(object):
-    r"""
+    """
     Represents a remote job. 
     
     Parameters:
@@ -619,7 +642,7 @@ class JobWrapper(object):
 
     def _got_jdict(self, jdict):
         self._job = expand_job(jdict)
-        self.id = jdict['job_id']
+        self.job_id = jdict['job_id']
         self._update_job(self._job)
         
     def get_job(self):
@@ -627,9 +650,9 @@ class JobWrapper(object):
         
         if self.remoteobj is None:
             raise NotConnectedException
-        if self.id is None:
+        if self.job_id is None:
             return
-        d = self.remoteobj.callRemote('get_job_by_id', self.id)
+        d = self.remoteobj.callRemote('get_job_by_id', self.job_id)
         d.addCallback(self._got_job)
         d.addErrback(self._catch_failure)
         
@@ -638,7 +661,7 @@ class JobWrapper(object):
     def get_job_output(self):
         if self.remoteobj == None:
             return
-        d = self.remoteobj.callRemote('get_job_output_by_id', self._job.id)
+        d = self.remoteobj.callRemote('get_job_output_by_id', self._job.job_id)
         d.addCallback(self._got_job_output)
         d.addErrback(self._catch_failure)
         
@@ -651,7 +674,7 @@ class JobWrapper(object):
     def get_job_result(self):
         if self.remoteobj == None:
             return
-        d = self.remoteobj.callRemote('get_job_result_by_id', self._job.id)
+        d = self.remoteobj.callRemote('get_job_result_by_id', self._job.job_id)
         d.addCallback(self._got_job_result)
         d.addErrback(self._catch_failure)
         
@@ -676,7 +699,7 @@ class JobWrapper(object):
             return
             
         try:
-            d = self.remoteobj.callRemote('sync_job', self._job.id)
+            d = self.remoteobj.callRemote('sync_job', self._job.job_id)
         except pb.DeadReferenceError:
             if self.sync_job_task:
                 if self.sync_job_task.running:
@@ -696,13 +719,13 @@ class JobWrapper(object):
         result_file.close()
 
     def kill(self):
-        r"""
+        """
         Kills the current job.
         
         """
         
-        if self.id is not None:
-            d = self.remoteobj.callRemote('kill_job', self.id)
+        if self.job_id is not None:
+            d = self.remoteobj.callRemote('kill_job', self.job_id)
             d.addCallback(self._killed_job)
             d.addErrback(self._catch_failure)
             return d
@@ -713,7 +736,7 @@ class JobWrapper(object):
         return
 
 class BlockingJobWrapper(JobWrapper):
-    r"""
+    """
     Blocking version of the JobWrapper object.  This is to be used 
     interactively.
     
@@ -725,20 +748,21 @@ class BlockingJobWrapper(JobWrapper):
         
         self._update_job(job)
 
-        jdict = blocking_call_from_thread(self.remoteobj.callRemote,
-                                          'submit_job', job.reduce())
+        jdict = blocking_call_from_thread(self.remoteobj.callRemote, 'submit_job', job.reduce())
         self._job = expand_job(jdict)
 
     def __repr__(self):
+        if self.killed:
+            return 'Job %s was killed' % (self.job_id)
         if self.status != 'completed':
-            self.get_job()
+            self.get_job()   
         if self.status == 'completed' and not self.output:
-            return 'No output.'
-        elif not self.output:
+            return 'No output.'      
+        if not self.output:
             return 'No output yet.'
-            
-        return self.output
-        
+        else:
+            return self.output
+                    
     def get_job(self):
         from sage.dsage.errors.exceptions import NotConnectedException
         
@@ -747,7 +771,8 @@ class BlockingJobWrapper(JobWrapper):
         if self.status == 'completed':
             return
         
-        job = blocking_call_from_thread(self.remoteobj.callRemote, 'get_job_by_id', self._job.id)
+        job = blocking_call_from_thread(
+                        self.remoteobj.callRemote, 'get_job_by_id', self._job.job_id)
         
         self._update_job(expand_job(job))
     
@@ -755,29 +780,31 @@ class BlockingJobWrapper(JobWrapper):
         return JobWrapper.get_job(self)
         
     def kill(self):
-        r"""
+        """
         Kills the current job.
 
         """
         
-        job_id = blocking_call_from_thread(self.remoteobj.callRemote,
-                                           'kill_job', self._job.id)
+        job_id = blocking_call_from_thread(self.remoteobj.callRemote, 'kill_job', self._job.job_id)
+        self.job_id = job_id
+        self.killed = True
+        
         return job_id
     
     def async_kill(self):
-        r"""
+        """
         async version of kill
         
         """
         
-        d = self.remoteobj.callRemote('kill_job', self.id)
+        d = self.remoteobj.callRemote('kill_job', self.job_id)
         d.addCallback(self._killed_job)
         d.addErrback(self._catch_failure)
         
         return d
         
     def wait(self, timeout=None):
-        r"""
+        """
         Waits on a job until it is completed. 
         
         Parameters:

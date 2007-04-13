@@ -27,14 +27,14 @@ import copy
 from persistent import Persistent
 
 class Job(Persistent):
-    r"""
+    """
     Defines a Job that gets distributed to clients.
     
     """
 
     def __init__(self, id_=None, name=None, code=None, parent=None, 
                  username=None, type_='sage'):
-        r"""
+        """
         Creates a new job.
 
         Parameters:
@@ -76,7 +76,16 @@ class Job(Persistent):
 
     def __str__(self):
         return str(self.jdict)
-
+    
+    def __setattr__(self, name, value):
+        if name == 'jdict':
+            if not self.__dict__.has_key('jdict'):
+                self.__dict__[name] = value
+            else:
+                raise ValueError, 'Do not reassign Job.jdict.'
+        else:
+            Persistent.__setattr__(self, name, value)
+        
     def num_of_children(self):
         return len(self.jdict['children'])
 
@@ -103,7 +112,7 @@ class Job(Persistent):
         if not isinstance(value, str):
             raise TypeError
         self.jdict['job_id'] = value
-    id = property(fget=get_id, fset=set_id, fdel=None, doc='Job ID')
+    job_id = property(fget=get_id, fset=set_id, fdel=None, doc='Job ID')
     
     def get_status(self):
         return self.jdict['status']
@@ -228,7 +237,7 @@ class Job(Persistent):
         self.jdict['verifiable'] = value         
     
     def attach(self, var, obj, file_name=None):
-        r"""
+        """
         Attaches an object to a job.
         
         Parameters:
@@ -255,7 +264,7 @@ class Job(Persistent):
         self.jdict['data'].append((var, s, 'object'))
         
     def attach_file(self, file_name):
-        r"""
+        """
         Attach a file to a job.
         
         Parameters:
@@ -263,33 +272,26 @@ class Job(Persistent):
         
         """
         
-        try:
-            f = open(file_name, 'rb').read()
-            f = zlib.compress(f)
-        except:
-            print 'Unable to read file.'
-            return
+        f = open(file_name, 'rb').read()
+        f = zlib.compress(f)
         
         # Strip out any hard coded path in the file name
         file_name = os.path.split(file_name)[1]
         self.jdict['data'].append((file_name, f, 'file'))
     
     def pickle(self):
-        r"""
+        """
         Returns a pickled representation of self.
         
         """
         
-        try:
-            s = cPickle.dumps(self, 2)
-            s = zlib.compress(s)
-        except:
-            print 'Error pickling self'
-            return
+        s = cPickle.dumps(self, 2)
+        s = zlib.compress(s)
+
         return s
     
     def unpickle(self, pickled_job):
-        r"""
+        """
         Returns the unpickled version of myself.
         
         """
@@ -297,7 +299,7 @@ class Job(Persistent):
         return cPickle.loads(zlib.decompress(pickled_job))
     
     def reduce(self):
-        r"""
+        """
         Returns a reduced form of Job.jdict to be sent over the network.
         
         """
@@ -312,7 +314,7 @@ class Job(Persistent):
         return jdict
 
 def expand_job(jdict):
-    r"""
+    """
     This method recreates a Job object given a jdict.
     
     """
@@ -328,7 +330,6 @@ def expand_job(jdict):
         jdict['data'] = cPickle.loads(jdict['data'])
     except:
         jdict['data'] = None
-    # swap the jdicts, easy eh?
-    job.jdict = jdict
+    job.jdict.update(jdict)
     
     return job

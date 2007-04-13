@@ -1593,6 +1593,7 @@ class PeriodMapping(SageObject):
         self.__modsym = modsym
         self.__domain = modsym.ambient_module()
         self.__A = A
+        A.set_immutable()
 
     def modular_symbols_space(self):
         return self.__modsym

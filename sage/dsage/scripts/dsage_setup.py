@@ -109,7 +109,6 @@ def setup_server():
     # Get ConfigParser object
     config = get_config('server')
     config.set('server', 'client_port', 8081)
-    config.set('server', 'worker_port', 8082)
     config.set('ssl', 'ssl', 1)
     config.set('server_log', 'log_file', 'stdout')
     config.set('server_log', 'log_level', '0')
@@ -121,7 +120,7 @@ def setup_server():
     config.set('db', 'stale_in_days', 365)
     config.set('db', 'job_failure_threshold', 2)
     config.set('ssl', 'privkey_file', os.path.join(DSAGE_DIR, 'cacert.pem'))
-    config.set('ssl', 'cert_file', os.path.join(DSAGE_DIR, 'privkey.pem'))
+    config.set('ssl', 'cert_file', os.path.join(DSAGE_DIR, 'pubcert.pem'))
     config.set('general', 'stats_file', 'gauge.xml')
     
     print DELIMITER
@@ -134,6 +133,7 @@ def setup_server():
                     config.get('ssl', 'cert_file'))]
     subprocess.call(cmd, shell=True)
     print DELIMITER
+    os.chmod(os.path.join(DSAGE_DIR, 'cacert.pem'), 0600)
     
     conf_file = os.path.join(DSAGE_DIR, 'server.conf')
     config.write(open(conf_file, 'w'))
@@ -146,8 +146,18 @@ def setup_server():
     username = c.get('auth', 'username')
     pubkey_file = c.get('auth', 'pubkey_file')
     clientdb = ClientDatabase()
-    clientdb.add_user(username, pubkey_file)
-    print 'Added user %s\n' % (username)
+    if clientdb.get_user_and_key(username) is None:
+        clientdb.add_user(username, pubkey_file)
+        print 'Added user %s\n' % (username)
+    else:
+        (user, key) = clientdb.get_user_and_key(username)
+        pubkey = open(pubkey_file).read()
+        if pubkey != key:
+            clientdb.del_user(username)
+            clientdb.add_user(username, pubkey_file)            
+            print 'User %s exists, changing public key' % (username)
+        else:
+            print 'User %s already exists.' % (username)
 
 def setup():
     setup_client()

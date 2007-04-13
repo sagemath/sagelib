@@ -52,10 +52,8 @@ try:
 
     LOG_FILE = config.get('server_log', 'log_file')
     SSL = config.getint('ssl', 'ssl')
-    WORKER_PORT = config.getint('server', 'worker_port')
     CLIENT_PORT = config.getint('server', 'client_port')
-    PUBKEY_DATABASE = os.path.expanduser(config.get('auth',
-                                                    'pubkey_database'))
+    PUBKEY_DATABASE = os.path.expanduser(config.get('auth', 'pubkey_database'))
 
     conf_file = os.path.join(DSAGE_DIR, 'client.conf')
     config = ConfigParser.ConfigParser()
@@ -89,7 +87,7 @@ Data =  ''.join([chr(i) for i in [random.randint(65, 123) for n in
                 range(500)]])
 
 class ClientRemoteCallsTest(unittest.TestCase):
-    r"""
+    """
     Tests of remote procedure calls go here.
     
     """
@@ -108,8 +106,7 @@ class ClientRemoteCallsTest(unittest.TestCase):
         self.realm = Realm(self.dsage_server)
         self.p = _SSHKeyPortalRoot(portal.Portal(self.realm))
         self.clientdb = ClientDatabase(test=True)
-        self.p.portal.registerChecker(
-        PublicKeyCredentialsCheckerDB(self.clientdb))
+        self.p.portal.registerChecker(PublicKeyCredentialsCheckerDB(self.clientdb))
         self.client_factory = pb.PBServerFactory(self.p)
         self.hostname = 'localhost'
         self.server = reactor.listenTCP(0, self.client_factory)
@@ -119,8 +116,7 @@ class ClientRemoteCallsTest(unittest.TestCase):
         self.username = USERNAME
         self.pubkey_file = PUBKEY_FILE
         self.privkey_file = PRIVKEY_FILE
-        self.public_key_string = keys.getPublicKeyString(
-                                 filename=self.pubkey_file)
+        self.public_key_string = keys.getPublicKeyString(filename=self.pubkey_file)
         self.private_key = keys.getPrivateKeyObject(filename=self.privkey_file)
         self.public_key = keys.getPublicKeyObject(self.public_key_string)
         self.alg_name = 'rsa'
@@ -199,12 +195,12 @@ class ClientRemoteCallsTest(unittest.TestCase):
 
         jobs = []
         for i in range(n):
-            jobs.append(Job(name='unittest', username='yqiang'))
+            jobs.append(Job(name='unittest', username=self.username))
 
         return jobs
 
 class MonitorRemoteCallsTest(unittest.TestCase):
-    r"""
+    """
     Tests remote calls for monitors.
     
     """

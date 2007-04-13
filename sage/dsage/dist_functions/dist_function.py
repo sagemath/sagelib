@@ -14,6 +14,7 @@
 #  The full text of the GPL is available at:
 #
 #                  http://www.gnu.org/licenses/
+#
 ############################################################################
 
 import datetime
@@ -25,7 +26,7 @@ from sage.dsage.interface.dsage_interface import JobWrapper, BlockingJobWrapper
 from sage.dsage.twisted.misc import blocking_call_from_thread
 
 class DistributedFunction(object):
-    r"""
+    """
     Parent class for all classes that wish to use Distributed SAGE.
 
     Parameters:
@@ -70,7 +71,7 @@ class DistributedFunction(object):
                      doc="Time it took for job to complete")
 
     def save(self, filename=None, compress=True):
-        r"""
+        """
         Saves your distributed job to disk.
         
         """
@@ -89,7 +90,7 @@ class DistributedFunction(object):
         return filename
 
     def stop(self, verbose=True):
-        r"""
+        """
         Ends the current DistributedFunction, kills all waiting jobs.
         
         """
@@ -103,7 +104,7 @@ class DistributedFunction(object):
             print 'All waiting jobs have been killed. This job is no more.'
         
     def restore(self, dsage):
-        r"""
+        """
         Reloads a distributed job from disk.
         
         """
@@ -122,27 +123,35 @@ class DistributedFunction(object):
         self.checker_task = task.LoopingCall(self.check_results)
         reactor.callFromThread(self.checker_task.start, 1.0, now=True)
 
-    def submit_job(self, job, job_name='job', async=False):
+    def submit_job(self, job, job_name='job', async=True):
+        """
+        Submits a job to the server.
+        
+        """
+        
+        job.username = self.DSage.username
         if async:
             if isinstance(job, Job):
-                job.username = self.DSage.username
-                self.waiting_jobs.append(self.DSage.send_job(job, 
-                                                             async=True))
+                self.waiting_jobs.append(self.DSage.send_job(job, async=True))
             else:
-                self.waiting_jobs.append(self.DSage.eval(job, 
-                                                         job_name=job_name,
-                                                         async=True))
+                self.waiting_jobs.append(self.DSage.eval(job, job_name=job_name, async=True))
         else:
             if isinstance(job, Job):
-                job.username = self.DSage.username
                 self.waiting_jobs.append(self.DSage.send_job(job, async=False))
             else:
-                self.waiting_jobs.append(self.DSage.eval(job,
-                                                         job_name=job_name))
+                self.waiting_jobs.append(self.DSage.eval(job, job_name=job_name))
     
-    def submit_jobs(self, job_name='job', async=False):
+    def submit_jobs(self, job_name='job', async=True):
+        """
+        Repeatedly calls submit_job until we have no more jobs in outstanding_jobs
+        
+        """
+        
         for job in self.outstanding_jobs:
-           self.submit_job(job, job_name, async)
+            try:              
+               self.submit_job(job, job_name, async)
+            except Exception, msg:
+               print msg
         self.outstanding_jobs = []
 
     def start(self):
@@ -154,6 +163,14 @@ class DistributedFunction(object):
         reactor.callFromThread(self.submit_jobs, self.name, async=True)
         self.checker_task = blocking_call_from_thread(task.LoopingCall, self.check_results)
         reactor.callFromThread(self.checker_task.start, 1.0, now=True)
+    
+    def process_result(self):
+        """
+        Any class subclassing DistributedFunction should implement this method.
+        
+        """
+        
+        pass
         
     def check_results(self):
         from twisted.internet import reactor
@@ -174,7 +191,6 @@ class DistributedFunction(object):
                 self.process_result(wrapped_job)
                 self.processed_jobs.append(wrapped_job)
         if self.done:
-            # kill the jobs in the waiting queue
             for wrapped_job in self.waiting_jobs:
                 if isinstance(wrapped_job, JobWrapper):
                     wrapped_job.kill()
@@ -185,7 +201,7 @@ class DistributedFunction(object):
                 reactor.callFromThread(self.checker_task.stop)
         
 class DistributedFunctionTest(DistributedFunction):
-    r"""
+    """
     This is a very simple DistributedFunction.  
     Only for educational purposes.
     
@@ -198,7 +214,6 @@ class DistributedFunctionTest(DistributedFunction):
         self.result = 0
         self.results = []
         self.code = """DSAGE_RESULT=%s"""
-        # self.outstanding_jobs = ["print %s" % (i for i in range(1,n+1))]
         self.outstanding_jobs = [Job(code=self.code % i, username='yqiang') for i in range(1, n+1)]
         
     def process_result(self, job):
