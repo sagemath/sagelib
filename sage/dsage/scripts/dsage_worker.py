@@ -290,17 +290,23 @@ class Worker(object):
         
         INTERRUPT_TRIES = 20
         timeout = 0.3
-        for i in range(INTERRUPT_TRIES):    
-            try: 
-                self.sage._expect.sendline(chr(3))  # send ctrl-c            
-                self.sage._expect.expect(self.sage._prompt, timeout=timeout)            
-                self.sage._expect.expect(self.sage._prompt, timeout=timeout)
-                success = True
-                break
-            except (pexpect.TIMEOUT, pexpect.EOF), msg:
-                if self.log_level > 3:
-                    log.err("Trying again to interrupt SAGE (try %s)..." % i)
+        try:
+            for i in range(INTERRUPT_TRIES):    
+                self.sage._expect.sendline('q')
+                self.sage._expect.sendline(chr(3))  # send ctrl-c 
+                try: 
+                    self.sage._expect.expect(self.sage._prompt, timeout=timeout)            
+                    success = True
+                    break
+                except (pexpect.TIMEOUT, pexpect.EOF), msg:
+                    if self.log_level > 3:
+                        log.err("Trying again to interrupt SAGE (try %s)..." % i)
+        except Exception, msg:
+            log.err("[Worker %s] Could not do a soft reset, performing a hard reset now.")
         
+        if not success:
+            pass
+            
         self.sage.reset()
         self.free = True
         self.job = None
