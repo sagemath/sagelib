@@ -2493,8 +2493,10 @@ common_varnames = ['alpha',
                    
 
 def tex_varify(a):
-    if a in common_varnames: 
+    if a in common_varnames:
         return "\\" + a
+    elif len(a) == 1:
+        return a
     else:
         return '\\mbox{%s}'%a
     
