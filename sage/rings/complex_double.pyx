@@ -800,6 +800,12 @@ cdef class ComplexDoubleElement(FieldElement):
             1.0*I            
         """
         return self._new_c(gsl_complex_sqrt(self._complex))
+        
+    def is_square(self):
+        """
+        This function always returns true as $\C$ is algebraically closed. 
+        """
+        return True
 
     def square_root(self):
         r"""
