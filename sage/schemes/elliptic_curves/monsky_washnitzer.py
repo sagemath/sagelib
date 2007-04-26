@@ -2469,7 +2469,6 @@ class MonskyWashnitzerDifferentialRing_class(Module):
 #        t = self.base_ring()(three_halves) - a._rmul_(one_half)
         
         print prec, "->", ceil(log(prec, 2))
-#        for _ in range(prec+1):
         for _ in range(ceil(log(prec, 2))):
             t = t._rmul_(three_halves) - (t*t*t * a)._rmul_(one_half)  # t = (3/2) t - (1/2) a t^3
 #            t = three_halves * t - one_half * t*t*t * a
@@ -2477,17 +2476,11 @@ class MonskyWashnitzerDifferentialRing_class(Module):
 #        print "a =", a
 #        print "t =", t
 
-        prof("verify")
-        print "a*t^2 =", a * t**2
+#        prof("verify")
+#        print "a*t^2 =", a * t**2
 
         prof("compose")
         F_dx_y = (p * x_to_p_less_1 * t) >> (p-1)  # px^{p-1} sqrt(a) * y^{-p+1}
-        
-        print F_dx_y == F_dx_y
-        print F_dx_y.change_ring(QQ).change_ring(F_dx_y.parent().base_ring()) == F_dx_y
-        print F_dx_y.extract_pow_y(-10)
-        print F_dx_y.change_ring(QQ).extract_pow_y(-10)
-        print F_dx_y.change_ring(QQ).change_ring(F_dx_y.parent().base_ring()).extract_pow_y(-10)
         
 #        print "-----", F_dx_y
 #        print "-----", x_to_p * F_dx_y
@@ -2650,7 +2643,7 @@ class MonskyWashnitzerDifferential(ModuleElement):
             else:
                 # this is a total hack to deal with the fact that we're using 
                 # rational numbers to approximate fixed precision p-adics
-                if j % 3 == -1:
+                if j % 3 == 1:
                     try:
                         v = coeffs[j-offset-1]
                         for kk in range(len(v)):
