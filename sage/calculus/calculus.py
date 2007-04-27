@@ -959,6 +959,20 @@ class SymbolicExpression(RingElement):
     ###################################################################
     def derivative(self, *args):
         """
+        Returns the derivative of itself. If self has exactly one variable, then
+        it differentiates with respect to that variable. If there is more than one
+        variable in the expression, then you must explicitly supply a variable.
+        If you supply a variable $x$ followed by a number $n$, then it will
+        differentiate with respect to $n$ times with respect to $n$.
+
+        You may supply more than one variable. Each variable may optionally be
+        followed by a positive integer. Then SAGE will differentiate with
+        respect to the first variable $n$ times, where $n$ is the number
+        immediately following the variable in the parameter list. If the
+        variable is not followed by an integer, then SAGE will differentiate
+        once. Then SAGE will differentiate by the second variables, and if that
+        is followed by a number $m$, it will differentiate $m$ times, and so on.
+
         EXAMPLES:
             sage: h = sin(x)/cos(x)
             sage: diff(h,x,x,x)
@@ -969,6 +983,27 @@ class SymbolicExpression(RingElement):
             sage: u = (sin(x) + cos(y))*(cos(x) - sin(y))
             sage: diff(u,x,y)
             sin(x)*sin(y) - cos(x)*cos(y)            
+            sage: f = ((x^2+1)/(x^2-1))^(1/4)
+            sage: g = diff(f, x); g # this is a complex expression
+            x/(2*(x^2 - 1)^(1/4)*(x^2 + 1)^(3/4)) - (x*(x^2 + 1)^(1/4)/(2*(x^2 - 1)^(5/4)))
+            sage: g.simplify_rational()
+            -x/((x^2 - 1)^(5/4)*(x^2 + 1)^(3/4))
+            
+            sage: f = y^(sin(x))
+            sage: diff(f, x)
+            cos(x)*y^sin(x)*log(y)
+
+            sage: g(x) = sqrt(5-2*x)
+            sage: g_3 = diff(g, x, 3); g_3(2)
+            -3
+            
+            sage: f = x*e^(-x)
+            sage: diff(f, 100)
+            x*e^(-x) - 100*e^(-x)
+
+            sage: g = 1/(sqrt((x^2-1)*(x+5)^6))
+            sage: diff(g, x)
+            -3/((x + 5)^3*sqrt(x^2 - 1)*abs(x + 5)) - (x/((x^2 - 1)^(3/2)*abs(x + 5)^3))
         """
         # check each time
         s = ""
@@ -1104,6 +1139,25 @@ class SymbolicExpression(RingElement):
             0
             sage: lim(-e^x/x, x = oo)
             -Infinity
+            sage: lim((cos(x))/(x^2), x = 0)
+            +Infinity
+            sage: lim(sqrt(x^2+1) - x, x = oo)
+            0
+            sage: lim(x^2/(sec(x)-1), x=0)
+            2
+            sage: lim(cos(x)/(cos(x)-1), x=0)
+            -Infinity
+            sage: lim(x*sin(1/x), x=0)
+            0
+            
+            Traceback (most recent call last):
+            ...
+            TypeError: Computation failed since Maxima requested additional constraints (use assume):
+            Is  x  positive or negative?
+
+            sage: f = log(log(x))/log(x)
+            sage: forget(); assume(x<-2); lim(f, x=0)
+            limit(log(log(x))/log(x), x=0)
 
         The following means "indefinite but bounded":
             sage: lim(sin(1/x), x = 0)
@@ -1149,6 +1203,10 @@ class SymbolicExpression(RingElement):
             1/(s^2 + 1)
             sage: (z + exp(x)).laplace(x, s)
             z/s + 1/(s - 1)
+
+            sage: var('t0')
+            sage: log(t/t0).laplace(x, s)
+            (-log(t0) - log(s) - euler_gamma)/s
 
         We do a formal calculation:
             sage: f = function('f', x)
@@ -1694,6 +1752,49 @@ class SymbolicExpression(RingElement):
         return self.parent()(self._maxima_().fullratsimp())
 
     rational_simplify = simplify_rational
+
+    # TODO: come up with a way to intelligently wrap Maxima's way of
+    # fine-tuning all simplificationsrational
+
+    def simplify_radical(self):
+        r"""
+        Wraps the Maxima radcan() command. From the Maxima documentation: 
+
+            Simplifies this expression, which can contain logs, exponentials,
+            and radicals, by converting it into a form which is canonical over a
+            large class of expressions and a given ordering of variables; that
+            is, all functionally equivalent forms are mapped into a unique form.
+            For a somewhat larger class of expressions, produces a regular form.
+            Two equivalent expressions in this class do not necessarily have the
+            same appearance, but their difference can be simplified by radcan to
+            zero.
+
+            For some expressions radcan is quite time consuming. This is the
+            cost of exploring certain relationships among the components of the
+            expression for simplifications based on factoring and partial
+            fraction expansions of exponents. 
+
+        ALIAS: radical_simplify, simplify_log, log_simplify, exp_simplify,
+        simplify_exp are all the same
+
+        EXAMPLES:
+
+            sage: f = log(x*y)
+            sage: f.simplify_radical()
+            log(y) + log(x)
+
+            sage: f = (log(x+x^2)-log(x))^a/log(1+x)^(a/2)
+            sage: f.simplify_radical()
+            log(x + 1)^(a/2)
+
+            sage: f = (e^x-1)/(1+e^(x/2))
+            sage: f.simplify_exp()
+            e^(x/2) - 1
+        """
+        return self.parent()(self._maxima_().radcan())
+
+    radical_simplify = simplify_log = log_simplify = simplify_radical
+    simplify_exp = exp_simplify = simplify_radical
         
     ###################################################################
     # factor
@@ -3687,7 +3788,7 @@ _syms['csch'] = csch
 
 class Function_log(PrimitiveFunction):
     """
-    The log funtion.
+    The log funtion. This is a symbolic logarithm.
 
     EXAMPLES:
         sage: log(e^2)
@@ -3734,7 +3835,7 @@ def log(x, base=None):
 
 class Function_sqrt(PrimitiveFunction):
     """
-    The square root function.
+    The square root function. This is a symbolic square root.
 
     EXAMPLES:
         sage: sqrt(-1)
@@ -3772,8 +3873,8 @@ sqrt = Function_sqrt()
 _syms['sqrt'] = sqrt
 
 class Function_exp(PrimitiveFunction):
-    """
-    The square root function.
+    r"""
+    The exponential function, $\exp(x) = e^x$.
 
     EXAMPLES:
         sage: exp(-1)
@@ -4130,7 +4231,7 @@ def symbolic_expression_from_maxima_string(x, equals_sub=False, maxima=maxima):
 
     if equals_sub:
         s = s.replace('=','==')
-        
+    
     global is_simplified
     try:
         # use a global flag so all expressions obtained via
