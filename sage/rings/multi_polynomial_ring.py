@@ -328,6 +328,10 @@ class MPolynomialRing_generic(commutative_ring.CommutativeRing):
             names.append(g)
         self.__latex_variable_names = names
         return names
+        
+    def change_ring(self, R):
+        from polynomial_ring_constructor import PolynomialRing
+        return PolynomialRing(R, self.variable_names(), order=self.term_order())
 
 class MPolynomialRing_polydict( MPolynomialRing_macaulay2_repr, MPolynomialRing_generic):
     """
