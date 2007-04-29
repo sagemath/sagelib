@@ -300,6 +300,9 @@ class MPolynomial_element(MPolynomial):
 
     def element(self):
         return self.__element
+        
+    def change_ring(self, R):
+        return self.parent().change_ring(R)(self)
 
 
 class MPolynomial_macaulay2_repr:

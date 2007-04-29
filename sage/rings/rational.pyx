@@ -172,6 +172,7 @@ cdef class Rational(sage.structure.element.FieldElement):
 
     def __set_value(self, x, unsigned int base):
         cdef int n
+        cdef Rational temp_rational
         
         if isinstance(x, Rational):
             set_from_Rational(self, x)
@@ -245,6 +246,10 @@ cdef class Rational(sage.structure.element.FieldElement):
             if n or mpz_cmp_si(mpq_denref(self.value), 0) == 0:
                 raise TypeError, "Unable to coerce %s (%s) to Rational"%(x,type(x))
             
+        elif hasattr(x, 'rational_reconstruction'):
+            temp_rational = x.rational_reconstruction()
+            mpq_set(self.value, temp_rational.value)
+        
         else:
             
             raise TypeError, "Unable to coerce %s (%s) to Rational"%(x,type(x))
@@ -447,8 +452,25 @@ cdef class Rational(sage.structure.element.FieldElement):
 
     def valuation(self, p):
         return self.numerator().valuation(p) - self.denominator().valuation(p)
+        
+    def is_square(self):
+        """
+        EXAMPLES: 
+            sage: x = 9/4
+            sage: x.is_square()
+            True
+            sage: x = (7/53)^100
+            sage: x.is_square()
+            True
+            sage: x = 4/3
+            sage: x.is_square()
+            False
+            sage: x = -1/4
+            sage: x.is_square()
+            False
+        """
+        return bool(mpq_sgn(self.value) >= 0 and mpz_perfect_square_p(mpq_numref(self.value)) and mpz_perfect_square_p(mpq_denref(self.value)))
     
-    def sqrt_approx(self, bits=None):
         r"""
         Returns the positive square root of self as a real number to
         the given number of bits of precision if self is nonnegative,
@@ -504,16 +526,16 @@ cdef class Rational(sage.structure.element.FieldElement):
         \exception{ValueError} if self is not a perfect square.
 
         EXAMPLES:
-            sage: x = 125/5
+            sage: x = 25/9
             sage: x.sqrt()
-            5
+            5/3
             sage: x = 64/4
             sage: x.sqrt()
             4
             sage: x = 1000/10
             sage: x.sqrt()
             10
-            sage: x = 81/3
+            sage: x = 81/5
             sage: x.sqrt()
             3*sqrt(3)
             sage: x = -81/3
@@ -523,6 +545,25 @@ cdef class Rational(sage.structure.element.FieldElement):
         AUTHOR:
             -- Naqi Jaffery (2006-03-05): some examples
         """
+        if mpq_sgn(self.value) < 0:
+            raise ValueError, "self (=%s) is not a perfect square"%self
+        cdef Rational z = <Rational> PY_NEW(Rational)            
+        cdef mpz_t tmp
+        _sig_on
+        mpz_init(tmp)
+        mpz_sqrtrem(mpq_numref(z.value), tmp, mpq_numref(self.value))
+        if mpz_sgn(tmp) != 0:
+            mpz_clear(tmp)
+            _sig_off
+            raise ValueError, "self (=%s) is not a perfect square"%self
+        mpz_sqrtrem(mpq_denref(z.value), tmp, mpq_denref(self.value))
+        if mpz_sgn(tmp) != 0:
+            mpz_clear(tmp)
+            _sig_off
+            raise ValueError, "self (=%s) is not a perfect square"%self
+        mpz_clear(tmp)
+        _sig_off
+        return z
         if self < 0:
             from sage.calculus.calculus import sqrt
             return sqrt(self)
@@ -1184,9 +1225,6 @@ cdef class Rational(sage.structure.element.FieldElement):
         else:
             return sage.rings.infinity.infinity    
     
-    def is_square(self):
-        return self.numerator().is_square() and self.denominator().is_square()
-
     def is_one(self):
         r"""
         Determine if a rational number is one.
