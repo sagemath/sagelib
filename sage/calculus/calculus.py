@@ -1205,7 +1205,9 @@ class SymbolicExpression(RingElement):
             z/s + 1/(s - 1)
 
             sage: var('t0')
-            sage: log(t/t0).laplace(x, s)
+            t0
+            w
+            sage: log(t/t0).laplace(t, s)
             (-log(t0) - log(s) - euler_gamma)/s
 
         We do a formal calculation:
@@ -3953,7 +3955,7 @@ class SymbolicFunction(PrimitiveFunction):
     def _approx_(self, x):
         raise TypeError
 
-    def __call__(self, *args):
+    def __call__(self, *args, **kwds):
         return SymbolicFunctionEvaluation(self, [SR(x) for x in args])
 
 class SymbolicFunction_delayed(SymbolicFunction):
@@ -3987,7 +3989,7 @@ class SymbolicFunctionEvaluation(SymbolicExpression):
         sage: k.diff(x)
         gfun(x)
     """
-    def __init__(self, f, args):
+    def __init__(self, f, args=None, kwds=None):
         """
         INPUT:
             f -- symbolic function
@@ -3996,23 +3998,33 @@ class SymbolicFunctionEvaluation(SymbolicExpression):
         """
         SymbolicExpression.__init__(self)
         self._f = f
-        if not isinstance(args, tuple):
-            args = tuple(args)
+        if not args is None:
+            if not isinstance(args, tuple):
+                args = tuple(args)
         self._args = args
+        self._kwds = kwds
 
     def _is_atomic(self):
         return True
 
     def arguments(self):
         return tuple(self._args)
+
+    def keyword_arguments(self):
+        return self._kwds
     
     def _repr_(self, simplify=True):
         if simplify:
             return self.simplify()._repr_(simplify=False)
         else:
-            return '%s(%s)'%(self._f._name, ', '.join([x._repr_(simplify=simplify)
-                                                       for x in self._args]))
-
+            args = ', '.join([x._repr_(simplify=simplify) for x in
+                                                      self._args])
+            if not self._kwds is None:
+                kwds = ', '.join(["%s=%s" %(x, y) for x,y in self._kwds.iteritems()])
+                return '%s(%s, %s)' % (self._f._name, args, kwds)
+            else:
+                return '%s(%s)' % (self._f._name, args)
+            
     def _latex_(self):
         return "{\\rm %s}(%s)"%(self._f._name, ', '.join([x._latex_() for
                                                        x in self._args]))
@@ -4179,6 +4191,10 @@ def function(s, *args):
     return v
     
 #######################################################
+def dummy_limit(*args):
+    s = str(args[1])
+    return SymbolicFunctionEvaluation(function('limit'), args=(args[0],),kwds={s: args[2]})
+######################################i################
 
 
 
@@ -4231,7 +4247,10 @@ def symbolic_expression_from_maxima_string(x, equals_sub=False, maxima=maxima):
 
     if equals_sub:
         s = s.replace('=','==')
-    
+      
+    # have to do this here, otherwise maxima_tick catches it
+    _syms['limit'] = dummy_limit
+
     global is_simplified
     try:
         # use a global flag so all expressions obtained via
@@ -4267,5 +4286,3 @@ def symbolic_expression_from_maxima_element(x):
 
 def evaled_symbolic_expression_from_maxima_string(x):
     return symbolic_expression_from_maxima_string(maxima.eval(x))
-
-    
