@@ -1,6 +1,6 @@
-############################################################################
+##############################################################################
 #                                                                     
-#   DSAGE: Distributed SAGE                     
+#  DSAGE: Distributed SAGE                     
 #                                                                             
 #       Copyright (C) 2006, 2007 Yi Qiang <yqiang@gmail.com>               
 #                                                                            
@@ -14,6 +14,27 @@
 #  The full text of the GPL is available at:
 #
 #                  http://www.gnu.org/licenses/
-############################################################################
+#
+##############################################################################
 
-version='0.4'
+from sage.dsage.database.job import Job
+
+class BenchmarkJob(object):
+    """
+    This job is sent to workers as a way to benchmark their performance.
+    
+    """
+    
+    def __init__(self):
+        pass
+    
+    def get_job(self):
+        job = Job()
+        job.code = """import time
+start = time.time()
+os.system("openssl speed rsa1024")
+end = time.time()
+DSAGE_RESULT = end - start
+"""
+        
+        return job

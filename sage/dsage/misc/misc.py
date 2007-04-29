@@ -1,6 +1,6 @@
-############################################################################
+##############################################################################
 #                                                                     
-#   DSAGE: Distributed SAGE                     
+#  DSAGE: Distributed SAGE                     
 #                                                                             
 #       Copyright (C) 2006, 2007 Yi Qiang <yqiang@gmail.com>               
 #                                                                            
@@ -14,6 +14,23 @@
 #  The full text of the GPL is available at:
 #
 #                  http://www.gnu.org/licenses/
-############################################################################
+#
+##############################################################################
+"""
+Miscellaneous helper methods. 
 
-version='0.4'
+"""
+
+import random
+
+def random_str(length=500):
+    """
+    Generates a random string.
+    
+    INPUT:
+    length -- the length of the string
+    
+    """
+    s = [chr(i) for i in [random.randint(65, 123) for n in range(length)]]
+    
+    return ''.join(s)
