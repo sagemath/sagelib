@@ -349,9 +349,15 @@ def SymbolicExpressionRing():
 
 class SymbolicExpression(RingElement):
     """
-    A Symbolic Expression.
+    A Symbolic Expression. 
 
     EXAMPLES:
+        Some types of SymbolicExpressions:
+
+        sage: a = SR(2+2); a
+        4
+        sage: type(a)
+        <class 'sage.calculus.calculus.SymbolicConstant'>
     
     """
     def __init__(self):
