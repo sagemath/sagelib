@@ -728,14 +728,16 @@ cdef class RealDoubleElement(FieldElement):
     # Special Functions
     ############################
 
-    def sqrt(self):
+    def sqrt(self, extend=True, all=False):
         """
-        Return a square root of self.
+        The square root function.
 
-        If self is negative a complex number is returned.
-
-        If you use self.square_root() then a real number will always
-        be returned (though it will be NaN if self is negative).
+        INPUT:
+            extend -- bool (default: True); if True, return
+                a square root in a complex field if necessary
+                if self is negative; otherwise raise a ValueError
+            all -- bool (default: False); if True, return a list
+                of all square roots.
 
         EXAMPLES:
             sage: r = RDF(4.0)
@@ -753,27 +755,42 @@ cdef class RealDoubleElement(FieldElement):
             sage: r = RDF(-2.0)
             sage: r.sqrt()
             1.41421356237*I
-            """
+
+            sage: RDF(2).sqrt(all=True)
+            [1.41421356237, -1.41421356237]
+            sage: RDF(0).sqrt(all=True)
+            [0.0]
+            sage: RDF(-2).sqrt(all=True)
+            [1.41421356237*I, -1.41421356237*I]
+        """
         if self._value >= 0:
-            return self.square_root()
-        return self._complex_double_(sage.rings.complex_double.CDF).sqrt()
+            x = self._new_c(sqrt(self._value))
+            if all:
+                if x.is_zero():
+                    return [x]
+                else:
+                    return [x, -x]
+            else:
+                return x
+        if not extend:
+            raise ValueError, "negative number %s does not have a square root in the real field"%self
+        return self._complex_double_(sage.rings.complex_double.CDF).sqrt(all=all)
         
-
-    def square_root(self):
+        
+    def is_square(self):
         """
-        Return a square root of self.  A real number will always be
-        returned (though it will be NaN if self is negative).
-
-        Use self.sqrt() to get a complex number if self is negative.
-
-        EXAMPLES:
-            sage: r = RDF(-2.0)
-            sage: r.square_root()
-            nan
-            sage: r.sqrt()
-            1.41421356237*I
+        Returns whether or not this number is a square in this field. 
+        For the real numbers, this is True if and only if self is non-negative. 
+        
+        EXAMPLES: 
+            sage: RDF(3.5).is_square()
+            True
+            sage: RDF(0).is_square()
+            True
+            sage: RDF(-4).is_square()
+            False
         """
-        return self._new_c(sqrt(self._value))
+        return bool(self._value >= 0)
 
     def cube_root(self):
         """
@@ -1170,7 +1187,7 @@ cdef class RealDoubleElement(FieldElement):
             sage: q = RDF.pi()/2 
             sage: i = q.cosh() ; i
             2.50917847866
-            sage: i.acosh() == q
+            sage: abs(i.acosh()-q) < 1e-15
             True
         """
         return self._new_c(gsl_acosh(self._value))
@@ -1183,7 +1200,7 @@ cdef class RealDoubleElement(FieldElement):
             sage: q = RDF.pi()/2 
             sage: i = q.sinh() ; i
             2.30129890231
-            sage: i.asinh() == q
+            sage: abs(i.asinh()-q) < 1e-15
             True
         """
         return self._new_c(gsl_asinh(self._value))

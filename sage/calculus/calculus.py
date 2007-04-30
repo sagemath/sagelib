@@ -179,7 +179,8 @@ from sage.rings.all import (CommutativeRing, RealField, is_Polynomial,
                             is_MPolynomial, is_MPolynomialRing,
                             is_RealNumber, is_ComplexNumber, RR,
                             Integer, Rational, CC,
-                            PolynomialRing)
+                            QuadDoubleElement,
+                            PolynomialRing, ComplexField)
 
 from sage.structure.element import RingElement, is_Element
 from sage.structure.parent_base import ParentWithBase
@@ -302,6 +303,7 @@ class SymbolicExpressionRing_class(CommutativeRing):
                             PariGen,
                             ComplexNumber,
                             ComplexDoubleElement,
+                            QuadDoubleElement,
                             InfinityElement
                             )):
             return SymbolicConstant(x)
@@ -366,8 +368,13 @@ class SymbolicExpression(RingElement):
             self._simp = self
 
     def __nonzero__(self):
-        # Best to error on side of being nonzero in most cases. 
-        return not bool(self == SR.zero_element())
+        try:
+            return self.__nonzero
+        except AttributeError:
+            # Best to error on side of being nonzero in most cases. 
+            ans = not bool(self == SR.zero_element())
+            self.__nonzero = ans
+        return ans
 
     def __str__(self):
         """
@@ -386,6 +393,10 @@ class SymbolicExpression(RingElement):
         
         """
         return self.display2d(onscreen=False)
+
+    def show(self):
+        from sage.misc.functional import _do_show
+        return _do_show(self)
 
     def display2d(self, onscreen=True):
         """
@@ -421,6 +432,8 @@ class SymbolicExpression(RingElement):
                                   + (sqrt(2)  I - sqrt(2)) erf(------------------------))/8
                                                                           2
         """
+        if not self.is_simplified():
+            self = self.simplify()
         s = self._maxima_().display2d(onscreen=False)
         s = s.replace('%pi',' pi').replace('%i',' I').replace('%e', ' e')
         if onscreen:
@@ -621,6 +634,9 @@ class SymbolicExpression(RingElement):
         raise TypeError
 
     def _real_double_(self, R):
+        raise TypeError
+
+    def _real_rqdf_(self, R):
         raise TypeError
 
     def _rational_(self):
@@ -1215,8 +1231,47 @@ class SymbolicExpression(RingElement):
             sage: g = f.diff(x); g
             diff(f(x), x, 1)
             sage: g.laplace(x, s)
-            s*laplace(f(x), x, s) - f(0)        
-        
+            s*laplace(f(x), x, s) - f(0)
+
+        EXAMPLE: A BATTLE BETWEEN the X-women and the Y-men (by David Joyner):
+        Solve
+        $$
+          x' = -16y, x(0)=270,  y' = -x + 1, y(0) = 90.
+        $$
+        This models a fight between two sides, the "X-women"
+        and the "Y-men", where the X-women have 270 initially and
+        the Y-men have 90, but the Y-men are better at fighting,
+        because of the higher factor of "-16" vs "-1", and also get
+        an occasional reinforcement, because of the "+1" term.
+
+            sage: var('t')
+            sage: x = function('x', t)
+            sage: y = function('y', t)
+            sage: de1 = x.diff(t) + 16*y
+            sage: de2 = y.diff(t) + x - 1
+            sage: de1.laplace(t, s)
+            16*laplace(y(t), t, s) + s*laplace(x(t), t, s) - x(0)
+            sage: de2.laplace(t, s)
+            s*laplace(y(t), t, s) + laplace(x(t), t, s) - (1/s) - y(0)
+
+        Next we form the augmented matrix of the above system:
+            sage: A = matrix([[s, 16, 270],[1, s, 90+1/s]])   
+            sage: E = A.echelon_form()
+            sage: xt = E[0,2].inverse_laplace(s,t)
+            sage: yt = E[1,2].inverse_laplace(s,t)
+            sage: print xt
+				4 t	    - 4 t
+			   91  e      629  e
+        		 - -------- + ----------- + 1
+			      2		   2
+            sage: print yt
+				 4 t	     - 4 t
+			    91  e      629  e
+        		    -------- + -----------
+			       8	    8
+            sage: p1 = plot(xt,0,1/2,rgbcolor=(1,0,0))
+            sage: p2 = plot(yt,0,1/2,rgbcolor=(0,1,0))
+            sage: (p1+p2).save()
         """
         return self.parent()(self._maxima_().laplace(var(t), var(s)))
 
@@ -2039,6 +2094,10 @@ class Symbolic_object(SymbolicExpression):
         SymbolicExpression.__init__(self)
         self._obj = obj
 
+    #def derivative(self, *args):
+        # TODO: remove
+    #    return self.parent().zero_element()
+
     def obj(self):
         """
         EXAMPLES:
@@ -2076,6 +2135,12 @@ class Symbolic_object(SymbolicExpression):
         return C(self._obj)
 
     def _real_double_(self, R):
+        """
+        EXAMPLES:
+        """
+        return R(self._obj)
+
+    def _real_rqdf_(self, R):
         """
         EXAMPLES:
         """
@@ -2359,6 +2424,12 @@ class SymbolicArithmetic(SymbolicOperation):
         rops = [op._real_double_(field) for op in self._operands]
         return self._operator(*rops)
 
+    def _real_rqdf_(self, field):
+        if not self.is_simplified():
+            return self.simplify()._real_rqdf_(field)
+        rops = [op._real_rqdf_(field) for op in self._operands]
+        return self._operator(*rops)
+
     def _is_atomic(self):
         try:
             return self._atomic
@@ -2405,10 +2476,6 @@ class SymbolicArithmetic(SymbolicOperation):
         ops = self._operands
         op = self._operator
 
-        ###############
-        # some bugs here in parenthesis -- exposed by above doctest
-        ###############
-        
         s = [o._repr_(simplify=False) for o in ops]
         
         # for the left operand, we need to surround it in parens when the
@@ -2471,6 +2538,8 @@ class SymbolicArithmetic(SymbolicOperation):
         elif op is operator.mul:
             if ops[0]._has_op(operator.add) or ops[0]._has_op(operator.sub):
                 s[0] = r'\left( %s \right)' %s[0]
+            if ops[1]._has_op(operator.add) or ops[1]._has_op(operator.sub):
+                s[1] = r'\left( %s \right)' %s[1]
             return '{%s \\cdot %s}' % (s[0], s[1])
         elif op is operator.div:
             return '\\frac{%s}{%s}' % (s[0], s[1])
@@ -2600,8 +2669,10 @@ common_varnames = ['alpha',
                    
 
 def tex_varify(a):
-    if a in common_varnames: 
+    if a in common_varnames:
         return "\\" + a
+    elif len(a) == 1:
+        return a
     else:
         return '\\mbox{%s}'%a
     
@@ -2802,6 +2873,9 @@ class CallableSymbolicExpression(SymbolicExpression):
         return C(self._expr)
 
     def _real_double_(self, R):
+        return R(self._expr)
+
+    def _real_rqdf_(self, R):
         return R(self._expr)
 
     # TODO: should len(args) == len(vars)?
@@ -3214,8 +3288,26 @@ class SymbolicComposition(SymbolicOperation):
             return field(float(z))
         return z
 
+    def _real_rqdf_(self, field):
+        """
+        Coerce to a real qdrf.
+        
+        EXAMPLES:
+            
+        """
+        if not self.is_simplified():
+            return self.simplify()._real_rqdf_(field)
+        f = self._operands[0]
+        g = self._operands[1]
+        z = f(g._real_rqdf_(field))
+        if isinstance(z, SymbolicExpression):
+            raise TypeError, "precision loss"
+        else:
+            return z
+
 class PrimitiveFunction(SymbolicExpression):
     def __init__(self, needs_braces=False):
+        SymbolicExpression.__init__(self)
         self._tex_needs_braces = needs_braces
 
     def plot(self, *args, **kwds):
@@ -3351,6 +3443,7 @@ class Function_floor(PrimitiveFunction):
         5
         sage: type(floor(5.4))
         <type 'sage.rings.integer.Integer'>
+        sage: var('x')
         sage: a = floor(5.4 + x); a
         floor(x + 0.4000000000000004) + 5
         sage: a(2)
@@ -3811,17 +3904,37 @@ class Function_sqrt(PrimitiveFunction):
     def _latex_(self):
         return "\\sqrt"
 
-    def __call__(self, x):
-        # if x is an integer or rational, never call the sqrt method
+    def _do_sqrt(self, x, prec=None, extend=True, all=False):
+        if prec:
+            return ComplexField(prec)(x).sqrt(all=all)
+        z = SymbolicComposition(self, SR(x))
+        if all:
+            return [z, -z]
+        return z
+
+    def __call__(self, x, *args, **kwds):
+        """
+        
+        POSSIBLE INPUTS INCLUDE:
+            x -- a number
+            prec -- integer (default: None): if None, returns an exact
+                 square root; otherwise returns a numerical square
+                 root if necessary, to the given bits of precision.
+            extend -- bool (default: True); if True, return a square
+                 root in an extension ring, if necessary. Otherwise,
+                 raise a ValueError if the square is not in the base
+                 ring.
+            all -- bool (default: False); if True, return all square
+                 roots of self, instead of just one.
+        """
         if isinstance(x, float):
-            return self._approx_(x)
+            return math.float(x)
         if not isinstance(x, (Integer, Rational)):
             try:
-                return x.sqrt()
+                return x.sqrt(*args, **kwds)
             except AttributeError:
                 pass
-        return SymbolicComposition(self, SR(x))
-    
+        return self._do_sqrt(x, *args, **kwds)
 
     def _approx_(self, x):
         return math.sqrt(x)
@@ -4078,6 +4191,9 @@ class SymbolicFunctionEvaluation_delayed(SymbolicFunctionEvaluation):
     def _real_double_(self, R):
         return R(float(self))
 
+    def _real_rqdf_(self, R):
+        raise TypeError
+
     def _complex_double_(self, C):
         return C(float(self))
 
@@ -4117,6 +4233,14 @@ def function(s, *args):
         -sin(a)*b
         sage: g(cr=sin(x) + cos(x))
         (cos(a) - sin(a))*b
+
+    Basic arithmetic:
+        sage: x = var('x')
+        sage: h = function('f',x)
+        sage: 2*f
+        2*f
+        sage: 2*h
+        2*f(x)
     """
     if len(args) > 0:
         return function(s)(*args)
