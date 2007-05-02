@@ -70,4 +70,13 @@ on Distributions:
     sin((x + t)^2) + cos(x - t) + (x - t)^3
     sage: u.diff(t,2) - u.diff(x,2)
     0
+
+Restoring variables after they have been turned into functions:
+    sage: x = function('x')
+    sage: sin(x).variables()
+    ()
+    sage: restore('x')
+    sage: sin(x).variables()
+    (x,)
+
 """
