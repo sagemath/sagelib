@@ -110,7 +110,11 @@ def IntegerMod(parent, value):
             res = value % modulus.int64
             if res < 0:
                 res = res + modulus.int64
-            return modulus.lookup(res)
+            a = modulus.lookup(res)
+            if (<Element>a)._parent is not parent:
+               (<Element>a)._parent = parent
+#                print (<Element>a)._parent, " is not ", parent
+            return a
     if modulus.int32 != -1:
         return IntegerMod_int(parent, value)
     elif modulus.int64 != -1:
@@ -1187,8 +1191,8 @@ cdef class IntegerMod_int(IntegerMod_abstract):
         if self.__modulus.table is not None:
             return self.__modulus.lookup(value)
         cdef IntegerMod_int x = PY_NEW(IntegerMod_int)
-        x.__modulus = self.__modulus
         x._parent = self._parent
+        x.__modulus = self.__modulus
         x.ivalue = value
         return x
 
@@ -2174,7 +2178,7 @@ def square_root_mod_prime_power(IntegerMod_abstract a, p, e):
     if val > 0:
         x *= p**(val // 2)
     return x
-    
+        
 def square_root_mod_prime(IntegerMod_abstract a, p=None):
     r"""
     Calculates the square root of a, where a is an integer mod p. 
