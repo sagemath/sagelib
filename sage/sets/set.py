@@ -53,8 +53,9 @@ def Set(X):
         <class 'sage.sets.set.Set_object_union'>
 
     Usually sets can be used as dictionary keys. 
-        sage: d={Set([2*I,1+I]):10}; d
-        {{I + 1, 2*I}: 10}        
+        sage: d={Set([2*I,1+I]):10}
+        sage: d                  # key is randomly ordered
+        {{I + 1, 2*I}: 10}          
         sage: d[Set([1+I,2*I])]
         10
         sage: d[Set((1+I,2*I))]
