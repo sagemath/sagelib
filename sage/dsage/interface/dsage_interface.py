@@ -601,6 +601,7 @@ class JobWrapper(object):
             d = self.remoteobj.callRemote('submit_job', job.reduce())
         except Exception, msg:
             print msg
+        d.addCallback(self._got_job_id)
         d.addCallback(self._got_jdict)
         d.addErrback(self._catch_failure)
 
@@ -659,6 +660,14 @@ class JobWrapper(object):
             print "Error: ", failure.getErrorMessage()
             print "Traceback: ", failure.printTraceback()
     
+    def _got_job_id(self, job_id):
+        try:
+            d = self.remoteobj.callRemote('get_job_by_id', job_id)
+        except Exception, msg:
+            raise
+            
+        return d
+        
     def _got_job(self, job):
         if job == None:
             return
