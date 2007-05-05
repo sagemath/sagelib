@@ -76,8 +76,8 @@ class DSageServer(pb.Root):
                 log.msg('[DSage, get_job]' + ' Job db is empty.')
             return None
         else:
+            job_id = jdict['job_id']
             if self.LOG_LEVEL > 3:
-                job_id = jdict['job_id']
                 log.msg('[DSage, get_job]' + ' Sending job %s' % job_id)
             jdict['status'] = 'processing'
             jdict = self.jobdb.store_job(jdict)
@@ -98,7 +98,7 @@ class DSageServer(pb.Root):
         id -- the job id
         
         """
-
+        
         jdict = self.jobdb.get_job_by_id(job_id)
         uuid = jdict['monitor_id']
         jdict['worker_info'] = self.monitordb.get_monitor(uuid)
