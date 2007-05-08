@@ -71,7 +71,7 @@ class Worker(object):
         self.log_level = self.conf['log_level']
         self.delay = self.conf['delay']
         self.checker_task = task.LoopingCall(self.check_work)
-        self.checker_timeout = 1.0
+        self.checker_timeout = 0.5
         self.got_output = False
         self.start()
             
@@ -173,8 +173,8 @@ class Worker(object):
                 log.msg(LOG_PREFIX % self.id + msg)
             reactor.callLater(sleep_time, self.get_job)
         else:
-            print "Error: ", failure.getErrorMessage()
-            print "Traceback: ", failure.printTraceback()
+            log.err("Error: ", failure.getErrorMessage())
+            log.err("Traceback: ", failure.printTraceback())
     
     def setup_tmp_dir(self, job):
         """
@@ -335,7 +335,8 @@ except:
             result = open('result.sobj', 'rb').read()
             done = True
         except RuntimeError, msg: # Error in calling worker.sage._so_far()
-            log.err(LOG_PREFIX % self.id + '%s' % msg)
+            done = False
+            log.err(LOG_PREFIX % self.id + 'RuntimeError: %s' % msg)
             self.increase_checker_task_timeout()
             return
         except IOError, msg: # File does not exist yet
@@ -502,15 +503,15 @@ class Monitor(object):
     
     It monitors the workers and checks on their status
     
+    Parameters:
+    hostname -- the hostname of the server we want to connect to (str)
+    port -- the port of the server we want to connect to (int)
+
     """
     
-    def __init__(self, server, port):
-        """
-        Parameters:
-        hostname -- the hostname of the server we want to connect to (str)
-        port -- the port of the server we want to connect to (int)
-        
-        """
+    def __init__(self, server='localhost', port=8081, ssl=True, 
+                 workers=2, anonymous=False, priority=20, delay=5.0,
+                 log_level=0):
         
         self.conf = get_conf('monitor')
         self.uuid = self.conf['id']
@@ -575,10 +576,13 @@ class Monitor(object):
     def _startLogging(self, log_file):
         if log_file == 'stdout':
             log.startLogging(sys.stdout)
+            log.msg('WARNING: Only loggint to stdout!')
         else:
-            print "Logging to file: ", log_file
-            server_log = open(log_file, 'a')
-            log.startLogging(server_log)
+            worker_log = open(log_file, 'a')
+            log.startLogging(sys.stdout)
+            log.startLogging(worker_log)
+            log.msg("Logging to file: ", log_file)
+            
 
     def _get_auth_info(self):
         self.DATA =  random_str(500)
@@ -671,7 +675,7 @@ class Monitor(object):
         log.msg(DELIMITER)
         
         self.factory = PBClientFactory()
-        if self.ssl == 1:
+        if self.ssl:
             from twisted.internet import ssl
             contextFactory = ssl.ClientContextFactory()
             reactor.connectSSL(self.server, self.port,
@@ -757,7 +761,7 @@ def main():
             try:
                 hostname = str(hostname)
             except Exception, msg:
-                print msg
+                log.err(msg)
                 hostname = None
     else:
         hostname = port = None

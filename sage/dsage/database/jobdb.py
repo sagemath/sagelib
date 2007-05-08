@@ -41,13 +41,21 @@ class JobDatabase(object):
     
     """
     
-    def __init__(self):
-        self.conf = get_conf(type='jobdb')
-        self.db_file = self.conf['db_file']
-        self.job_failure_threshold = int(self.conf['job_failure_threshold'])
-        self.log_file = self.conf['log_file']
-        self.log_level = int(self.conf['log_level'])
-        self.prune_in_days = int(self.conf['prune_in_days'])
+    def __init__(self, test=False):
+        if test:
+            self.db_file = 'dsage_test.db'
+            self.log_file = 'dsage_test.log'
+            self.log_level = 5
+            self.prune_in_days = 10
+            self.job_failure_threshold = 3
+        else:
+            self.conf = get_conf(type='jobdb')
+            self.db_file = self.conf['db_file']
+            self.job_failure_threshold =int(
+                                        self.conf['job_failure_threshold'])
+            self.log_file = self.conf['log_file']
+            self.log_level = int(self.conf['log_level'])
+            self.prune_in_days = int(self.conf['prune_in_days'])
         
     def random_string(self, length=10):
         """
@@ -84,7 +92,7 @@ class JobDatabaseZODB(JobDatabase):
     logging.getLogger("ZODB.Connection").setLevel(10000000)
     
     def __init__(self, test=False, read_only=False):
-        JobDatabase.__init__(self)
+        JobDatabase.__init__(self, test=test)
         if test:
             self.db_file = 'test_db.db'
         else:
@@ -393,7 +401,7 @@ class JobDatabaseSQLite(JobDatabase):
     """
     
     def __init__(self, test=False):
-        JobDatabase.__init__(self)
+        JobDatabase.__init__(self, test=test)
         if test:
             self.db_file = 'test_jobdb.db'
         else:
@@ -457,12 +465,23 @@ class JobDatabaseSQLite(JobDatabase):
         
         """
         
-        query = "SELECT * FROM jobs WHERE job_id = ?"
+        query = """SELECT 
+                job_id, 
+                status, 
+                output, 
+                result, 
+                killed, 
+                verifiable,
+                monitor_id,
+                failures
+                FROM jobs WHERE job_id = ?"""
         cur = self.con.cursor()
         cur.execute(query, (job_id,))
         jtuple = cur.fetchone()
+        jdict = self.create_jdict(jtuple, cur.description)
+        del jtuple
         
-        return self.create_jdict(jtuple, cur.description)
+        return jdict
     
     def _get_jobs_by_parameter(self, key, value):
         """
@@ -515,8 +534,11 @@ class JobDatabaseSQLite(JobDatabase):
         
         """
         
-        job_id = jdict['job_id']
-
+        try:
+            job_id = jdict['job_id']
+        except KeyError, msg:
+            job_id = None
+            
         if job_id is None: 
             job_id = self.random_string()
             if self.log_level > 3:
@@ -525,7 +547,7 @@ class JobDatabaseSQLite(JobDatabase):
                     (job_id, status, creation_time) VALUES (?, ?, ?)"""
             cur = self.con.cursor()
             cur.execute(query, (job_id, 'new', datetime.datetime.now()))
-            self.con.commit()
+            # self.con.commit()
             
         for k, v in jdict.iteritems():
             try:
@@ -538,7 +560,7 @@ class JobDatabaseSQLite(JobDatabase):
                     log.msg(msg)
                 continue    
         
-        return self.get_job_by_id(job_id)
+        return job_id
     
     def create_jdict(self, jtuple, row_description):
         """
@@ -557,9 +579,15 @@ class JobDatabaseSQLite(JobDatabase):
         jdict['verifiable'] = bool(jdict['verifiable'])
         
         # Convert buffer objects back to string
-        jdict['data'] = str(jdict['data'])
-        jdict['result'] = str(jdict['result'])
-        
+        try:
+            jdict['data'] = str(jdict['data'])
+        except Exception, msg:
+            pass
+        try:
+            jdict['result'] = str(jdict['result'])
+        except Exception, msg:
+            pass
+            
         return jdict
         
     def get_killed_jobs_list(self):
