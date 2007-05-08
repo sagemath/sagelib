@@ -19,7 +19,7 @@ cdef class pAdicRingCappedAbsoluteElement(pAdicBaseGenericElement):
     cdef int absprec
     cdef void set_precs(pAdicRingCappedAbsoluteElement self, unsigned int absprec)
     cdef void set_value_from_mpz(pAdicRingCappedAbsoluteElement self, mpz_t value)
-    cdef void set_from_Integers(pAdicRingCappedAbsoluteElement self, Integer value, Integer absprec)
+    cdef void set_from_Integers(pAdicRingCappedAbsoluteElement self, Integer value, absprec)
     cdef pAdicRingCappedAbsoluteElement _new_c(self)
     cdef RingElement _invert_c_impl(self)
     cdef ModuleElement _neg_c_impl(self)

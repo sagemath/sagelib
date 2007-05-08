@@ -564,10 +564,10 @@ cdef class PolyDict:
             T -- a term order
         """
         try:
-            return ETuple(reduce(greater_etuple,self.__repn.keys()))
+            return ETuple(reduce(greater_etuple, self.__repn.keys()))
         except KeyError:
-            raise ArithmeticError, "%s not supported",T
-
+            raise ArithmeticError, "%s not supported"%greater_etuple
+            
     def __reduce__(PolyDict self):
         """
         sage: from sage.rings.polydict import PolyDict        
