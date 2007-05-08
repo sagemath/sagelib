@@ -66,10 +66,8 @@ from sage.rings.arith import factor
 from sage.rings.rational_field import QQ
 from sage.rings.real_mpfr import RR
 from sage.rings.all import CC, I
-from math import sin
-from math import cos
-from sage.functions.constants import Pi
-pi = Pi()
+from sage.calculus.all import sin, cos
+from sage.functions.constants import pi
 from sage.gsl.fft import FastFourierTransform
 from sage.gsl.dwt import WaveletTransform
 
@@ -318,8 +316,9 @@ class IndexedSequence(SageObject):
         F = self.base_ring()   ## elements must be coercible into RR
         J = self.index_object()   ## must be = range(N)
         N = len(J)
-        S = self.list()        
-        FT = [sum([S[i]*cos(2*pi*i/N) for i in J]) for j in J]
+        S = self.list()
+        PI = F(pi)
+        FT = [sum([S[i]*cos(2*PI*i/N) for i in J]) for j in J]
         return IndexedSequence(FT,J)
 
     def dst(self):
@@ -328,6 +327,7 @@ class IndexedSequence(SageObject):
 
         EXAMPLES:
             sage: J = range(5)
+            sage: I = CC.0; pi = CC(pi)
             sage: A = [exp(-2*pi*i*I/5) for i in J]
             sage: s = IndexedSequence(A,J)
             sage: s.dst()        # discrete sine
@@ -337,8 +337,9 @@ class IndexedSequence(SageObject):
         F = self.base_ring()   ## elements must be coercible into RR
         J = self.index_object()   ## must be = range(N)
         N = len(J)
-        S = self.list()        
-        FT = [sum([S[i]*sin(2*pi*i/N) for i in J]) for j in J]
+        S = self.list()
+        PI = F(pi)
+        FT = [sum([S[i]*sin(2*PI*i/N) for i in J]) for j in J]
         return IndexedSequence(FT,J)
 
     def convolution(self, other):

@@ -25,11 +25,21 @@ from twisted.cred.credentials import IAnonymous
 from zope.interface import implements
 from twisted.internet import defer
 from twisted.python import log
-from twisted.spread import pb
 
-from sage.dsage.database.clientdb import ClientDatabase
 from sage.dsage.errors.exceptions import AuthenticationError
 
+def get_pubkey_string(filename=None):
+    try:
+        f = open(filename)
+        type_, key = f.readlines()[0].split()[:2]
+        f.close()
+        if not type_ == 'ssh-rsa':
+            raise TypeError('Invalid key type.')
+    except IOError, msg:
+        key = pubkey_file
+    
+    return key
+    
 class PublicKeyCredentialsChecker(object):
     """
     This class provides authentication checking using ssh public keys.
@@ -85,6 +95,7 @@ class PublicKeyCredentialsCheckerDB(object):
     credentialInterfaces = (credentials.ISSHPrivateKey, credentials.IAnonymous)
     
     def __init__(self, clientdb):
+        from sage.dsage.database.clientdb import ClientDatabase
         if not isinstance(clientdb, ClientDatabase):
             raise TypeError
         self.clientdb = clientdb
