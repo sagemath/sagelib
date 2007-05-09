@@ -102,7 +102,7 @@ class DSageServer(pb.Root):
         jdict = self.jobdb.get_job_by_id(job_id)
         uuid = jdict['monitor_id']
         jdict['worker_info'] = self.monitordb.get_monitor(uuid)
-        
+
         return jdict
 
     def get_job_result_by_id(self, job_id):
@@ -368,8 +368,8 @@ class DSageServer(pb.Root):
     
     def generate_xml_stats(self):
         """
-        This method returns a an XML document to be consumed by the Dashboard
-        widget
+        This method returns a an XML document to be consumed by the 
+        Mac OS X Dashboard widget
         
         """
         
