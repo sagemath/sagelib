@@ -19,10 +19,11 @@
 
 import datetime
 import os
-import sqlite3 as sqlite
+import sqlite3
 
 from twisted.python import log
 
+from sage.dsage.twisted.pubkeyauth import get_pubkey_string
 import sage.dsage.database.sql_functions as sql_functions
 from sage.dsage.misc.config import get_conf
 
@@ -55,20 +56,23 @@ class ClientDatabase(object):
         
         """
         
-        self.conf = get_conf(type='clientdb')
         self.tablename = self.TABLENAME
         if test:
             self.db_file = 'clientdb_test.db'
         else:
+            self.conf = get_conf(type='clientdb')
             self.db_file = self.conf['db_file']
             if not os.path.exists(self.db_file):
                 dir, file = os.path.split(self.db_file)
                 if not os.path.isdir(dir):
                     os.mkdir(dir)
-        self.con = sqlite.connect(self.db_file,
-                    detect_types=sqlite.PARSE_DECLTYPES|sqlite.PARSE_COLNAMES)
+        self.con = sqlite3.connect(self.db_file,
+                isolation_level=None,
+                detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        # Don't use this slow!
+        # self.con.text_factory = sqlite3.OptimizedUnicode
+        sql_functions.optimize_sqlite(self.con)
         self.con.text_factory = str
-        
         if sql_functions.table_exists(self.con, self.tablename) is None:
             sql_functions.create_table(self.con, 
                                        self.tablename,
@@ -85,7 +89,9 @@ class ClientDatabase(object):
         
         """
         
-        query = """SELECT username, public_key FROM clients WHERE username = ?"""
+        query = """SELECT username, public_key 
+                   FROM clients 
+                   WHERE username = ?"""
         
         cur = self.con.cursor()
         cur.execute(query, (username,))
@@ -112,24 +118,19 @@ class ClientDatabase(object):
         """
         Adds a user to the database.
         
+        Parameters:
+        username -- username
+        pubkey -- public key string (must be pre-parsed already)
+        
         """
         
         query = """INSERT INTO clients 
                    (username, public_key, creation_time) 
                    VALUES (?, ?, ?)
                 """
-        
-        try:
-            f = open(pubkey)
-            type_, key = f.readlines()[0].split()[:2]
-            f.close()
-            if not type_ == 'ssh-rsa':
-                raise TypeError
-        except IOError:
-            key = pubkey
-            
+                            
         cur = self.con.cursor()
-        cur.execute(query, (username, key, datetime.datetime.now()))
+        cur.execute(query, (username, pubkey, datetime.datetime.now()))
         self.con.commit()        
     
     def del_user(self, username):
