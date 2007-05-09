@@ -41,13 +41,21 @@ class JobDatabase(object):
     
     """
     
-    def __init__(self):
-        self.conf = get_conf(type='jobdb')
-        self.db_file = self.conf['db_file']
-        self.job_failure_threshold = int(self.conf['job_failure_threshold'])
-        self.log_file = self.conf['log_file']
-        self.log_level = int(self.conf['log_level'])
-        self.prune_in_days = int(self.conf['prune_in_days'])
+    def __init__(self, test=False):
+        if test:
+            self.db_file = 'dsage_test.db'
+            self.log_file = 'dsage_test.log'
+            self.log_level = 5
+            self.prune_in_days = 10
+            self.job_failure_threshold = 3
+        else:
+            self.conf = get_conf(type='jobdb')
+            self.db_file = self.conf['db_file']
+            self.job_failure_threshold =int(
+                                        self.conf['job_failure_threshold'])
+            self.log_file = self.conf['log_file']
+            self.log_level = int(self.conf['log_level'])
+            self.prune_in_days = int(self.conf['prune_in_days'])
         
     def random_string(self, length=10):
         """
@@ -84,7 +92,7 @@ class JobDatabaseZODB(JobDatabase):
     logging.getLogger("ZODB.Connection").setLevel(10000000)
     
     def __init__(self, test=False, read_only=False):
-        JobDatabase.__init__(self)
+        JobDatabase.__init__(self, test=test)
         if test:
             self.db_file = 'test_db.db'
         else:
@@ -358,7 +366,11 @@ class JobDatabaseSQLite(JobDatabase):
 
     Parameters:
     test -- set to true for unittesting purposes
-
+    
+    AUTHORS:
+    Yi Qiang
+    Alex Clemesha
+    
     """
 
     # TODO: SQLite does *NOT* enforce foreign key constraints
@@ -382,12 +394,14 @@ class JobDatabaseSQLite(JobDatabase):
      update_time timestamp,
      finish_time timestamp,
      verifiable BOOL,
+     private BOOL DEFAULT 0,
+     timeout INTEGER DEFAULT 600, 
      killed BOOL DEFAULT 0 
     );
     """
     
     def __init__(self, test=False):
-        JobDatabase.__init__(self)
+        JobDatabase.__init__(self, test=test)
         if test:
             self.db_file = 'test_jobdb.db'
         else:
@@ -398,51 +412,17 @@ class JobDatabaseSQLite(JobDatabase):
                     
         self.tablename = 'jobs'
         self.con = sqlite3.connect(
-                   self.db_file,
-                   detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
-        self.con.text_factory = str # Don't want unicode objects 
+                  self.db_file,
+                  isolation_level=None,
+                  detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        sql_functions.optimize_sqlite(self.con)
+        # Don't use this, slow!
+        # self.con.text_factory = sqlite3.OptimizedUnicode 
+        self.con.text_factory = str
         if not sql_functions.table_exists(self.con, self.tablename):
             sql_functions.create_table(self.con,
                                        self.tablename, 
                                        self.CREATE_JOBS_TABLE)
-                                       
-    def __add_test_data(self):
-        INSERT_JOB = """INSERT INTO jobs 
-        (uid, 
-         username, 
-         code,
-         data, 
-         output, 
-         worker_id,
-         status, 
-         priority, 
-         creation_time, 
-         update_time, 
-         finish_time
-        ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """
-
-        dn = lambda: datetime.datetime.now() # short hand
-        D = [(self.random_string(), 1, None, None, None, 1, 
-             'new', 1, dn(), dn(), None),
-             (self.random_string(), 1, None, None, None, 1, 
-             0, 1, dn(), dn(), None),
-             (self.random_string(), 1, None, None, None, 1, 
-             0, 1, dn(), dn(), None)]
-             
-        log.msg('Sleeping for 0.5 second to test timestamps...')
-        time.sleep(0.5)
-        
-        D.extend([(self.random_string(), 1, None, None, None, 1, 
-                   0, 1, dn(), dn(), None),
-                  (self.random_string(), 1, None, None, None, 1, 
-                   0, 1, dn(), dn(), None),
-                  (self.random_string(), 1, None, None, None, 1, 
-                   0, 1, dn(), dn(), None)])
-
-        self.con.executemany(INSERT_JOB, D)
-        self.con.commit()
         
     def _shutdown(self):
         self.con.commit()
@@ -455,9 +435,15 @@ class JobDatabaseSQLite(JobDatabase):
         """
 
         if anonymous:
-            query = "SELECT * FROM jobs WHERE status = 'new' AND killed = 0"
+            query = """SELECT * FROM jobs 
+                       WHERE status = 'new' AND killed = 0 
+                       LIMIT 1
+                    """
         else:
-            query = "SELECT * FROM jobs WHERE status = 'new' AND killed = 0"
+            query = """SELECT * FROM jobs 
+                       WHERE status = 'new' AND killed = 0
+                       LIMIT 1
+                    """
         cur = self.con.cursor()
         cur.execute(query)
         jtuple = cur.fetchone()
@@ -480,11 +466,29 @@ class JobDatabaseSQLite(JobDatabase):
                 for jtuple in result]
         
     def get_job_by_id(self, job_id):
-        query = "SELECT * FROM jobs WHERE job_id = ?"
+        """
+        Returns a jdict given a job id.
+        
+        """
+        
+        query = """SELECT 
+                job_id, 
+                status, 
+                output, 
+                result, 
+                killed, 
+                verifiable,
+                monitor_id,
+                failures
+                FROM jobs WHERE job_id = ?"""
+
         cur = self.con.cursor()
-        cur.execute(query, (job_id,)) # Need to cast it to int for SAGE
+        cur.execute(query, (job_id,))
         jtuple = cur.fetchone()
-        return self.create_jdict(jtuple, cur.description)
+        jdict = self.create_jdict(jtuple, cur.description)
+        del jtuple
+        
+        return jdict
     
     def _get_jobs_by_parameter(self, key, value):
         """
@@ -514,11 +518,11 @@ class JobDatabaseSQLite(JobDatabase):
         
         """
         
-        query = """UPDATE jobs
-        SET %s=?
-        WHERE job_id=?
-        """ % (key)
         cur = self.con.cursor()
+        query = """UPDATE jobs
+                   SET %s=?
+                   WHERE job_id=?
+                """ % (key)
         if key == 'data' or key == 'result': # Binary objects
             if value != None:
                 cur.execute(query, (sqlite3.Binary(value), job_id))
@@ -533,21 +537,24 @@ class JobDatabaseSQLite(JobDatabase):
         'jobs' table.
         
         Parameters:
-        job -- a sage.dsage.database.Job object
+        jdict -- sage.dsage.database.Job.jdict 
         
         """
         
-        job_id = jdict['job_id']
-
+        try:
+            job_id = jdict['job_id']
+        except KeyError, msg:
+            job_id = None
+            
         if job_id is None: 
             job_id = self.random_string()
             if self.log_level > 3:
-                log.msg('[JobDB] Creating a new job with id:', job_id)
+                log.msg('[JobDB] Creating a new job with id: ', job_id)
             query = """INSERT INTO jobs 
                     (job_id, status, creation_time) VALUES (?, ?, ?)"""
             cur = self.con.cursor()
             cur.execute(query, (job_id, 'new', datetime.datetime.now()))
-            self.con.commit()
+            # self.con.commit()
             
         for k, v in jdict.iteritems():
             try:
@@ -560,7 +567,7 @@ class JobDatabaseSQLite(JobDatabase):
                     log.msg(msg)
                 continue    
         
-        return self.get_job_by_id(job_id)
+        return job_id
     
     def create_jdict(self, jtuple, row_description):
         """
@@ -579,9 +586,15 @@ class JobDatabaseSQLite(JobDatabase):
         jdict['verifiable'] = bool(jdict['verifiable'])
         
         # Convert buffer objects back to string
-        jdict['data'] = str(jdict['data'])
-        jdict['result'] = str(jdict['result'])
-        
+        try:
+            jdict['data'] = str(jdict['data'])
+        except Exception, msg:
+            pass
+        try:
+            jdict['result'] = str(jdict['result'])
+        except Exception, msg:
+            pass
+            
         return jdict
         
     def get_killed_jobs_list(self):
@@ -589,7 +602,18 @@ class JobDatabaseSQLite(JobDatabase):
         Returns a list of jobs which have been marked as killed.
         
         """
-        query = "SELECT * from jobs where killed = 1 AND status <> 'completed'"
+        
+        query = """SELECT 
+                   job_id, 
+                   status, 
+                   killed, 
+                   verifiable,
+                   monitor_id,
+                   failures,
+                   update_time
+                   FROM jobs 
+                   WHERE killed = 1 AND status <> 'completed'"""
+                   
         cur = self.con.cursor()
         cur.execute(query)
         killed_jobs = cur.fetchall()
@@ -625,9 +649,19 @@ class JobDatabaseSQLite(JobDatabase):
             return True
     
     def set_killed(self, job_id, killed=True):
-        self._update_value(job_id, 'killed', killed)
+        """
+        Sets the value of killed for a job.
+        
+        """
+
+        return self._update_value(job_id, 'killed', killed)
     
     def get_active_jobs(self):
+        """
+        Returns a list of jdicts whose status is 'processing'
+        
+        """
+        
         return self._get_jobs_by_parameter('status', 'processing')
         
 class DatabasePruner(object):

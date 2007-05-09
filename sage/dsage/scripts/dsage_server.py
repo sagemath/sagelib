@@ -16,12 +16,13 @@
 #
 #                  http://www.gnu.org/licenses/
 ############################################################################
-
+# 
+# import gc
+# gc.set_debug(gc.DEBUG_LEAK)
 
 import sys
 import os
 from optparse import OptionParser
-import ConfigParser
 import socket
 
 from twisted.internet import reactor, error, ssl, task
@@ -29,18 +30,15 @@ from twisted.spread import pb
 from twisted.python import log
 from twisted.cred import portal
 
-from sage.dsage.database.jobdb import JobDatabaseZODB, JobDatabaseSQLite
-from sage.dsage.database.jobdb import DatabasePruner
+from sage.dsage.database.jobdb import JobDatabaseSQLite
 from sage.dsage.database.clientdb import ClientDatabase
 from sage.dsage.database.monitordb import MonitorDatabase
 from sage.dsage.twisted.pb import Realm
-from sage.dsage.twisted.pb import WorkerPBServerFactory
 from sage.dsage.twisted.pb import _SSHKeyPortalRoot
-from sage.dsage.twisted.pubkeyauth import PublicKeyCredentialsChecker
 from sage.dsage.twisted.pubkeyauth import PublicKeyCredentialsCheckerDB
-from sage.dsage.server.server import DSageServer, DSageWorkerServer
+from sage.dsage.server.server import DSageServer
+from sage.dsage.misc.config import get_conf, get_bool
 from sage.dsage.misc.constants import delimiter as DELIMITER
-from sage.dsage.__version__ import version
 
 DSAGE_DIR = os.path.join(os.getenv('DOT_SAGE'), 'dsage')
 
@@ -67,7 +65,6 @@ def usage():
     return options
 
 def write_stats(dsage_server, stats_file):
-    # Put this entire thing in a try block, should not cause the server to die in any way.
     try:
         fname = os.path.join(DSAGE_DIR, stats_file)
         f = open(fname, 'w')
@@ -76,15 +73,30 @@ def write_stats(dsage_server, stats_file):
     except Exception, msg:
         print 'Error writing stats: %s' % (msg)
         return
-        
+
+def create_manhole():
+    from twisted.manhole import telnet
+    factory = telnet.ShellFactory()
+    factory.username = 'yqiang'
+    factory.password = 'foo'
+    port = reactor.listenTCP(2000, factory)
+    
+    return port
+    	
 def startLogging(log_file):
-    """This method initializes the logging facilities for the server. """
+    """
+    This method initializes the logging facilities for the server. 
+    
+    """
+    
     if log_file == 'stdout':
         log.startLogging(sys.stdout)
+        log.msg('WARNING: DSAGE Server ONLY logging to stdout!')
     else:
-        print "Logging to file: ", log_file
         server_log = open(log_file, 'a')
+        log.startLogging(sys.stdout)
         log.startLogging(server_log)
+        log.msg("DSAGE Server: Logging to file: ", log_file)
 
 def main():
     """
@@ -92,28 +104,16 @@ def main():
     
     """
     
-    try:
-        conf_file = os.path.join(DSAGE_DIR, 'server.conf')
-        config = ConfigParser.ConfigParser()
-        config.read(conf_file)
+    config = get_conf('server')
+    LOG_FILE = config['log_file']
+    LOG_LEVEL = config['log_level']
+    SSL = get_bool(config['ssl'])
+    SSL_PRIVKEY = config['privkey_file']
+    SSL_CERT = config['cert_file']
+    CLIENT_PORT = int(config['client_port'])
+    PUBKEY_DATABASE = os.path.expanduser(config['pubkey_database'])
+    STATS_FILE = config['stats_file']
 
-        LOG_FILE = config.get('server_log', 'log_file')
-        LOG_LEVEL = config.getint('server_log', 'log_level')
-        SSL = config.getint('ssl', 'ssl')
-        SSL_PRIVKEY = config.get('ssl', 'privkey_file')
-        SSL_CERT = config.get('ssl', 'cert_file')
-        WORKER_PORT = config.getint('server', 'worker_port')
-        CLIENT_PORT = config.getint('server', 'client_port')
-        PUBKEY_DATABASE = os.path.expanduser(config.get('auth', 'pubkey_database'))
-        STATS_FILE = config.get('general', 'stats_file')
-        old_version = config.get('general', 'version')
-        if version != old_version:
-            raise ValueError, "Incompatible version. You have %s, need %s." % (old_version, version)
-    except Exception, msg:
-        print msg
-        print "Error reading %s, run dsage.setup()" % conf_file
-        sys.exit(-1)
-    
     # start logging
     startLogging(LOG_FILE)
     
@@ -127,7 +127,8 @@ def main():
     clientdb = ClientDatabase()
     
     # Create the main DSage object
-    dsage_server = DSageServer(jobdb, monitordb, clientdb, log_level=LOG_LEVEL)
+    dsage_server = DSageServer(jobdb, monitordb, 
+                               clientdb, log_level=LOG_LEVEL)
     p = _SSHKeyPortalRoot(portal.Portal(Realm(dsage_server)))
     
     # Credentials checker
@@ -164,8 +165,8 @@ def main():
                 port_used = False
             if not port_used:
                 if SSL:
-                    log.msg('Using SSL...')
-                    ssl_context = ssl.DefaultOpenSSLContextFactory(SSL_PRIVKEY, SSL_CERT)
+                    ssl_context = ssl.DefaultOpenSSLContextFactory(
+                                    SSL_PRIVKEY, SSL_CERT)
                     reactor.listenSSL(NEW_CLIENT_PORT,
                                       client_factory,
                                       contextFactory = ssl_context)
@@ -174,7 +175,7 @@ def main():
                     reactor.listenTCP(NEW_CLIENT_PORT, client_factory)
                     break
             else:
-                raise SystemError, 'Trying to bind to open port: %s.' % (NEW_CLIENT_PORT)
+                raise SystemError('Trying to bind to open port: %s.' % (NEW_CLIENT_PORT))
         except (SystemError, error.CannotListenError):
             attempts += 1
             NEW_CLIENT_PORT += 1
@@ -184,14 +185,23 @@ def main():
         log.msg("***NOTICE***")
         log.msg("Changing listening port in server.conf to %s" % (NEW_CLIENT_PORT))
         log.msg(DELIMITER)
-        config.set('server', 'client_port', NEW_CLIENT_PORT)
-        config.write(open(conf_file, 'w'))
+        import ConfigParser
+        cparser = ConfigParser.ConfigParser()
+        cparser.read(config['conf_file'])
+        cparser.set('server', 'client_port', NEW_CLIENT_PORT)
+        cparser.write(open(config['conf_file'], 'w'))
         
     log.msg(DELIMITER)
     log.msg('DSAGE Server')
+    log.msg('Started with PID: %s' % (os.getpid()))
+    if SSL:
+        log.msg('Using SSL...')    
     log.msg('Listening on %s' % (NEW_CLIENT_PORT))
     log.msg(DELIMITER)
-    
+
+    # from sage.dsage.misc.countrefs import logInThread
+    # logInThread(n=15)
+    # reactor.callWhenRunning(create_manhole)
     reactor.run(installSignalHandlers=1)
 
 if __name__ == "__main__":
