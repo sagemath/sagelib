@@ -169,85 +169,68 @@ class ClassicHostInfo(object):
 
     def get_host_info(self, platform):
         host_info = {}
+        host_info['os'] = platform
         if platform in ('linux', 'linux2', 'cygwin'):
-            try:
-                # os
-                host_info['os'] = platform
-                # cpu info
-                cpuinfo = open('/proc/cpuinfo','r').readlines()
+            cpuinfo = open('/proc/cpuinfo','r').readlines()
+            cpus = 0
+            for line in cpuinfo:
+                if 'processor' in line:
+                    cpus += 1
+                s = line.split(':')
+                if s != ['\n']:
+                    host_info[s[0].strip()] = s[1].strip()
+            host_info['cpus'] = cpus
+            
+            uptime = open('/proc/uptime', 'r').readline().split(' ')
+            host_info['uptime'] = uptime[0]
 
-                cpus = 0
-                for line in cpuinfo:
-                    if 'processor' in line:
-                        cpus += 1
-                    s = line.split(':')
-                    if s != ['\n']:
-                        host_info[s[0].strip()] = s[1].strip()
+            meminfo = open('/proc/meminfo', 'r').readlines()
+            for line in meminfo:
+                s = line.split(':')
+                if s != ['\n']:
+                    host_info[s[0].strip()] = s[1].strip()
 
-                host_info['cpus'] = cpus
-                
-                # uptime
-                uptime = open('/proc/uptime', 'r').readline().split(' ')
-                host_info['uptime'] = uptime[0]
+            hostname = os.popen('hostname').readline().strip()
+            host_info['hostname'] = hostname
 
-                # memory info
-                meminfo = open('/proc/meminfo', 'r').readlines()
-                for line in meminfo:
-                    s = line.split(':')
-                    if s != ['\n']:
-                        host_info[s[0].strip()] = s[1].strip()
-
-                # hostname
-                hostname = os.popen('hostname').readline().strip()
-                host_info['hostname'] = hostname
-
-                # kernel version
-                kernel_version = os.popen('uname -r').readline().strip()
-                host_info['kernel_version'] = kernel_version
-                
-                # if the model name was not in /proc/cpuinfo
-                if not host_info.has_key('model name'):
-                    model = os.popen('uname -p').readline().strip()
-                    host_info['model name'] = model
-            except IOError, msg:
-                raise            
+            kernel_version = os.popen('uname -r').readline().strip()
+            host_info['kernel_version'] = kernel_version
+            
+            if not host_info.has_key('model name'):
+                model = os.popen('uname -p').readline().strip()
+                host_info['model name'] = model
         if platform == 'darwin':
-            host_info['os'] = platform
-            try:
-                for line in os.popen('sysctl -a hw machdep').readlines():
-                    l = line.strip()
-                    if '=' in l:
-                        l = l.split('=')
-                    if ':' in line:
-                        l = l.split(':')
-                    
-                    l = [li.strip() for li in l]
-                    if l[0] == 'hw.cpufrequency':
-                        host_info['cpu MHz'] = str(int(l[1]) / 1000000)
-                    elif l[0] == 'hw.availcpu':
-                        host_info['cpus'] = int(l[1])
-                    elif l[0] == 'hw.physmem':
-                        host_info['MemTotal'] = l[1]
-                    elif l[0] == 'hw.usermem':
-                        mem_total = int(host_info['MemTotal'])
-                        user_mem = int(l[1])
-                        mem_free = int((mem_total - user_mem) / (1024*1024))
-                        host_info['MemFree'] = mem_free
-                    elif l[0] == 'machdep.cpu.brand_string':
-                        host_info['model name'] = l[1]
-                    elif l[0] == 'hw.model': # OS X PPC 
-                        host_info['model name'] = l[1]
-                                    
-                # hostname
-                hostname = os.popen('hostname').readline().strip()
-                host_info['hostname'] = hostname
+            for line in os.popen('sysctl -a hw machdep').readlines():
+                l = line.strip()
+                if '=' in l:
+                    l = l.split('=')
+                if ':' in line:
+                    l = l.split(':')
+                
+                l = [li.strip() for li in l]
+                if l[0] == 'hw.cpufrequency':
+                    host_info['cpu MHz'] = str(int(l[1]) / 1000000)
+                elif l[0] == 'hw.availcpu':
+                    host_info['cpus'] = int(l[1])
+                elif l[0] == 'hw.physmem':
+                    host_info['MemTotal'] = l[1]
+                elif l[0] == 'hw.usermem':
+                    mem_total = int(host_info['MemTotal'])
+                    user_mem = int(l[1])
+                    mem_free = int((mem_total - user_mem) / (1024*1024))
+                    host_info['MemFree'] = mem_free
+                elif l[0] == 'machdep.cpu.brand_string':
+                    host_info['model name'] = l[1]
+                elif l[0] == 'hw.model': # OS X PPC 
+                    host_info['model name'] = l[1]
+                                
+            # hostname
+            hostname = os.popen('hostname').readline().strip()
+            host_info['hostname'] = hostname
 
-                # kernel version
-                kernel_version = os.popen('uname -r').readline().strip()
-                host_info['kernel_version'] = kernel_version
-            except IOError, msg:
-                log.msg(msg)
-                raise
+            # kernel version
+            kernel_version = os.popen('uname -r').readline().strip()
+            host_info['kernel_version'] = kernel_version
 
         return self.canonical_info(host_info)
 
@@ -268,16 +251,14 @@ class ClassicHostInfo(object):
                           'hostname': 'hostname',
                           'cpus': 'cpus',
                           'ip': 'ip',
-                          'os': 'os'
-                     }
-       
+                          'os': 'os'}
         canonical_info = {}
         for k,v in platform_host_info.iteritems():
             try:
                 canonical_info[unify_info[k]] = v
             except KeyError:
                 pass
-        
+
         import sage.version
         canonical_info['sage_version'] = sage.version.version
 
