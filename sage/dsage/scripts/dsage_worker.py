@@ -340,7 +340,7 @@ except:
             done = True
         except RuntimeError, msg: # Error in calling worker.sage._so_far()
             done = False
-            if self.log_level > 2:
+            if self.log_level > 1:
                 log.msg(LOG_PREFIX % self.id + 'RuntimeError: %s' % msg)
                 log.msg("Don't worry, the RuntimeError above " + 
                         "is a non-fatal SAGE failure")
@@ -506,7 +506,7 @@ except:
                 print 'Failed to start a worker, probably Expect issues.'
                 reactor.stop()
                 sys.exit(-1)
-                
+        
         self.sage._get()
         self.get_job()
     
