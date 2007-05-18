@@ -96,8 +96,8 @@ def algdep(z, n, known_bits=None, use_bits=None, known_digits=None, use_digits=N
     """
 
     # TODO -- change to use PARI C library???
-    import sage.rings.polynomial_ring
-    x = sage.rings.polynomial_ring.PolynomialRing(
+    import sage.rings.polynomial.polynomial_ring
+    x = sage.rings.polynomial.polynomial_ring.PolynomialRing(
         integer_ring.IntegerRing(), 'x').gen()
 
     if isinstance(z, (int, long, integer.Integer)):
@@ -2441,11 +2441,11 @@ def continuant(v, n=None):
         517656/190435
         sage: x = MPolynomialRing(RationalField(),'x',5).gens()
         sage: continuant(x)
-        x4 + x2 + x2*x3*x4 + x0 + x0*x3*x4 + x0*x1*x4 + x0*x1*x2 + x0*x1*x2*x3*x4
+        x0*x1*x2*x3*x4 + x0*x1*x2 + x0*x1*x4 + x0*x3*x4 + x2*x3*x4 + x0 + x2 + x4
         sage: continuant(x, 3)
-        x2 + x0 + x0*x1*x2
+        x0*x1*x2 + x0 + x2
         sage: continuant(x,2)
-        1 + x0*x1
+        x0*x1 + 1
 
         $K_n(z,z,\cdots,z) = sum_{k=0}^n {n-k} \choose k z^{n-2k}$:
 

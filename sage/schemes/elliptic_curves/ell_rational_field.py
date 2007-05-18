@@ -39,8 +39,7 @@ import sage.functions.constants as constants
 import sage.modular.modform.constructor
 import sage.modular.modform.element
 from sage.misc.functional import log
-from sage.rings.padics.zp import Zp
-from sage.rings.padics.qp import Qp
+from sage.rings.padics.factory import Zp, Qp
 
 # Use some interval arithmetic to guarantee correctness.  We assume
 # that alpha is computed to the precision of a float.
@@ -4269,6 +4268,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             ...       assert E.padic_height(5, prec)(P) == full   # long time
 
         """
+        #print "pre-setup"
         if check_hypotheses:
             p = self.__check_padic_hypotheses(p)
 
@@ -4276,6 +4276,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         if prec < 1:
             raise ValueError, "prec (=%s) must be at least 1" % prec
 
+        #print "now1"
         # For notation and definitions, see "Efficient Computation of
         # p-adic Heights", David Harvey (unpublished)
 
@@ -4283,17 +4284,24 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         n2 = arith.LCM(self.tamagawa_numbers())
         n = arith.LCM(n1, n2)
         m = int(n / n2)
+
+        #print "now2"
         
         adjusted_prec = prec + 2 * arith.valuation(n, p) + 1
         R = rings.Integers(p ** adjusted_prec)
 
+        #print "now2.5"
+
         if sigma is None:
             sigma = self.padic_sigma(p, adjusted_prec, check_hypotheses=False)
+
+        #print "now3"
 
         # K is the field for the final result
         K = Qp(p, prec=prec)
         E = self
 
+        #print "post-setup"
 
         def height(P, check=True):
             if check:
@@ -4327,6 +4335,7 @@ class EllipticCurve_rational_field(EllipticCurve_field):
                        "answer with precision at least prec, but we didn't."
             return K(answer.lift(), prec - answer.valuation())
 
+        #print "post height def"
         
         # (man... I love python's local function definitions...)
         return height
@@ -4384,24 +4393,24 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
         EXAMPLES:
             sage: EllipticCurve([-1, 1/4]).padic_sigma(5, 10)
-            (1 + O(5^20))*t + (3 + 2*5^2 + 3*5^3 + 3*5^6 + 4*5^7 + O(5^8))*t^3 + (2 + 4*5^2 + 4*5^3 + 5^4 + 5^5 + O(5^6))*t^5 + (2 + 2*5 + 5^2 + 4*5^3 + O(5^4))*t^7 + (1 + 2*5 + O(5^2))*t^9 + O(t^11)
+            (1 + O(5^10))*t + (3 + 2*5^2 + 3*5^3 + 3*5^6 + 4*5^7 + O(5^8))*t^3 + (2 + 4*5^2 + 4*5^3 + 5^4 + 5^5 + O(5^6))*t^5 + (2 + 2*5 + 5^2 + 4*5^3 + O(5^4))*t^7 + (1 + 2*5 + O(5^2))*t^9 + O(t^11)
 
           Run it with a consistency check:
             sage: EllipticCurve("37a").padic_sigma(5, 10, check=True)
-            (1 + O(5^20))*t + (3 + 2*5^2 + 3*5^3 + 3*5^6 + 4*5^7 + O(5^8))*t^3 + (3 + 2*5 + 2*5^2 + 2*5^3 + 2*5^4 + 2*5^5 + 2*5^6 + O(5^7))*t^4 + (2 + 4*5^2 + 4*5^3 + 5^4 + 5^5 + O(5^6))*t^5 + (2 + 3*5 + 5^4 + O(5^5))*t^6 + (4 + 3*5 + 2*5^2 + O(5^4))*t^7 + (2 + 3*5 + 2*5^2 + O(5^3))*t^8 + (4*5 + O(5^2))*t^9 + (1 + O(5))*t^10 + O(t^11)
+            (1 + O(5^10))*t + (3 + 2*5^2 + 3*5^3 + 3*5^6 + 4*5^7 + O(5^8))*t^3 + (3 + 2*5 + 2*5^2 + 2*5^3 + 2*5^4 + 2*5^5 + 2*5^6 + O(5^7))*t^4 + (2 + 4*5^2 + 4*5^3 + 5^4 + 5^5 + O(5^6))*t^5 + (2 + 3*5 + 5^4 + O(5^5))*t^6 + (4 + 3*5 + 2*5^2 + O(5^4))*t^7 + (2 + 3*5 + 2*5^2 + O(5^3))*t^8 + (4*5 + O(5^2))*t^9 + (1 + O(5))*t^10 + O(t^11)
 
           Boundary cases:
             sage: EllipticCurve([1, 1, 1, 1, 1]).padic_sigma(5, 1)
-             (1 + O(5^20))*t + O(t^2)
+             (1 + O(5))*t + O(t^2)
             sage: EllipticCurve([1, 1, 1, 1, 1]).padic_sigma(5, 2)
-             (1 + O(5^20))*t + (3 + O(5))*t^2 + O(t^3)
+             (1 + O(5^2))*t + (3 + O(5))*t^2 + O(t^3)
 
           Supply your very own value of E2:
             sage: X = EllipticCurve("37a")
             sage: my_E2 = X.padic_E2(5, 8)
             sage: my_E2 = my_E2 + 5**5    # oops!!!
             sage: X.padic_sigma(5, 10, E2=my_E2)
-            (1 + O(5^20))*t + (3 + 2*5^2 + 3*5^3 + 4*5^5 + 2*5^6 + 3*5^7 + O(5^8))*t^3 + (3 + 2*5 + 2*5^2 + 2*5^3 + 2*5^4 + 2*5^5 + 2*5^6 + O(5^7))*t^4 + (2 + 4*5^2 + 4*5^3 + 5^4 + 3*5^5 + O(5^6))*t^5 + (2 + 3*5 + 5^4 + O(5^5))*t^6 + (4 + 3*5 + 2*5^2 + O(5^4))*t^7 + (2 + 3*5 + 2*5^2 + O(5^3))*t^8 + (4*5 + O(5^2))*t^9 + (1 + O(5))*t^10 + O(t^11)
+            (1 + O(5^10))*t + (3 + 2*5^2 + 3*5^3 + 4*5^5 + 2*5^6 + 3*5^7 + O(5^8))*t^3 + (3 + 2*5 + 2*5^2 + 2*5^3 + 2*5^4 + 2*5^5 + 2*5^6 + O(5^7))*t^4 + (2 + 4*5^2 + 4*5^3 + 5^4 + 3*5^5 + O(5^6))*t^5 + (2 + 3*5 + 5^4 + O(5^5))*t^6 + (4 + 3*5 + 2*5^2 + O(5^4))*t^7 + (2 + 3*5 + 2*5^2 + O(5^3))*t^8 + (4*5 + O(5^2))*t^9 + (1 + O(5))*t^10 + O(t^11)
 
           Check that sigma is ``weight 1''. [This test is disabled until
           trac \#254 is addressed. The lines f(2*t)/2 and g should return
@@ -4444,15 +4453,16 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             if N < 1:
                 raise ValueError, "N (=%s) must be at least 1" % prec
 
-            K = Qp(p)
-
             if N == 1:
                 # return simply t + O(t^2)
-                return PowerSeriesRing(K, "t")([K(0), K(1)], prec=2)
+                K = Qp(p, 2)
+                return PowerSeriesRing(K, "t")([K(0), K(1, 1)], prec=2)
+
 
             if N == 2:
                 # return t + a_1/2 t^2 + O(t^3)
-                return PowerSeriesRing(K, "t")([K(0), K(1),
+                K = Qp(p, 3)
+                return PowerSeriesRing(K, "t")([K(0), K(1, 2),
                                                 K(self.a1()/2, 1)], prec=3)
 
         if self.discriminant().valuation(p) != 0:
@@ -4499,10 +4509,12 @@ class EllipticCurve_rational_field(EllipticCurve_field):
         # [Note: there are actually more digits available, but it's a bit
         # tricky to figure out exactly how many, and we only need $p^(N-k+1)$
         # for p-adic height purposes anyway]
-        K = rings.pAdicField(p)
+        K = rings.pAdicField(p, N + 1)
+
         sigma = sigma.padded_list(N+1)
-        sigma[0] = K(0)
-        sigma[1] = K(1)
+
+        sigma[0] = K(0, N +1)
+        sigma[1] = K(1, N)
         for n in range(2, N+1):
             sigma[n] = K(sigma[n].lift(), N - n + 1)
 
@@ -4663,10 +4675,6 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
         frob_p_n = frob_p**prec
 
-        # todo: write a coercion operator from integers mod p^n to the
-        # p-adic field (it doesn't seem to currently exist)
-        # see trac #4
-
         # todo: think about the sign of this. Is it correct?
         output_ring = rings.pAdicField(p, prec)
 
@@ -4754,11 +4762,12 @@ class EllipticCurve_rational_field(EllipticCurve_field):
 
             base_ring = rings.Integers(p**adjusted_prec)
             output_ring = rings.pAdicField(p, prec)
-        
+
             R, x = rings.PolynomialRing(base_ring, 'x').objgen()
             Q = x**3 + base_ring(X.a4()) * x + base_ring(X.a6())
             frob_p = monsky_washnitzer.matrix_of_frobenius(
                              Q, p, adjusted_prec, trace)
+
 
         else:   # algorithm == "sqrtp"
             base_ring = rings.Integers(p**prec)
@@ -4771,6 +4780,8 @@ class EllipticCurve_rational_field(EllipticCurve_field):
             trace = self.ap(p)
             check = True
             
+
+        return frob_p
 
         if check:
             trace_of_frobenius = frob_p.trace().lift() % p**prec
