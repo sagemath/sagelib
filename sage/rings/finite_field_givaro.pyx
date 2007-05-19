@@ -513,6 +513,10 @@ cdef class FiniteField_givaro(FiniteField):
             sage: F.multiplicative_generator()^3
             12*a + 11
 
+            sage: k.<a> = GF(29^3)
+            sage: k(48771/1225)
+            28
+
         """
 
         cdef int res
@@ -567,8 +571,6 @@ cdef class FiniteField_givaro(FiniteField):
         elif PY_TYPE_CHECK(e, Rational):
             num = e.numer()
             den = e.denom()
-            if num>=self.characteristic() or den>=self.characteristic():
-                raise TypeError, "unable to coerce"
             return self(num)/self(den)
 
         elif PY_TYPE_CHECK(e, gen):
@@ -1335,8 +1337,15 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
             sage: k.<g> = GF(2**8)
             sage: g/g
             1
+
+            sage: k(1) / k(0)
+            Traceback (most recent call last):
+            ...
+            ZeroDivisionError: division by zero in finite field.
         """
         cdef int r
+        if (<FiniteField_givaroElement>right).element == 0:
+            raise ZeroDivisionError, 'division by zero in finite field.'
         r = parent_object(self).objectptr.div(r, self.element,
                                               (<FiniteField_givaroElement>right).element)
         return make_FiniteField_givaroElement(parent_object(self),r)
