@@ -257,6 +257,15 @@ def is_SymbolicExpressionRing(x):
     """
     return isinstance(x, SymbolicExpressionRing_class)
 
+cache = {}
+class uniq(object):
+    def __new__(cls):
+        global cache
+        if cache.has_key(cls):
+            return cache[cls]
+        O = object.__new__(cls)
+        cache[cls] = O
+        return O
 
 class SymbolicExpressionRing_class(CommutativeRing):
     """
@@ -271,6 +280,12 @@ class SymbolicExpressionRing_class(CommutativeRing):
     def __init__(self):
         self._default_precision = 53 # default precision bits
         ParentWithBase.__init__(self, RR)
+
+    def __cmp__(self, other):
+        return cmp(type(self), type(other))
+
+    def __reduce__(self):
+        return SymbolicExpressionRing, tuple([])
 
     def __call__(self, x):
         """
@@ -647,7 +662,40 @@ class SymbolicExpression(RingElement):
         """
         return long(int(self))
 
-    
+    def numerical_approx(self, prec=53):
+        """
+        Return a numerical approximation of self as either a real or
+        complex number.
+
+        INPUT:
+            prec -- integer (default: 53): the number of bits of precision
+
+        OUTPUT:
+            A RealNumber or ComplexNumber approximation of self with
+            prec bits of precision.
+
+        EXAMPLES:
+            sage: cos(3).numerical_approx()
+            -0.989992496600445
+            sage: cos(3).numerical_approx(200)
+            -0.98999249660044545727157279473126130239367909661558832881409
+            sage: (i + 1).numerical_approx(32)
+            1.00000000 + 1.00000000*I
+            sage: (pi + e + sqrt(2)).numerical_approx(100)
+            7.2740880444219335226246195788
+        """
+        # make sure the field is of the right precision
+        prec = Integer(prec)
+        field = RealField(prec)
+
+        try:
+            approx = self._mpfr_(field)
+        except TypeError:
+            # try to return a complex result
+            approx = self._complex_mpfr_field_(ComplexField(prec))
+
+        return approx
+
     def _mpfr_(self, field):
         raise TypeError
 
@@ -862,11 +910,11 @@ class SymbolicExpression(RingElement):
             sage: f = pi^3*x - y^2*e - I; f
             -1*e*y^2 + pi^3*x - I
             sage: f.polynomial(CDF)
-            -1.0*I + (-2.71828182846)*y^2 + 31.0062766803*x
+            (-2.71828182846)*y^2 + 31.0062766803*x - 1.0*I
             sage: f.polynomial(CC)
-            -1.00000000000000*I + (-2.71828182845905)*y^2 + 31.0062766802998*x
+            (-2.71828182845905)*y^2 + 31.0062766802998*x - 1.00000000000000*I
             sage: f.polynomial(ComplexField(70))
-            -1.0000000000000000000*I + (-2.7182818284590452354)*y^2 + 31.006276680299820175*x
+            (-2.7182818284590452354)*y^2 + 31.006276680299820175*x - 1.0000000000000000000*I
 
         Another polynomial:
             sage: f = sum((e*I)^n*x^n for n in range(5)); f
@@ -880,7 +928,7 @@ class SymbolicExpression(RingElement):
             sage: f = (3*x^5 - 5*y^5)^7; f
             (3*x^5 - 5*y^5)^7
             sage: g = f.polynomial(GF(7)); g
-            2*y^35 + 3*x^35
+            3*x^35 + 2*y^35
             sage: parent(g)
             Polynomial Ring in x, y over Finite Field of size 7
         """
@@ -900,7 +948,7 @@ class SymbolicExpression(RingElement):
         EXAMPLES:
             sage: R = QQ[x,y,z]
             sage: R(x^2 + y)
-            y + x^2
+            x^2 + y
             sage: R = QQ[w]
             sage: R(w^3 + w + 1)
             w^3 + w + 1
@@ -915,7 +963,7 @@ class SymbolicExpression(RingElement):
             sage: a
             y + x^3 + sqrt(2)
             sage: type(a)
-            <type 'sage.rings.polynomial_element.Polynomial_generic_dense'>
+            <type 'sage.rings.polynomial.polynomial_element.Polynomial_generic_dense'>
             sage: a.degree()
             0
 
@@ -924,12 +972,12 @@ class SymbolicExpression(RingElement):
             pi*y^3 + e*x^3 + I + sqrt(2)
             sage: R = CDF[x,y]
             sage: R(f)
-            1.41421356237 + 1.0*I + 3.14159265359*y^3 + 2.71828182846*x^3
+            2.71828182846*x^3 + 3.14159265359*y^3 + 1.41421356237 + 1.0*I
 
         We coerce to a higher-precision polynomial ring
             sage: R = ComplexField(100)[x,y]
             sage: R(f)
-            1.4142135623730950066967437806 + 1.0000000000000000000000000000*I + 3.1415926535897932384626433833*y^3 + 2.7182818284590452353602874714*x^3
+            2.7182818284590452353602874714*x^3 + 3.1415926535897932384626433833*y^3 + 1.4142135623730950066967437806 + 1.0000000000000000000000000000*I
             
         """
         vars = self.variables()
@@ -2295,7 +2343,7 @@ class SymbolicPolynomial(Symbolic_object):
     
         sage: R.<x,y,theta> = ZZ[]
         sage: f = SR(x^3 + x + y + theta^2); f
-        theta^2 + y + x + x^3
+        x^3 + theta^2 + x + y
         sage: f(x=y, theta=y)
         y^3 + y^2 + 2*y
         sage: f(x=5)
@@ -2703,7 +2751,7 @@ common_varnames = ['alpha',
                    'zeta',
                    'eta',
                    'theta',
-                   'Theta'
+                   'Theta',
                    'iota',
                    'kappa',
                    'lambda',
@@ -2711,18 +2759,18 @@ common_varnames = ['alpha',
                    'mu',
                    'nu',
                    'xi',
-                   'Xi'
+                   'Xi',
                    'pi',
-                   'Pi'
+                   'Pi',
                    'rho',
                    'sigma',
-                   'Sigma'
+                   'Sigma',
                    'tau',
                    'upsilon',
                    'varphi',
                    'chi',
                    'psi',
-                   'Psi'
+                   'Psi',
                    'omega',
                    'Omega']
                    
@@ -3521,8 +3569,8 @@ class Function_ceil(PrimitiveFunction):
         try:
             return x.ceil()
         except AttributeError:
-            if isinstance(x, float):
-                return math.ceil(x)
+            if isinstance(x, (float, int, long, complex)):
+                return int(math.ceil(x))
         return SymbolicComposition(self, SR(x))
 
 ceil = Function_ceil()
@@ -3560,8 +3608,8 @@ class Function_floor(PrimitiveFunction):
         try:
             return x.floor()
         except AttributeError:
-            if isinstance(x, float):
-                return math.floor(x)
+            if isinstance(x, (float, int, long, complex)):
+                return int(math.floor(x))
         return SymbolicComposition(self, SR(x))
 
 floor = Function_floor()

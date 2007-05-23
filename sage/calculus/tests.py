@@ -192,5 +192,16 @@ Maple documentation:
     integrate(1/(sqrt(2*t^4 - 3*t^2 - 2)), t, 2, 3)
     sage: integral(integral(x*y^2, x, 0, y), y, -2, 2)
     32/5
-    
+
+We verify several standard differentiation rules:
+    sage: function('f, g')
+    (f, g)
+    sage: diff(f(t)*g(t),t)
+    f(t)*diff(g(t), t, 1) + g(t)*diff(f(t), t, 1)
+    sage: diff(f(t)/g(t), t)
+    diff(f(t), t, 1)/g(t) - (f(t)*diff(g(t), t, 1)/g(t)^2)
+    sage: diff(f(t) + g(t), t)
+    diff(g(t), t, 1) + diff(f(t), t, 1)
+    sage: diff(c*f(t), t)
+    c*diff(f(t), t, 1)    
 """

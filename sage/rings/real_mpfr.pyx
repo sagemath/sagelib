@@ -1163,8 +1163,14 @@ cdef class RealNumber(sage.structure.element.RingElement):
             2
             sage: floor(RR(-5/2))
             -3
+            sage: floor(RR(+infinity))
+            Traceback (most recent call last):
+            ...
+            ValueError: Calling floor() on infinity or NaN
         """
         cdef RealNumber x
+        if not mpfr_number_p(self.value):
+            raise ValueError, 'Calling floor() on infinity or NaN'
         x = self._new()
         mpfr_floor(x.value, self.value)
         return x.integer_part()
@@ -1188,8 +1194,14 @@ cdef class RealNumber(sage.structure.element.RingElement):
             10000000000000000
             sage: ceil(10^17 * 1.0)
             100000000000000000
+            sage: ceil(RR(+infinity))
+            Traceback (most recent call last):
+            ...
+            ValueError: Calling ceil() on infinity or NaN
         """
         cdef RealNumber x
+        if not mpfr_number_p(self.value):
+            raise ValueError, 'Calling ceil() on infinity or NaN'
         x = self._new()
         mpfr_ceil(x.value, self.value)
         return x.integer_part()
@@ -2654,6 +2666,20 @@ def is_RealField(x):
     return bool(PY_TYPE_CHECK(x, RealField))
 
 def is_RealNumber(x):
+    """
+    Return True if x is of type RealNumber, meaning that it is an
+    element of the MPFR real field with some precision.
+
+    EXAMPLES:
+        sage: is_RealNumber(2.5)
+        True
+        sage: is_RealNumber(float(2.3))
+        False
+        sage: is_RealNumber(RDF(2))
+        False
+        sage: is_RealNumber(pi)
+        False
+    """
     return bool(PY_TYPE_CHECK(x, RealNumber))
 
 def __create__RealField_version0(prec, sci_not, rnd):
