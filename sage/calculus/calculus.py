@@ -257,6 +257,15 @@ def is_SymbolicExpressionRing(x):
     """
     return isinstance(x, SymbolicExpressionRing_class)
 
+cache = {}
+class uniq(object):
+    def __new__(cls):
+        global cache
+        if cache.has_key(cls):
+            return cache[cls]
+        O = object.__new__(cls)
+        cache[cls] = O
+        return O
 
 class SymbolicExpressionRing_class(CommutativeRing):
     """
@@ -271,6 +280,12 @@ class SymbolicExpressionRing_class(CommutativeRing):
     def __init__(self):
         self._default_precision = 53 # default precision bits
         ParentWithBase.__init__(self, RR)
+
+    def __cmp__(self, other):
+        return cmp(type(self), type(other))
+
+    def __reduce__(self):
+        return SymbolicExpressionRing, tuple([])
 
     def __call__(self, x):
         """
@@ -647,7 +662,40 @@ class SymbolicExpression(RingElement):
         """
         return long(int(self))
 
-    
+    def numerical_approx(self, prec=53):
+        """
+        Return a numerical approximation of self as either a real or
+        complex number.
+
+        INPUT:
+            prec -- integer (default: 53): the number of bits of precision
+
+        OUTPUT:
+            A RealNumber or ComplexNumber approximation of self with
+            prec bits of precision.
+
+        EXAMPLES:
+            sage: cos(3).numerical_approx()
+            -0.989992496600445
+            sage: cos(3).numerical_approx(200)
+            -0.98999249660044545727157279473126130239367909661558832881409
+            sage: (i + 1).numerical_approx(32)
+            1.00000000 + 1.00000000*I
+            sage: (pi + e + sqrt(2)).numerical_approx(100)
+            7.2740880444219335226246195788
+        """
+        # make sure the field is of the right precision
+        prec = Integer(prec)
+        field = RealField(prec)
+
+        try:
+            approx = self._mpfr_(field)
+        except TypeError:
+            # try to return a complex result
+            approx = self._complex_mpfr_field_(ComplexField(prec))
+
+        return approx
+
     def _mpfr_(self, field):
         raise TypeError
 
@@ -2703,7 +2751,7 @@ common_varnames = ['alpha',
                    'zeta',
                    'eta',
                    'theta',
-                   'Theta'
+                   'Theta',
                    'iota',
                    'kappa',
                    'lambda',
@@ -2711,18 +2759,18 @@ common_varnames = ['alpha',
                    'mu',
                    'nu',
                    'xi',
-                   'Xi'
+                   'Xi',
                    'pi',
-                   'Pi'
+                   'Pi',
                    'rho',
                    'sigma',
-                   'Sigma'
+                   'Sigma',
                    'tau',
                    'upsilon',
                    'varphi',
                    'chi',
                    'psi',
-                   'Psi'
+                   'Psi',
                    'omega',
                    'Omega']
                    
