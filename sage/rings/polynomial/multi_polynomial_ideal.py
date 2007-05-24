@@ -74,7 +74,18 @@ We do a Groebner basis computation over a number field:
     sage: S.0  - zeta*S.1
     -1
     sage: S.0^3 - zeta*S.1^3
-    0    
+    0
+
+Two examples from the Mathematica documentation (done in SAGE):
+    We compute a Groebner basis:
+        sage: R.<x,y> = PolynomialRing(QQ, order='lex')
+        sage: ideal(x^2 - 2*y^2, x*y - 3).groebner_basis()
+        [2*y^4 - 9, 3*x - 2*y^3]    
+
+    We show that three polynomials have no common root:
+        sage: R.<x,y> = QQ[]
+        sage: ideal(x+y, x^2 - 1, y^2 - 2*x).groebner_basis()
+        [1]
 
 TESTS:
     sage: x,y,z = QQ['x,y,z'].gens()
