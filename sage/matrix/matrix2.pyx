@@ -46,14 +46,16 @@ cdef class Matrix(matrix1.Matrix):
 
         INPUT:
             B -- a matrix or vector
+
         OUTPUT:
             a matrix or vector
 
         EXAMPLES:
-            sage: A = matrix(3, [8,1,6, 3,5,7, 4,9,2])
-            sage: b = A \ vector([1,2,3]); b
-            (1/20, 3/10, 1/20)
-            sage: A*b
+            sage: A = matrix(QQ, 3, [1,2,3,-1,2,5,2,3,1])
+            sage: b = vector(QQ,[1,2,3])
+            sage: x = A \ b; x
+            (-13/12, 23/12, -7/12)
+            sage: A * x
             (1, 2, 3)
 
         We illustrate left associativity, etc., of the backslash operator. 
@@ -77,19 +79,8 @@ cdef class Matrix(matrix1.Matrix):
             [-1  2]
             [ 3  2]        
         """
-        if isinstance(B, Matrix):
-            if self.nrows() != B.nrows():
-                raise TypeError, "self and B must have the same number of rows"
-        elif is_Vector(B):
-            if self.nrows() != B.degree():
-                raise TypeError, "number of rows of self must equal the degree of B"
-        else:
-            raise TypeError, "B must be a matrix or vector"
-        
-            
-        # This is a *really* dumb generic algorithm -- enough so I can
-        # write doctests and at least try it for "feel".
-        return (~self)*B
+        C = self.augment(B).echelon_form()
+        return C.matrix_from_columns(range(self.ncols(),C.ncols()))
         
         
     def prod_of_row_sums(self, cols):
