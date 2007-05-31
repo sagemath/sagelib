@@ -1862,6 +1862,12 @@ cdef class RealNumber(sage.structure.element.RingElement):
             False
         """
         return bool(mpfr_inf_p(self.value))
+        
+    def is_unit(self):
+        return mpfr_sgn(self.value) != 0
+
+    def __nonzero__(self):
+        return mpfr_sgn(self.value) != 0
 
     def __richcmp__(left, right, int op):
         return (<RingElement>left)._richcmp(right, op)
