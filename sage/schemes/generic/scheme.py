@@ -314,5 +314,5 @@ class AffineScheme(Scheme):
         return Scheme.hom(self, x, Y)
 
 
-import morphism
-import spec
+#import morphism
+#import spec
