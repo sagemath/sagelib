@@ -27,3 +27,4 @@ class EllipticCurve_field(ell_generic.EllipticCurve_generic):
         if y**2 + a[0]*x*y + a[2]*y != x**3 + a[1]*x**2 + a[3]*x + a[4]:
             self._error_bad_coords(v)
             
+    
