@@ -357,7 +357,7 @@ cdef class PowerSeries(AlgebraElement):
             100        
         """
         return self._prec
-
+        
     def _repr_(self):
         """
         Return string represenation of this power series. 
@@ -1095,11 +1095,15 @@ cdef class PowerSeries(AlgebraElement):
         if not R is P.base_ring():
             a = a.change_ring(R)
         half = ~R(2)
-            
-        for i in range (ceil(log(prec, 2))):
+        
+        s = a.parent()([s])
+        for cur_prec in sage.misc.misc.newton_method_sizes(prec)[1:]:
+            (<PowerSeries>s)._prec = cur_prec
             s = half * (s + a/s)
-            
-        ans = P.gen(0)**(val/2) * s
+        
+        ans = s
+        if val != 0:
+            ans *= P.gen(0)**(val/2)
 
         if all:
             return [ans, -ans]  # since over an integral domain
