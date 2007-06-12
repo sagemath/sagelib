@@ -16,10 +16,10 @@ include '../ext/cdefs.pxi'
 include '../ext/stdsage.pxi'
 
 cdef class Matrix_dense(matrix.Matrix):
-    cdef int is_sparse_c(self):
+    cdef bint is_sparse_c(self):
         return 0
 
-    cdef int is_dense_c(self):
+    cdef bint is_dense_c(self):
         return 1
 
     def __copy__(self):
@@ -51,7 +51,7 @@ cdef class Matrix_dense(matrix.Matrix):
             True
         """
         return self._hash()
-        
+
     cdef long _hash(self) except -1:
         x = self.fetch('hash')
         if not x is None: return x

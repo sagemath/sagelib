@@ -158,6 +158,9 @@ def MatrixSpace(base_ring, nrows, ncols=None, sparse=False):
         True
 
     """
+    if not sage.rings.ring.is_Ring(base_ring):
+        raise TypeError, "base_ring (=%s) must be a ring"%base_ring
+    
     if ncols is None: ncols = nrows
     nrows = int(nrows); ncols = int(ncols); sparse=bool(sparse)
     key = (base_ring, nrows, ncols, sparse)
@@ -165,9 +168,6 @@ def MatrixSpace(base_ring, nrows, ncols=None, sparse=False):
         M = _cache[key]()
         if not M is None: return M
 
-    if not sage.rings.ring.is_Ring(base_ring):
-        raise TypeError, "base_ring (=%s) must be a ring"%base_ring
-    
     M = MatrixSpace_generic(base_ring, nrows, ncols, sparse)
 
     _cache[key] = weakref.ref(M)
