@@ -100,12 +100,17 @@ class Sage(Expect):
     its arguments using the s interpeter, so the call to s3 is passed
     \code{s('"x"')}, which is the string \code{"x"} in the s interpreter.
     """
-    def __init__(self, maxread=10000, script_subdirectory=None,
-                       logfile=None,  preparse=True, server=None,
-                       do_cleaner=True, python=False, path=None,
-                       init_code=None, verbose_start=False):
+    def __init__(self, logfile   = None,
+                       preparse  = True,
+                       python    = False,
+                       init_code = None,
+                       server    = None,
+                       **kwds):
         if python:
-            command = "sage -python -u"
+            if server:
+                command = "sage -cleaner & sage -python -u"
+            else:
+                command = "sage -python -u"
             prompt = ">>>"
             if init_code is None:
                 init_code = ['from sage.all import *', 'import cPickle']
@@ -119,15 +124,11 @@ class Sage(Expect):
                         name = 'sage',
                         prompt = prompt,
                         command = command,
-                        server = server,
-                        maxread = maxread,
-                        script_subdirectory = script_subdirectory,
                         restart_on_ctrlc = False,
                         logfile = logfile,
                         init_code = init_code,
-                        do_cleaner = do_cleaner,
-                        path = path,
-                        verbose_start = verbose_start,
+                        server = server,
+                        **kwds
                         )
         self._preparse = preparse
         self._is_local = (server is None)

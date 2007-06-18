@@ -161,7 +161,7 @@ class MySessionWrapper(object):
                 log.msg("=== logout ===")
                 return self.logout(session, request, segments)
             else:
-                log.msg("session found ... locateResource")
+                #log.msg("session found ... locateResource")
                 creds = session.get_authCreds()
                 return self.locateResource(request, segments, session, creds)
 
@@ -257,7 +257,8 @@ class MySessionWrapper(object):
         return credentials.UsernamePassword(username, password)
 
     def _loginSuccess(self, (iface, rsrc, logout), session, creds, segments):
-        """Return the Root Page after log in success.
+        """
+        Return the Root Page after log in success.
         
         Also saved the credentials that the user used to log in
         to later associate these credentials with the users session.
@@ -270,6 +271,8 @@ class MySessionWrapper(object):
         return rsrc, () #segments
     
     def _loginFailure(self, *x): #TODO    
+        log.msg("=== _loginFailure ===")
+        
         print x
                  
     def incorrectLoginError(self, error, ctx, segments, loginFailure):

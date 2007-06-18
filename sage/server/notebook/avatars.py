@@ -6,12 +6,6 @@
 #####################################################################
 
 import twist
-
-def user_type(avatarId):
-    if twist.notebook.user_is_admin(avatarId):
-        return 'admin'
-    return 'user'
-
 import os
 
 from twisted.cred import portal, checkers, credentials, error as credError
@@ -19,6 +13,12 @@ from twisted.internet import protocol, defer
 from zope.interface import Interface, implements
 from twisted.web2 import iweb
 from twisted.python import log
+from random import randint
+
+def user_type(avatarId):
+    if twist.notebook.user_is_admin(avatarId):
+        return 'admin'
+    return 'user'
 
 class PasswordDataBaseChecker(object):
     implements(checkers.ICredentialsChecker)
@@ -35,7 +35,6 @@ class PasswordDataBaseChecker(object):
             return checkers.ANONYMOUS #defer.succeed(checkers.ANONYMOUS)
 
     def requestAvatarId(self, credentials):
-        log.msg("=== requestAvatarId ===")
         username = credentials.username
         password = credentials.password
         query = "SELECT avatarId FROM users WHERE avatarId = ? AND password = ?"
@@ -53,23 +52,15 @@ class PasswordDictChecker(object):
         self.passwords = passwords
 
     def requestAvatarId(self, credentials):
-        log.msg("=== requestAvatarId ===")
         username = credentials.username
-        #log.msg("un: %s, pw: %s"%(credentials.username, credentials.password))
         if self.passwords.has_key(username):
-            log.msg("password.has_key(%s)"%username)
             password = self.passwords[username]
             if credentials.password == password:
                 return defer.succeed(username)
             else:
-                log.msg("=== %s entered the wrong password" % username)
-                log.msg("=== Returning anonymous credentials.")
                 return defer.succeed(checkers.ANONYMOUS)
         else:
-            log.msg("=== Returning anonymous credentials.")
             return defer.succeed(checkers.ANONYMOUS)
-            #return defer.fail(credError.UnauthorizedLogin("No such user"))
-
 
 class PasswordFileChecker(PasswordDictChecker):
     implements(checkers.ICredentialsChecker)
@@ -81,18 +72,67 @@ class PasswordFileChecker(PasswordDictChecker):
         password_file - file that contains passwords
         
         """
-        if not os.path.exists(password_file):
-            open(password_file,'w').close()
-        f = open(password_file).readlines()
-        passwords = {'a':'a', 'was':'a', 'admin':'a'}
+        
+        self.password_file = password_file
+        self.load_passwords()
+        
+    def load_passwords(self):
+        passwords = {}
+        if not os.path.exists(self.password_file):
+            open(self.password_file,'w').close()
+            self.add_first_admin()
+        f = open(self.password_file).readlines()
+        if len(f) == 0:
+            self.add_first_admin()
         for line in f:
-            username, password = line.split(':')
+            username, password, email, account_type = line.split(':')
             password = password.strip()
             passwords[username] = password
             
         self.passwords = passwords
         
+    def add_user(self, username, password, email, account_type='user'):
+        self.check_username(username)
+        f = open(self.password_file, 'a')
+        s = '%s:%s:%s:%s\n' % (username, password, email, account_type)
+        f.writelines(s)
+        f.close()
+    
+    def add_first_admin(self):
+        pw = "%x"%randint(2**24,2**25)
+        self.add_user("admin", pw, "", "admin")
+        log.msg("""
+*************************************
+     INITIALIZING USER DATABASE
+*************************************
+Please visit the notebook immediately
+to configure the server.  Log in with
+user: admin
+pass: %s
+*************************************"""%pw)
 
+    def check_username(self, username):
+        usernames = []
+        f = open(self.password_file).readlines()
+        for line in f:
+            v = line.split(':')
+            usernames.append(v[0])
+        if username in usernames:
+            raise ValueError('Username %s already exists' % username)
+        else:
+            return True
+    
+    def requestAvatarId(self, credentials):
+        self.load_passwords()
+        username = credentials.username
+        if self.passwords.has_key(username):
+            password = self.passwords[username]
+            if credentials.password == password:
+                return defer.succeed(username)
+            else:
+                return defer.succeed(checkers.ANONYMOUS)
+        else:
+            return defer.succeed(checkers.ANONYMOUS)
 
 class LoginSystem(object):
     implements(portal.IRealm)
@@ -105,7 +145,8 @@ class LoginSystem(object):
         self.logout = lambda: None #find a good use for logout 
 
     def requestAvatar(self, avatarId, mind, *interfaces):
-        """Return a given Avatar depending on the avatarID.
+        """
+        Return a given Avatar depending on the avatarID.
 
         This approximatly boils down to, for a protected web site,
         that given a username (avatarId, which could just be '()' for
@@ -114,32 +155,29 @@ class LoginSystem(object):
         We serve up a given "web site" -> twisted resources, that depends
         on the avatarId, (i.e. different permissions / view depending on
         if the user is anonymous, regular, or an admin)
+        
         """
+        
         from sage.server.notebook.twist import AnonymousToplevel, UserToplevel, AdminToplevel
-        log.msg("=== requestAvatar ===")
         self.cookie = mind[0]
         if iweb.IResource in interfaces:
+            log.msg(avatarId)
             if avatarId is checkers.ANONYMOUS: #anonymous user
-                
                 log.msg("returning AnonymousResources")
                 rsrc = AnonymousToplevel(self.cookie, avatarId)
                 return (iweb.IResource, rsrc, self.logout)
-            
             elif user_type(avatarId) == 'user':
-
                 log.msg("returning User resources for %s" % avatarId)
                 self._mind = mind #mind = [cookie, request.args, segments]
                 self._avatarId = avatarId
                 rsrc = UserToplevel(self.cookie, avatarId)
                 return (iweb.IResource, rsrc, self.logout)
-            
             elif user_type(avatarId) == 'admin':
-
+                log.msg("returning Admin resources for %s" % avatarId)                
                 self._mind = mind #mind = [cookie, request.args, segments]
                 self._avatarId = avatarId
                 rsrc = AdminToplevel(self.cookie, avatarId)
                 return (iweb.IResource, rsrc, self.logout)
-            
         else:
             raise KeyError("None of the requested interfaces is supported")
 

@@ -55,8 +55,8 @@ SAGE_ERROR=SC+'r'
 # This variable gets sets when the notebook function
 # in notebook.py is called.
 multisession = True
-def initialized_sage(server):
-    S = Sage(server=server, maxread = 1, python=True)
+def initialized_sage(server, ulimit):
+    S = Sage(server=server, ulimit=ulimit, maxread = 1, python=True, verbose_start=True)
     S._start(block_during_init=False)
     E = S.expect()
     E.sendline('\n')
@@ -69,29 +69,53 @@ def initialized_sage(server):
     
 
 _a_sage = None
-def init_sage_prestart(server):
+def init_sage_prestart(server, ulimit):
     global _a_sage
-    _a_sage = initialized_sage(server)
+    _a_sage = initialized_sage(server, ulimit)
     
-def one_prestarted_sage(server):
+def one_prestarted_sage(server, ulimit):
     global _a_sage
     X = _a_sage
     if multisession:
-        init_sage_prestart(server)
+        init_sage_prestart(server, ulimit)
     return X
 
 class Worksheet:
-    def __init__(self, name, notebook, id, system, user):
-        name = ' '.join(name.split())
-        self.__id = id
-        self.__system = system
-        self.__next_id = (_notebook.MAX_WORKSHEETS) * id
-        self.set_name(name)
+    def __init__(self, name, notebook, id, system, owner):
+
+        # Record the basic properties of the worksheet
+        
+        self.__id       = id
+        self.__next_id  = (_notebook.MAX_WORKSHEETS) * id
+
+        self.__system   = system
         self.__notebook = notebook
-        self.__dir = '%s/%s'%(notebook.worksheet_directory(), dir)
+        self.__owner         = owner
+        self.__viewers       = []
+        self.__collaborators = [owner]
+
+        self.set_name(name)
+
+        # set the directory in which the worksheet files will be stored.
+        # We also add the hash of the name, since the cleaned name loses info, e.g.,
+        # it could be all _'s if all characters are funny.
+        clean_name = _notebook.clean_name(name)
+        worksheet_dir = owner + '/' + clean_name
+        self.__filename = worksheet_dir
+        self.__dir = '%s/%s'%(notebook.worksheet_directory(), worksheet_dir)
+
         self.clear()
-        self.__viewers = []
-        self.__collaborators = [user]
+        
+
+    def owner(self):
+        try:
+            return self.__owner
+        except AttributeError:
+            self.__owner = 'pub'
+            return 'pub'
+
+    def set_owner(self, owner):
+        self.__owner = self.owner
 
     def user_is_only_viewer(self, user):
         try:
@@ -136,8 +160,9 @@ class Worksheet:
             self.append_new_cell()
 
     def set_notebook(self, notebook, new_id=None):
+        owner = self.owner()
         self.__notebook = notebook
-        self.__dir = '%s/%s'%(notebook.worksheet_directory(), self.__filename)
+        self.__dir = '%s/%s/%s'%(notebook.worksheet_directory(), owner, self.__filename)
         if not new_id is None:
             for C in self.__cells:
                 i = C.relative_id()
@@ -354,7 +379,38 @@ class Worksheet:
         return self.__notebook.DIR()
 
     def quit(self):
-        self.restart_sage()
+        try:
+            S = self.__sage
+        except AttributeError:
+            # no sage running anyways!
+            return
+
+        try:
+            pid = S._expect.pid
+            print "PID = ", pid
+            os.killpg(pid, 9)
+            os.kill(pid, 9)
+            S._expect = None
+            del self.__sage
+        except AttributeError, msg:
+            print "WARNING: %s"%msg
+        except Exception, msg:
+            print msg
+            print "WARNING: Error deleting SAGE object!"
+            
+        try:
+            os.kill(pid, 9)
+        except:
+            pass
+
+        try:
+            del self.__variables
+        except AttributeError:
+            pass
+
+        # We do this to avoid getting a stale SAGE that uses old code. 
+        self.clear_queue()
+        
 
     def next_block_id(self):
         try:
@@ -406,7 +462,8 @@ class Worksheet:
                 return S
         except AttributeError:
             pass
-        self.__sage = one_prestarted_sage(server=self.notebook().get_server())
+        self.__sage = one_prestarted_sage(server = self.notebook().get_server(),
+                                          ulimit = self.notebook().get_ulimit())
         verbose("Initializing SAGE.")
         os.environ['PAGER'] = 'cat'
         try:
@@ -800,34 +857,10 @@ class Worksheet:
         """
         Restart SAGE kernel.
         """
-        print "restarting"
+        self.quit()
 
-        try:
-            S = self.__sage
-        except AttributeError:
-            # no sage running anyways!
-            return
-
-        try:
-            pid = S._expect.pid
-            os.killpg(pid, 9)
-            os.kill(pid, 9)
-            S._expect = None
-            del self.__sage
-        except AttributeError, msg:
-            print "WARNING: %s"%msg
-        except Exception, msg:
-            print msg
-            print "WARNING: Error deleting SAGE object!"
-
-        try:
-            del self.__variables
-        except AttributeError:
-            pass
-
-        # We do this to avoid getting a stale SAGE that uses old code. 
-        self.clear_queue()
-        self.__sage = initialized_sage(server = self.notebook().get_server())
+        self.__sage = initialized_sage(server = self.notebook().get_server(),
+                                       ulimit = self.notebook().get_ulimit())
         self.initialize_sage()
         self._enqueue_auto_cells()
         self.start_next_comp()
@@ -1230,6 +1263,9 @@ class Worksheet:
             s += div%F + '%s</div>'%F
         return s
 
+    def worksheet_command(self, cmd):
+        return '/home/%s/%s'%(self.filename(), cmd)
+
     def html(self, include_title=True, do_print=False,
              confirm_before_leave=False, read_only=False):
         n = len(self.__cells)
@@ -1251,9 +1287,11 @@ class Worksheet:
             menu  = '  <span class="worksheet_control_commands">'
             menu += '    <a class="%s" onClick="interrupt()" id="interrupt">Interrupt</a>'%interrupt_class + vbar
             menu += '    <a class="restart_sage" onClick="restart_sage()" id="restart_sage">Restart</a>' +vbar
-            menu += '    <a class="plain_text" href="edit">Edit</a>' + vbar
-            menu += '    <a class="doctest_text" onClick="doctest_window(\'%s\')">Text</a>'%name + vbar
-            menu += '    <a class="doctest_text" onClick="print_window(\'%s\')">Print</a>'%name + vbar
+            menu += '    <a class="plain_text" href="%s">Edit</a>'%self.worksheet_command('edit') + vbar
+            #menu += '    <a class="doctest_text" onClick="doctest_window(\'%s\')">Text</a>'%name + vbar
+            menu += '    <a class="doctest_text" href="%s">Text</a>'%self.worksheet_command('plain') + vbar
+            #menu += '    <a class="doctest_text" onClick="print_window(\'%s\')">Print</a>'%name + vbar
+            menu += '    <a class="doctest_text" href="%s">Printable</a>'%self.worksheet_command('print') + vbar
             menu += '    <a class="evaluate" onClick="evaluate_all()">Eval All</a>' + vbar
             menu += '    <a class="hide" onClick="hide_all()">Hide</a>/<a class="hide" onClick="show_all()">Show</a>' + vbar
             menu += '    <a class="slide_mode" onClick="slide_mode()">Focus</a>' + vbar

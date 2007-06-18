@@ -1,3 +1,10 @@
+#############################################################################
+#       Copyright (C) 2007 William Stein <wstein@gmail.com>
+#  Distributed under the terms of the GNU General Public License (GPL)
+#  The full text of the GPL is available at:
+#                  http://www.gnu.org/licenses/
+#############################################################################
+
 """
 SAGE Notebook (Twisted Version)
 """
@@ -8,13 +15,14 @@ from twisted.web2 import static, http_headers, responsecode
 
 import css, js, keyboards
 
-from sage.misc.misc import SAGE_EXTCODE, DOT_SAGE, walltime
+import notebook as _notebook
+
+from sage.misc.misc import SAGE_EXTCODE, walltime
 
 p = os.path.join
 css_path        = p(SAGE_EXTCODE, "notebook/css")
 image_path      = p(SAGE_EXTCODE, "notebook/images")
 javascript_path = p(SAGE_EXTCODE, "notebook/javascript")
-conf_path       = p(DOT_SAGE, 'notebook')
 
 # the list of users waiting to register
 waiting = {}
@@ -163,7 +171,7 @@ class UploadWorksheet(resource.PostableResource):
             s = "<html>Error uploading worksheet '%s'.  <a href='/'>continue</a></html>"%msg
             return http.Response(stream = s)
         os.unlink(tmp)
-        return http.RedirectResponse('/ws/'+W.filename())
+        return http.RedirectResponse('/home/'+W.filename())
         
     
 
@@ -179,7 +187,7 @@ class UploadWorksheet(resource.PostableResource):
 class WorksheetResource:
     def __init__(self, name):
         self.name = name
-        self.worksheet = notebook.get_worksheet_with_id(name)
+        self.worksheet = notebook.get_worksheet_with_filename(name)
 
     def id(self, ctx):
         return int(ctx.args['id'][0])
@@ -188,7 +196,7 @@ class WorksheetResource:
 # Worksheet data -- a file that
 # is associated with a cell in some worksheet.
 # The file is stored on the filesystem.
-#      /ws/worksheet_name/data/cell_number/filename
+#      /home/worksheet_name/data/cell_number/filename
 ##############################################
 class CellData(resource.Resource):
     def __init__(self, worksheet, number):
@@ -233,6 +241,10 @@ class YesNo(resource.Resource):
         self.no_effect = no_effect
 
     def render(self, ctx):
+        from sage.server.notebook.template import yes_no_template
+        lt = yes_no_template(mesg=self.mesg)
+        return http.Response(stream = lt)
+        
         s = '<html><body>%s<br>'%self.mesg
         s += '<a href="yes">Yes</a> or <a href="no">No</a></body></html>'
         return http.Response(stream = s)
@@ -266,8 +278,10 @@ def Worksheet_delete(name):
 def Worksheet_create(name):
     def do_create():
         notebook.create_new_worksheet(name, username)
+
+    wsname = _notebook.clean_name(name)
     return YesNo('Do you want to create the worksheet "%s"?'%name,
-                 '.', '/', yes_effect=do_create)
+                 '/home/%s/%s'%(username, wsname), '/', yes_effect=do_create)
 
 #Toplevel(), Worksheet(name))
 ## class WorksheetCreate(WorksheetResource, resource.Resource):
@@ -325,7 +339,7 @@ class Worksheet_save(WorksheetResource, resource.PostableResource):
     def render(self, ctx):
         if ctx.args.has_key('button_save'):
             self.worksheet.edit_save(ctx.args['textfield'][0])
-        return http.RedirectResponse('/ws/'+self.worksheet.filename())
+        return http.RedirectResponse('/home/'+self.worksheet.filename())
               
 
 
@@ -348,7 +362,7 @@ class Worksheet_set_cell_output_type(WorksheetResource, resource.PostableResourc
         return http.Response(stream = '')
 
 ########################################################
-# The new cell command: /ws/worksheet/new_cell?id=number 
+# The new cell command: /home/worksheet/new_cell?id=number 
 ########################################################
 class Worksheet_new_cell(WorksheetResource, resource.PostableResource):
     """
@@ -362,7 +376,7 @@ class Worksheet_new_cell(WorksheetResource, resource.PostableResource):
     
 
 ########################################################
-# The delete cell command: /ws/worksheet/delete_cell?id=number 
+# The delete cell command: /home/worksheet/delete_cell?id=number 
 ########################################################
 class Worksheet_delete_cell(WorksheetResource, resource.PostableResource):
     """
@@ -504,7 +518,7 @@ class Worksheet_plain(WorksheetResource, resource.Resource):
 
 class Worksheet_print(WorksheetResource, resource.Resource):
     def render(self, ctx):
-        s = notebook.worksheet_html(self.name)
+        s = notebook.worksheet_html(self.name, do_print=True)
         return http.Response(stream=s)
 
 
@@ -536,15 +550,46 @@ class Worksheet(WorksheetResource, resource.Resource):
         except KeyError:
             return NotImplementedWorksheetOp(op)
 
+class WorksheetsByUser(resource.Resource):
+    addSlash = True
+    
+    def __init__(self, user):
+        self.user = user
+
+    def render(self, ctx):
+        if self.user == username:
+            return http.Response(stream = notebook.html_worksheet_list_for_user(username))
+        else:
+            return http.Response(stream = "<html><br><br><br><h2>You are logged in as '%s' so you do not have permission to view the home page of '%s'.</h2></html>."%(
+                username, self.user))
+
+    def childFactory(self, request, name):
+        filename = self.user + '/' + name
+        try:
+            return Worksheet(filename)
+        except KeyError:
+            if username != self.user:
+                return http.Response(stream = "The user '%s' has no worksheet '%s'."%(self.user, name))
+            return Worksheet_create(name)
+        
+
 class Worksheets(resource.Resource):
     def render(self, ctx):
         return http.Response(stream = "Please request a specific worksheet")
 
     def childFactory(self, request, name):
-        try:
-            return Worksheet(name)
-        except KeyError:
-            return Worksheet_create(name)
+        return WorksheetsByUser(name)
+
+
+class WorksheetsByUserAdmin(WorksheetsByUser):
+    def render(self, ctx):
+        return http.Response(stream = notebook.html_worksheet_list_for_user(self.user))
+
+class WorksheetsAdmin(Worksheets):
+    def childFactory(self, request, name):
+        return WorksheetsByUserAdmin(name)
+    
+
 
 ############################
 # Adding a new worksheet
@@ -591,6 +636,11 @@ class Main_css(resource.Resource):
         return http.Response(stream=s)
     
 class CSS(resource.Resource):
+    addSlash = True
+
+    def render(self, ctx):
+        return static.File(css_path)
+
     def childFactory(self, request, name):
         return static.File(css_path + "/" + name)
 
@@ -621,8 +671,12 @@ class Keyboard_js(resource.Resource):
         return Keyboard_js_specific(browser_os)
 
 class Javascript(resource.Resource):
+    addSlash = True
     child_keyboard = Keyboard_js()
     
+    def render(self, ctx):
+        return static.File(javascript_path)
+
     def childFactory(self, request, name):
         return static.File(javascript_path + "/" + name)
 
@@ -633,6 +687,11 @@ setattr(Javascript, 'child_main.js', Main_js())
 ############################
 
 class Images(resource.Resource):
+    addSlash = True
+    
+    def render(self, ctx):
+        return static.File(image_path)
+    
     def childFactory(self, request, name):
         return static.File(image_path + "/" + name)
 
@@ -668,13 +727,13 @@ server. Please <a href="%s://%s:%s/register">register</a> with the server.</p>
 ############################
 
 class RegistrationPage(resource.PostableResource):
-    # TODO: IMPORTANT -- figure out how to get a handle on the database here; we
-    # want to throw an error when a user tries to register a name that already
-    # exists
+    def __init__(self, userdb):
+        self.userdb = userdb
+        
     def render(self, request):
         if request.args.has_key('email'):
             if request.args['email'][0] is not None:
-                user = request.args['username'][0]
+                username = request.args['username'][0]
                 passwd  = request.args['password'][0]
                 destaddr = """%s""" % request.args['email'][0]
                 from sage.server.notebook.smtpsend import send_mail
@@ -684,25 +743,43 @@ class RegistrationPage(resource.PostableResource):
                 listenaddr = notebook.address
                 port = notebook.port
                 fromaddr = 'no-reply@%s' % listenaddr
-                body = build_msg(key, user, listenaddr, port, notebook.secure)
+                body = build_msg(key, username, listenaddr, port,
+                                 notebook.secure)
 
-                # Send a confirmation message to the user. 
-                send_mail(self, fromaddr, destaddr, "SAGE Notebook Registration",body)
+                # Send a confirmation message to the user.
+                try:
+                    send_mail(self, fromaddr, destaddr, "SAGE Notebook Registration",body)
+                except ValueError:
+                    # the email address is invalid
+                    return http.Response(stream="Registration failed -- the email address '%s' is invalid."%destaddr)
 
                 # Store in memory that we are waiting for the user to respond
                 # to their invitation to join the SAGE notebook.
-                waiting[key] = user
+                waiting[key] = username
                 
-            # now say that the user has been registered.
-            s = """\
-<html><h1>Registration information received</h1>
-<p>Thank you for registering with the SAGE notebook.  A confirmation message will be
-sent to %s.</p></html>
-"""%destaddr
+            # Add the user to passwords.txt
+            try:
+                self.userdb.add_user(username, passwd, destaddr)
+                # now say that the user has been registered.
+                s = """
+                <html>
+                <h1>Registration information received</h1>
+                <p>Thank you for registering with the SAGE notebook. A
+                confirmation message will be sent to %s.</p>
+                <br>
+                <p><a href="/">Click here to login with your new account.</a></p>
+                </html>
+                """%destaddr
+            except ValueError:
+                s = """
+                <html>
+                <h1>Username is already taken, please choose another one.</h1>
+                </html>
+                """
         else:
             url_prefix = "https" if notebook.secure else "http"
             s = """<html><h1>This is the registration page.</h1>
-            <form method="POST" action="%s://%s:%s/register"
+            <form method="POST" action="%s://%s:%s/register">
             Username: <input type="text" name="username" size="15" />  Password:
                 <input type="password" name="password" size="15" /><br /> Email
                 Address: <input type="text" name="email" size="15" /><br /> <div align="center">  <p><input type="submit" value="Register" /></p>  </div> </form><br /><br />
@@ -712,207 +789,79 @@ sent to %s.</p></html>
 class Toplevel(resource.PostableResource):
     def __init__(self, cookie, _username):
         self.cookie = cookie
-        global username
+        global username, admin
         username = _username
+
+setattr(Toplevel, 'child_favicon.ico', static.File(image_path + '/favicon.ico'))
+
+
+
+from sage.server.notebook.template import login_template
+
+class LoginResourceClass(resource.Resource):
+    def render(self, ctx):
+        return http.Response(stream =  login_template())
     
+    def childFactory(self, request, name):
+        return LoginResource
+
+LoginResource = LoginResourceClass()
+
 class AnonymousToplevel(Toplevel):
+    from sage.server.notebook.avatars import PasswordFileChecker
     addSlash = True
-    child_register = RegistrationPage()
+    child_register = RegistrationPage(PasswordFileChecker('passwords.txt'))
     child_confirm = RegConfirmation()
+    child_images = Images()
+    child_css = CSS()
 
     def render(self, ctx):
-        return http.Response(stream = notebook.html_login())
-            
+        return http.Response(stream =  login_template())
+
+    def childFactory(self, request, name):
+        return LoginResource
+
+
 class UserToplevel(Toplevel):
     addSlash = True
 
     child_images = Images()
-    child_javascript = Javascript()
     child_css = CSS()
-    child_ws = Worksheets()
+    child_javascript = Javascript()
+    child_home = Worksheets()
     child_notebook = Notebook()
     child_doc = Doc()
     child_upload = Upload()
     child_upload_worksheet = UploadWorksheet()
     
     def render(self, ctx):
-        s = notebook.html(username=username)
+        s = notebook.html_worksheet_list_for_user(username)
         return http.Response(responsecode.OK, 
                              {'content-type': http_headers.MimeType('text',
                                                                     'html'),
                              'set-cookie':[http_headers.Cookie("sid",
                                                             self.cookie)]},
                              stream=s)
-
-    def childFactory(self, request, name):
-        print request, name
 
 class AdminToplevel(UserToplevel):
-
+    child_home = WorksheetsAdmin()
+    
     def render(self, ctx):
-        s = notebook.html(username=username, admin=True)
+        s = notebook.html_worksheet_list_for_user(username)        
         return http.Response(responsecode.OK, 
                              {'content-type': http_headers.MimeType('text',
                                                                     'html'),
                              'set-cookie':[http_headers.Cookie("sid",
                                                             self.cookie)]},
                              stream=s)
+    
     
 
 setattr(UserToplevel, 'child_help.html', Help())
 setattr(UserToplevel, 'child_history.html', History())
 
 notebook = None  # this gets set on startup.
-
 username = None  # This is set when a request comes in.
 
-##########################################################
-# This actually serves up the notebook.
-##########################################################
-
-from   sage.server.misc import print_open_msg
-import os, shutil, socket
-
-private_pem = conf_path + '/private.pem'
-public_pem = conf_path + '/public.pem'
-
-def notebook_setup(self=None):
-    if not os.path.exists(conf_path):
-        os.makedirs(conf_path)
-    print "Using dsage certificates."
-    dsage = os.path.join(DOT_SAGE, 'dsage')
-    if not os.path.exists(dsage + '/cacert.pem'):
-        import sage.dsage.all
-        sage.dsage.all.dsage.setup()
-    if not os.path.exists(dsage + '/pubcert.pem'):
-        print "Error configuring."
-        return
-    shutil.copyfile(dsage + '/cacert.pem', private_pem)
-    shutil.copyfile(dsage + '/pubcert.pem', public_pem)
-    print "Successfully configured notebook."
-
-def notebook_twisted(self,
-             directory   = 'sage_notebook',
-             port        = 8000,
-             address     = 'localhost',
-             port_tries  = 0,
-             secure      = True,
-             server_pool = None):
-    r"""
-    Experimental twisted version of the SAGE Notebook.
-
-    INPUT:
-        directory  -- (default: 'sage_notebook') directory that contains
-                      the SAGE notebook files
-        port       -- (default: 8000), port to serve the notebook on
-        address    -- (default: 'localhost'), address to listen on
-        port_tries -- (default: 0), number of additional ports to try if the
-                      first one doesn't work (*not* implemented)
-        secure     -- (default: True) if True use https so all
-                      communication, e.g., logins and passwords,
-                      between web browsers and the SAGE notebook is
-                      encrypted (via GNU TLS).
-    ADVANCED OPTIONS:
-        server_pool -- (default: None), if given, should be a list like 
-                      ['sage1@localhost', 'sage2@localhost'], where
-                      you have setup ssh keys so that typing
-                         ssh sage1@localhost
-                      logs in without requiring a password, e.g., by typing
-                      as the notebook server user
-                          cd; ssh-keygen -t rsa
-                      then putting ~/.ssh/id_rsa.pub as the file .ssh/authorized_keys2. 
-    """
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    port = int(port)
-    conf = '%s/twistedconf.py'%directory
-
-    # We load the notebook to make sure it is created with the
-    # given options, then delete it.  The notebook is later
-    # loaded by the *other* Twisted process below.
-    if not server_pool is None:
-        from sage.server.notebook.notebook import load_notebook
-        nb = load_notebook(directory, server_pool=server_pool)
-        nb.set_server_pool(server_pool)
-        nb.save()
-        del nb
-
-    def run(port):
-        ## Create the config file
-        if secure:
-            if not os.path.exists(private_pem) or not os.path.exists(public_pem):
-                print "In order to use an SECURE encrypted notebook, you must first run notebook.setup()."
-                print "Now running notebook.setup()"
-                notebook_setup()
-            if not os.path.exists(private_pem) or not os.path.exists(public_pem):
-                print "Failed to setup notebook.  Please try notebook.setup() again manually."
-            strport = 'tls:%s:privateKey=%s:certKey=%s'%(port, private_pem, public_pem)
-        else:
-            strport = 'tcp:%s'%port
-
-        notebook_opts = '"%s",address="%s",port=%s,secure=%s' % (os.path.abspath(directory),
-                address, port, secure)
-        config = open(conf, 'w')
-        config.write("""
-import sage.server.notebook.notebook
-sage.server.notebook.notebook.JSMATH=True
-import sage.server.notebook.notebook as notebook
-import sage.server.notebook.twist as twist
-twist.notebook = notebook.load_notebook(%s)
-import sage.server.notebook.worksheet as worksheet
-worksheet.init_sage_prestart(twist.notebook.get_server())
-
-import signal, sys
-def my_sigint(x, n):
-    twist.notebook.save()
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    print "(Notebook cleanly saved. Press control-C again to exit.)"
-    
-signal.signal(signal.SIGINT, my_sigint)
-
-## Use Knoboo's authentication framework
-from twisted.web2 import log, server, channel
-from twisted.cred import portal, checkers, credentials
-import sage.server.notebook.guard as guard
-import sage.server.notebook.avatars as avatars
-
-from twisted.cred import portal
-
-password_file = 'passwords.txt'
-realm = avatars.LoginSystem(password_file)
-p = portal.Portal(realm)
-# p.registerChecker(avatars.PasswordDataBaseChecker(DBCONNECTION))
-p.registerChecker(avatars.PasswordFileChecker(password_file))
-# p.registerChecker(checkers.AllowAnonymousAccess(), credentials.IAnonymous)
-p.registerChecker(checkers.AllowAnonymousAccess())
-rsrc = guard.MySessionWrapper(p)
-log.DefaultCommonAccessLoggingObserver().start()
-site = server.Site(rsrc)
-factory = channel.HTTPFactory(site)
-
-from twisted.web2 import channel
-from twisted.application import service, strports
-application = service.Application("SAGE Notebook")
-s = strports.service('%s', factory)
-s.setServiceParent(application)
-"""%(notebook_opts, strport))
 
 
-        config.close()                     
-
-        ## Start up twisted
-        print_open_msg(address, port, secure=secure)
-        e = os.system('cd "%s" && sage -twistd -ny twistedconf.py'%directory)
-        if e == 256:
-            raise socket.error
-                     
-
-    for i in range(int(port_tries)+1):
-        try:
-            run(port + i)
-        except socket.error:
-            print "Port %s is already in use.  Trying next port..."%port
-        else:
-            break
-
-    return True
