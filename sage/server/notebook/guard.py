@@ -270,7 +270,7 @@ class MySessionWrapper(object):
         session.set_authCreds(creds)
         return rsrc, () #segments
     
-    def _loginFailure(self, *x): #TODO    
+    def _loginFailure(self, *x): #TODO
         #log.msg("=== _loginFailure ===")
         print x
                  
