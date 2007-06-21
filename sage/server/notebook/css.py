@@ -826,7 +826,7 @@ span.control:hover a.cs, span.control a:hover.cs {
 /************ WORKSHEET **************************/
 
 div.worksheet {
-  position:fixed;
+  position:fixed; 
   overflow:auto;
   z-index:1;
   background-color: white;
@@ -834,7 +834,7 @@ div.worksheet {
 /*  border-top: 0px;
   border-left: 2px solid <color1>;
   */
-  top: 7em; 
+  top: 8em; 
   bottom: 0ex;
   right: 0ex;
   left:1ex;
