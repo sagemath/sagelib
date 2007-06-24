@@ -151,7 +151,7 @@ class Notebook(SageObject):
             shutil.copytree(data, W.directory() + '/data')
         cells = src.cells_directory()
         if os.path.exists(cells):
-            shutil.copytree(cells, W.directory() + '/cells')        
+            shutil.copytree(cells, W.directory() + '/cells')
         W.edit_save(src.edit_text())
 
     def publish_worksheet(self, worksheet, username):
@@ -228,7 +228,6 @@ class Notebook(SageObject):
 
     def copy_worksheet(self, ws, owner):
         W = self.create_new_worksheet('default', owner)
-        print W.name(), W.filename()
         self._initialize_worksheet(ws, W)
         name = "Copy of %s"%ws.name()
         W.set_name(name)
@@ -947,13 +946,13 @@ class Notebook(SageObject):
                 return r
                 
             return """
-            <select class="worksheet_edit">
-            <option onClick="list_edit_worksheet('%s');" title="Open this worksheet and edit it">Edit</option>
-            <option onClick="list_copy_worksheet('%s');" title="Copy this worksheet">Copy Worksheet</option>
-            <option onClick="list_share_worksheet('%s');" title="Share this worksheet with others">Collaborate</option>
-            <option onClick="list_publish_worksheet('%s');" title="Publish this worksheet on the internet">Publish</option>
-            <option onClick="list_revisions_of_worksheet('%s');" title="See all revisions of this worksheet">Revisions</option>
-            <option onClick="list_preview_worksheet('%s');" title="Preview this worksheet">Preview</option>
+            <select onchange="go_list_worksheet(this);" class="worksheet_edit">
+            <option value="list_edit_worksheet('%s');" title="Open this worksheet and edit it">Edit</option>
+            <option value="list_copy_worksheet('%s');" title="Copy this worksheet">Copy Worksheet</option>
+            <option value="list_share_worksheet('%s');" title="Share this worksheet with others">Collaborate</option>
+            <option value="list_publish_worksheet('%s');" title="Publish this worksheet on the internet">Publish</option>
+            <option value="list_revisions_of_worksheet('%s');" title="See all revisions of this worksheet">Revisions</option>
+            <option value="list_preview_worksheet('%s');" title="Preview this worksheet">Preview</option>
             </select>
             """%(name, name,name,name,name,name)
         
@@ -1628,8 +1627,8 @@ class Notebook(SageObject):
                 selected = "selected=1"
             else:
                 selected = ''
-            options += '<option %s onClick="system_select(\'%s\');">%s</option>\n'%(selected, S,S)
-        s = """<select class="worksheet">
+            options += '<option %s value="%s">%s</option>\n'%(selected, S,S)
+        s = """<select onchange="go_system_select(this);" class="worksheet">
             %s
             </select>"""%options
         return s
