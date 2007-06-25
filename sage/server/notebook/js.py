@@ -229,6 +229,8 @@ var updating = false; var update_time = -1;
 
 var jsmath_font_msg = '<a href="SAGE_URL/jsmath">Click to download and install tex fonts.</a><br>';
 
+jsMath = {Font: {Message: function () {}}}
+
 var cell_id_list; // this gets set in worksheet.py
 
 var input_keypress; //this gets set to a function when we set up the keyboards
@@ -274,11 +276,17 @@ try{
   os_mac=(nav.indexOf('Mac')!=-1);
   os_win=( ( (nav.indexOf('Win')!=-1) || (nav.indexOf('NT')!=-1) ) && !os_mac)?true:false;
   os_lin=(nua.indexOf('Linux')!=-1);
-  line_height = 1.2;
-  if (os_mac || os_win) {
-     line_height = 1;
+
+  if(browser_ie) {
+      alert("Using SAGE with Microsoft Internet Explorer is currently not supported.");
   }
 
+/*  line_height = 1.2;
+  if (os_mac) {
+     line_height = 1;
+  }
+  */
+  line_height = 1.2;
   get_keyboard();
 } catch(e){}
 
@@ -772,8 +780,28 @@ function search_worksheets(typ) {
     window.location.replace(url);
 }
 
+function go_system_select(theform) {
+   with(theform) {
+      system_select(options[selectedIndex].value);
+   }
+}
+
 function system_select(s) {
     async_request(worksheet_command('system/'+s), null, null);
+}
+
+
+function go_data(theform) {
+   var value;
+   with(theform) {
+      value = options[selectedIndex].value;
+      if(value == "__upload_data_file__") {
+          window.location.replace(worksheet_command("upload_data"));
+      } else {
+          window.location.replace("/home/" + worksheet_filename + "/" + value);
+      }
+      options[0].selected = 1;
+   }
 }
 
 function add_worksheet(name) {
@@ -956,6 +984,19 @@ function sync_active_cell_list_callback(status, response_text) {
 // 
 ///////////////////////////////////////////////////////////////////
 
+function go_option(theform) {
+   with(theform) {
+      eval(options[selectedIndex].value);
+      options[0].selected = 1;
+   }
+}
+
+function link_datafile(target_worksheet_filename, filename) {
+   open(worksheet_command("link_datafile?filename=" + escape0(filename) +
+         "&target="+escape0(target_worksheet_filename)));
+}
+
+
 function list_edit_worksheet(filename) {
     window.location.replace('/home/' + filename);
 }
@@ -1137,11 +1178,29 @@ function focus_delay(id,bottom) {
          setTimeout('cell_focus('+id+',true)', 10);
 }
 
+function number_of_rows(txt, ncols) {
+    var r;
+    r = txt.split('\n');
+    var e, i, k, nrows;
+    nrows = r.length;
+    for(i=0; i < nrows; i++) {
+        try {
+            nrows += Math.floor(r[i].length/ncols);
+        } catch(e) {
+
+        };
+    }
+    return (nrows);
+}
+
 
 function cell_input_resize(cell_input) {
-    var rows = cell_input.value.split('\n').length;
+    var rows = number_of_rows(cell_input.value, cell_input.cols);
     if (rows <= 1) {
       rows = 1;
+    }
+    if (browser_saf) {
+       rows += 1;
     }
     try {
         cell_input.style.height = 0.5 + rows*line_height + 'em'; 
@@ -1176,7 +1235,7 @@ function cell_input_minimize_size(cell_input) {
     }
    
     cell_input.className = 'cell_input';
-    var rows = v.split('\n').length ;
+    var rows = number_of_rows(v, cell_input.cols);
     if (rows < 1) {
       rows = 1;
     }
@@ -1300,7 +1359,12 @@ function cell_input_key_event(id, e) {
     }
 
     cell_input_resize(cell_input);
-  
+    cell_input.focus();
+/*    if (browser_saf)   {
+        cell_input.scrollIntoView();
+    }
+    */
+    
     // Will need IE version... if possible.
     if (!in_slide_mode && key_up_arrow(e)) {
         var before = text_cursor_split(cell_input)[0];
@@ -1936,15 +2000,46 @@ function do_insert_new_cell_before(id, new_id, new_html) {
     cell_id_list = insert_into_array(cell_id_list, i, eval(new_id));
 }
 
+function insert_new_cell_after(id) {
+    async_request(worksheet_command('new_cell_after'), insert_new_cell_after_callback, 'id='+id);
+}
+
+function insert_new_cell_after_callback(status, response_text) {
+    if (status == "failure") {
+        alert("Problem inserting new input cell after current input cell.\n" + response_text);
+        return ;
+    }
+    if (response_text == "locked") {
+        alert("Worksheet is locked.  Cannot insert cells.");
+        return;
+    }
+    /* Insert a new cell _after_ a cell. */
+    var X = response_text.split(SEP);
+    var new_id = eval(X[0]);
+    var new_html = X[1];
+    var id = eval(X[2]);
+    do_insert_new_cell_after(id, new_id, new_html);
+    jump_to_cell(new_id,0);
+}
+
+
 function do_insert_new_cell_after(id, new_id, new_html) {
   /* Insert a new cell with the given new_id and new_html
-     after the cell with given id. */
+     after the cell with given id.      */
+
     i = id_of_cell_delta(id,1);
     if(i == id) {
         append_new_cell(new_id,new_html);
     } else {
         do_insert_new_cell_before(i, new_id, new_html);
     }
+}
+
+
+
+
+function insert_new_cell_before(id) {
+    async_request(worksheet_command('new_cell_before'), insert_new_cell_before_callback, 'id='+id);
 }
 
 function insert_new_cell_before_callback(status, response_text) {
@@ -1963,10 +2058,6 @@ function insert_new_cell_before_callback(status, response_text) {
     var id = eval(X[2]);
     do_insert_new_cell_before(id, new_id, new_html);
     jump_to_cell(new_id,0);
-}
-
-function insert_new_cell_before(id) {
-    async_request(worksheet_command('new_cell'), insert_new_cell_before_callback, 'id='+id);
 }
 
 
@@ -2224,6 +2315,10 @@ function print_worksheet(worksheet) {
       "menubar=1,scrollbars=1,width=800,height=600,toolbar=1,  resizable=1");
 }
 
+function help(worksheet) {
+    log = window.open ("/help","",
+    "menubar=1,location=1,scrollbars=1,width=800,height=650,toolbar=1,  resizable=1");
+}
 
 
 ////////////////////////////////// 
@@ -2244,7 +2339,7 @@ function jsmath_init() {
     jsMath.Process(); 
     /*   jsMath.ProcessBeforeShowing(); */
     } catch(e) {
-        font_warning();
+/*        font_warning(); */
     }
 
 }

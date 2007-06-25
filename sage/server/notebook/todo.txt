@@ -1,23 +1,30 @@
 TODO for the new Twisted notebook
 
-[] cross browser
+[ ] backward compatible
+
+[ ] attachment upload
+
+[x] fix cell://
+
+[x] cross browser
 * safari os x
 * firefox os x
 * firefox windows 
-* IE/windows
+* (later) IE/windows
 
 
 [x] logout doesn't work at all.
 
 [x] make cookies persistent
 
-[] don't let two people edit a worksheet at the same time -- only edit a copy.
+[x] don't let two people edit a worksheet at the same time -- only edit a copy.
+  (at least give a warning now)
 
 [x] search_doc and search-src -- fix it. 
 
 [] unpublish -- appears to owners. 
 
-[] bug -- using text mode can have multiple cells with the same id. Ick!
+[x] bug -- using text mode can have multiple cells with the same id. Ick!
 
 [] way to attach local text files:
     (1) Click "upload"
@@ -27,27 +34,36 @@ TODO for the new Twisted notebook
     (4) Can edit using a javascript code text editor  
     (5) It has a name and can be loaded, attached, doctested. 
 
-[] I forgot the "doctest text" display for the worksheets!
+[x] I forgot the "doctest text" display for the worksheets!
 
 [] bug: published worksheets always say "last edited on June 22, 2007
 04:18 AM by pub" but they should give who really edited them.  The
 time maybe doesn't get updated either. 
 
-[] some from "plain text mode" should make an entry in the revisions log. 
+[x] save from "plain text mode" should make an entry in the revisions log. 
 
-[ ] definitely *need* autosave!
+[x] definitely *need* autosave!
 
-[] marketing text: "Idea for marketing text: With the SAGE Notebook
+[x] marketing text: "Idea for marketing text: With the SAGE Notebook
 anyone can create, collaborate on, and publish interactive
 worksheets. In a worksheet, one can write code using SAGE and the
 different software included such as Python and evaluate it his
 code. He could make pretty pictures, calculate something new, tutor
 someone, learn about programming, and many other things."
 
+[ ] i definitely do not know how to make twisted listen on the same port
+with both https and http.  however, it is easy to make twisted listen
+on separate ports for both http and https, and allow the anonymous
+view view https.  good idea.
+ 
+
 -----------------------
 
 
 Later...
+
+[] have an active/archived/trash/new folder thing for published worksheets
+
 [ ] if a worksheet is in the trash after x days all images are deleted...
 [ ] migration of old notebooks to new format
 [ ] implement user configuration:
@@ -69,6 +85,8 @@ done * make sure notebook? gives docs.
 
 
 [] why not have "click to the left" of input cell toggle whether it is shown?
+
+[] move between cells should save their contents to the server if they change (?)
 
 [x] keep alive
 

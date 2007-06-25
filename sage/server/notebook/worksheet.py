@@ -46,6 +46,8 @@ from cell import Cell, TextCell
 INTERRUPT_TRIES = 3
 INITIAL_NUM_CELLS = 1
 
+WARN_THRESHOLD = 100
+
 
 #If you make any changes to this, be sure to change the
 # error line below that looks like this:
@@ -123,7 +125,7 @@ class Worksheet:
 
     def __cmp__(self, other):
         try:
-            return cmp(self.name(), other.name())
+            return cmp(self.filename(), other.filename())
         except AttributeError:
             return cmp(type(self), type(other))
 
@@ -159,7 +161,11 @@ class Worksheet:
     # TODO: Need to create a worksheet configuration object
     ##########################################################
     def collaborators(self):
-        return self.__collaborators
+        try:
+            return self.__collaborators
+        except AttributeError:
+            self.__collaborators = []
+            return self.__collaborators            
 
     def set_collaborators(self, v):
         n = self.notebook()
@@ -179,7 +185,11 @@ class Worksheet:
         self.__collaborators.sort()
 
     def viewers(self):
-        return self.__viewers
+        try:
+            return self.__viewers
+        except AttributeError:
+            self.__viewers = []
+            return self.__viewers
     
     def delete_notebook_specific_data(self):
         self.__attached = {}
@@ -219,7 +229,16 @@ class Worksheet:
         return self.__dir
 
     def data_directory(self):
-        return self.directory() + '/data/'
+        d = self.directory() + '/data/'
+        if not os.path.exists(d):
+            os.makedirs(d)
+        return d
+
+    def attached_data_files(self):
+        D = self.data_directory()
+        if not os.path.exists(D):
+            return []
+        return os.listdir(D)
 
     def cells_directory(self):
         return self.directory() + '/cells/'
@@ -440,7 +459,8 @@ class Worksheet:
             the words appear in the text version of self. 
         """
         E = self.edit_text() + \
-            ' '.join(self.collaborators()) + ' '.join(self.viewers()) + ' ' + self.publisher()
+            ' '.join(self.collaborators()) + ' '.join(self.viewers()) + ' ' + self.publisher() + \
+            ' '.join(self.attached_data_files())
         E = E.lower()
         for word in search.split():
             if not word.lower() in E:
@@ -458,6 +478,7 @@ class Worksheet:
         save(self.conf(), path + '/conf.sobj')
 
     def save_snapshot(self, user, E=None):
+        self.uncache_snapshot_data()
         path = self.snapshot_directory()
         basename = str(int(time.time()))
         filename = '%s/%s.bz2'%(path, basename)
@@ -504,12 +525,23 @@ class Worksheet:
             return ' ago'
 
     def snapshot_data(self):
+        try:
+            return self.__snapshot_data
+        except AttributeError:
+            pass
         filenames = os.listdir(self.snapshot_directory())
         filenames.sort()
         t = time.time()
         v = [(convert_seconds_to_meaningful_time_span(t - float(os.path.splitext(x)[0]))+ self._saved_by_info(x), x)  \
              for x in filenames]
+        self.__snapshot_data = v
         return v
+
+    def uncache_snapshot_data(self):
+        try:
+            del self.__snapshot_data
+        except AttributeError:
+            pass
 
     def revert_to_last_saved_state(self):
         filename = '%s/worksheet.txt'%(self.__dir)
@@ -578,7 +610,7 @@ class Worksheet:
                 s += '\n\n' + t
         return s
 
-    def edit_save(self, text):
+    def edit_save(self, text, ignore_ids=False):
         # Clear any caching.
         try:
             del self.__html
@@ -591,6 +623,8 @@ class Worksheet:
         text = text[i:]
 
         system, i = extract_system(text)
+        if system == "None":
+            system = "sage"
         self.set_system(system)
         text = text[i:]        
 
@@ -621,10 +655,10 @@ class Worksheet:
                     used_ids.add(id)
             elif typ == 'compute':
                 meta, input, output = T
-                if meta.has_key('id'):
+                if not ignore_ids and meta.has_key('id'):
                     id = meta['id']
                     if id in used_ids:
-                        # In this case don't reuse, since ids for must be unique.
+                        # In this case don't reuse, since ids must be unique.
                         id = next_available_id(ids)
                     html = True
                 else:
@@ -637,9 +671,9 @@ class Worksheet:
                     C = self._new_cell(id)
                 C.set_input_text(input)
                 C.set_output_text(output, '')
-                if html:
-                    print C.directory()
-                    C.update_html_output()
+                #if html:
+                    #print C.directory()
+                    #    C.update_html_output()
                 cells.append(C)
                 
         if len(cells) == 0:   # there must be at least one cell.
@@ -648,6 +682,7 @@ class Worksheet:
         self.set_cell_counter()
             
         self.__cells = cells
+
 
     ##########################################################
     # HTML rendering of the wholea worksheet
@@ -683,13 +718,17 @@ class Worksheet:
             name = name[:max] + ' ...'
         return name
 
-    def html_title(self):
+    def html_title(self, username='guest'):
         name = self.truncated_name()
+
+        warn = self.warn_about_other_person_editing(username, WARN_THRESHOLD)
         
         s = ''
         s += '<div class="worksheet_title">'
         s += '<a id="worksheet_title" class="worksheet_title" onClick="rename_worksheet(); return false;" title="Click to rename this worksheet">%s</a>'%(name.replace('<','&lt;'))
         s += '<br>' + self.html_time_last_edited()
+        if warn and username != 'guest' and not self.is_doc_worksheet():
+            s += '&nbsp;&nbsp;<span class="pingdown">Conflict WARNING!</span>'
         s += '</div>'
 
         return s
@@ -733,6 +772,11 @@ class Worksheet:
         <a class="control" onClick="publish_worksheet();" title="Let others view this worksheet">Publish</a>
         """%(cls('use'),cls('edit'),cls('text'),cls('revisions'),cls('share'))
 
+    def html_data_options_list(self):
+        D = self.attached_data_files()
+        x = '\n'.join(['<option value="datafile?name=%s">%s</option>'%(nm,nm) for nm in D])
+        return x
+
     def html_file_menu(self):
 ##  <option title="Save this worksheet as an HTML web page" onClick="save_as('html');">Save as HTML (zipped) </option>
 ##  <option title="Save this worksheet to LaTeX format" onClick="save_as('latex');">Save as LaTeX (zipped) </option>
@@ -743,32 +787,47 @@ class Worksheet:
             system_select = ''
         else:
             system_select = self.notebook().html_system_select_form_element(self)
+
+        data = self.html_data_options_list()
         
         return """
-<select class="worksheet">
- <option title="Create a new worksheet" onClick="new_worksheet();">New</option>
- <option title="Save this worksheet to an sws file" onClick="download_worksheet('%s');">Download</option>
- <option title="Save changes" onClick="save_worksheet();">Save</option> 
- <option title="Print this worksheet" onClick="print_worksheet();">Print</optooion>
- <option title="Rename this worksheet" onClick="rename_worksheet();">Rename</option>
- <option title="Copy this worksheet" onClick="copy_worksheet();">Copy worksheet</option>
- <option title="Move this worksheet to the trash" onClick="delete_worksheet('%s');">Delete worksheet</option>
- <option title="Configure this worksheet" onClick="worksheet_settings();">Worksheet settings</option>
+<select class="worksheet"  onchange="go_option(this);">
+<option title="Select a file related function" value=""  selected=1>File...</option>
+ <option title="Create a new worksheet" value="new_worksheet();">New Worksheet</option>
+ <option title="Save this worksheet to an sws file" value="download_worksheet('%s');">Download</option>
+ <option title="Print this worksheet" value="print_worksheet();">Print</optooion>
+ <option title="Rename this worksheet" value="rename_worksheet();">Rename worksheet</option>
+ <option title="Copy this worksheet" value="copy_worksheet();">Copy worksheet</option>
+ <option title="Move this worksheet to the trash" value="delete_worksheet('%s');">Delete worksheet</option>
 </select>
 
-<select class="worksheet">
- <option title="Interrupt currently running calculations, if possible" onClick="interrupt();">Interrupt</option>
- <option title="Evaluate all input cells in the worksheet" onClick="evaluate_all();">Evaluate All</option>
- <option title="Hide all output" onClick="hide_all();">Hide All</option>
- <option title="Show all output" onClick="show_all();">Show All</option>
- <option title="Restart the worksheet" onClick="restart_sage();">Restart</option>
- <option title="Switch to single-cell mode" onClick="slide_mode();">One Cell Mode</option>
- <option title="Switch to multi-cell mode" onClick="cell_mode();">Multi Cell Mode</option> 
+<select class="worksheet"  onchange="go_option(this);" >
+ <option title="Select a worksheet function" value="" selected=1>Action...</option>
+ <option title="Interrupt currently running calculations, if possible" value="interrupt();">Interrupt</option>
+ <option title="Restart the worksheet" value="restart_sage();">Restart</option>
+ <option value="">---------------------------</option>
+ <option title="Evaluate all input cells in the worksheet" value="evaluate_all();">Evaluate All</option>
+ <option title="Hide all output" value="hide_all();">Hide All</option>
+ <option title="Show all output" value="show_all();">Show All</option>
+ <option value="">---------------------------</option>
+ <option title="Switch to single-cell mode" value="slide_mode();">One Cell Mode</option>
+ <option title="Switch to multi-cell mode" value="cell_mode();">Multi Cell Mode</option> 
  </select>
 
- %s
+<select class="worksheet" onchange="go_data(this);" >
+ <option title="Select an attached file" value="" selected=1>Data...</option>
+ <option title="Upload or create a data file in a wide range of formats" value="__upload_data_file__">Upload or create file...</option>
+ <option value="">--------------------</option>
+%s
+</select>
 
- """%(_notebook.clean_name(self.name()), self.filename(), system_select)
+ %s
+ """%(_notebook.clean_name(self.name()), self.filename(),
+      data, system_select)
+# <option title="Browse the data directory" value="data/">Browse data directory...</option>
+# <option title="Browse the directory of output from cells" value="cells/">Browse cell output directories...</option>
+
+# <option title="Configure this worksheet" value="worksheet_settings();">Worksheet settings</option>
 
     def html_menu(self):
         name = self.filename()
@@ -846,9 +905,33 @@ class Worksheet:
     def time_since_last_edited(self):
         return time.time() - self.last_edited()
 
+    def warn_about_other_person_editing(self,username, threshold):
+        """
+        Check to see if another user besides username was the last to
+        edited this worksheet during the last threshold seconds.  If
+        so, return True and that user name.  If not, return False.
+        
+        INPUT:
+           username -- user who would like to edit this file.
+           threshold -- number of seconds, so if there was no activity on
+                   this worksheet for this many seconds, then editing is
+                   considered safe.
+        """
+        if self.time_since_last_edited() < threshold:
+            user = self.last_to_edit()
+            if user != username:
+                return True, user
+        False
+        
+
     def html_time_since_last_edited(self):
         t = self.time_since_last_edited()
-        return convert_seconds_to_meaningful_time_span(t)
+        tm = convert_seconds_to_meaningful_time_span(t)
+        if self.is_published():
+            who = self.publisher()
+        else:
+            who = self.last_to_edit()
+        return '<span class="lastedit">%s ago by %s</span>'%(tm, who)
 
     def html_time_last_edited(self):
         tm = convert_time_to_string(self.last_edited())
@@ -958,7 +1041,7 @@ class Worksheet:
 
         try:
             pid = S._expect.pid
-            print "PID = ", pid
+            #print "PID = ", pid
             os.killpg(pid, 9)
             os.kill(pid, 9)
             S._expect = None
@@ -1003,13 +1086,14 @@ class Worksheet:
         return True
 
     def initialize_sage(self):
-        print "Starting SAGE server for worksheet %s..."%self.name()
+        #print "Starting SAGE server for worksheet %s..."%self.name()
         self.delete_cell_input_files()
         object_directory = os.path.abspath(self.notebook().object_directory())
         S = self.__sage
         try:
-            cmd = '__DIR__="%s/"; DIR=__DIR__;'%self.DIR()
-            cmd += '_support_.init("%s", globals()); '%object_directory
+            cmd = '__DIR__="%s/"; DIR=__DIR__; DATA="%s/"; '%(self.DIR(), os.path.abspath(self.data_directory()))
+            #cmd += '_support_.init("%s", globals()); '%object_directory
+            cmd += '_support_.init(None, globals()); '
             S._send(cmd)   # non blocking
         except Exception, msg:
             print "ERROR initializing compute process:\n"
@@ -1271,8 +1355,8 @@ class Worksheet:
         if username:
             self.record_edit(username)
 
-    def ping(self):
-        self._record_that_we_are_computing()
+    def ping(self, username):
+        self._record_that_we_are_computing(username)
 
     ##########################################################
     # Enqueuing cells
@@ -1666,6 +1750,23 @@ class Worksheet:
             a.append(filename)
         return a
 
+    def load_path(self):
+        D = self.cells_directory()
+        return [self.directory() + '/data/'] + [D + x for x in os.listdir(D)]
+
+    def hunt_file(self, filename):
+        if not os.path.exists(filename):
+            fn = os.path.split(filename)[-1]
+            for D in self.load_path():
+                t = D + '/' + fn
+                if os.path.exists(t):
+                    filename = t
+                    break
+                if os.path.exists(t + '.sobj'):
+                    filename = t + '.sobj'
+                    break
+        return os.path.abspath(filename)
+    
     def _load_file(self, filename, files_seen_so_far, this_file):
         if filename.endswith('.sobj'):
             name = os.path.splitext(filename)[0]
@@ -1674,6 +1775,7 @@ class Worksheet:
 
         if filename in files_seen_so_far:
             t = "print 'WARNING: Not loading %s -- would create recursive load'"%filename
+
         try:
             F = open(filename).read()
         except IOError:
@@ -1702,12 +1804,14 @@ class Worksheet:
             if t.startswith('load '):
                 z = ''
                 for filename in self._normalized_filenames(after_first_word(t)):
+                    filename = self.hunt_file(filename)
                     z += self._load_file(filename, files_seen_so_far, this_file) + '\n'
                 t = z
                 
             elif t.startswith('attach '):
                 z = ''
                 for filename in self._normalized_filenames(after_first_word(t)):
+                    filename = self.hunt_file(filename)                    
                     if not os.path.exists(filename):
                         z += "print 'Error attaching %s -- file not found'\n"%filename
                     else:
@@ -1716,6 +1820,7 @@ class Worksheet:
                 t = z
                     
             elif t.startswith('detach '):
+                filename = self.hunt_file(filename)                                    
                 for filename in self._normalized_filenames(after_first_word(t)):
                     self.detach(filename)
                 t = ''
@@ -1726,6 +1831,7 @@ class Worksheet:
                     filename = self.__filename
                 else:
                     filename = F
+                filename = self.hunt_file(filename)
                 if t.startswith('save'):
                     t = '_support_.save_session("%s")'%filename
                 else:

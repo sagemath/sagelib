@@ -8,7 +8,7 @@
 """
 SAGE Notebook (Twisted Version)
 """
-import os, time
+import os, shutil, time
 
 import bz2
 
@@ -127,7 +127,7 @@ def doc_worksheet():
         W = notebook.get_worksheet_with_name(name)
         W.clear()
     else:
-        W = notebook.create_new_worksheet(name, username, docbrowser=True)
+        W = notebook.create_new_worksheet(name, '_sage_', docbrowser=True)
     W.set_is_doc_worksheet(True)
     return W
 
@@ -176,7 +176,7 @@ class DocLive(resource.Resource):
     addSlash = True
     
     def render(self, ctx):
-        return WorksheetFile('%s/index.html'%DOC, evil_hack)
+        return http.Response(stream=message('nothing to see.'))
     
     def childFactory(self, request, name):
         return WorksheetFile('%s/%s'%(DOC,name))
@@ -249,12 +249,18 @@ class UploadWorksheet(resource.PostableResource):
         else:
             tmp = '%s/tmp.sws'%notebook.directory()
             f = file(tmp,'wb')
+
+            # Blocking issues (?!)
             f.write(ctx.files['fileField'][0][2].read())
             f.close()
 
         try:
             W = notebook.import_worksheet(tmp, username)
             os.unlink(tmp)
+            if ctx.args.has_key('nameField'):
+                new_name = ctx.args['nameField'][0].strip()
+                if new_name:
+                    W.rename(new_name)
         except ValueError, msg:
             s = "Error uploading worksheet '%s'."%msg
             return http.Response(stream = message(s, '/'))
@@ -282,7 +288,8 @@ class WorksheetResource:
         self.worksheet = notebook.get_worksheet_with_filename(name)
         if not self.worksheet.is_published():
             self.worksheet.set_active(username)
-        if username != self.worksheet.owner():
+        owner = self.worksheet.owner()
+        if owner != '_sage_' and username != owner:
             if not self.worksheet.is_published():
                 if not username in self.worksheet.collaborators() and user_type(username) != 'admin':
                     raise RuntimeError, "illegal worksheet access"
@@ -297,19 +304,129 @@ class WorksheetResource:
 # The file is stored on the filesystem.
 #      /home/worksheet_name/data/cell_number/filename
 ##############################################
+class Worksheet_savedatafile(WorksheetResource, resource.PostableResource):
+    def render(self, ctx):
+        if ctx.args.has_key('button_save'):
+            E = ctx.args['textfield'][0]
+            filename = ctx.args['filename'][0]
+            dest = '%s/%s'%(self.worksheet.data_directory(), filename)
+            open(dest,'w').write(E)
+        return http.RedirectResponse('/home/'+self.worksheet.filename())            
+    
+class Worksheet_link_datafile(WorksheetResource, resource.Resource):
+    def render(self, ctx):
+        target_worksheet_filename = ctx.args['target'][0]
+        data_filename = ctx.args['filename'][0]        
+        src = os.path.abspath(self.worksheet.data_directory() + '/' +data_filename)
+        target_ws =  notebook.get_worksheet_with_filename(target_worksheet_filename)
+        target = os.path.abspath(target_ws.data_directory() + '/' + data_filename)
+        if target_ws.owner() != username and not target_ws.user_is_collaborator(username):
+            return http.Response(stream=message("illegal link attempt!"))
+        os.system('ln "%s" "%s"'%(src, target))
+        return http.RedirectResponse('/home/'+target_ws.filename() + '/datafile?name=%s'%data_filename)
+
+
+class Worksheet_upload_data(WorksheetResource, resource.Resource):
+    def render(self, ctx):
+        return http.Response(stream = notebook.html_upload_data_window(self.worksheet, username))
+
+class Worksheet_do_upload_data(WorksheetResource, resource.PostableResource):
+    def render(self, ctx):
+        name = ''
+        if ctx.args.has_key('newField'):
+            newfield = ctx.args['newField'][0].strip()
+        else:
+            newfield = None
+            
+        if ctx.args.has_key('nameField'):
+            name = ctx.args['nameField'][0].strip()
+            
+        url = ctx.args['urlField'][0].strip()
+
+        if not name:
+            name = ctx.files['fileField'][0][0]
+
+        if not name:
+            name = newfield
+            
+        if url and not name:
+            name = os.path.split(url)[-1]
+            
+        dest = '%s/%s'%(self.worksheet.data_directory(), name)
+        
+        if url != '':
+            tmp = get_remote_file(url, verbose=True)
+            shutil.move(tmp, dest)
+        elif newfield:
+            open(dest,'w').close()
+        else:
+            f = file(dest,'wb')
+            f.write(ctx.files['fileField'][0][2].read())
+            f.close()
+        return http.RedirectResponse('/home/'+self.worksheet.filename() + '/datafile?name=%s'%name)
+
+
+##############################################
+# Download or delete a data file
+##############################################
+
+class Worksheet_datafile(WorksheetResource, resource.Resource):
+    def render(self, ctx):
+        dir = os.path.abspath(self.worksheet.data_directory())
+        filename = ctx.args['name'][0]
+        if ctx.args.has_key('action'):
+            if ctx.args['action'][0] == 'delete':
+                path = '%s/%s'%(self.worksheet.data_directory(), filename)
+                os.unlink(path)
+                return http.Response(stream = message("Successfully deleted '%s'"%filename,
+                                                      '/home/' + self.worksheet.filename()))
+        s = notebook.html_download_or_delete_datafile(self.worksheet, username, filename)
+        return http.Response(stream=s)
+
+##############################################
+# Returns an object in the datafile directory
+##############################################
+class Worksheet_data(WorksheetResource, resource.Resource):
+    addSlash = True
+
+    def render(self, ctx):
+        dir = os.path.abspath(self.worksheet.data_directory())
+        if os.path.exists(dir):
+            return static.File(dir)
+        else:
+            return http.Response(stream = message("No data files",'..'))
+        
+    def childFactory(self, request, name):
+        dir = os.path.abspath(self.worksheet.data_directory())
+        return static.File('%s/%s'%(dir, name))
+    
+
 class CellData(resource.Resource):
     def __init__(self, worksheet, number):
         self.worksheet = worksheet
         self.number = number
         
+    def render(self, ctx):
+        return http.Response(stream = message("No data file (%s)"%self.number,'..'))
+
     def childFactory(self, request, name):
         dir = self.worksheet.directory()
         path = '%s/cells/%s/%s'%(dir, self.number, name)
         return static.File(path)
     
-class Worksheet_data(WorksheetResource, resource.Resource):
-    def childFactory(self, request, number):
-        return CellData(self.worksheet, number)
+
+class Worksheet_cells(WorksheetResource, resource.Resource):
+    addSlash = True
+
+    def render(self, ctx):
+        return static.File(self.worksheet.cells_directory())
+    
+    def childFactory(self, request, segment):
+        return static.File(self.worksheet.cells_directory() + segment)
+    #return CellData(self.worksheet, segment)
+
+
+        
 
 ########################################################
 # Use this to wrap a worksheet operation in a confirmation
@@ -351,7 +468,7 @@ class Worksheet_data(WorksheetResource, resource.Resource):
 
 class Worksheet_alive(WorksheetResource, resource.Resource):
     def render(self, ctx):
-        self.worksheet.ping()
+        self.worksheet.ping(username)
         return http.Response(stream = '')
 
 ########################################################
@@ -409,6 +526,7 @@ class Worksheet_edit(WorksheetResource, resource.Resource):
     worksheet with the given filename.
     """
     def render(self, ctx):
+        self.worksheet.save_snapshot(username)
         s = notebook.html_edit_window(self.worksheet, username)
         return http.Response(stream = s)
 
@@ -450,7 +568,7 @@ class Worksheet_edit_published_page(WorksheetResource, resource.Resource):
             return http.Response(stream = message(
                 'You must <a href="/">login first</a> in order to edit this worksheet.'))
         ws = self.worksheet.worksheet_that_was_published()
-        if ws.user_is_collaborator(username) or ws.owner() == username:
+        if ws.owner() == username:
             W = ws
         else:
             W = notebook.copy_worksheet(self.worksheet, username)
@@ -466,7 +584,10 @@ class Worksheet_save(WorksheetResource, resource.PostableResource):
     """
     def render(self, ctx):
         if ctx.args.has_key('button_save'):
-            self.worksheet.edit_save(ctx.args['textfield'][0])
+            E = ctx.args['textfield'][0]
+            self.worksheet.edit_save(E)
+            self.worksheet.record_edit(username)
+            self.worksheet.save_snapshot(username, E)
         return http.RedirectResponse('/home/'+self.worksheet.filename())
 
 
@@ -658,13 +779,23 @@ class Worksheet_set_cell_output_type(WorksheetResource, resource.PostableResourc
 ########################################################
 # The new cell command: /home/worksheet/new_cell?id=number 
 ########################################################
-class Worksheet_new_cell(WorksheetResource, resource.PostableResource):
+class Worksheet_new_cell_before(WorksheetResource, resource.PostableResource):
     """
     Adds a new cell before a given cell.
     """
     def render(self, ctx):
         id = self.id(ctx)        
         cell = self.worksheet.new_cell_before(id)
+        s = encode_list([cell.id(), cell.html(div_wrap=False), id])
+        return http.Response(stream = s)
+    
+class Worksheet_new_cell_after(WorksheetResource, resource.PostableResource):
+    """
+    Adds a new cell after a given cell.
+    """
+    def render(self, ctx):
+        id = self.id(ctx)        
+        cell = self.worksheet.new_cell_after(id)
         s = encode_list([cell.id(), cell.html(div_wrap=False), id])
         return http.Response(stream = s)
     
@@ -823,7 +954,7 @@ class WorksheetRating(WorksheetResource, resource.Resource):
         self.do_rating()
         return http.Response(stream=message("""
         Thank you for rating the worksheet <b><i>%s</i></b>!
-        """%self.worksheet.name(), '/home/' + self.worksheet.filename()))
+        """%self.worksheet.name(), '/pub/'))
     
 class Worksheet_rate1(WorksheetRating):
     def do_rating(self):
@@ -918,7 +1049,11 @@ class Worksheet(WorksheetResource, resource.Resource):
             file = self.worksheet.data_directory() + '/' + op
             if os.path.exists(file):
                 return static.File(file)
-            
+            dir = self.worksheet.cells_directory()
+            for F in os.listdir(dir):
+                h = '%s/%s/%s'%(dir,F,op)
+                if os.path.exists(h):
+                    return static.File(h)
             return NotImplementedWorksheetOp(op, self.worksheet)
 
 def render_worksheet_list(args, pub=False):
@@ -1312,9 +1447,17 @@ class InvalidPage(resource.Resource):
             s += ' You might have to login to view this page.'
         return http.Response(stream = message(s, '/'))
 
+    
+class RedirectLogin(resource.PostableResource):
+    def render(self, ctx):
+        return http.RedirectResponse('/')
+    def childFactory(self, request, name):
+        return RedirectLogin()
+
 class Toplevel(resource.PostableResource):
     child_logout = Logout()
-
+    child_login = RedirectLogin()
+    
     def __init__(self, cookie, _username):
         self.cookie = cookie
         global username, admin
@@ -1324,7 +1467,7 @@ class Toplevel(resource.PostableResource):
             username = _username
 
     def render(self, ctx):
-        return http.Response(stream =  login_template())
+        return http.Response(stream =  login_page_template(notebook.get_accounts()))
 
     def childFactory(self, request, name):
         return LoginResource
@@ -1334,12 +1477,13 @@ setattr(Toplevel, 'child_favicon.ico', static.File(image_path + '/favicon.ico'))
 
 
 
-from sage.server.notebook.template import login_template
+from sage.server.notebook.template import login_page_template
+
 from sage.server.notebook.template import failed_login_template
 
 class LoginResourceClass(resource.Resource):
     def render(self, ctx):
-        return http.Response(stream =  login_template())
+        return http.Response(stream =  login_page_template(notebook.get_accounts()))
     
     def childFactory(self, request, name):
         return LoginResource
@@ -1357,10 +1501,10 @@ class AnonymousToplevel(Toplevel):
     child_javascript = Javascript()
     child_home = PublicWorksheetsHome()
     child_pub = PublicWorksheets()
-    child_login = LoginResource
+    #child_login = LoginResource
 
     def render(self, ctx):
-        return http.Response(stream =  login_template())
+        return http.Response(stream =  login_page_template(notebook.get_accounts()))
 
     def childFactory(self, request, name):
         return InvalidPage()
@@ -1372,8 +1516,9 @@ class FailedToplevel(Toplevel):
         self.problem= problem
         
     def render(self, ctx):
-        return http.Response(stream=failed_login_template(problem=self.problem))
-    
+        return http.Response(stream = login_page_template(notebook.get_accounts()))
+
+
 class UserToplevel(Toplevel):
     addSlash = True
 
@@ -1397,6 +1542,7 @@ class UserToplevel(Toplevel):
     child_send_to_active = SendWorksheetToActive()
     child_notebook_settings = NotebookSettings()
     child_settings = UserSettings()
+    #child_login = RedirectLogin()
     
     def render(self, ctx):
         s = render_worksheet_list(ctx.args)
@@ -1417,7 +1563,9 @@ class AdminToplevel(UserToplevel):
 
 
 def set_cookie(cookie):
-    print "Setting cookie: ", cookie
+    #print "Setting cookie: ", cookie
+    #if not OPEN_MODE:
+        #print "User %s logged in."%username
     return [http_headers.Cookie(SID_COOKIE, cookie)]
 
 notebook = None  # this gets set on startup.
