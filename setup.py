@@ -296,7 +296,6 @@ sagex_ds = Extension('sage.misc.sagex_ds', ['sage/misc/sagex_ds.pyx'])
 #####################################################
 
 ext_modules = [ \
-
     free_module_element, 
     
     complex_double_vector,
@@ -372,6 +371,9 @@ ext_modules = [ \
 
     sagex_ds,
 
+    Extension('sage.media.channels',
+              sources = ['sage/media/channels.pyx']), \
+    
     Extension('sage.ext.sig',
               sources = ['sage/ext/sig.pyx']), \
 
