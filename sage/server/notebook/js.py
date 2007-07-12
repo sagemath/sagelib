@@ -1420,7 +1420,7 @@ function cell_input_key_event(id, e) {
     } else if (key_comment(e)) {
        return comment_cell(cell_input);
     } else if (key_uncomment(e)) {
-       return uncomment_cell(cell_input);
+       return uncomment_cell(cell_input);       
     } else if (key_unindent(e)) { //unfortunately, shift-tab needs to get caught before not-shift tab
        unindent_cell(cell_input);
        return false;
