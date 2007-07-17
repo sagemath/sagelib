@@ -62,7 +62,7 @@ cdef class Morphism(Element):
         if HAS_DICTIONARY(self):
             _dict = self.__dict__
         else:
-            _dict = {}        
+            _dict = {}
         return make_morphism, (self.__class__, self._parent, _dict, self._extra_slots({}))
     
     def _repr_type(self):
