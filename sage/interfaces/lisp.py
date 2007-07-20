@@ -52,9 +52,10 @@ AUTHORS:
 import random
 
 from expect import Expect, ExpectElement, ExpectFunction, FunctionElement
-from sage.misc.misc import verbose
+from sage.misc.misc import verbose, UNAME, is_64bit
 from sage.structure.element import RingElement
 
+is_64bit_linux = is_64bit() and UNAME == "Linux"
 
 class Lisp(Expect):
     def __init__(self, stacksize=10000000,   # 10MB
@@ -73,7 +74,7 @@ class Lisp(Expect):
                         prompt = '\[[0-9]+\]> ',
 
                         # This is the command that starts up your program
-                        command = "clisp -I --silent -on-error abort",
+                        command = "clisp --silent -on-error abort",
 
                         maxread = maxread,
                         server=server,
@@ -110,12 +111,15 @@ class Lisp(Expect):
                 try:
                     s = self.__in_seq + 1
                     pr = '\[%s\]>'%s
-                    #M = self._eval_line(L, wait_for_prompt=pr)
                     M = self._eval_line(L, wait_for_prompt=self._prompt)
-                    i = M.rfind('[C\x1b[C\n')
-                    if i != -1:
-                        M = M[i+len('[C\x1b[C\n'):]
-                    x.append(M)
+                    if is_64bit_linux:
+                        phrase = '[C\x1b[C\n'
+                    else:
+                        phrase = L
+                    i = M.rfind(phrase)
+                    if i > 1:
+                        M = M[i+len(phrase):]
+                    x.append(M.strip())
                     self.__in_seq = s
                 except KeyboardInterrupt:
                     self._keyboard_interrupt()

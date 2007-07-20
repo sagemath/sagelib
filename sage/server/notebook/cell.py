@@ -112,8 +112,8 @@ class Cell(Cell_generic):
         if not id is None:
             self.set_id(id)
 
-    def update_html_output(self):
-        self.__out_html = self.files_html()
+    def update_html_output(self, output=''):
+        self.__out_html = self.files_html(output)
 
     def id(self):
         return self.__id
@@ -285,10 +285,13 @@ class Cell(Cell_generic):
             del self._html_cache
         output = output.replace('\r','')
         if len(output) > MAX_OUTPUT:
+            url = ""
             if not self.computing():
                 file = "%s/full_output.txt"%self.directory()
                 open(file,"w").write(output)
-                html+="<br><a href='/%s' class='file_link'>full_output.txt</a>"%file   
+                url = "<a href='%s/full_output.txt' class='file_link'>full_output.txt</a>"%(
+                    self.url_to_self())
+                html+="<br>" + url
             if output.lstrip()[:len(TRACEBACK)] != TRACEBACK:
                 output = 'WARNING: Output truncated!\n' + output[:MAX_OUTPUT/2] + '...\n\n...' + output[-MAX_OUTPUT/2:]
             else:
@@ -328,7 +331,7 @@ class Cell(Cell_generic):
     
     def process_cell_urls(self, x):
         end = '?%d"'%self.version()
-        begin = '"/home/%s/cells/%s'%(self.worksheet_filename(), self.id())
+        begin = self.url_to_self()
         for s in re_cell.findall(x) + re_cell_2.findall(x):
             x = x.replace(s,begin + s[7:-1] + end)
         return x
@@ -489,7 +492,8 @@ class Cell(Cell_generic):
         #self._html_cache[key] = s
         return s
 
-    def html_in(self, do_print=False, ncols=80):
+    def html_in(self, do_print=False, ncols=200):
+        s = ''
         id = self.__id
         t = self.__in.rstrip()
 
@@ -505,7 +509,8 @@ class Cell(Cell_generic):
 ##                 s = '<pre class="cell_input">%s</pre>'%(self.__in.replace('<','&lt;'))
 ##                 return s
 
-        s = self.html_new_cell_before()
+        if not do_print:
+            s += self.html_new_cell_before()
 
         if do_print:
             ncols = 70
@@ -545,7 +550,14 @@ class Cell(Cell_generic):
                  </div>
               """%(self.id(), self.id())
 
-    def files_html(self, out=''):
+    def url_to_self(self):
+        try:
+            return self.__url_to_self
+        except AttributeError:
+            self.__url_to_self = '/home/%s/cells/%s'%(self.worksheet_filename(), self.id())
+            return self.__url_to_self
+
+    def files_html(self, out):
         dir = self.directory()
         D = os.listdir(dir)
         D.sort()
@@ -559,8 +571,9 @@ class Cell(Cell_generic):
         for F in D:
             if 'cell://%s'%F in out:
                 continue
-            url = "/home/%s/cells/%s/%s"%(self.worksheet_filename(), self.id(), F)
-            if F.endswith('.png') or F.endswith('.bmp') or F.endswith('.jpg'):
+            url = "%s/%s"%(self.url_to_self(), F)
+            if F.endswith('.png') or F.endswith('.bmp') or \
+                   F.endswith('.jpg') or F.endswith('.gif'):
                 images.append('<img src="%s?%d">'%(url, self.version()))
             elif F.endswith('.svg'):
                 images.append('<embed src="%s" type="image/svg+xml" name="emap">'%url)

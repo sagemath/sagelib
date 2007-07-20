@@ -1,4 +1,4 @@
-"""
+"""nodoctest
 A Worksheet.
 
 A worksheet is embedded in a webpage that is served by the SAGE server.
@@ -53,6 +53,7 @@ WARN_THRESHOLD = 100
 # error line below that looks like this:
 #         cmd += 'print "\\x01r\\x01e%s"'%self.synchro()
 SC='\x01'
+#SC="__SAGE__"
 SAGE_BEGIN=SC+'b'
 SAGE_END=SC+'e'
 SAGE_ERROR=SC+'r'
@@ -304,13 +305,22 @@ class Worksheet:
             raise TypeError, "W must be a worksheet"
         self.__worksheet_came_from = W
 
-    def rate(self, x, username):
-        self.ratings().append((username, x))
-        del self.__rating
+    def rate(self, x, comment, username):
+        r = self.ratings()
+        for i in range(len(r)):
+            if r[i][0] == username:
+                r[i] = (username, x, comment)
+                return
+        else:
+            r.append((username, x, comment))
+##         try:
+##             del self.__rating
+##         except AttributeError:
+##             pass
 
     def is_rater(self, username):
         try:
-            return username in [y for y, _ in self.ratings()]
+            return username in [x[0] for x in self.ratings()]
         except TypeError:
             return False
 
@@ -322,16 +332,29 @@ class Worksheet:
             self.__ratings = v
             return v
 
+    def html_ratings_info(self):
+        ratings = self.ratings()
+        lines = []
+        for z in sorted(ratings):
+            if len(z) == 2:
+                person, rating = z
+                comment = ''
+            else:
+                person, rating, comment = z
+            lines.append('<tr><td>%s</td><td align=center>%s</td><td>%s</td></tr>'%(
+                person, rating, '&nbsp;' if not comment else comment))
+        return '\n'.join(lines)
+
     def rating(self):
-        try:
-            return self.__rating
-        except AttributeError:
-            r = [x for _, x in self.ratings()]
+##         try:
+##             return self.__rating
+##         except AttributeError:
+            r = [x[1] for x in self.ratings()]
             if len(r) == 0:
-                rating = 0    # means "not rated"
+                rating = -1    # means "not rated"
             else:
                 rating = float(sum(r))/float(len(r))
-            self.__rating = rating
+#            self.__rating = rating
             return rating
         
     ##########################################################
@@ -462,7 +485,8 @@ class Worksheet:
             ' '.join(self.collaborators()) + ' '.join(self.viewers()) + ' ' + self.publisher() + \
             ' '.join(self.attached_data_files())
         E = E.lower()
-        for word in search.split():
+        words = split_search_string_into_keywords(search)
+        for word in words:
             if not word.lower() in E:
                 return False
         return True
@@ -660,6 +684,7 @@ class Worksheet:
                     if id in used_ids:
                         # In this case don't reuse, since ids must be unique.
                         id = next_available_id(ids)
+                        ids.add(id)
                     html = True
                 else:
                     id = next_available_id(ids)
@@ -672,15 +697,19 @@ class Worksheet:
                 C.set_input_text(input)
                 C.set_output_text(output, '')
                 if html:
-                    C.update_html_output()
+                    C.update_html_output(output)
                 cells.append(C)
                 
         if len(cells) == 0:   # there must be at least one cell.
             cells = [self._new_cell()]
+        elif isinstance(cells[-1], TextCell):
+            cells.append(self._new_cell())
 
+        self.__cells = cells
+
+        # This *depends* on self.__cells being set!!
         self.set_cell_counter()
             
-        self.__cells = cells
 
 
     ##########################################################
@@ -727,7 +756,7 @@ class Worksheet:
         s += '<a id="worksheet_title" class="worksheet_title" onClick="rename_worksheet(); return false;" title="Click to rename this worksheet">%s</a>'%(name.replace('<','&lt;'))
         s += '<br>' + self.html_time_last_edited()
         if warn and username != 'guest' and not self.is_doc_worksheet():
-            s += '&nbsp;&nbsp;<span class="pingdown">Conflict WARNING!</span>'
+            s += '&nbsp;&nbsp;<span class="pingdown">(Someone else is viewing this worksheet)</span>'
         s += '</div>'
 
         return s
@@ -745,7 +774,7 @@ class Worksheet:
         if self.is_doc_worksheet():
             return ''
         return """
-        <button title="Save changes" onClick="save_worksheet();">Save</button><button title="Save changes and close window" onClick="save_worksheet_and_close();">Save & close</button><button title="Discard changes to this worksheet" onClick="worksheet_discard();">Discard changes</button>
+        <button name="button_save" title="Save changes" onClick="save_worksheet();">Save</button><button title="Save changes and close window" onClick="save_worksheet_and_close();" name="button_save">Save & close</button><button title="Discard changes to this worksheet" onClick="worksheet_discard();">Discard changes</button>
         """
 
     def html_share_publish_buttons(self, select=None):
@@ -773,6 +802,7 @@ class Worksheet:
 
     def html_data_options_list(self):
         D = self.attached_data_files()
+        D.sort()
         x = '\n'.join(['<option value="datafile?name=%s">%s</option>'%(nm,nm) for nm in D])
         return x
 
@@ -1086,6 +1116,7 @@ class Worksheet:
         self.delete_cell_input_files()
         object_directory = os.path.abspath(self.notebook().object_directory())
         S = self.__sage
+        self._enqueue_auto_cells()
         try:
             cmd = '__DIR__="%s/"; DIR=__DIR__; DATA="%s/"; '%(self.DIR(), os.path.abspath(self.data_directory()))
             #cmd += '_support_.init("%s", globals()); '%object_directory
@@ -1112,7 +1143,6 @@ class Worksheet:
             pass
         self.__sage = one_prestarted_sage(server = self.notebook().get_server(),
                                           ulimit = self.notebook().get_ulimit())
-        verbose("Initializing SAGE.")
         os.environ['PAGER'] = 'cat'
         self.__next_block_id = 0
         self.initialize_sage()
@@ -1123,7 +1153,7 @@ class Worksheet:
             return
 
         if self.__comp_is_running:
-            self._record_that_we_are_computing()
+            #self._record_that_we_are_computing()
             return
 
         C = self.__queue[0]
@@ -1247,7 +1277,7 @@ class Worksheet:
             out = self._process_output(out)
             if not C.introspect():
                 C.set_output_text(out, '')
-            self._record_that_we_are_computing()
+            #self._record_that_we_are_computing()
             return 'w', C
 
         # Finished a computation.
@@ -1314,7 +1344,6 @@ class Worksheet:
         self.__sage = initialized_sage(server = self.notebook().get_server(),
                                        ulimit = self.notebook().get_ulimit())
         self.initialize_sage()
-        self._enqueue_auto_cells()
         self.start_next_comp()
         
 
@@ -1332,7 +1361,7 @@ class Worksheet:
         their browser) is also considered idle, even if code is running. 
         """
         if self.time_idle() > timeout:
-            print "Quitting idle or ignored worksheet process for '%s'."%self.name()
+            print "Quitting ignored worksheet process for '%s'."%self.name()
             self.quit()
 
     def time_idle(self):
@@ -1372,18 +1401,11 @@ class Worksheet:
 
 
     def enqueue(self, C, username=None):
-        self._record_that_we_are_computing(username)
+        #self._record_that_we_are_computing(username)
         if not isinstance(C, Cell):
             raise TypeError
         if C.worksheet() != self:
             raise ValueError, "C must be have self as worksheet."
-        # If the SAGE server hasn't started and the queue is empty,
-        # first enqueue the auto cells:
-        if len(self.__queue) == 0:
-            try:
-                self.__sage            
-            except AttributeError:
-                self._enqueue_auto()
             
         # Now enqueue the requested cell.
         if not (C in self.__queue):
@@ -2142,7 +2164,7 @@ def dictify(s):
 
 def next_available_id(v):
     """
-    Return smallest positive integer not in v.
+    Return smallest nonnegative integer not in v.
     """
     i = 0
     while i in v:
@@ -2174,3 +2196,43 @@ def convert_seconds_to_meaningful_time_span(t):
 
 def convert_time_to_string(t):
     return time.strftime('%B %d, %Y %I:%M %p', time.localtime(float(t)))
+
+
+def split_search_string_into_keywords(s):
+    """
+    The point of this function is to allow for searches like this:
+
+          "ws 7" foo bar  Modular  '"the" end'
+
+    i.e., where search terms can be in quotes and the different quote
+    types can be mixed.
+    
+    INPUT:
+        s -- a string
+
+    OUTPUT:
+        list -- a list of strings
+    """
+    ans = []
+    while len(s) > 0:
+        word, i = _get_next(s, '"')
+        if i != -1:
+            ans.append(word)
+            s = s[i:]
+        word, j = _get_next(s, "'")
+        if j != -1:
+            ans.append(word)
+            s = s[j:]
+        if i == -1 and j == -1:
+            break
+    ans.extend(s.split())
+    return ans
+
+
+def _get_next(s, quote='"'):
+    i = s.find(quote)
+    if i != -1:
+        j = s[i+1:].find(quote)
+        if j != -1:
+            return s[i+1:i+1+j].strip(), i+1+j
+    return None, -1

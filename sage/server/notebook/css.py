@@ -1,13 +1,14 @@
+"""nodoctest
+SAGE Notebook CSS
+"""
+
+
 #############################################################################
 #       Copyright (C) 2007 William Stein <wstein@gmail.com>
 #  Distributed under the terms of the GNU General Public License (GPL)
 #  The full text of the GPL is available at:
 #                  http://www.gnu.org/licenses/
 #############################################################################
-
-"""
-SAGE Notebook CSS
-"""
 
 import os
 
@@ -1299,7 +1300,6 @@ span.username {
 }
 
 span.ratingmsg {
-  font-family: sans-serif;
   color: #112abb;
   padding:0.6ex;
   font-size:14px;
@@ -1322,6 +1322,13 @@ a.usercontrol {
 a.usercontrol:hover {
   cursor:pointer;
 }
+
+span.usercontrol {
+  color: #112abb;
+  padding:0.6ex;
+  font-size:14px;
+}
+
 
 a.boldusercontrol {
   color: #112abb;

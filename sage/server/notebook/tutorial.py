@@ -1,3 +1,6 @@
+"""nodoctest
+"""
+
 #############################################################################
 #       Copyright (C) 2006, 2007 William Stein <wstein@gmail.com>
 #  Distributed under the terms of the GNU General Public License (GPL)
@@ -360,6 +363,8 @@ notebook_help = [
                  'Type ? immediately after the object or function and press tab.'),
                 ('Source Code',
                  'Put ?? after the object and press tab.'),
+                ('Indenting Blocks',
+                 'Highlight text and press > to indent it all and < to unindent it all (works in Safari and Firefox).  In Firefox you can also press tab and shift-tab.'),
                 ('Insert New Cell',
                  'Put the mouse between an output and input until the horizontal line appears and click.  If you press Alt-Enter in a cell, the cell is evaluated and a new cell is inserted after it.'),
                 ('Delete Cell',

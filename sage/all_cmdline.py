@@ -12,7 +12,7 @@ sage_mode = 'cmdline'
 try:
 
     from sage.all import *
-    from sage.calculus.predefined import *
+    from sage.calculus.predefined import x
     preparser(on=True)
 
 except ValueError, msg:
@@ -25,3 +25,8 @@ except ValueError, msg:
 
 
 
+def _init_cmdline(globs):
+    from sage.misc.inline_fortran import InlineFortran
+    fortran = InlineFortran(globs)
+    globs['fortran'] = fortran
+    

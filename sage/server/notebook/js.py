@@ -1,4 +1,4 @@
-r"""
+r"""nodoctest
 Javascript (AJAX) Component of SAGE Notebook
 
 AUTHORS:
@@ -178,7 +178,7 @@ var update_error_delta = 1024;
 var update_normal_delta = 512; 
 var cell_output_delta = update_normal_delta;
 
-var server_ping_time = 10000;  /* Is once very 10 seconds way too fast?  Is it just right?  */
+var server_ping_time = 30000;  /* Is once very 30 seconds way too fast?  Is it just right?  */
 
 
 var SEP = '___S_A_G_E___';   // this had better be the same as in the server
@@ -210,7 +210,8 @@ var non_word = "[^a-zA-Z0-9_]"; //finds any character that doesn't belong in a v
 var command_pat = "([a-zA-Z_][a-zA-Z._0-9]*)$"; //identifies the command at the end of a string 
 var function_pat = "([a-zA-Z_][a-zA-Z._0-9]*)\\([^()]*$"; 
 var one_word_pat = "([a-zA-Z_][a-zA-Z._0-9]*)";
-
+var unindent_pat = "^\\s{0,4}(.*)$";
+var uncomment_pat = "^([^\\#]*)\\#{0,1}(.*)$";  //the # doesn't need a slash for now... but let's give it one anyway
 var whitespace_pat = "(\\s*)";
 
 try{
@@ -219,6 +220,8 @@ try{
   function_pat = new RegExp(function_pat);
   one_word_pat = new RegExp(one_word_pat);
   whitespace_pat = new RegExp(whitespace_pat);
+  unindent_pat = new RegExp(unindent_pat);
+  uncomment_pat = new RegExp(uncomment_pat);
 } catch(e){}
 
 var after_cursor, before_cursor, before_replacing_word;
@@ -705,6 +708,11 @@ function copy_worksheet() {
     window.location.replace(worksheet_command("copy"));
 }
 
+function rate_worksheet(rating) {
+    comment = get_element("rating_comment").value;
+    window.location.replace(worksheet_command("rate?rating="+rating + "&comment="+escape0(comment)));
+}
+
 function download_worksheet(base_filename) {
     open(worksheet_command("download/" + base_filename + '.sws'));
 }     
@@ -761,14 +769,20 @@ function rename_worksheet() {
    var new_worksheet_name = prompt('Enter new worksheet name:',worksheet_name);
    if (new_worksheet_name == null) return;
    var T = get_element("worksheet_title");
-   T.innerHTML = new_worksheet_name;
+   var set_name;
+   if (new_worksheet_name.length >= 30) {
+       set_name = new_worksheet_name.slice(0,30) + ' ...';
+   } else {
+       set_name = new_worksheet_name;
+   }
+   T.innerHTML = set_name;
    worksheet_name = new_worksheet_name;
    async_request(worksheet_command('rename'), null, 'name='+escape0(new_worksheet_name));
 }
 
-function entsub(event) {
+function entsub_ws(event, typ) {
   if (event && event.which == 13)
-     search_worksheets();
+     search_worksheets(typ);
   else
      return true;
 }
@@ -780,9 +794,14 @@ function search_worksheets(typ) {
     window.location.replace(url);
 }
 
-function go_system_select(theform) {
+function go_system_select(theform, original_system) {
    with(theform) {
-      system_select(options[selectedIndex].value);
+      var system = options[selectedIndex].value;
+      if (confirm("Are you sure you wish to change the evaluation system to " + system + "? All cells will be evaluted using " + system + " until you change the system back.")) {
+          system_select(system);
+      } else {
+          options[original_system].selected = 1;
+      }
    }
 }
 
@@ -825,21 +844,13 @@ function add_worksheet_callback(status,response_text) {
 }
 
 function delete_worksheet(name) {
-    async_request('/delete_worksheet', delete_worksheet_callback, 'name='+name)
+    async_request('/send_to_trash', delete_worksheet_callback, 'filename='+escape0(name))
 }
 
 function delete_worksheet_callback(status, response_text) {
     if (status == "success") {
-        /* expect response_text to encode a pair consisting of
-           the HTML for the updated worksheet list and the
-           id of a worksheet to switch to in case we just
-           deleted the current worksheet. */
-        var X = response_text.split(SEP);
-        if (X.length <= 1) {
-            alert("Possible failure deleting worksheet.  " + response_text);
-        } else {
-            set_worksheet_list(X[0]);
-        }
+        window.location.replace("/?typ=trash");
+         
     } else {
         alert("Possible failure deleting worksheet.");
     }
@@ -984,6 +995,10 @@ function sync_active_cell_list_callback(status, response_text) {
 // 
 ///////////////////////////////////////////////////////////////////
 
+function refresh() {
+    window.location.replace(location.href);   
+}
+
 function go_option(theform) {
    with(theform) {
       eval(options[selectedIndex].value);
@@ -994,6 +1009,17 @@ function go_option(theform) {
 function link_datafile(target_worksheet_filename, filename) {
    open(worksheet_command("link_datafile?filename=" + escape0(filename) +
          "&target="+escape0(target_worksheet_filename)));
+}
+
+
+function list_rename_worksheet(filename, curname) {
+   var new_name = prompt('Enter new worksheet name:', curname);   
+   async_request('/home/' + filename + '/' + 'rename',
+            list_rename_worksheet_callback, 'name='+ escape0(new_name));
+}
+
+function list_rename_worksheet_callback(status, response_text) {
+   refresh();
 }
 
 
@@ -1391,10 +1417,20 @@ function cell_input_key_event(id, e) {
     } else if (key_send_input_newcell(e)) {
        evaluate_cell(id, 1);
        return false;
-    } else if (key_request_introspections(e)) {
+    } else if (key_comment(e)) {
+       return comment_cell(cell_input);
+    } else if (key_uncomment(e)) {
+       return uncomment_cell(cell_input);       
+    } else if (key_unindent(e)) { //unfortunately, shift-tab needs to get caught before not-shift tab
+       unindent_cell(cell_input);
+       return false;
+    } else if (key_request_introspections(e) && cell_input.selectionStart == cell_input.selectionEnd) {
        // command introspection (tab completion, ?, ??)
        evaluate_cell(id, 2);
        focus_delay(id,true);
+       return false;
+    } else if (key_indent(e)) {
+       indent_cell(cell_input);
        return false;
     } else if (key_interrupt(e)) {
        interrupt();
@@ -1497,6 +1533,83 @@ function text_cursor_split(input) {
     a = input.value.substr(b.length);
     return new Array(b,a);
 }
+
+function indent_cell(input) {
+    if(browser_ie) {
+    } else {
+        var start = 1+input.value.lastIndexOf("\n", input.selectionStart);
+        var a = input.value.substring(0, start);
+        var b = input.value.substring(start, input.selectionEnd);
+        var c = input.value.substring(input.selectionEnd);
+        var lines = b.split("\n");
+        for(var i = 0; i < lines.length; i++)
+            lines[i] = "    "+lines[i];
+        b = lines.join("\n");
+        input.value = a+b+c;
+        input.selectionStart = a.length;
+        input.selectionEnd = a.length + b.length;;
+    }
+}
+
+function unindent_cell(input) {
+    if(browser_ie) {
+    } else {
+        var start = 1+input.value.lastIndexOf("\n", input.selectionStart);
+        var a = input.value.substring(0, start);
+        var b = input.value.substring(start, input.selectionEnd);
+        var c = input.value.substring(input.selectionEnd);
+        var lines = b.split("\n");
+        for(var i = 0; i < lines.length; i++)
+            lines[i] = unindent_pat.exec(lines[i])[1];  //square brackets pull the captured pattern
+        b = lines.join("\n");
+        input.value = a+b+c;
+        input.selectionStart = a.length;
+        input.selectionEnd = a.length + b.length;;
+    }
+}
+
+function comment_cell(input) {
+    if(browser_ie) {
+    } else {
+        if(input.selectionStart == input.selectionEnd) return true;
+        var start = 1+input.value.lastIndexOf("\n", input.selectionStart);
+        var a = input.value.substring(0, start);
+        var b = input.value.substring(start, input.selectionEnd);
+        var c = input.value.substring(input.selectionEnd);
+        var lines = b.split("\n");
+        for(var i = 0; i < lines.length; i++)
+            lines[i] = "#"+lines[i];
+        b = lines.join("\n");
+        input.value = a+b+c;
+        input.selectionStart = a.length;
+        input.selectionEnd = a.length + b.length;;
+    }
+    return false;
+}
+
+function uncomment_cell(input) {
+    if(browser_ie) {
+    } else {
+        if(input.selectionStart == input.selectionEnd) return true;
+        var start = 1+input.value.lastIndexOf("\n", input.selectionStart);
+        var a = input.value.substring(0, start);
+        var b = input.value.substring(start, input.selectionEnd);
+        var c = input.value.substring(input.selectionEnd);
+        var lines = b.split("\n");
+        for(var i = 0; i < lines.length; i++){
+            m = uncomment_pat.exec(lines[i]);
+            lines[i] = m[1]+m[2];
+        }
+        b = lines.join("\n");
+        input.value = a+b+c;
+        input.selectionStart = a.length;
+        input.selectionEnd = a.length + b.length;;
+    }
+    return false;
+}
+
+
+
 
 function worksheet_command(cmd) {
    return ('/home/' + worksheet_filename + '/' + cmd);

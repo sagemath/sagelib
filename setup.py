@@ -63,26 +63,6 @@ include_dirs = ['%s/include'%SAGE_LOCAL, '%s/include/python'%SAGE_LOCAL, \
 
 #####################################################    
         
-ec =    Extension('sage.libs.ec.ec',
-              sources = ["sage/libs/ec/ec.pyx"] +  \
-                        ["sage/libs/ec/%s"%s for s in \
-                         ["analrank.c", "apcompute.c", "arderivs.c",
-                          "arintern.c", "arith.c", "artwists.c",
-                          "arutil.c", "checkit.c", "degphi.c", 
-                          "diskio.c", "docurve.c", "dodisk.c", 
-                          "equation.c", "exotic.c", "fixit.c", 
-                          "iisog2.c", "iisog3.c", "isog.c", "isog2.c",
-                          "isog23.c", "isog24.c", "isog3.c", "isog5.c",
-                          "isog52.c", "isog713.c", "isogNprime.c",
-                          "isoggen.c", "isogsort.c", "isogx0.c", 
-                          "isogx0branch.c", "isogx0branch1.c", 
-                          "isogx0branch2.c", "isogx0branch3.c",
-                          "isogx0branch4.c", "isogx0branch5.c", 
-                          "isogx0branch6.c", "isogx0getd.c", 
-                          "isogx0period.c", "readit.c",
-                          "special.c", "util.c"]], 
-              libraries = ["pari", "m"])
-
 hanke = Extension(name = "sage.libs.hanke.hanke",
               sources = ["sage/libs/hanke/hanke.pyx",
                          "sage/libs/hanke/wrap.cc",
@@ -316,7 +296,6 @@ sagex_ds = Extension('sage.misc.sagex_ds', ['sage/misc/sagex_ds.pyx'])
 #####################################################
 
 ext_modules = [ \
-
     free_module_element, 
     
     complex_double_vector,
@@ -328,7 +307,6 @@ ext_modules = [ \
 
     #vector_rational_sparse,
 
-    ec, 
     pari, 
 
     mwrank, 
@@ -393,6 +371,9 @@ ext_modules = [ \
 
     sagex_ds,
 
+    Extension('sage.media.channels',
+              sources = ['sage/media/channels.pyx']), \
+    
     Extension('sage.ext.sig',
               sources = ['sage/ext/sig.pyx']), \
 
@@ -612,7 +593,9 @@ ext_modules = [ \
               libraries = ['gmp']
               ), \
 
-
+    Extension('sage.graphs.graph_isom',
+              ['sage/graphs/graph_isom.pyx']
+              ), \
                             
     ]
     
@@ -891,13 +874,12 @@ setup(name        = 'sage',
                      'sage.libs.linbox',
                      'sage.libs.mwrank',
                      'sage.libs.ntl',
-                     'sage.libs.ec',
                      'sage.libs.pari',
                      'sage.libs.singular',
                      
                      'sage.matrix',
 #                     'sage.matrix.padics',
-                     
+                     'sage.media',
                      'sage.misc',
                      
                      'sage.modules',

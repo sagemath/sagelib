@@ -1,3 +1,7 @@
+"""nodoctest
+Keep out the bad guys.
+"""
+
 ##################################################################### 
 # Copyright (C) 2007 Alex Clemesha <clemesha@gmail.com>
 # 
@@ -188,7 +192,7 @@ class MySessionWrapper(object):
         d.addErrback(self._loginFailure, request, segments, "Incorrect login.")
         return d
 
-    def _loginFailure(self, avatar, request, segments, reason): 
+    def _loginFailure(self, avatar, request, segments, reason):
         return self, ()
 
     def _delegate(self, request, segments):
