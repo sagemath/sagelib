@@ -134,3 +134,4 @@ class RingHomset_quo_ring(RingHomset_generic):
         if x.parent() == self:
             return morphism.RingHomomorphism_from_quotient(self, x._phi())
         raise TypeError
+        
