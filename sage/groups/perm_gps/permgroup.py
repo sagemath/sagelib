@@ -1353,10 +1353,10 @@ class PermutationGroup_generic(group.FiniteGroup):
         return PermutationGroupMorphism_im_gens(self, right, srcs, dsts)
 
     def is_isomorphic(self, right):
-        """                                                                                            
-        Return True if the groups are isomorphic. If mode="verbose" then                               
-        an isomorphism is printed.                                                                     
-                                                                                                       
+        """
+        Return True if the groups are isomorphic. If mode="verbose" then
+        an isomorphism is printed.
+
         INPUT:
             self -- this group
             right -- a permutation group
@@ -1376,9 +1376,9 @@ class PermutationGroup_generic(group.FiniteGroup):
         """
         if not isinstance(right, PermutationGroup_generic):
             raise TypeError, "right must be a permutation group"
-        G = self._gap_init_()
-        H = right._gap_init_()
-        return gap.eval("IsomorphismGroups( %s, %s )"%(G,H)) != "fail"
+        G = self._gap_()
+        H = right._gap_()
+        return gap.eval("IsomorphismGroups( %s, %s )"%(G.name(),H.name())) != "fail"
 
     def is_monomial(self):
         """
