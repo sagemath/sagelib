@@ -1267,7 +1267,7 @@ def search_tree(G, Pi, lab=True, dig=False, dict=False, proof=False, verbosity=0
     for i from 0 <= i < n:
         _W[i] = _gamma + n + n*i
         M[i] = _gamma + n*( 1 + n + 2*L + i )
-        
+    
     # allocate GMP ints
     for i from 0 <= i < n+2:
         mpz_init(Lambda_mpz[i])
@@ -1369,7 +1369,7 @@ def search_tree(G, Pi, lab=True, dig=False, dict=False, proof=False, verbosity=0
             _alpha[1] = -1
 
             i = _nu._refine_by_square_matrix(k, _alpha, n, M, _dig)
-
+            
             # add one, then multiply by the invariant
             mpz_add_ui(Lambda_mpz[k], Lambda_mpz[k-1], 1)
             mpz_mul_si(Lambda_mpz[k], Lambda_mpz[k], i)
@@ -1504,11 +1504,13 @@ def search_tree(G, Pi, lab=True, dig=False, dict=False, proof=False, verbosity=0
                          # rho
             # if we are not searching for a canonical label, there is nothing
             # to do here
-            if (not lab) or (qzb < 0): state = 6; continue
+            if (not lab) or (qzb < 0):
+                state = 6; continue
             
             # if Lambda[k] > zb[k] or nu is shorter than rho, then we have
             # found an improvement for rho
-            if (qzb > 0) or (k < k_rho): state = 9; continue
+            if (qzb > 0) or (k < k_rho):
+                state = 9; continue
 
             # if G(nu) > G(rho), goto 9
             # if G(nu) < G(rho), goto 6
@@ -1516,8 +1518,10 @@ def search_tree(G, Pi, lab=True, dig=False, dict=False, proof=False, verbosity=0
             m1 = _nu._enumerate_graph_from_discrete(M, n)
             m2 = _rho._enumerate_graph_from_discrete(M, n)
             
-            if m1 > m2: state = 9; continue
-            if m1 < m2: state = 6; continue
+            if m1 > m2:
+                state = 9; continue
+            if m1 < m2:
+                state = 6; continue
 
             _rho._get_permutation_from(_nu, _gamma)
             if verbosity > 3:
