@@ -1,4 +1,4 @@
-"""nodoctest
+"""
 Jacobian of a General Hyperelliptic Curve
 """
 
@@ -52,8 +52,8 @@ class HyperellipticJacobian_generic(Jacobian_generic):
 	sage: C(QQ)
 	Set of Rational Points of Hyperelliptic Curve over Rational Field defined by v^2 + u*v = u^5 - u + 1
 	sage: K.<t> = NumberField(x^2-2)                     
-	sage: C(K)    
-	Set of Rational Points over Number Field in t with defining polynomial x^2 - 2 of Hyperelliptic Curve over Rational Field defined by v^2 + u*v = u^5 - u + 1
+	sage: C(K)
+        Set of Rational Points of Closed subscheme of Projective Space of dimension 2 over Number Field in t with defining polynomial x^2 - 2 defined by: -x0^5 + x0*x1*x2^3 + x1^2*x2^3 + x0*x2^4 - x2^5
 	sage: P = C(QQ)(0,1,1); P                            
 	(0 : 1 : 1) 
 	sage: P == C(0,1,1)                                  
