@@ -17,7 +17,6 @@ from sage.matrix.constructor import matrix
 
 class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_generic):
 
-
 # The functions below were prototyped at the 2007 Arizona Winter School by
 # Robert Bradshaw and Ralf Gerkmann, working with Miljan Brakovevic and 
 # Kiran Kedlaya
@@ -144,13 +143,18 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
             M_frob, forms = self._frob_calc
         except AttributeError:
             M_frob, forms = self._frob_calc = monsky_washnitzer.matrix_of_frobenius_hyperelliptic(self)
-            prof("changing rings")
-            # another hack due to slow padics
-            forms = [f.change_ring(self.base_ring()) for f in forms]
-            self._frob_calc = (M_frob, forms)
 
         prof("eval f")
-        L = [f(TP[0], TP[1]) - f(TQ[0], TQ[1]) for f in forms]
+        # another hack due to slow padics
+        R = forms[0].base_ring()
+        try:
+            prof("eval f %s"%R)
+            L = [f(R(TP[0]), R(TP[1])) - f(R(TQ[0]), R(TQ[1])) for f in forms]
+        except ValueError:
+            prof("changing rings")
+            forms = [f.change_ring(self.base_ring()) for f in forms]
+            prof("eval f %s"%self.base_ring())
+            L = [f(TP[0], TP[1]) - f(TQ[0], TQ[1]) for f in forms]
         b = 2*V(L)
 #        print "b =", b
         
