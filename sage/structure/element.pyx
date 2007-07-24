@@ -828,7 +828,7 @@ cdef class ModuleElement(Element):
         return left._lmul_nonscalar_c_impl(right)
     
     cdef ModuleElement _rmul_nonscalar_c(right, left):
-        if HAS_DICTIONARY(right): 
+        if HAS_DICTIONARY(right):
             return right._rmul_nonscalar(left)
         else:
             return right._rmul_nonscalar_c_impl(left)
