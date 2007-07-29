@@ -106,7 +106,7 @@ class Notebook(SageObject):
         self.add_user('pub', '', '', account_type='user', force=True)
         self.add_user('_sage_', '', '', account_type='user', force=True)
         self.add_user('guest', '', '', account_type='guest', force=True)
-        self.add_user('root', passwd, '', account_type='admin', force=True)
+        self.add_user('admin', passwd, '', account_type='admin', force=True)
 
     def user_exists(self, username):
         return username in self.users()
@@ -879,7 +879,7 @@ class Notebook(SageObject):
         s = """
         <span class="banner">
         <table width=100%%><tr><td>
-        <a class="banner" href="http://www.sagemath.org"><img align="top" src="/images/sagelogo.png" alt="SAGE"> Notebook</a></td><td><span class="ping" id="ping">Checking for SAGE server...</span></td>
+        <a class="banner" href="http://www.sagemath.org"><img align="top" src="/images/sagelogo.png" alt="SAGE"> Notebook</a></td><td><span class="ping" id="ping">Searching for SAGE server...</span></td>
         </tr></table>
         </span>
         """
@@ -1508,6 +1508,7 @@ class Notebook(SageObject):
         head, body = self.html_worksheet_page_template(worksheet, username, 'View plain text', select="text")
 
         t = worksheet.plain_text(prompts=True, banner=False)
+        t = t.replace('<','&lt;')
         body += """
         <pre class="plaintext" id="cell_intext" name="textfield">%s
         </pre>
