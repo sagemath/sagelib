@@ -305,32 +305,3 @@ class BruhatSn(BruhatInterval):
                         w = tuple([permutation[self._swapitch(i,j,k)] for k in range(0,permutation_length)])
                         self._add_above(w, height+1, max_height, new_node)
         
-        
-def height_unknown(G):
-    """
-    Helper function to determine height for plotting.
-    """
-    h = {}
-    for v in G:
-        if G.in_degree(v) == 0:
-            break
-    i = 0
-    h = recurse_unknown(G, i, v, h)
-    return h
-
-def recurse_unknown(G, i, v, h, seen=None):
-    """
-    Helper function to determine height for plotting.
-    """
-    if seen is None: seen = []
-    seen.append(v)
-    try:
-        h[i].append(v)
-    except:
-        h[i] = [v]
-    for a, b, _ in G.outgoing_arc_iterator(v):
-        if b not in seen:
-            h = recurse_unknown(G, i+1, b, h, seen)
-    return h    
-
-        
