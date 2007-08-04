@@ -52,9 +52,9 @@ REFERENCES:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.groups.perm_gps.permgroup import PermutationGroup,PermutationGroup_generic, SymmetricGroup, PermutationGroup_subgroup
+from sage.groups.perm_gps.permgroup import PermutationGroup,PermutationGroup_generic, PermutationGroup_subgroup
+from sage.groups.perm_gps.permgroup_named import SymmetricGroup
 import random
-from types import ListType
 
 import sage.structure.element as element
 import sage.groups.group as group
@@ -63,7 +63,6 @@ from sage.rings.all      import RationalField, Integer
 #from sage.matrix.all     import MatrixSpace
 from sage.interfaces.all import gap, is_GapElement, is_ExpectElement
 from sage.groups.perm_gps.permgroup_element import PermutationGroupElement
-import sage.structure.coerce as coerce
 from sage.rings.finite_field import GF
 from sage.rings.arith import factor
 from sage.groups.abelian_gps.abelian_group import AbelianGroup
