@@ -50,9 +50,7 @@ if [ -d "$DEVEL/sage-main" ]; then
 
     # We also delete the build directory, since it could contain 
     # old .py files we don't want anymore. 
-    rm -rf build/temp.*
-    rm -rf build/lib.*
-    rm -rf build/scripts-*
+    rm -rf build
 
     "$SAGE_ROOT/sage" -b main
     if [ $? -ne 0 ]; then
