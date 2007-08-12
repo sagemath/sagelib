@@ -394,42 +394,30 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
             [0.0 1.0 2.0]
             [3.0 4.0 5.0]
             [6.0 7.0 8.0]
-            sage: e, v = m.eigenspaces()
-            sage: e
+            sage: e, v = m.eigenspaces(); e
             [13.3484692283, -1.34846922835, -9.96461975961e-16]
-            sage: v                
-            [Vector space of degree 3 and dimension 1 over Real Double Field
-            Basis matrix:
-            [          1.0 1.28989794856 1.57979589711], Vector space of degree 3 and dimension 1 over Real Double Field
-            Basis matrix:
-            [            1.0  0.310102051443 -0.379795897113], Vector space of degree 3 and dimension 1 over Real Double Field
-            Basis matrix:
-            [ 1.0 -2.0  1.0]]
-            sage: (v[0].0) * m
-            (13.3484692283, 17.218163074, 21.0878569197)
-            sage: e[0] * v[0].0
-            (13.3484692283, 17.218163074, 21.0878569197)        
+            sage: a = (v[0].0) * m; b = e[0] * v[0].0
+            sage: a.change_ring(CDF) - b
+            (-2.6645352591e-15, -7.1054273576e-15, -3.5527136788e-15)
         """
         e, v = self.eigen()
         return e, [c.parent().span_of_basis([c], check=False) for c in v.columns()]
             
-    def eigen(self):
+    def eigen_left(self):
         """
-        Computes the eigenvalues and eigenvectors of this matrix acting
-        *from the right*. 
+        Computes the eigenvalues and *left* eigenvectors of this
+        matrix m acting *from the right*.  I.e., vectors v such that
+        v*m = lambda*m.
 
         OUTPUT:
              eigenvalues -- as a list
-             corresponding eigenvectors -- as an RDF matrix whose columns are
-                           the eigenvectors.
+             corresponding eigenvectors -- as an RDF matrix whose columns
+                           are the eigenvectors.
 
         EXAMPLES:
             sage: m = Matrix(RDF, 3, range(9))
-            sage: m.eigen()           # random-ish platform-dependent output (low order digits)
-            ([13.3484692283, -1.34846922835, -9.96461975961e-16],
-             [-0.440242867236 -0.897878732262  0.408248290464]
-            [-0.567868371314 -0.278434036822 -0.816496580928]
-            [-0.695493875393  0.341010658618  0.408248290464])
+            sage: m.eigen_left()           # random-ish platform-dependent output (low order digits)
+
 
         IMPLEMENTATION:
             Uses numpy.
@@ -440,9 +428,36 @@ cdef class Matrix_real_double_dense(matrix_dense.Matrix_dense):   # dense
             return [], self
 
         import numpy
-        v_, m_ = numpy.linalg.eig(numpy.transpose(self.numpy()))
-        return ([sage.rings.complex_double.CDF(x) for x in v_],matrix(m_))
+        v, m = numpy.linalg.eig(numpy.transpose(self.numpy()))
+        return ([sage.rings.complex_double.CDF(x) for x in v],matrix(m))
     
+    def eigen_right(self):
+        """
+        Computes the eigenvalues and *right* eigenvectors of this
+        matrix m acting *from the left*.  I.e., vectors v such that
+        m * v = lambda*m, where v is viewed as a column vector. 
+
+        OUTPUT:
+             eigenvalues -- as a list
+             corresponding eigenvectors -- as an RDF matrix whose columns
+                           are the eigenvectors.
+
+        EXAMPLES:
+            sage: m = Matrix(RDF, 3, range(9))
+            sage: m.eigen_right()           # random-ish platform-dependent output (low order digits)
+
+        IMPLEMENTATION:
+            Uses numpy.
+        """
+        if not self.is_square():
+            raise ValueError, "self must be square"
+        if self._nrows == 0:
+            return [], self
+
+        import numpy
+        v, m = numpy.linalg.eig(self.numpy())
+        return ([sage.rings.complex_double.CDF(x) for x in v],matrix(m))
+
     def solve_left_LU(self, b):
         """
         Solve the equation A*x = b.
