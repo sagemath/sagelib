@@ -428,6 +428,15 @@ class ModularFormsSpace(hecke.HeckeModule_generic):
             q^6 + q^8 - 7/3*q^9 + O(q^10),
             q^7 + 2*q^8 - 4/3*q^9 + O(q^10)
             ]
+
+        Here's another example where there is a big gap in the valuations:
+            sage: m = CuspForms(64,2)
+            sage: m.integral_basis()
+            [
+            q + O(q^6),
+            q^2 + O(q^6),
+            q^5 + O(q^6)
+            ]        
             
         TESTS:
             sage: m = CuspForms(11*2^4,2, prec=13); m
