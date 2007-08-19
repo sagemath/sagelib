@@ -93,6 +93,8 @@ from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing as 
 
 from sage.structure.parent_gens import ParentWithGens
 
+from sage.structure.element import Element
+
 from multi_polynomial_ring_generic import MPolynomialRing_generic, is_MPolynomialRing
 
 from polydict import ETuple
@@ -251,6 +253,14 @@ class MPolynomialRing_polydict( MPolynomialRing_macaulay2_repr, MPolynomialRing_
             Polynomial Ring in x, y, z over Rational Field
             sage: (f - g).expand()
             0
+            
+            
+            
+        Arithmetic with a constant from a base ring:
+            sage: R.<u,v> = QQ[]
+            sage: S.<x,y> = R[]
+            sage: u^3*x^2 + v*y
+            u^3*x^2 + v*y            
 
         Stacked polynomial rings coerce into constants if possible.  First,
         the univariate case:
@@ -283,7 +293,12 @@ class MPolynomialRing_polydict( MPolynomialRing_macaulay2_repr, MPolynomialRing_
             sage: S(a + b)
             u + v
         """
-        # handle constants that coerce into self.base_ring() first, if possible
+        
+        # handle constants that coerce into self.base_ring() first, if possible        
+        if isinstance(x, Element) and x.parent() is self.base_ring():
+            # A Constant multi-polynomial
+            return self({self._zero_tuple:x})
+            
         try:
             y = self.base_ring()._coerce_(x)
             return multi_polynomial_element.MPolynomial_polydict(self, {self._zero_tuple:y})
