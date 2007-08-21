@@ -96,6 +96,10 @@ import polynomial_element
 
 from sage.structure.parent_gens import ParentWithGens
 
+from sage.structure.element import Element
+
+from sage.structure.parent_gens import ParentWithGens
+
 from multi_polynomial_ring_generic import MPolynomialRing_generic, is_MPolynomialRing
 
 from polydict import ETuple
@@ -275,6 +279,10 @@ class MPolynomialRing_polydict( MPolynomialRing_macaulay2_repr, MPolynomialRing_
             x^2 + 6*x*z + 9*z^2 + 10*x + 30*z + 25            
         """
         from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
+        
+        if isinstance(x, Element) and x.parent() is self.base_ring():
+            # A Constant multi-polynomial
+            return self({self._zero_tuple:x})
         
         if isinstance(x, multi_polynomial_element.MPolynomial_polydict):
             P = x.parent()

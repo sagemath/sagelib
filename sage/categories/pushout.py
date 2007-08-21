@@ -191,6 +191,8 @@ class CompletionFunctor(ConstructionFunctor):
         self.extras = extras
         self.rank = 4
     def __call__(self, R):
+        print "completion of", R
+        print "prime", self.p
         return R.completion(self.p, self.prec, self.extras)
     def __cmp__(self, other):
         c = cmp(type(self), type(other))
@@ -366,7 +368,7 @@ def pushout(R, S):
     Sc = [c[0] for c in S_tower[1:len(Ss)+1]]
     
     while len(Rc) > 0 or len(Sc) > 0:
-#        print Z
+        print Z
         # if we are out of functors in either tower, there is no ambiguity
         if len(Sc) == 0:
             c = Rc.pop()
