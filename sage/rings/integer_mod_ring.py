@@ -518,6 +518,9 @@ class IntegerModRing_generic(quotient_ring.QuotientRing_generic):
     
     def _repr_(self):
         return "Ring of integers modulo %s"%self.__order
+        
+    def _latex_(self):
+        return "\mathbf{Z}/%s\mathbf{Z}" % self.__order
     
     def modulus(self):
         r"""
