@@ -4,7 +4,7 @@
  * Some global C stuff that gets imported into pyrex modules.
  *
  */
-
+   
 /******************************************************************************
        Copyright (C) 2006 William Stein <wstein@gmail.com>
                      2006 David Harvey <dmharvey@math.harvard.edu>
