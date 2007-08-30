@@ -90,9 +90,10 @@ def needs_c_lib_build():
     return False
 
 #### Build the c_lib first
-if needs_c_lib_build() and os.system( "cd c_lib && scons install" ) != 0:
-    print "    ERROR: The c_lib did not build successfully."
-    sys.exit(1)	
+if needs_c_lib_build():
+    if os.system( "cd c_lib && scons install" ) != 0:
+        print "    ERROR: The c_lib did not build successfully."
+        sys.exit(1)	
 
 include_dirs = ['%s/include'%SAGE_LOCAL, '%s/include/python'%SAGE_LOCAL, \
                 '%s/sage/sage/ext'%SAGE_DEVEL]
@@ -731,7 +732,7 @@ if NO_WARN and distutils.sysconfig.get_config_var('CC').startswith("gcc"):
 
 if DEVEL:
     extra_compile_args.append('-ggdb')
-    ext_modules.append(hanke)
+    #ext_modules.append(hanke)
     #ext_modules.append(mpc)
 
 for m in ext_modules:
@@ -755,7 +756,6 @@ def check_dependencies( filename, outfile ):
     OUTPUT:
         bool -- whether or not outfile must be regenerated.
     """
-
     if is_older(filename, outfile):
         print "\nBuilding %s because it depends on %s."%(outfile, filename)
         return True

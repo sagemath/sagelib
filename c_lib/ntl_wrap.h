@@ -20,6 +20,8 @@ using namespace NTL;
 #define EXTERN
 #endif
 
+EXTERN void del_charstar(char*);
+
 
 ////////  ZZ //////////
 
