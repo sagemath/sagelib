@@ -989,6 +989,9 @@ class ModularFormsSpace(hecke.HeckeModule_generic):
         Synonym for eisenstein_submodule.
         """
         return self.eisenstein_submodule()
+
+    def eisenstein_series(self):
+        raise NotImplementedError, "computation of Eisenstein series in this space not yet implemented"
         
     def decomposition(self):
         """
