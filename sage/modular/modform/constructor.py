@@ -187,9 +187,19 @@ def ModularForms(group  = 1,
         M = ambient_g1.ModularFormsAmbient_g1_Q(group.level(), weight)
         if base_ring != rings.QQ:
             M = ambient_R.ModularFormsAmbient_R(M, base_ring)
+
+    elif congroup.is_GammaH(group):
+        M = ambient.ModularFormsAmbient(group, weight, rings.QQ)
+        if base_ring != rings.QQ:
+            M = ambient_R.ModularFormsAmbient_R(M, base_ring)
             
     elif isinstance(group, dirichlet.DirichletCharacter):
         eps = group
+        if eps.base_ring().characteristic() != 0:
+            # TODO -- implement this
+            # Need to add a lift_to_char_0 function for characters,
+            # and need to still remember eps.
+            raise NotImplementedError, "currently the character must be over a ring of characteristic 0."
         eps = eps.minimize_base_ring()
         if eps.is_trivial():
             return ModularForms(eps.modulus(), weight, base_ring,
