@@ -945,7 +945,7 @@ setup(name        = 'sage',
                      'sage.interfaces',
 
                      'sage.lfunctions',
-                     
+
                      'sage.libs',
                      'sage.libs.hanke',
                      'sage.libs.linbox',
@@ -953,6 +953,8 @@ setup(name        = 'sage',
                      'sage.libs.ntl',
                      'sage.libs.pari',
                      'sage.libs.singular',
+                     
+                     'sage.logic',
                      
                      'sage.matrix',
 #                     'sage.matrix.padics',
