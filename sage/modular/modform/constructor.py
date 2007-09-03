@@ -187,6 +187,11 @@ def ModularForms(group  = 1,
         M = ambient_g1.ModularFormsAmbient_g1_Q(group.level(), weight)
         if base_ring != rings.QQ:
             M = ambient_R.ModularFormsAmbient_R(M, base_ring)
+
+    elif congroup.is_GammaH(group):
+        M = ambient.ModularFormsAmbient(group, weight, rings.QQ)
+        if base_ring != rings.QQ:
+            M = ambient_R.ModularFormsAmbient_R(M, base_ring)
             
     elif isinstance(group, dirichlet.DirichletCharacter):
         eps = group
