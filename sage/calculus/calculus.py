@@ -215,7 +215,7 @@ from sage.structure.element import RingElement, is_Element
 from sage.structure.parent_base import ParentWithBase
 
 import operator
-from sage.misc.latex import latex
+from sage.misc.latex import latex, latex_varify
 from sage.structure.sage_object import SageObject
 
 from sage.interfaces.maxima import MaximaElement, Maxima
@@ -1111,7 +1111,13 @@ class SymbolicExpression(RingElement):
                 if repr(g) == r:
                     sub.append((v,g))
         if len(sub) == 0:
-            return R(B(self))
+            try:
+                return R(B(self))
+            except TypeError:
+                if len(vars) == 1:
+                    sub = [(vars[0], G[0])]
+                else:
+                    raise
         return self.substitute_over_ring(dict(sub), ring=R)
 
     def function(self, *args):
@@ -3082,10 +3088,10 @@ class SymbolicVariable(SymbolicExpression):
         if len(a) > 1:
             m = re.search('(\d|[.,])+$',a)
             if m is None:
-                a = tex_varify(a)
+                a = latex_varify(a)
             else:
                 b = a[:m.start()]
-                a = '%s_{%s}'%(tex_varify(b), a[m.start():])
+                a = '%s_{%s}'%(latex_varify(b), a[m.start():])
                 
         self.__latex = a
         return a
@@ -3096,48 +3102,6 @@ class SymbolicVariable(SymbolicExpression):
     def _sys_init_(self, system):
         return self._name
 
-common_varnames = ['alpha',
-                   'beta',
-                   'gamma',
-                   'Gamma',
-                   'delta',
-                   'Delta',
-                   'epsilon',
-                   'zeta',
-                   'eta',
-                   'theta',
-                   'Theta',
-                   'iota',
-                   'kappa',
-                   'lambda',
-                   'Lambda',
-                   'mu',
-                   'nu',
-                   'xi',
-                   'Xi',
-                   'pi',
-                   'Pi',
-                   'rho',
-                   'sigma',
-                   'Sigma',
-                   'tau',
-                   'upsilon',
-                   'varphi',
-                   'chi',
-                   'psi',
-                   'Psi',
-                   'omega',
-                   'Omega']
-                   
-
-def tex_varify(a):
-    if a in common_varnames:
-        return "\\" + a
-    elif len(a) == 1:
-        return a
-    else:
-        return '\\mbox{%s}'%a
-    
 _vars = {}
 def var(s, create=True):
     r"""
