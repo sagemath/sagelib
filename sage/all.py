@@ -274,6 +274,9 @@ def quit_sage(verbose=True):
           reactor.callFromThread(reactor.stop)
     except ImportError:
        pass
+
+    import sage.rings.integer
+    sage.rings.integer.free_integer_pool()
         
 def _quit_sage_(self):
     import sage.misc.preparser_ipython
@@ -291,6 +294,7 @@ def _quit_sage_(self):
     if self.exit_now:
         quit_sage()
         self.exit_now = True
+
     return self.exit_now
 
 from IPython.iplib import InteractiveShell
