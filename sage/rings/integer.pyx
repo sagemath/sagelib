@@ -100,6 +100,7 @@ include "../ext/gmp.pxi"
 include "../ext/interrupt.pxi"  # ctrl-c interrupt block support
 include "../ext/stdsage.pxi"
 include "../ext/python_list.pxi"
+include "../ext/python_number.pxi"
 
 cdef extern from "mpz_pylong.h":
     cdef mpz_get_pylong(mpz_t src)
@@ -144,12 +145,18 @@ from sage.structure.element import  bin_op
 import integer_ring
 the_integer_ring = integer_ring.ZZ
 
+initialized = False
 cdef set_zero_one_elements():
-    global the_integer_ring
+    global the_integer_ring, initialized
+    if initialized: return
     the_integer_ring._zero_element = Integer(0)
     the_integer_ring._one_element = Integer(1)
-
+    init_mpz_globals()
+    initialized = True
 set_zero_one_elements()
+
+cdef zero = the_integer_ring._zero_element
+cdef one = the_integer_ring._one_element
 
 def is_Integer(x):
     """
@@ -854,6 +861,11 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             1
             sage: (-1)^(1/3)
             -1
+            sage: 0^0
+            Traceback (most recent call last):
+            ...
+            ArithmeticError: 0^0 is undefined.
+            
 
         The base need not be an integer (it can be a builtin
         Python type).
@@ -864,13 +876,14 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: 'sage'^3     
             'sagesagesage'
 
-
-        The exponent must fit in an unsigned long.
+        The exponent must fit in a long unless the base is -1, 0, or 1.
             sage: x = 2^100000000000000000000000
             Traceback (most recent call last):
             ...
-            RuntimeError: exponent must be at most 4294967294  # 32-bit
-            RuntimeError: exponent must be at most 18446744073709551614 # 64-bit
+            RuntimeError: exponent must be at most 2147483647  # 32-bit
+            RuntimeError: exponent must be at most 9223372036854775807 # 64-bit
+            sage: (-1)^100000000000000000000000
+            1
 
         We raise 2 to various interesting exponents:
             sage: 2^x                # symbolic x
@@ -893,18 +906,21 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: 2^(-1/2)
             1/sqrt(2)
         """
-        cdef Integer _n
+        if dummy is not None:
+            raise RuntimeError, "__pow__ dummy argument ignored"
+        cdef long nn
+        cdef _n
         cdef unsigned int _nval
         if not PY_TYPE_CHECK(self, Integer):
             if isinstance(self, str):
                 return self * n
             else:
                 return self.__pow__(int(n))
+                
+        cdef Integer _self = <Integer>self
 
         try:
-            # todo: should add a fast pathway to deal with n being
-            # an Integer or python int
-            _n = Integer(n)
+            nn = PyNumber_Index(n)
         except TypeError:
             try:
                 s = n.parent()(self)
@@ -912,21 +928,33 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             except AttributeError:
                 raise TypeError, "exponent (=%s) must be an integer.\nCoerce your numbers to real or complex numbers first."%n
 
-        if _n < 0:
-            return Integer(1)/(self**(-_n))
-        if _n > MAX_UNSIGNED_LONG:
-            raise RuntimeError, "exponent must be at most %s"%MAX_UNSIGNED_LONG
-        _self = self
-        cdef Integer x
-        x = PY_NEW(Integer)
-        _nval = _n
+        except OverflowError:
+            if mpz_cmp_si(_self.value, 1) == 0:
+                return self
+            elif mpz_cmp_si(_self.value, 0) == 0:
+                return self
+            elif mpz_cmp_si(_self.value, -1) == 0:
+                return self if n % 2 else -self
+            raise RuntimeError, "exponent must be at most %s" % sys.maxint
 
+        if nn == 0:
+            if not self:
+                raise ArithmeticError, "0^0 is undefined."
+            else:
+                return one
+        
+        cdef Integer x = PY_NEW(Integer)
+        
         _sig_on
-        mpz_pow_ui(x.value, (<Integer>self).value, _nval)
+        mpz_pow_ui(x.value, (<Integer>self).value, nn if nn > 0 else -nn)
         _sig_off
 
-        return x
-
+        if nn < 0:
+            return ~x
+        else:
+            return x
+        
+                
     def nth_root(self, int n, int report_exact=0):
         r"""
         Returns the truncated nth root of self.
@@ -1312,8 +1340,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             <type 'long'>
         """
         # TODO -- this crashes on sage.math, since it is evidently written incorrectly.
-        #return mpz_get_pyintlong(self.value)
-        return int(mpz_get_pylong(self.value))
+        return mpz_get_pyintlong(self.value)
+        #return int(mpz_get_pylong(self.value))
 
     def __long__(self):
         """
@@ -2123,7 +2151,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         if self.is_zero():
             return self
         F = self.factor()
-        n = Integer(1)
+        n = one
         for p, e in F:
             if e % 2 != 0:
                 n = n * p
@@ -2196,7 +2224,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         """
         import sage.rings.infinity
         if self.is_zero():
-            return Integer(1)
+            return one
         else:
             return sage.rings.infinity.infinity
 
@@ -2216,7 +2244,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         """
         import sage.rings.infinity
         if  mpz_cmp_si(self.value, 1) == 0:
-                return Integer(1)
+                return one
         elif mpz_cmp_si(self.value, -1) == 0:
                 return Integer(2)
         else:
@@ -2565,7 +2593,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: n.__invert__()
             1/10        
         """
-        return Integer(1)/self    # todo: optimize
+        return one/self    # todo: optimize
         
     def inverse_of_unit(self):
         """
@@ -2628,8 +2656,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         cdef Integer m
         m = Integer(n)
 
-        if m == 1:
-            return Integer(0)
+        if m == one:
+            return zero
 
         mpz_init(x)
 
@@ -2756,7 +2784,7 @@ def LCM_list(v):
     n = len(v)
 
     if n == 0:
-        return Integer(1)
+        return one
 
     try:
         w = v[0]
@@ -2818,7 +2846,7 @@ def GCD_list(v):
     n = len(v)
 
     if n == 0:
-        return Integer(1)
+        return one
 
     try:
         w = v[0]
@@ -2830,7 +2858,7 @@ def GCD_list(v):
             mpz_gcd(z, z, w.value)
             if mpz_cmp_si(z, 1) == 0:
                 _sig_off
-                return Integer(1)
+                return one
         _sig_off
     except TypeError:
         w = Integer(v[0])
@@ -2842,7 +2870,7 @@ def GCD_list(v):
             mpz_gcd(z, z, w.value)
             if mpz_cmp_si(z, 1) == 0:
                 _sig_off
-                return Integer(1)
+                return one
         _sig_off
 
     
@@ -2979,10 +3007,10 @@ cdef void (* mpz_free)(void *, size_t)
 # - When an integer is collected, it will add it to the pool 
 #   if there is room, otherwise it will be deallocated. 
     
-cdef enum:
-    integer_pool_size = 100 # Pyrex has no way of defining constants
+
+cdef int integer_pool_size = 100
     
-cdef PyObject* integer_pool[integer_pool_size]
+cdef PyObject** integer_pool
 cdef int integer_pool_count = 0
 
 # used for profiling the pool
@@ -3123,7 +3151,9 @@ cdef hook_fast_tp_functions():
     """
     Initialize the fast integer creation functions. 
     """
-    global global_dummy_Integer, mpz_t_offset, sizeof_Integer
+    global global_dummy_Integer, mpz_t_offset, sizeof_Integer, integer_pool
+    
+    integer_pool = <PyObject**>sage_malloc(integer_pool_size * sizeof(PyObject*))
 
     cdef long flag
 
@@ -3210,3 +3240,22 @@ cdef integer(x):
     if PY_TYPE_CHECK(x, Integer):
         return x
     return Integer(x)
+
+
+def free_integer_pool():
+    cdef int i
+    cdef PyObject *o
+
+    global integer_pool_count, integer_pool_size
+    
+    for i from 0 <= i < integer_pool_count:
+        o = integer_pool[i]
+        mpz_clear(<__mpz_struct *>(<char*>o + mpz_t_offset))
+        # Free the object. This assumes that Py_TPFLAGS_HAVE_GC is not
+        # set. If it was set another free function would need to be
+        # called.
+        PyObject_FREE(o)
+
+    integer_pool_size = 0
+    integer_pool_count = 0
+    sage_free(integer_pool)

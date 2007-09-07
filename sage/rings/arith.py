@@ -1124,8 +1124,10 @@ def xgcd(a, b):
         (4, 4, -5)
         sage: 4*56 + (-5)*44
         4
-        sage: xgcd(5/1, 7/1)
-        (1, 3, -2)
+        sage: g, a, b = xgcd(5/1, 7/1); g, a, b
+        (1, -4, 3)
+        sage: a*(5/1) + b*(7/1) == g
+        True
         sage: x = polygen(QQ)
         sage: xgcd(x^3 - 1, x^2 - 1)
         (x - 1, 1, -x)
@@ -1773,13 +1775,17 @@ def crt(a,b,m,n):
 
     EXAMPLES:
         sage: crt(2, 1, 3, 5)
-        -4
+        11 
         sage: crt(13,20,100,301)
         -2087
 
     You can also use upper case:
-        sage: CRT(2,3, 3, 5)
-        8
+        sage: c = CRT(2,3, 3, 5); c
+        -7 
+        sage: c % 3 == 2
+        True
+        sage: c % 5 == 3
+        True
     """
     if isinstance(a,list):
         return CRT_list(a,b)
@@ -2162,10 +2168,11 @@ class Moebius:
         For simplicity, if $n=0$ we define $\mu(n) = 0$. 
 
     IMPLEMENTATION:
-        Uses the PARI C library. 
+        Factors or -- for integers -- uses the PARI C library. 
 
     INPUT:
-        n -- an integer
+        n -- anything that can be factored. 
+        
     OUTPUT:
         0, 1, or -1
         
@@ -2185,18 +2192,31 @@ class Moebius:
 
         sage: moebius(0)   # potentially nonstandard!
         0
+
+
+    The moebius function even makes sense for non-integer inputs.
+        sage: x = GF(7)['x'].0
+        sage: moebius(x+2)
+        -1
     """
     def __call__(self, n):
+        if isinstance(n, (int, long)):
+            n = integer.Integer(n)
+        elif not isinstance(n, integer.Integer):
+            # Use a generic algorithm.
+            if n < 0:
+                n = -n
+            F = factor(n)
+            for _, e in F:
+                if e >= 2:
+                    return 0
+            return (-1)**len(F)
+        
+        # Use fast PARI algorithm
         if n == 0:
             return integer.Integer(0)
         return integer.Integer(pari(n).moebius().int_unsafe())
-    ##     if n < 0:
-    ##         n = -n
-    ##     F = factor(n)
-    ##     for _, e in F:
-    ##         if e >= 2:
-    ##             return 0
-    ##     return (-1)**len(F)
+    
 
     def __repr__(self):
         return "The Moebius function"

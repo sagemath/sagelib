@@ -13,7 +13,10 @@ AUTHORS:
 # extensions are re-written this way.  Also there needs to be class
 # hierarchy for number field elements, integers, etc.  This is a
 # nontrivial project, and it needs somebody to attack it.  I'm amazed
-# how long this has gone unattacked. 
+# how long this has gone unattacked.
+
+# Relative elements need to be a derived class or something.  This is
+# terrible as it is now.
 
 #*****************************************************************************
 #       Copyright (C) 2004, 2007 William Stein <wstein@gmail.com>
@@ -179,11 +182,20 @@ cdef class NumberFieldElement(FieldElement):
             (<Integer>ZZ(num[i]))._to_ZZ(&coeff)
             SetCoeff( self.__numerator, i, coeff )
 
+    def __alloc__(self):
+        ZZX_construct(&self.__numerator)
+        ZZ_construct(&self.__denominator)
+
+    def __dealloc__(self):
+        ZZX_destruct(&self.__numerator)
+        ZZ_destruct(&self.__denominator)
+
     def _lift_cyclotomic_element(self, new_parent):
         """
-            Creates an element of the passed field from this field.  This is specific to creating elements in a 
-        cyclotomic field from elements in another cyclotomic field.  This function aims to make this common 
-        coercion extremely fast!
+        Creates an element of the passed field from this field.  This
+        is specific to creating elements in a cyclotomic field from
+        elements in another cyclotomic field.  This function aims to
+        make this common coercion extremely fast!
 
         EXAMPLES:
             sage: C.<zeta5>=CyclotomicField(5)
@@ -288,31 +300,40 @@ cdef class NumberFieldElement(FieldElement):
         """
         return self.polynomial()._latex_(name=self.parent().latex_variable_name())
 
-    def _pari_(self, var=None):
+    def _pari_(self, var='x'):
         """
         Return PARI C-library object corresponding to self.
 
         EXAMPLES:
             sage: k.<j> = QuadraticField(-1)
-            sage: j._pari_()
+            sage: j._pari_('j')
             Mod(j, j^2 + 1)
             sage: pari(j)
-            Mod(j, j^2 + 1)
+            Mod(x, x^2 + 1)
 
             sage: y = QQ['y'].gen()
             sage: k.<j> = NumberField(y^3 - 2)
             sage: pari(j)
-            Mod(j, j^3 - 2)
+            Mod(x, x^3 - 2)
+
+        By default the variable name is 'x', since in PARI many variable
+        names are reserved:
+            sage: theta = polygen(QQ, 'theta')
+            sage: M.<theta> = NumberField(theta^2 + 1)
+            sage: pari(theta)
+            Mod(x, x^2 + 1)
 
         If you try do coerce a generator called I to PARI, hell may
         break loose:
             sage: k.<I> = QuadraticField(-1)
-            sage: pari(I)
+            sage: I._pari_('I')
             Traceback (most recent call last):
             ...
             PariError: forbidden (45)
 
         Instead, request the variable be named different for the coercion:
+            sage: pari(I)
+            Mod(x, x^2 + 1)
             sage: I._pari_('i')
             Mod(i, i^2 + 1)
             sage: I._pari_('II')
@@ -326,16 +347,19 @@ cdef class NumberFieldElement(FieldElement):
             self.__pari = {}
         if var is None:
             var = self.parent().variable_name()
-        if isinstance(self.parent(), sage.rings.number_field.number_field.NumberField_extension):
+        if isinstance(self.parent(),
+                      sage.rings.number_field.number_field.NumberField_extension):
             f = self.polynomial()._pari_()
-            g = str(self.parent().pari_relative_polynomial())
+            g = str(self.parent().pari_polynomial())
             base = self.parent().base_ring()
             gsub = base.gen()._pari_()
-            gsub = str(gsub).replace(base.variable_name(), "y")
+            gsub = str(gsub).replace('x', "y")
             g = g.replace("y", gsub)
         else:
             f = self.polynomial()._pari_()
             gp = self.parent().polynomial()
+            if gp.name() != 'x':
+                gp = gp.change_variable_name('x')
             g = gp._pari_()
             gv = str(gp.parent().gen())
             if var != 'x':
@@ -364,31 +388,35 @@ cdef class NumberFieldElement(FieldElement):
             sage: ((1 + 1/3*a)^4)._pari_init_('a')
             'Mod(1/81*a^4 + 4/27*a^3 + 2/3*a^2 + 4/3*a + 1, a^5 - a - 1)'
 
-        Note that _pari_init_ can return something that can't be parsed
-        by PARI, because of reserved words.
+        Note that _pari_init_ can fail because of reserved words in PARI,
+        and since it actually works by obtaining the PARI representation
+        of something.
             sage: K.<theta> = NumberField(x^5 - x - 1)
             sage: b = (1/2 - 2/3*theta)^3; b
             -8/27*theta^3 + 2/3*theta^2 - 1/2*theta + 1/8
             sage: b._pari_init_('theta')
-            'Mod(-8/27*theta^3 + 2/3*theta^2 - 1/2*theta + 1/8, theta^5 - theta - 1)'
-            sage: pari(b)
             Traceback (most recent call last):
             ...
             PariError: unexpected character (2)
+
+        Fortunately pari_init returns everything in terms of x by default.
+            sage: pari(b)
+            Mod(-8/27*x^3 + 2/3*x^2 - 1/2*x + 1/8, x^5 - x - 1)
         """
-        if var == None:
-            var = self.parent().variable_name()
-        if isinstance(self.parent(), sage.rings.number_field.number_field.NumberField_extension):
-            f = self.polynomial()._pari_()
-            g = str(self.parent().pari_relative_polynomial())
-            base = self.parent().base_ring()
-            gsub = base.gen()._pari_()
-            gsub = str(gsub).replace(base.variable_name(), "y")
-            g = g.replace("y", gsub)
-        else:
-            f = str(self.polynomial()).replace("x",var)
-            g = str(self.parent().polynomial()).replace("x",var)
-        return 'Mod(%s, %s)'%(f,g)
+        return repr(self._pari_(var=var))
+##         if var == None:
+##             var = self.parent().variable_name()
+##         if isinstance(self.parent(), sage.rings.number_field.number_field.NumberField_extension):
+##             f = self.polynomial()._pari_()
+##             g = str(self.parent().pari_relative_polynomial())
+##             base = self.parent().base_ring()
+##             gsub = base.gen()._pari_()
+##             gsub = str(gsub).replace(base.variable_name(), "y")
+##             g = g.replace("y", gsub)
+##         else:
+##             f = str(self.polynomial()).replace("x",var)
+##             g = str(self.parent().polynomial()).replace("x",var)
+##         return 'Mod(%s, %s)'%(f,g)
 
     def __getitem__(self, n):
         """
@@ -670,28 +698,31 @@ cdef class NumberFieldElement(FieldElement):
         """
         cdef NumberFieldElement x
         cdef NumberFieldElement _right = right
+        cdef ZZX_c temp
+        cdef ZZ_c temp1
         cdef ZZ_c parent_den
         cdef ZZX_c parent_num
         self._parent_poly_c_( &parent_num, &parent_den )
-        # an ugly hack fix for the fact that MulMod doesn't handle non-monic polynomials
-        # I expect that PARI will win out over NTL for reasons of speed and things like this
-        # that will be the elegant fix
+        x = self._new()
+        _sig_on
+        # MulMod doesn't handle non-monic polynomials.
+        # Therefore, we handle the non-monic case entirely separately.
         if ZZX_is_monic( &parent_num ):
-            x = self._new()
-            _sig_on
             mul_ZZ(x.__denominator, self.__denominator, _right.__denominator)
             MulMod_ZZX(x.__numerator, self.__numerator, _right.__numerator, parent_num)
-            _sig_off
-            x._reduce_c_()
-            return x
         else:
-            return self.parent()(self._pari_()*right._pari_())
-            #  Hmm, this next bit is not so straight-forward as I thought it should be
-            # I'll get back to this when I benchmark
-#            mul_ZZX(x.__numerator, self.__numerator, _right.__numerator)
-#            if ZZX_degree(&x.__numerator) >= ZZX_degree(&parent_num):
-#                PseudoRem_ZZX(x.__numerator, x.__numerator, parent_num)
-#                mul_ZZ(x.__denominator, x.__denominator, parent_den)
+            mul_ZZ(x.__denominator, self.__denominator, _right.__denominator)
+            mul_ZZX(x.__numerator, self.__numerator, _right.__numerator)
+            if ZZX_degree(&x.__numerator) >= ZZX_degree(&parent_num):
+                mul_ZZX_ZZ( x.__numerator, x.__numerator, parent_den )
+                mul_ZZX_ZZ( temp, parent_num, x.__denominator )
+                power_ZZ(temp1,LeadCoeff_ZZX(temp),ZZX_degree(&x.__numerator)-ZZX_degree(&parent_num)+1)
+                PseudoRem_ZZX(x.__numerator, x.__numerator, temp)
+                mul_ZZ(x.__denominator, x.__denominator, parent_den)
+                mul_ZZ(x.__denominator, x.__denominator, temp1)
+        _sig_off
+        x._reduce_c_()
+        return x
 
         #NOTES: In LiDIA, they build a multiplication table for the
         #number field, so it's not necessary to reduce modulo the
@@ -721,7 +752,7 @@ cdef class NumberFieldElement(FieldElement):
             sage: a/0
             Traceback (most recent call last):
             ...
-            ZeroDivisionError: Number field element division by zero            
+            ZeroDivisionError: Number field element division by zero
         """
         cdef NumberFieldElement x
         cdef NumberFieldElement _right = right
@@ -729,20 +760,30 @@ cdef class NumberFieldElement(FieldElement):
         cdef ZZ_c inv_den
         cdef ZZ_c parent_den
         cdef ZZX_c parent_num
+        cdef ZZX_c temp
+        cdef ZZ_c temp1
         if not _right:
             raise ZeroDivisionError, "Number field element division by zero"
         self._parent_poly_c_( &parent_num, &parent_den )
+        x = self._new()
+        _sig_on
+        _right._invert_c_(&inv_num, &inv_den)
         if ZZX_is_monic( &parent_num ):
-            _right._invert_c_(&inv_num, &inv_den)
-            x = self._new()
-            _sig_on
             mul_ZZ(x.__denominator, self.__denominator, inv_den)
             MulMod_ZZX(x.__numerator, self.__numerator, inv_num, parent_num)
-            _sig_off
-            x._reduce_c_()
-            return x
         else:
-            return self.parent()(self._pari_()/right._pari_())
+            mul_ZZ(x.__denominator, self.__denominator, inv_den)
+            mul_ZZX(x.__numerator, self.__numerator, inv_num)
+            if ZZX_degree(&x.__numerator) >= ZZX_degree(&parent_num):
+                mul_ZZX_ZZ( x.__numerator, x.__numerator, parent_den )
+                mul_ZZX_ZZ( temp, parent_num, x.__denominator )
+                power_ZZ(temp1,LeadCoeff_ZZX(temp),ZZX_degree(&x.__numerator)-ZZX_degree(&parent_num)+1)
+                PseudoRem_ZZX(x.__numerator, x.__numerator, temp)
+                mul_ZZ(x.__denominator, x.__denominator, parent_den)
+                mul_ZZ(x.__denominator, x.__denominator, temp1)
+        x._reduce_c_()
+        _sig_off
+        return x
 
     def __floordiv__(self, other):
         """
@@ -1080,7 +1121,7 @@ cdef class NumberFieldElement(FieldElement):
                 return self.__multiplicative_order
 
         if isinstance(self.parent(), sage.rings.number_field.number_field.NumberField_cyclotomic):
-            t = self.parent().multiplicative_order_table()
+            t = self.parent()._multiplicative_order_table()
             f = self.polynomial()
             if t.has_key(f):
                 self.__multiplicative_order = t[f]
@@ -1149,7 +1190,7 @@ cdef class NumberFieldElement(FieldElement):
         K = self.parent().base_ring()
         return K(self._pari_('x').norm())
 
-    def charpoly(self, var):
+    def charpoly(self, var='x'):
         r"""
         The characteristic polynomial of this element over $\Q$.
 
@@ -1166,9 +1207,8 @@ cdef class NumberFieldElement(FieldElement):
         polynomial over $\Q$.
 
             sage: S.<X> = K[] 
-            sage: L.<b> = NumberField(X^3 + 17)
-            sage: L
-            Extension by X^3 + 17 of the Number Field in a with defining polynomial x^3 - 2
+            sage: L.<b> = NumberField(X^3 + 17); L
+            Number Field in b with defining polynomial X^3 + 17 over its base field
             sage: a = L.0; a
             b
             sage: a.charpoly('x')

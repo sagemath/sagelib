@@ -15,7 +15,8 @@ AUTHORS:
 
 from sage.rings.infinity import infinity
 
-from sage.structure.element   import AdditiveGroupElement, RingElement, Element
+from sage.structure.element   import AdditiveGroupElement, RingElement, Element, generic_power
+
 from sage.structure.sequence  import Sequence
 
 from sage.categories.morphism import Morphism
@@ -76,12 +77,11 @@ class PyMorphism(Element):
     def _composition_(self, right, homset):
         return FormalCompositeMorphism(homset, right, self)
 
-    def __pow__(self, n, dummy):
+    def __pow__(self, n, dummy=None):
         if not self.is_endomorphism():
             raise TypeError, "self must be an endomorphism."
         # todo -- what about the case n=0 -- need to specify the identity map somehow.
-        import sage.rings.arith as arith
-        return arith.generic_power(self, n)
+        return generic_power(self, n)
 
 
 

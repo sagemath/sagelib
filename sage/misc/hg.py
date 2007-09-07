@@ -910,10 +910,13 @@ import misc
 
 SAGE_ROOT = misc.SAGE_ROOT
 try:
-    SAGE_SERVER = os.environ['SAGE_SERVER'].strip('/') + '/hg'
+    SAGE_SERVER = os.environ['SAGE_HG_SERVER'].strip('/') + '/hg'
 except KeyError:
-    print "Falling back to a hard coded sage server in misc/hg.py"
-    SAGE_SERVER = "http://sage.math.washington.edu/sage/hg/"
+    try:
+        SAGE_SERVER = os.environ['SAGE_SERVER'].strip('/') + '/hg'
+    except KeyError:
+        print "Falling back to a hard coded sage server in misc/hg.py"
+        SAGE_SERVER = "http://sage.math.washington.edu/sage/hg/"
 
 hg_sage    = HG('%s/devel/sage'%SAGE_ROOT,
                 'SAGE Library Source Code',
@@ -932,6 +935,3 @@ hg_extcode = HG('%s/data/extcode'%SAGE_ROOT,
                 'SAGE External System Code (e.g., PARI, MAGMA, etc.)',
                 url='%s/extcode-main'%SAGE_SERVER)
 
-hg_c_lib = HG('%s/devel/c_lib'%SAGE_ROOT,
-                'SAGE C-library code',
-                url='%s/extcode-main'%SAGE_SERVER)

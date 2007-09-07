@@ -1179,6 +1179,8 @@ cdef class MonoidElement(Element):
         """
         Return the (integral) power of self. 
         """
+        if dummy is not None:
+            raise RuntimeError, "__pow__ dummy argument not used"
         return generic_power_c(self,n,None)
 
     def __nonzero__(self):
@@ -1560,14 +1562,18 @@ cdef class RingElement(ModuleElement):
             True
 
         TESTS:
-        This crashed in sage-2.5 due to a mistake in missing type below.
             sage: 2r**(SR(2)-1-1r)
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: non-integral exponents not supported
+            sage: 2r**(Integer(SR(2)-1-1r))
             1
 
+
         """
-
+        if dummy is not None:
+            raise RuntimeError, "__pow__ dummy argument not used"
         return generic_power_c(self,n,None)
-
 
     ##################################
     # Division
@@ -1809,33 +1815,33 @@ cdef class Vector(ModuleElement):
             sage: x, y = var('x, y')
             
             sage: parent(vector(ZZ,[1,2])*vector(ZZ,[1,2]))
-            Ambient free module of rank 2 over the principal ideal domain Integer Ring
+            Integer Ring
             sage: parent(vector(ZZ,[1,2])*vector(QQ,[1,2]))
-            Vector space of dimension 2 over Rational Field
+            Rational Field
             sage: parent(vector(QQ,[1,2])*vector(ZZ,[1,2]))
-            Vector space of dimension 2 over Rational Field
+            Rational Field
             sage: parent(vector(QQ,[1,2])*vector(QQ,[1,2]))
-            Vector space of dimension 2 over Rational Field
+            Rational Field
 
             sage: parent(vector(QQ,[1,2,3,4])*vector(ZZ[x],[1,2,3,4]))
-            Ambient free module of rank 4 over the principal ideal domain Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in x over Rational Field
             sage: parent(vector(ZZ[x],[1,2,3,4])*vector(QQ,[1,2,3,4]))
-            Ambient free module of rank 4 over the principal ideal domain Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in x over Rational Field
 
             sage: parent(vector(QQ,[1,2,3,4])*vector(ZZ[x][y],[1,2,3,4]))
-            Ambient free module of rank 4 over the integral domain Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
             sage: parent(vector(ZZ[x][y],[1,2,3,4])*vector(QQ,[1,2,3,4]))
-            Ambient free module of rank 4 over the integral domain Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
 
             sage: parent(vector(QQ[x],[1,2,3,4])*vector(ZZ[x][y],[1,2,3,4]))
-            Ambient free module of rank 4 over the integral domain Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
             sage: parent(vector(ZZ[x][y],[1,2,3,4])*vector(QQ[x],[1,2,3,4]))
-            Ambient free module of rank 4 over the integral domain Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
 
             sage: parent(vector(QQ[y],[1,2,3,4])*vector(ZZ[x][y],[1,2,3,4]))
-            Ambient free module of rank 4 over the integral domain Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
             sage: parent(vector(ZZ[x][y],[1,2,3,4])*vector(QQ[y],[1,2,3,4]))
-            Ambient free module of rank 4 over the integral domain Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
+            Univariate Polynomial Ring in y over Univariate Polynomial Ring in x over Rational Field
 
             sage: parent(vector(ZZ[x],[1,2,3,4])*vector(ZZ[y],[1,2,3,4]))
             Traceback (most recent call last):
@@ -1995,7 +2001,7 @@ cdef class Vector(ModuleElement):
             right = (<Vector>right).base_base_extend_canonical_sym_c((<Element>left)._parent)
             return (<Vector>right)._rmultiply_by_scalar(left)
 
-    cdef Vector _vector_times_vector_c(Vector left, Vector right):
+    cdef Element _vector_times_vector_c(Vector left, Vector right):
         if left._degree != right._degree:
             raise TypeError, "incompatible degrees"
         left, right = coercion_model.canonical_base_coercion_c(left, right)
@@ -2003,8 +2009,19 @@ cdef class Vector(ModuleElement):
             return left._vector_times_vector(right)
         else:
             return left._vector_times_vector_c_impl(right)
-    cdef Vector _vector_times_vector_c_impl(Vector left, Vector right):
-        raise TypeError,arith_error_message(left, right, mul)
+        
+    cdef Element _vector_times_vector_c_impl(Vector left, Vector right):
+        raise TypeError,arith_error_message(left, right, operator.mul)
+
+    cdef Vector _pairwise_product_c(Vector left, Vector right): 
+        right = right.base_extend_canonical_sym_c(left._parent) 
+        if left._degree != right._degree: 
+            raise TypeError, "incompatible degrees" 
+        left, right = coercion_model.canonical_base_coercion_c(left, right) 
+        return left._pairwise_product_c_impl(right) 
+
+    cdef Vector _pairwise_product_c_impl(Vector left, Vector right): 
+        raise TypeError, "unsupported operation for '%s' and '%s'"%(parent_c(left), parent_c(right))    
     
     def  _vector_times_vector(left, right):
         return left.vector_time_vector_c_impl(right)
@@ -2520,6 +2537,27 @@ cdef class FieldElement(CommutativeRingElement):
 
 cdef class FiniteFieldElement(FieldElement):
     
+    def _im_gens_(self, codomain, im_gens):
+        """
+        Used for applying homomorphisms of finite fields.
+
+        EXAMPLES:
+            sage: k.<a> = FiniteField(73^2, 'a')
+            sage: K.<b> = FiniteField(73^4, 'b')
+            sage: phi = k.hom([ b^(73*73+1) ])
+            sage: phi(0)
+            0
+            sage: phi(a)
+            7*b^3 + 13*b^2 + 65*b + 71
+
+            sage: phi(a+3)
+            7*b^3 + 13*b^2 + 65*b + 1
+        """
+        ## NOTE: see the note in sage/rings/number_field_element.pyx,
+        ## in the comments for _im_gens_ there -- something analogous
+        ## applies here.
+        return codomain(self.polynomial()(im_gens[0]))
+
     def minpoly(self,var='x'):
         """
         Returns the minimal polynomial of this element 
@@ -2941,8 +2979,9 @@ def generic_power(a, n, one=None):
     return generic_power_c(a,n,one)
 
 cdef generic_power_c(a, nn, one):
-    n = int(nn)
-    if n != nn:
+    try:
+        n = PyNumber_Index(nn)
+    except TypeError:
         raise NotImplementedError, "non-integral exponents not supported"
 
     if not a: 
