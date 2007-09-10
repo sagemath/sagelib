@@ -33,6 +33,7 @@ include "../ext/gmp.pxi"
 include "../ext/stdsage.pxi"
 
 
+import sys
 import operator
 
 from sage.misc.mathml import mathml
@@ -57,9 +58,6 @@ import  sage.ext.arith
 
 cdef sage.ext.arith.arith_int ai
 ai = sage.ext.arith.arith_int()
-
-import sys
-MAX_UNSIGNED_LONG = 2 * sys.maxint  #TODO: this was copied from integer.pyx -- should this be defined somewhere more general?
 
 cdef extern from "mpz_pylong.h":
     cdef mpz_get_pylong(mpz_t src)
@@ -950,25 +948,39 @@ cdef class Rational(sage.structure.element.FieldElement):
             11^(-tan(x) - e^x)*-7^(tan(x) + e^x)
             sage: (2/3)^(3/4)
             2^(3/4)/3^(3/4)
+            sage: (-1/3)^0
+            1
             sage: (0/1)^0
             Traceback (most recent call last):
             ...
             ArithmeticError: 0^0 is undefined.
+            
+        The exponent must fit in a long unless the base is -1, 0, or 1.
             sage: s = (1/2)^(2^100)
             Traceback (most recent call last):
             ...
-            RuntimeError: exponent must be at most 4294967294  # 32-bit
-            RuntimeError: exponent must be at most 18446744073709551614 # 64-bit
+            RuntimeError: exponent must be at most 2147483647  # 32-bit
+            RuntimeError: exponent must be at most 9223372036854775807 # 64-bit
+            sage: s = (1/2)^(-2^100)
+            Traceback (most recent call last):
+            ...
+            RuntimeError: exponent must be at most 2147483647  # 32-bit
+            RuntimeError: exponent must be at most 9223372036854775807 # 64-bit
+            sage: (-3/3)^(2^100)
+            1
         """
-        cdef Rational _self = self, x
-        cdef unsigned int _n
-
+        if dummy is not None:
+            raise ValueError, "__pow__ dummy variable not used"
+        
         if not PY_TYPE_CHECK(self, Rational):  #this is here for no good reason apparent to me... should be removed in the future.
             assert False, "BUG:  Rational.__pow__ called on a non-Rational"
             return self.__pow__(float(n)) #whose idea was it to float(n)?
-
+        
+        cdef Rational _self = <Rational>self
+        cdef long nn
+        
         try:
-            _n = PyNumber_Index(n)
+            nn = PyNumber_Index(n)
         except TypeError:
             if PY_TYPE_CHECK(n, Rational):
                 # this is the only sensible answer that avoids rounding and
@@ -985,29 +997,88 @@ cdef class Rational(sage.structure.element.FieldElement):
                 except:
                     raise TypeError, "exponent (=%s) must be an integer.\nCoerce your numbers to real or complex numbers first."%n
 
-        if n > MAX_UNSIGNED_LONG:
-            raise RuntimeError, "exponent must be at most %s"%MAX_UNSIGNED_LONG
-        elif not (n or mpq_sgn(_self.value)):
-            raise ArithmeticError, "0^0 is undefined."
+        except OverflowError:
+            if mpz_cmp_si(mpq_denref(_self.value), 1) == 0:
+                if mpz_cmp_si(mpq_numref(_self.value), 1) == 0:
+                    return self
+                elif mpz_cmp_si(mpq_numref(_self.value), 0) == 0:
+                    return self
+                elif mpz_cmp_si(mpq_numref(_self.value), -1) == 0:
+                    return self if n % 2 else -self
+            raise RuntimeError, "exponent must be at most %s" % sys.maxint
 
-        x = <Rational> PY_NEW(Rational)                        
+        cdef Rational x = <Rational> PY_NEW(Rational)
+        
+        if nn == 0:
+            if not mpq_sgn(_self.value):
+                raise ArithmeticError, "0^0 is undefined."
+            else:
+                mpq_set_si(x.value, 1, 1)
+                return x
+
+
+
+        if nn < 0:
+            _sig_on
+            # mpz_pow_ui(mpq_denref(x.value), mpq_numref(_self.value), <unsigned long int>(-nn))
+            # mpz_pow_ui(mpq_numref(x.value), mpq_denref(_self.value), <unsigned long int>(-nn))
+            # The above causes segfaults, so swap after instead...
+            mpz_pow_ui(mpq_numref(x.value), mpq_numref(_self.value), -nn)
+            mpz_pow_ui(mpq_denref(x.value), mpq_denref(_self.value), -nn)
+            # mpz_swap(mpq_numref(x.value), mpq_denref(x.value)) # still a segfault
+            mpq_inv(x.value, x.value)
+            _sig_off
+            return x
+        elif nn > 0:
+            _sig_on
+            mpz_pow_ui(mpq_numref(x.value), mpq_numref(_self.value), nn)
+            mpz_pow_ui(mpq_denref(x.value), mpq_denref(_self.value), nn)
+            _sig_off
+            return x
+        
+
+        if n < 0:  # this doesn't make sense unless n is an integer.
+            x = _self**(-n)
+            return x.__invert__()
+
         cdef mpz_t num, den
 
         _sig_on
         mpz_init(num)
         mpz_init(den)
-        if n < 0:  # we used to call (self**(-n)).__invert__()) -- this should be loads faster
-            _n = PyNumber_Index(-n)
-            mpz_pow_ui(den, mpq_numref(_self.value), _n) #we switch den and num to invert
-            mpz_pow_ui(num, mpq_denref(_self.value), _n)
-        else:
-            mpz_pow_ui(num, mpq_numref(_self.value), _n)
-            mpz_pow_ui(den, mpq_denref(_self.value), _n)
+        mpz_pow_ui(num, mpq_numref(_self.value), nn)
+        mpz_pow_ui(den, mpq_denref(_self.value), nn)
         mpq_set_num(x.value, num)
         mpq_set_den(x.value, den)
         mpz_clear(num)
         mpz_clear(den)
         _sig_off
+        
+        return x
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+        
+        
+
+        _sig_on
+        if nn < 0:  # we used to call (self**(-n)).__invert__()) -- this should be loads faster
+            mpz_pow_ui(mpq_denref(x.value), mpq_numref(_self.value), -nn) #we switch den and num to invert
+            mpz_pow_ui(mpq_numref(x.value), mpq_denref(_self.value), -nn)
+        else:
+            mpz_pow_ui(mpq_numref(x.value), mpq_numref(_self.value), nn)
+            mpz_pow_ui(mpq_denref(x.value), mpq_denref(_self.value), nn)
+        _sig_off
+        
+        #print "returning"
         
         return x
 
