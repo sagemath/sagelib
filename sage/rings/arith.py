@@ -1597,15 +1597,16 @@ def prime_divisors(n):
     The prime divisors of the integer n, sorted in increasing order.  If n
     is negative, we do *not* include -1 among the prime divisors, since -1 is
     not a prime number.
-    
-    sage: prime_divisors(1)
-    []
-    sage: prime_divisors(100)
-    [2, 5]
-    sage: prime_divisors(-100)
-    [2, 5]
-    sage: prime_divisors(2004)
-    [2, 3, 167]
+
+    EXAMPLES:
+        sage: prime_divisors(1)
+        []
+        sage: prime_divisors(100)
+        [2, 5]
+        sage: prime_divisors(-100)
+        [2, 5]
+        sage: prime_divisors(2004)
+        [2, 3, 167]
     """
     v = [p for p,_ in factor(n) if p != -1]
     v.sort()
