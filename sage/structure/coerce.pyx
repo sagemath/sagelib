@@ -228,7 +228,7 @@ cdef class CoercionModel_cache_maps(CoercionModel_original):
         except TypeError:
 #            raise
             pass
-            
+
         if op is operator.mul:
                 
             # elements may also act on non-elements
