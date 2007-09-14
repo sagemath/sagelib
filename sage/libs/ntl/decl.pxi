@@ -110,6 +110,8 @@ cdef extern from "ntl_wrap.h":
     int ZZ_p_to_int(ZZ_p_c x)
     ZZ_p_c int_to_ZZ_p(int i)
     void ZZ_p_modulus(ZZ_c* mod, ZZ_p_c* x)
+    
+    ZZ_c rep(ZZ_p_c x)
 
     #### ZZX_c
 
