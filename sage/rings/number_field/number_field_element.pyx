@@ -1386,16 +1386,36 @@ cdef class NumberFieldElement(FieldElement):
         v = self._coefficients()
         z = sage.rings.rational.Rational(0)
         return v + [z]*(n - len(v))
+        
+        
+cdef class NumberFieldElement_absolute(NumberFieldElement):
+    def __init__(self, K, f):
+        NumberFieldElement.__init__(self, K, f)
+    
+cdef class NumberFieldElement_relative(NumberFieldElement):
+    def __init__(self, K, f):
+        NumberFieldElement.__init__(self, K, f)
 
-cdef class OrderElement(NumberFieldElement):
+
+cdef class OrderElement_absolute(NumberFieldElement_absolute):
     """
-    Element of an order in a number field.
+    Element of an order in an absolute number field.
 
     EXAMPLES:
         sage: k.<a> = NumberField(x^2 + 1)
     """
     def __init__(self, order, f):
         K = order.number_field()
-        NumberFieldElement.__init__(self, K, f)
+        NumberFieldElement_absolute.__init__(self, K, f)
         self._order = order
+
+cdef class OrderElement_relative(NumberFieldElement_relative):
+    """
+    Element of an order in a relative number field.
+    """
+    def __init__(self, order, f):
+        K = order.number_field()
+        NumberFieldElement_relative.__init__(self, K, f)
+        self._order = order
+
 
