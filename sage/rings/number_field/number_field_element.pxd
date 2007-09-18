@@ -16,6 +16,9 @@ cdef class NumberFieldElement(FieldElement):
     cdef object __matrix
 
     cdef NumberFieldElement _new(self)
+    
+    cdef void _ntl_coeff_as_mpz(self, mpz_t* z, long i)
+    cdef void _ntl_denom_as_mpz(self, mpz_t* z)
 
     cdef void _parent_poly_c_(self, ZZX_c *num, ZZ_c *den)
     cdef void _invert_c_(self, ZZX_c *num, ZZ_c *den)
@@ -30,13 +33,6 @@ cdef class NumberFieldElement(FieldElement):
 cdef class NumberFieldElement_absolute(NumberFieldElement):
     pass
         
-cdef class NumberFieldElement_quadratic(NumberFieldElement_absolute):
-    # (a + b sqrt(disc)) / denom 
-    cdef mpz_t a, b, denom
-    cdef Integer disc
-    cdef NumberFieldElement conjugate_c(self)
-    cdef bint is_sqrt_disc(self)
-    
 cdef class NumberFieldElement_relative(NumberFieldElement):
     pass
 
