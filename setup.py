@@ -588,8 +588,9 @@ ext_modules = [ \
     Extension('sage.rings.number_field.number_field_element_quadratic',
               sources = ['sage/rings/number_field/number_field_element_quadratic.pyx'],
               libraries=['gmp'],
-              language = 'c++'), \  # Needs c++ because it has c++ members in class struct (?)
-
+              language = 'c++'), \
+                    # Needs c++ because it has c++ members in class struct
+  
     Extension('sage.rings.number_field.number_field_base',
               sources = ['sage/rings/number_field/number_field_base.pyx']), \
 
