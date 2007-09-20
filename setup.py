@@ -987,6 +987,7 @@ setup(name        = 'sage',
                      'sage.server.trac',
                      
                      'sage.structure',
+                     'sage.structure.proof',
                      
                      'sage.dsage',
                      'sage.dsage.tests',
