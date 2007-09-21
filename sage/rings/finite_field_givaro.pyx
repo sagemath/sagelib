@@ -896,7 +896,7 @@ cdef class FiniteField_givaro(FiniteField):
              sage: k = GF(3**5, 'a')
              sage: k.vector_space()
              Vector space of dimension 5 over Finite Field of size 3
-
+             
          """
          import sage.modules.all
          V = sage.modules.all.VectorSpace(self.prime_subfield(),self.degree())
@@ -1994,6 +1994,9 @@ cdef class FiniteField_givaroElement(FiniteFieldElement):
             sage: k(v)
             2*a^2 + 1
 
+        You can also compute the vector in the other order:
+            sage: e.vector(reverse=True)
+            (0, 2, 0, 1)
         """
         cdef FiniteField_givaro k = <FiniteField_givaro>self._parent
         
