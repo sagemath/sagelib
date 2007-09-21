@@ -246,6 +246,9 @@ class GenericGraph(SageObject):
         Comparison of self and other. Must be in the same class, have the same
         settings for loops and multiedges, output the same vertex list (in order)
         and the same adjacency matrix.
+
+        Note that the less-than and greater-than value returned here
+        doesn't mean much.  The equality test is the useful thing.
         
         EXAMPLES:
             sage: G = graphs.EmptyGraph()
@@ -272,15 +275,19 @@ class GenericGraph(SageObject):
             False
 
         """
+        # If the graphs have different properties, they are not equal.
         if type(self) != type(other):
             return 1
         elif self.loops() != other.loops():
             return 1
-        else:
-            if self.multiple_edges() != other.multiple_edges():
-                return 1
+        elif self.multiple_edges() != other.multiple_edges():
+            return 1
+
+        # If the vertices have different labels, the graphs are not equal.
         if self.vertices() != other.vertices():
             return 1
+
+        # Check that the edges are the same.
         comp = enum(self) - enum(other)
         if comp < 0:
             return -1
