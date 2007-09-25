@@ -1002,6 +1002,48 @@ cdef class NumberFieldElement(FieldElement):
         ZZX_getitem_as_mpz(&num.value, &self.__numerator, 0)
         return num / (<IntegerRing_class>ZZ)._coerce_ZZ(&self.__denominator)
 
+    def galois_conjugates(self, K=None):
+        r"""
+        Return all Gal(Qbar/Q)-conjugates of this number field element in
+        the Galois closure of the parent field if K is not given, or
+        in K if K is given.
+
+        EXAMPLES:
+        In the first example the conjugates are obvious:
+            sage: K.<a> = NumberField(x^2 - 2)
+            sage: a.galois_conjugates()
+            [a, -a]
+            sage: K(3).galois_conjugates()
+            [3]
+
+        In this example the field is not Galois, so we have to pass
+        to an extension to obtain the Galois conjugates. 
+            sage: K.<a> = NumberField(x^3 - 2)
+            sage: a.galois_conjugates()
+            [1/84*a1^4 + 13/42*a1, -1/252*a1^4 - 55/126*a1, -1/126*a1^4 + 8/63*a1]
+            sage: K.<a> = NumberField(x^3 - 2)
+            sage: c = a.galois_conjugates(); c
+            [1/84*a1^4 + 13/42*a1, -1/252*a1^4 - 55/126*a1, -1/126*a1^4 + 8/63*a1]
+            sage: c[0]^3
+            2
+            sage: parent(c[0])
+            Number Field in a1 with defining polynomial x^6 + 40*x^3 + 1372
+            sage: parent(c[0]).is_galois()
+            True
+
+        There is only one Galois conjugate of $\sqrt[3]{2}$ in
+        $\QQ(\sqrt[3]{2})$.
+            sage: a.galois_conjugates(K)
+            [a]
+        
+        """
+        if K is None:
+            L = self.parent()
+            K = L.galois_closure()
+        f = self.minpoly()
+        g = K['x'](f)
+        return [a for a,_ in g.roots()]
+
     def conjugate(self):
         """
         Return the complex conjugate of the number field element.  Currently, 
@@ -1243,7 +1285,9 @@ cdef class NumberFieldElement(FieldElement):
             sage: R.<X> = K['X']
             sage: L.<b> = K.extension(X^2-(22 + a))
             sage: b.minpoly('t')
-            t^4 + (-44)*t^2 + 487
+            t^2 + -a - 22
+            sage: b.absolute_minpoly('t')
+            t^4 - 44*t^2 + 487
             sage: b^2 - (22+a)
             0        
         """
@@ -1421,9 +1465,28 @@ cdef class NumberFieldElement_absolute(NumberFieldElement):
         num[0] = _num.x
         den[0] = _den.x
 
+    def absolute_charpoly(self, var='x'):
+        r"""
+        Return the characteristic polynomial of this element over $\QQ$.
+        """
+        return self.charpoly(var=var)
+
+    def absolute_minpoly(self, var='x'):
+        r"""
+        Return the minimal polynomial of this element over $\QQ$.
+
+        EXAMPLES:
+
+        
+        """
+        return self.minpoly(var=var)
+
     def charpoly(self, var='x'):
         r"""
-        The characteristic polynomial of this element over $\Q$.
+        The characteristic polynomial of this element over $\QQ$.
+
+        This is the same as \code{self.absolute_charpoly} since this
+        is an element of an absolute extension.
 
         EXAMPLES:
 
@@ -1459,6 +1522,21 @@ cdef class NumberFieldElement_absolute(NumberFieldElement):
                 
 
 cdef class NumberFieldElement_relative(NumberFieldElement):
+    def list(self):
+        """
+        Return list of coefficients of self written in terms of a
+        power basis.
+
+        EXAMPLES:
+            sage: K.<a,b> = NumberField([x^3+2, x^2+1])
+            sage: a.list()
+            [0, 1, 0]
+            sage: v = (K.base_field().0 + a)^2 ; v
+            a^2 + 2*b*a + -1
+            sage: v.list()
+            [-1, 2*b, 1]
+        """
+        return self.vector().list()
 
     def _pari_(self, var='x'):
         """
@@ -1468,7 +1546,7 @@ cdef class NumberFieldElement_relative(NumberFieldElement):
         By default the variable name is 'x', since in PARI many variable
         names are reserved. 
             sage: y = QQ['y'].gen()
-            sage: k.<j> = NumberField([y^3 - 2, y^2 - 7])
+            sage: k.<j> = NumberField([y^2 - 7, y^3 - 2])
             sage: pari(j)
             Mod(42/5515*x^5 - 9/11030*x^4 - 196/1103*x^3 + 273/5515*x^2 + 10281/5515*x + 4459/11030, x^6 - 21*x^4 + 4*x^3 + 147*x^2 + 84*x - 339)
             sage: j^2
@@ -1522,33 +1600,49 @@ cdef class NumberFieldElement_relative(NumberFieldElement):
 
     def charpoly(self, var='x'):
         r"""
-        The characteristic polynomial of this element over $\Q$.
+        The characteristic polynomial of this element over its base field.
 
         EXAMPLES:
+        
+        """
+        return self.matrix().charpoly(var)
+
+    def absolute_charpoly(self, var='x'):
+        r"""
+        The characteristic polynomial of this element over $\QR$.
 
         We construct a relative extension and find the characteristic
-        polynomial over $\Q$.
+        polynomial over $\QQ$.
 
+        EXAMPLES:
             sage: R.<x> = QQ[]
             sage: K.<a> = NumberField(x^3-2)
             sage: S.<X> = K[] 
             sage: L.<b> = NumberField(X^3 + 17); L
             Number Field in b with defining polynomial X^3 + 17 over its base field
-            sage: b.charpoly ()
+            sage: b.absolute_charpoly()
             x^9 + 51*x^6 + 867*x^3 + 4913
             sage: b.charpoly()(b)
             0
             sage: a = L.0; a
             b
-            sage: a.charpoly('x')
+            sage: a.absolute_charpoly('x')
             x^9 + 51*x^6 + 867*x^3 + 4913
-            sage: a.charpoly('y')
+            sage: a.absolute_charpoly('y')
             y^9 + 51*y^6 + 867*y^3 + 4913
         """
-        R = self.parent().base_ring()[var]
         g = self.polynomial()  # in QQ[x]
+        R = g.parent()
         f = self.parent().pari_polynomial()  # # field is QQ[x]/(f)
-        return R( (g._pari_().Mod(f)).charpoly() )
+        return R( (g._pari_().Mod(f)).charpoly() ).change_variable_name(var)
+
+    def absolute_minpoly(self, var='x'):
+        r"""
+        Return the minpoly over $\QQ$ of this element.
+        
+        EXAMPLES:
+        """
+        return self.absolute_charpoly(var).radical()
 
 ## This might be useful for computing relative charpoly.
 ## BUT -- currently I don't even know how to view elements

@@ -826,8 +826,9 @@ class Worksheet:
         return """
 <select class="worksheet"  onchange="go_option(this);">
 <option title="Select a file related function" value=""  selected>File...</option>
- <option title="Create a new worksheet" value="new_worksheet();">New Worksheet</option>
- <option title="Save this worksheet to an sws file" value="download_worksheet('%s');">Download</option>
+ <option title="Load a new worksheet stored in a file" value="upload_worksheet_button();">Upload worksheet from a file</option>
+ <option title="Create a new worksheet" value="new_worksheet();">New worksheet</option>
+ <option title="Save this worksheet to an sws file" value="download_worksheet('%s');">Download to a file</option>
  <option title="Print this worksheet" value="print_worksheet();">Print</option>
  <option title="Rename this worksheet" value="rename_worksheet();">Rename worksheet</option>
  <option title="Copy this worksheet" value="copy_worksheet();">Copy worksheet</option>
@@ -837,7 +838,8 @@ class Worksheet:
 <select class="worksheet"  onchange="go_option(this);" >
  <option title="Select a worksheet function" value="" selected>Action...</option>
  <option title="Interrupt currently running calculations, if possible" value="interrupt();">Interrupt</option>
- <option title="Restart the worksheet" value="restart_sage();">Restart</option>
+ <option title="Restart the worksheet process" value="restart_sage();">Restart worksheet</option>
+ <option title="Quit the worksheet process" value="quit_sage();">Quit worksheet</option> 
  <option value="">---------------------------</option>
  <option title="Evaluate all input cells in the worksheet" value="evaluate_all();">Evaluate All</option>
  <option title="Hide all output" value="hide_all();">Hide All Output</option>
