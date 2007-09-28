@@ -637,13 +637,17 @@ cdef class MPolynomialRing_libsingular(MPolynomialRing_generic):
 
         return co.new_MP(self,_p)
 
-    def ideal(self, gens, coerce=True):
+    def ideal(self, *gens, **kwds):
         """
         Create an ideal in this polynomial ring.
 
         INPUT:
-            gens -- generators of the ideal
-            coerce -- shall the generators be coerced first (default:True)
+            *gens -- list or tuple of generators (or several input
+                  arguments)
+            coerce -- bool (default: True); this must be a keyword
+                  argument. Only set it to False if you are certain
+                  that each generator is already in the ring.
+
 
         EXAMPLE:
             sage: P.<x,y,z> = QQ[]
@@ -654,13 +658,15 @@ cdef class MPolynomialRing_libsingular(MPolynomialRing_generic):
             Ideal (x + 2*y + 2*z - 1, 2*x*y + 2*y*z - y, x^2 + 2*y^2 + 2*z^2 - x) of Polynomial Ring in x, y, z over Rational Field
 
         """
+        if len(gens) == 1:
+            gens = gens[0]
         if is_SingularElement(gens):
             gens = list(gens)
             coerce = True
-        if is_Macaulay2Element(gens):
+        elif is_Macaulay2Element(gens):
             gens = list(gens)
             coerce = True
-        elif not isinstance(gens, (list, tuple)):
+        if not isinstance(gens, (list, tuple)):
             gens = [gens]
         if coerce:
             gens = [self(x) for x in gens]  # this will even coerce from singular ideals correctly!
@@ -3045,7 +3051,7 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
         p_Delete(&gcd, _ring)
         return co.new_MP(self._parent, ret)
 
-    def is_square_free(self):
+    def is_squarefree(self):
         """
         """
         cdef ring *_ring = (<MPolynomialRing_libsingular>self._parent)._ring
@@ -3295,6 +3301,12 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
             sage: f = R.hom([y,x], R)
             sage: f(x^2 + 3*y^5)
             3*x^5 + y^2
+            
+            sage: R.<a,b,c,d> = QQ[]
+            sage: S.<u> = QQ[]
+            sage: h = R.hom([0,0,0,u], S)
+            sage: h((a+d)^3)
+            u^3
         """
         #TODO: very slow
         n = self.parent().ngens()
@@ -3302,7 +3314,7 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
             return codomain._coerce_(self)
         y = codomain(0)
         for (m,c) in self.dict().iteritems():
-            y += codomain(c)*mul([ im_gens[i]**m[i] for i in range(n) ])
+            y += codomain(c)*mul([ im_gens[i]**m[i] for i in range(n) if m[i]])
         return y
 
     def diff(self, MPolynomial_libsingular variable, have_ring=True):

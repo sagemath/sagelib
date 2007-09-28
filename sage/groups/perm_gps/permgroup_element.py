@@ -56,11 +56,15 @@ from sage.rings.all      import ZZ, Integer, is_MPolynomial, MPolynomialRing, is
 from sage.matrix.all     import MatrixSpace
 from sage.interfaces.all import gap, is_GapElement, is_ExpectElement
 
+import sage.structure.coerce as coerce
+
 import operator
 
 from sage.rings.integer import Integer
 from sage.structure.element import MonoidElement
 from sage.rings.arith import *   # todo: get rid of this -- "from blah import *" is evil.
+
+#import permgroup_named
 
 def is_PermutationGroupElement(x):
     return isinstance(x, PermutationGroupElement)
@@ -208,6 +212,7 @@ class PermutationGroupElement(element.MultiplicativeGroupElement):
             sage: k._gap_().parent()
             Gap
         """
+        import sage.groups.perm_gps.permgroup_named
         from sage.groups.perm_gps.permgroup_named import SymmetricGroup
         from sage.groups.perm_gps.permgroup import PermutationGroup_generic
         if check:
@@ -221,7 +226,7 @@ class PermutationGroupElement(element.MultiplicativeGroupElement):
         else:
             self.__gap = str(g)
         if parent is None:
-            parent = SymmetricGroup(self._gap_().LargestMovedPoint())
+            parent = sage.groups.perm_gps.permgroup_named.SymmetricGroup(self._gap_().LargestMovedPoint())
         element.Element.__init__(self, parent)
 
     def _gap_init_(self):
@@ -525,34 +530,30 @@ class PermutationGroupElement(element.MultiplicativeGroupElement):
             sage: g2 = G.gens()[1]
             sage: h = g1^2*g2*g1
             sage: h.word_problem([g1,g2], False)
-            '(1,2,3)(4,5)^2*(3,4)^-1*(1,2,3)(4,5)'
+            ('x1^2*x2^-1*x1', '(1,2,3)(4,5)^2*(3,4)^-1*(1,2,3)(4,5)')
             sage: h.word_problem([g1,g2])
                x1^2*x2^-1*x1
                [['(1,2,3)(4,5)', 2], ['(3,4)', -1], ['(1,2,3)(4,5)', 1]]
-            '(1,2,3)(4,5)^2*(3,4)^-1*(1,2,3)(4,5)'
+            ('x1^2*x2^-1*x1', '(1,2,3)(4,5)^2*(3,4)^-1*(1,2,3)(4,5)')
         """
         import copy
         from sage.groups.perm_gps.permgroup import PermutationGroup
         from sage.interfaces.all import gap
-        G = g.parent()
-        #print G
-        gap.eval("l:=One(Rationals)")
-        s1 = "gens := GeneratorsOfGroup(%s)"%G._gap_init_()
-        #print s1
-        gap.eval(s1)
-        s2 = "g0:=%s; gensH:=%s"%(gap(g),words)
-        gap.eval(s2)
-        s3 = 'G:=Group(gens); H:=Group(gensH)'
-        #print s3
-        gap.eval(s3)
-        phi = gap.eval("hom:=EpimorphismFromFreeGroup(G)")
-        #print phi
-        l1 = gap.eval("ans:=PreImagesRepresentative(hom,g0)")
+        
+        G = gap(words[0].parent())
+        g = words[0].parent()(g)
+        gensH = gap(words)
+        H = gensH.Group()
+        hom = G.EpimorphismFromFreeGroup()
+        ans = hom.PreImagesRepresentative(gap(g))
+        
+        l1 = str(ans)
         l2 = copy.copy(l1)
         l4 = []
         l3 = l1.split("*")
         for i in range(1,len(words)+1):
             l2 = l2.replace("x"+str(i),str(words[i-1]))
+
         if display:
             for i in range(len(l3)):    ## parsing the word for display
                 if len(l3[i].split("^"))==2:
@@ -565,4 +566,4 @@ class PermutationGroupElement(element.MultiplicativeGroupElement):
                     l5[i][0] = l5[i][0].replace("x"+str(j),str(words[j-1]))
             print "         ",l1
             print "         ",l5
-        return l2
+        return l1,l2

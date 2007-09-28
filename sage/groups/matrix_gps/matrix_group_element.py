@@ -179,9 +179,9 @@ class MatrixGroupElement(element.MultiplicativeGroupElement):
             sage: g = G([[1, 1], [0, 1]])
             sage: print g._latex_()
             \left(\begin{array}{rr}
-            1&1\\
-            0&1
-            \end{array}\right)            
+            1 & 1 \\
+            0 & 1
+            \end{array}\right)
 
         Type \code{view(g._latex_())} to see the object in an xdvi window (assuming you
         have latex and xdvi installed).

@@ -100,6 +100,7 @@ from sage.misc.misc import srange
 from sage.rings.integer_ring import ZZ
 import sage.calculus.all as calculus
 from sage.functions.transcendental import prime_pi
+import partition
 
 Integer = ZZ
 
@@ -1023,7 +1024,10 @@ class A000312(SloaneSequence):
         return "Number of labeled mappings from n points to themselves (endofunctions): n^n."
 
     def _eval(self, n):
-        return Integer(n**n)
+        if n == 0:
+            return Integer(1)
+        else:
+            return Integer(n**n)
 
 
 
@@ -2657,7 +2661,7 @@ class A000041(SloaneSequence):
         return "a(n) = number of partitions of n (the partition numbers)."
 
     def _eval(self, n):
-        return combinat.number_of_partitions(n)
+        return partition.Partitions(n).count()
 
 
 
