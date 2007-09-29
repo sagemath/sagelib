@@ -44,7 +44,10 @@ class NotebookObject:
                           nb.add_user("username", "password", "email@place", "user")
                           nb.save()
         open_viewer -- (default: True) whether to pop up a web browser
-                          
+        timeout    -- (default: 0) seconds until idle worksheet sessions
+                      automatically timeout, i.e., the corresponding
+                      Sage session terminates.  0 means 'never timeout'.
+                      
     \begin{verbatim}
 
     NOTE: If you have problems with the server certificate hostname not

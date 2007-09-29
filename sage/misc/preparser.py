@@ -268,7 +268,7 @@ def containing_block(code, ix, delimiters=['()','[]','{}'], require_delim=True):
     return start, end+1
     
     
-def parse_ellipsis(code):
+def parse_ellipsis(code, preparse_step=True):
     """
     Preparse [0,2,..,n] notation. 
     
@@ -291,6 +291,8 @@ def parse_ellipsis(code):
             start_list, end_list = containing_block(code, ix, ['()','[]'])
             arguments = code[start_list+1:end_list-1].replace('...', ',Ellipsis,').replace('..', ',Ellipsis,')
             arguments = re.sub(r',\s*,', ',', arguments)
+            if preparse_step:
+                arguments = arguments.replace(';', ', step=')
             range_or_iter = 'range' if code[start_list]=='[' else 'iter'
             code = "%s(ellipsis_%s(%s))%s" %  (code[:start_list],
                                                range_or_iter,
@@ -305,7 +307,7 @@ def preparse(line, reset=True, do_time=False, ignore_prompts=False):
     try:
         # [1,2,..,n] notation
         L, literals = strip_string_literals(line)
-        L = parse_ellipsis(L)
+        L = parse_ellipsis(L, preparse_step=False)
         line = L % literals
     except SyntaxError:
         pass
@@ -495,9 +497,9 @@ def preparse(line, reset=True, do_time=False, ignore_prompts=False):
                 d0 = line[:c0].rfind('[')
                 if c0 == -1:
                     raise SyntaxError, 'constructor must end with ) or ]'
-                line_new = '%s"%s"%s; (%s,) = %s.gens()'%(
+                line_new = '%s"%s"%s; (%s,) = %s._first_ngens(%s)'%(
                     line[:i] + line[gen_end+1:d0+1], gen_vars,
-                    line[c0:c], gen_vars, gen_obj)
+                    line[c0:c], gen_vars, gen_obj, gen_vars.count(',')+1)
             else:
                 c0 = line[:c].rfind(')')
                 # General constructor -- rewrite the input line as two commands
@@ -511,9 +513,9 @@ def preparse(line, reset=True, do_time=False, ignore_prompts=False):
                 else:
                     sep = ''
 
-                line_new = '%s%snames=%s); (%s,) = %s.gens()'%(
+                line_new = '%s%snames=%s); (%s,) = %s._first_ngens(%s)'%(
                     line[:i] + line[gen_end+1:c0], sep, gen_names,
-                    gen_vars, gen_obj)
+                    gen_vars, gen_obj, gen_vars.count(',')+1)
                        
             line = line_new + line[c:]
             #i = len(line_new)
