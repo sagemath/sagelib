@@ -237,7 +237,7 @@ cdef class ntl_ZZ_p:
 
     def __int__(self):
         return self.get_as_int()
-
+        
     cdef int get_as_int(ntl_ZZ_p self):
         r"""
         Returns value as C int.
@@ -304,6 +304,11 @@ cdef class ntl_ZZ_p:
         self.c.restore_c()
         ZZ_p_modulus( &r.x, &self.x )
         return r
+        
+    def _integer_(self):
+        self.c.restore_c()
+        cdef ZZ_c rep = ZZ_p_rep(self.x)
+        return (<IntegerRing_class>ZZ_sage)._coerce_ZZ(&rep)
 
     def _sage_(self):
         r"""
