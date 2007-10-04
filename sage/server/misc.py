@@ -50,7 +50,10 @@ def open_page(address, port, secure, path=""):
         rsrc = 'https'
     else:
         rsrc = 'http'
-        
+    
+    orig = os.environ['LD_LIBRARY_PATH']
+    os.environ['LD_LIBRARY_PATH'] = ''
     cmd = 'echo `%s %s://%s:%s%s 1>&2 >/dev/null` &'%(browser(), rsrc, address, port, path)
     os.system(cmd)
+    os.environ['LD_LIBRARY_PATH'] = orig
 
