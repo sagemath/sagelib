@@ -384,8 +384,7 @@ class GenericGraph(SageObject):
             [1 1 0 0 0]
             [1 1 0 0 0]
             sage: factor(m.charpoly())
-            (x^2 - 6) * x^3
-
+            x^3 * (x^2 - 6)
         """
         if R is None:
             return self.am()

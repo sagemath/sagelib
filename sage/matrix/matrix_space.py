@@ -22,9 +22,8 @@ TESTS:
     [0 0]
 """
 
-import types
-
 # System imports
+import types
 import random
 import weakref
 
@@ -78,7 +77,6 @@ import sage.rings.polynomial.multi_polynomial_ring_generic
 import sage.rings.padics.padic_ring_capped_relative
 import sage.misc.latex as latex
 #import sage.rings.real_double as real_double
-from sage.misc.misc import xsrange
 
 import sage.modules.free_module_element
 import sage.modules.free_module
@@ -257,7 +255,7 @@ class MatrixSpace_generic(parent_gens.ParentWithGens):
         if entries == 0 and hasattr(self, '__zero_matrix'):
             return self.zero_matrix()
         
-        if isinstance(entries, list) and len(entries) > 0 and \
+        if isinstance(entries, (list, tuple)) and len(entries) > 0 and \
            sage.modules.free_module_element.is_FreeModuleElement(entries[0]):
             if self.__is_sparse:
                 e = {}

@@ -35,6 +35,8 @@ from pager import pager
 
 from sagedoc import search_src, search_doc
 
+from classgraph import class_graph
+
 from reset import reset, restore
 
 from getusage import top, get_memory_usage
@@ -120,7 +122,6 @@ from functional import (additive_order,
                         quo,
                         show,
                         isqrt,
-                        square_free_part,
                         squarefree_part,
                         transpose,
                         zero,
