@@ -543,6 +543,12 @@ cdef class IntegerRing_class(PrincipalIdealDomain):
 
     def ngens(self):
         return 1
+
+    def degree(self):
+        return 1
+
+    def absolute_degree(self):
+        return 1
     
     def characteristic(self):
         """
