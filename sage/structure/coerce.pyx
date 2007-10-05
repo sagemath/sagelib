@@ -211,7 +211,7 @@ cdef class CoercionModel_cache_maps(CoercionModel_original):
         self._action_maps = {}
         
     cdef bin_op_c(self, x, y, op):
-        
+
         if (op is not op_add) and (op is not op_sub):
             # Actions take preference over common-parent coercions.
             xp = parent_c(x)
