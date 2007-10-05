@@ -1192,7 +1192,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         This returns a copy, which is safe to change:
             sage: edivs = M.elementary_divisors()
             sage: edivs.pop()
-            0
+            6
             sage: M.elementary_divisors()
             [1, 1, 6]
 
