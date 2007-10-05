@@ -383,7 +383,13 @@ cdef class Polynomial(CommutativeAlgebraElement):
                 result = result(other_args)
             else:
                 raise TypeError, "Wrong number of arguments"
-                
+
+        if d == -1:
+            try:
+                return a.parent()(0)
+            except AttributeError:
+                return result
+
         if d == 0:
             try:
                 return a.parent()(1) * result
@@ -1491,7 +1497,6 @@ cdef class Polynomial(CommutativeAlgebraElement):
 
 
         elif is_NumberField(R) or is_FiniteField(R):
-
             v = [x._pari_("a") for x in self.list()]
             f = pari(v).Polrev()
             G = list(f.factor())
