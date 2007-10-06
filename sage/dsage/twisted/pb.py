@@ -93,6 +93,10 @@ class PBClientFactory(pb.PBClientFactory):
         d = root.callRemote("login_anonymous", mind)
         
         return d
+    
+    # We should override this in the future to do something useful...
+    # def startedConnecting(self, connector):
+    #     pass
         
 class _SSHKeyPortalRoot(pb._PortalRoot):
     def rootObject(self, broker):
