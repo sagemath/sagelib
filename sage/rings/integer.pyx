@@ -572,7 +572,21 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             1101101011101100011110001110010010100111010001101010001111111000101000000000101111000010000011
         """
         return self.str(2)
+    
+    def bits(self, int base=2):
+        """
+        Return the number of bits in self.
 
+        EXAMPLES: 
+            sage: 500.bits()
+            9
+            sage: 5.bits()
+            3
+            sage: 12345.bits() == len(12345.binary())
+            True
+        """
+        return int(mpz_sizeinbase(self.value, 2))
+        
     def digits(self, int base=2, digits=None):
         """
         Return a list of digits for self in the given base in little
@@ -592,7 +606,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             
         """
         if base < 2:
-            raise TypeError, "base must be >= 2"
+            raise ValueError, "base must be >= 2"
 
         cdef mpz_t mpz_value
         cdef mpz_t mpz_base
