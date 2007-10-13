@@ -2808,7 +2808,7 @@ class SymbolicArithmetic(SymbolicOperation):
         if self._operator == operator.pow:
             new_ops = [ops[0]._recursive_sub_over_ring(kwds, ring=ring), Integer(ops[1])]
         else:
-            new_ops = [op._recursive_sub_over_ring(kwds, ring=ring) for op in ops]                
+            new_ops = [op._recursive_sub_over_ring(kwds, ring=ring) for op in ops]
         return ring(self._operator(*new_ops))
         
     def __float__(self):
