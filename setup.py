@@ -745,7 +745,7 @@ ext_modules = [ \
     Extension('sage.combinat.partitions',
               ['sage/combinat/partitions.pyx',
                'sage/combinat/partitions_c.cc'],
-              libraries = ['gmp', 'mpfr'],
+              libraries = ['qd', 'gmp', 'mpfr'],
               language='c++'              
               ), \
 
