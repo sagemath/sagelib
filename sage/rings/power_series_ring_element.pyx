@@ -530,6 +530,9 @@ cdef class PowerSeries(AlgebraElement):
         a = self.list()
         v = [a[i] for i in range(min(prec, len(a)))]
         return self._parent._poly_ring()(v)
+        
+    cdef _inplace_truncate(self, long prec):
+        return self.truncate(prec)
 
     def add_bigoh(self, prec):
         r"""
@@ -649,7 +652,7 @@ cdef class PowerSeries(AlgebraElement):
         # endif
         return prec
 
-    def is_zero(self):
+    def __nonzero__(self):
         """
         Return True if this power series equals 0.
 
@@ -666,7 +669,7 @@ cdef class PowerSeries(AlgebraElement):
             sage: (0 + O(q^1000)).is_zero()
             True
         """
-        return self.polynomial().is_zero()
+        return not not self.polynomial()
 
     def is_unit(self):
         """
