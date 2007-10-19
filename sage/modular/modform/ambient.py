@@ -373,57 +373,71 @@ class ModularFormsAmbient(space.ModularFormsSpace,
         """
         Return the new or $p$-new submodule of this ambient module.
 
+        NOTE: This code is currently broken, so it now just raises a
+        NotImplementedError. The code and doctests remain below as an
+        example of what the function *should* do.
+
         INPUT:
             p -- (default: None), if specified return only the $p$-new submodule.
 
         EXAMPLES:
-            sage: m = ModularForms(Gamma0(33),2); m
+            sage.: m = ModularForms(Gamma0(33),2); m
             Modular Forms space of dimension 6 for Congruence Subgroup Gamma0(33) of weight 2 over Rational Field
-            sage: m.new_submodule()
+            sage.: m.new_submodule()
             Modular Forms subspace of dimension 1 of Modular Forms space of dimension 6 for Congruence Subgroup Gamma0(33) of weight 2 over Rational Field
 
         Another example:
-            sage: M = ModularForms(17,4)
-            sage: N = M.new_subspace(); N
+            sage.: M = ModularForms(17,4)
+            sage.: N = M.new_subspace(); N
             Modular Forms subspace of dimension 4 of Modular Forms space of dimension 6 for Congruence Subgroup Gamma0(17) of weight 4 over Rational Field
-            sage: N.basis()
+            sage.: N.basis()
             [
             q + 2*q^5 + O(q^6),
             q^2 - 3/2*q^5 + O(q^6),
             q^3 + O(q^6),
             q^4 - 1/2*q^5 + O(q^6)
             ]
+
+            sage: ModularForms(12,4).new_submodule()
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: computation of new submodule currently not implemented.
         
 
-        Unfortunaely (TODO) -- $p$-new submodules aren't yet implemented:
-            sage: m.new_submodule(3)
+        Unfortunately (TODO) -- $p$-new submodules aren't yet implemented:
+            sage.: m.new_submodule(3)
             Traceback (most recent call last):
             ...
             NotImplementedError
-            sage: m.new_submodule(11)
+            sage.: m.new_submodule(11)
             Traceback (most recent call last):
             ...
             NotImplementedError
         """
-        try:
-            return self.__new_submodule[p]
-        except AttributeError:
-            self.__new_submodule = {}
-        except KeyError:
-            pass
-        if not p is None:
-            p = rings.Integer(p)
-            if not p.is_prime():
-                raise ValueError, "p (=%s) must be a prime or None."%p
-        
-        if p is None:
-            M = self._full_new_submodule()
-            self.__new_submodule[None] = M
-            return M
-        else:
-            M = self._new_submodule(p)
-            self.__new_submodule[p] = M
-            return M
+
+        ## this code is currently broken, but left in place so that
+        ## it can be used when I get a chance to fix it.
+        raise NotImplementedError, "computation of new submodule currently not implemented."
+    
+##        try:
+##            return self.__new_submodule[p]
+##        except AttributeError:
+##            self.__new_submodule = {}
+##        except KeyError:
+##            pass
+##        if not p is None:
+##            p = rings.Integer(p)
+##            if not p.is_prime():
+##                raise ValueError, "p (=%s) must be a prime or None."%p
+##        
+##        if p is None:
+##            M = self._full_new_submodule()
+##            self.__new_submodule[None] = M
+##            return M
+##        else:
+##            M = self._new_submodule(p)
+##            self.__new_submodule[p] = M
+##            return M
             
             
 
