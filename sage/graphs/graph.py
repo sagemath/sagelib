@@ -359,7 +359,19 @@ class GenericGraph(SageObject):
             return self._nxg.name
         else:
             return repr(self)
-
+            
+    def __hash__(self):
+        """
+        Since graphs are mutable, they should not be hashable, so we return a type error.
+        
+        EXAMPLES:
+            sage: hash(Graph())
+            Traceback (most recent call last):
+            ...
+            TypeError: graphs are mutable, and thus not hashable
+        """
+        raise TypeError, "graphs are mutable, and thus not hashable"
+        
     def _latex_(self):
         """
         To include a graph in LaTeX document, see function
