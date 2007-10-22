@@ -16,7 +16,7 @@ on their system:
    
 Set timeout to 30 seconds so it will not hang the doctests indefinitely.
 
-   sage: _ = [x.wait(timeout=30) for x in v] 
-   sage: print v
+   sage: _ = [x.wait(timeout=30) for x in v]    # long time
+   sage: print v                                # long time
    [10000, 10201, 10404]
 """

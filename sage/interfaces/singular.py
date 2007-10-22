@@ -198,18 +198,19 @@ Gr\"obner basis for some ideal, using Singular through \sage.
             //                        : names    a b c d e f 
             //        block   2 : ordering C
     sage: I = singular.ideal('cyclic(6)')
-    sage.: g = singular('groebner(I)')             
+    sage: g = singular('groebner(I)')             
     Traceback (most recent call last):
     ...
     TypeError: Singular error:
-       ? `I` is undefined
-       ? error occurred in standard.lib::groebner line 164: `parameter def i; parameter  list #;  `
-       ? leaving standard.lib::groebner
-       skipping text from `;` error at token `)`
-    sage.: g = I.groebner()             # not tested since crashes doctest system
-    sage.: g
-       f^48-2554*f^42-15674*f^36+12326*f^30-12326*f^18+15674*f^12+2554*f^6-1,
-       ...
+    ...
+
+We restart everything and try again, but correctly.
+    sage: singular.quit()
+    sage: singular.lib('poly.lib'); R = singular.ring(32003, '(a,b,c,d,e,f)', 'lp')
+    sage: I = singular.ideal('cyclic(6)')
+    sage: I.groebner()     
+    f^48-2554*f^42-15674*f^36+12326*f^30-12326*f^18+15674*f^12+2554*f^6-1,
+    ...
 
 It's important to understand why the first attempt at computing a
 basis failed.  The line where we gave singular the input 'groebner(I)'
@@ -227,6 +228,18 @@ robust manner, as long as you are creating a new object.
     sage: t = '"%s"'%10^15000   # 15 thousand character string (note that normal Singular input must be at most 10000)
     sage: a = singular.eval(t)            
     sage: a = singular(t)
+
+TESTS:
+We test an automatic coercion:
+    sage: a = 3*singular('2'); a
+    6
+    sage: type(a)
+    <class 'sage.interfaces.singular.SingularElement'>
+    sage: a = singular('2')*3; a
+    6
+    sage: type(a)
+    <class 'sage.interfaces.singular.SingularElement'>
+    
 """
 
 #We could also do these calculations without using the singular
@@ -345,19 +358,22 @@ class Singular(Expect):
         # code that involves the singular interfaces.  Everything goes
         # through here. 
         #print "input: %s"%x
-        
-        x = str(x).rstrip().rstrip(';')
-        x = x.replace("> ",">\t") #don't send a prompt  (added by Martin Albrecht)
-        if not allow_semicolon and x.find(";") != -1:
-            raise TypeError, "singular input must not contain any semicolons:\n%s"%x
-        if len(x) == 0 or x[len(x) - 1] != ';':
-            x += ';'
+        import gc
+        try:
+            gc.disable()
+            x = str(x).rstrip().rstrip(';')
+            x = x.replace("> ",">\t") #don't send a prompt  (added by Martin Albrecht)
+            if not allow_semicolon and x.find(";") != -1:
+                raise TypeError, "singular input must not contain any semicolons:\n%s"%x
+            if len(x) == 0 or x[len(x) - 1] != ';':
+                x += ';'
 
-        s = Expect.eval(self, x)
-        
-        if s.find("error") != -1 or s.find("Segment fault") != -1:
-            raise RuntimeError, 'Singular error:\n%s'%s
+            s = Expect.eval(self, x)
 
+            if s.find("error") != -1 or s.find("Segment fault") != -1:
+                raise RuntimeError, 'Singular error:\n%s'%s
+        finally:
+            gc.enable()
         return s
 
     def set(self, type, name, value):

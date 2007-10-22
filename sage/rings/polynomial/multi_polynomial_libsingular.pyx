@@ -2089,6 +2089,29 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
 
             p = pNext(p)
         return pd
+        
+    def __iter__(self):
+        """
+        Facilitates iterating over the monomials of self, 
+        returning tuples of the form (coeff, mon) for each
+        non-zero monomial. 
+        
+        NOTE: This function creates the entire list upfront because
+              Cython doesn't (yet) support iterators. 
+        
+        EXAMPLES: 
+            sage: P.<x,y,z> = PolynomialRing(QQ,3)
+            sage: f = 3*x^3*y + 16*x + 7
+            sage: [(c,m) for c,m in f]
+            [(3, x^3*y), (16, x), (7, 1)]
+            sage: f = P.random_element(12,14)
+            sage: sum(c*m for c,m in f) == f
+            True
+        """
+        # TODO: re-implement actually using yield when yield added to cython
+        D = self.dict()
+        L = [(c, MPolynomial_polydict(self._parent, {exp: 1})) for exp, c in D.items()]
+        return iter(L)
 
     def __getitem__(self,x):
         """
@@ -2888,6 +2911,10 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
             sage: f.factor(2)
             (y + z) * (x - 1)^2
 
+            sage: R.<x,w,v,u> = QQ['x','w','v','u']
+            sage: p = (4*v^4*u^2 - 16*v^2*u^4 + 16*u^6 - 4*v^4*u + 8*v^2*u^3 + v^4)
+            sage: p.factor()
+            (-2*v^2*u + 4*u^3 + v^2)^2
         """
         cdef ring *_ring
         cdef intvec *iv
