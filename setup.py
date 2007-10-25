@@ -160,8 +160,18 @@ ntl_lzz_pX = Extension('sage.libs.ntl.ntl_lzz_pX',
                  libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
                  language='c++')
 
+ntl_GF2 = Extension('sage.libs.ntl.ntl_GF2',
+                 sources = ["sage/libs/ntl/ntl_GF2.pyx"],
+                 libraries = ["csage", "ntl", "stdc++"],
+                 language='c++')
+
 ntl_GF2X = Extension('sage.libs.ntl.ntl_GF2X',
                  sources = ["sage/libs/ntl/ntl_GF2X.pyx"],
+                 libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
+                 language='c++')
+
+ntl_GF2EContext = Extension('sage.libs.ntl.ntl_GF2EContext',
+                 sources = ["sage/libs/ntl/ntl_GF2EContext.pyx"],
                  libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
                  language='c++')
 
@@ -256,6 +266,13 @@ libsingular = Extension('sage.libs.singular.singular',
                         libraries = ['gmp', 'm', 'readline', 'singular', 'singfac', 'singcf', 'omalloc', 'givaro', 'gmpxx'],
                         language="c++",
                         include_dirs=[SAGE_ROOT +'/local/include/singular']
+                        )
+
+fplll = Extension('sage.libs.fplll.fplll',
+                        sources = ['sage/libs/fplll/fplll.pyx'],
+                        libraries = ['gmp', 'mpfr', 'stdc++', 'fplll'],
+                        language="c++",
+                        include_dirs=[SAGE_ROOT +'/local/include/fplll']
                         )
 
 
@@ -438,7 +455,9 @@ ext_modules = [ \
     ntl_lzz_pContext,    
     ntl_lzz_p,
     ntl_lzz_pX,
+    ntl_GF2,
     ntl_GF2X,
+    ntl_GF2EContext,
     ntl_GF2E,
     ntl_GF2EX,
     ntl_mat_ZZ,
@@ -482,6 +501,8 @@ ext_modules = [ \
      givaro_gfq, \
 
      libsingular, \
+
+     fplll, \
 
 ##     matrix_rational_sparse,
 
@@ -1062,6 +1083,7 @@ setup(name        = 'sage',
                      'sage.lfunctions',
 
                      'sage.libs',
+                     'sage.libs.fplll',
                      'sage.libs.hanke',
                      'sage.libs.linbox',
                      'sage.libs.mwrank',
