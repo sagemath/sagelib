@@ -1452,7 +1452,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         """
         import sage.rings.integer_ring
         return sage.rings.integer_ring.factor(self, algorithm=algorithm, proof=proof)
-
+        
     def coprime_integers(self, m):
         """
         Return the positive integers $< m$ that are coprime to self.
