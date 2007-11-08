@@ -284,6 +284,8 @@ class DSageServer(pb.Root):
             if job.status == 'failed':
                 msg = '%s failed, removing from queue.' % (job_id)
                 log.msg(msg)
+        
+        jdict['update_time'] = datetime.datetime.now()
             
         return self.jobdb.store_job(job.reduce())
 
