@@ -322,6 +322,8 @@ class EllipticCurve_finite_field(EllipticCurve_field, HyperellipticCurve_finite_
             N = integer_floor(M.real())
 
         return N
+        
+    order = cardinality # alias
 
     def _cremona_abgrp_data(self):
         E = self._gp()
