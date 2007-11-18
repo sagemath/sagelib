@@ -892,7 +892,7 @@ class SymbolicExpression(RingElement):
             sage: (a+b+a*b).absolute_minpoly()
             x^4 - 22*x^2 - 48*x - 23
 
-        Works with trig funcitons too. 
+        Works with trig functions too. 
             sage: sin(pi/3).minpoly()
             x^2 - 3/4
             
@@ -2116,10 +2116,10 @@ class SymbolicExpression(RingElement):
         An example, where one of the exponents is not an integer.
             sage: var('x, u, v')
             (x, u, v)
-            sage: f = expand((2*u*v^2-v^2-4*u^3)^2 * (-u)^3 * (x-sin(x))^3)     # not tested -- trac #946
-            sage: f.factor()                                 # not tested
-            u^3*(2*u*v^2 - v^2 - 4*u^3)^2*(sin(x) - x)^3     # not tested
-            sage: g = f.factor_list(); g                     # not tested 
+            sage: f = expand((2*u*v^2-v^2-4*u^3)^2 * (-u)^3 * (x-sin(x))^3) 
+            sage: f.factor()                                 
+            u^3*(2*u*v^2 - v^2 - 4*u^3)^2*(sin(x) - x)^3     
+            sage: g = f.factor_list(); g                     
             [(u, 3), (2*u*v^2 - v^2 - 4*u^3, 2), (sin(x) - x, 3)]
 
         This example also illustrates that the exponents do not have
