@@ -211,6 +211,20 @@ pari = Extension('sage.libs.pari.gen',
                  sources = ["sage/libs/pari/gen.pyx"],
                  libraries = ['pari', 'gmp'])
 
+cremona_mat = Extension('sage.libs.cremona.mat',
+                       sources = ["sage/libs/cremona/mat.pyx"],
+                       libraries = ['g0nntl', 'jcntl', 'gmpxx', 'ntl', 'gmp', 'm', 'stdc++', ],
+                       language='c++',
+                       define_macros = [("NTL_ALL",None)]
+                       )
+
+cremona_homspace = Extension('sage.libs.cremona.homspace',
+                       sources = ["sage/libs/cremona/homspace.pyx"],
+                       libraries = ['g0nntl', 'jcntl', 'gmpxx', 'ntl', 'gmp', 'm', 'stdc++', 'pari', 'curvesntl'],
+                       language='c++',
+                       define_macros = [("NTL_ALL",None)]
+                       )
+
 
 finite_field_givaro = Extension('sage.rings.finite_field_givaro',
                        sources = ["sage/rings/finite_field_givaro.pyx"],
@@ -506,6 +520,9 @@ ext_modules = [ \
      matrix_modn_sparse,
      matrix_mod2_dense,
      matrix_mpolynomial_dense, \
+
+     cremona_mat, \
+     cremona_homspace, \
 
      finite_field_givaro, \
      finite_field_ntl_gf2e, \
@@ -1104,7 +1121,8 @@ setup(name        = 'sage',
                      'sage.libs.flint',
                      'sage.libs.pari',
                      'sage.libs.singular',
-                     'sage.libs.symmetrica', 
+                     'sage.libs.symmetrica',
+                     'sage.libs.cremona',
 
                      'sage.logic',
                      
@@ -1176,13 +1194,21 @@ setup(name        = 'sage',
                      'sage.dsage.dist_functions.tests',
                      'sage.dsage.misc',
                      'sage.dsage.misc.tests',
-                     'sage.dsage.scripts'
+                     'sage.dsage.web',
+                     'sage.dsage.scripts',
                      ],
       
       scripts = ['sage/dsage/scripts/dsage_server.py',
                  'sage/dsage/scripts/dsage_worker.py',
                  'sage/dsage/scripts/dsage_setup.py'
                 ],
+
+      data_files = [('dsage/web/static',                       
+                     ['sage/dsage/web/static/dsage_web.css',
+                      'sage/dsage/web/static/dsage_web.js',
+                      'sage/dsage/web/static/jquery-latest.js',
+                      'sage/dsage/web/static/jquery.tablesorter.pack.js',
+                      'sage/dsage/web/static/index.html'])],
       
       ext_modules = ext_modules,
       include_dirs = include_dirs)

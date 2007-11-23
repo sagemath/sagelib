@@ -975,7 +975,7 @@ class GenericGraph(SageObject):
         for v in self:
             if random() < p:
                 vertices.append(v)
-        return self.subgraph(vertices, inplace, create_using)
+        return self.subgraph(vertices=vertices, inplace=inplace, create_using=create_using)
 
     def vertex_iterator(self, vertices=None):
         """
@@ -4071,7 +4071,7 @@ class Graph(GenericGraph):
         else:
             M = self.am()
         M = matrix(RDF, M.rows())
-        E = M.eigen_left()[0]
+        E = M.right_eigenvectors()[0]
         v = [e.real() for e in E]
 	v.sort()
 	return v
@@ -4674,35 +4674,73 @@ class Graph(GenericGraph):
         """
         self._nxg.add_path(vertices)
 
-    def subgraph(self, vertices=None, inplace=False, create_using=None):
+    def subgraph(self, vertices=None, edges=None, inplace=False, create_using=None):
         """
-        Returns the subgraph induced by the given vertices.
+        Returns the subgraph containing the given vertices and edges.
+        If either vertices or edges are not specified, they are
+        assumed to be all vertices or edges.  If edges are not
+        specified, returns the subgraph induced by the vertices.
 
         INPUT:
         inplace -- Using inplace is True will simply delete the extra vertices
-        and edges from the current graph. This will modify the graph, and re-
-        turn itself.
+           and edges from the current graph. This will modify the graph.
         vertices -- Vertices can be a single vertex or an iterable container
-        of vertices, e.g. a list, set, graph, file or numeric array.  If not passed, defaults to the entire graph.
+           of vertices, e.g. a list, set, graph, file or numeric array.
+           If not passed, defaults to the entire graph.
         create_using -- Can be an existing graph object or a call to a graph
-        object, such as create_using=DiGraph(). Must be a NetworkX object.
-        
+           object, such as create_using=DiGraph(). Must be a NetworkX object.
+        edges -- As with vertices, edges can be a single edge or an iterable
+           container of edges (e.g., a list, set, file, numeric array,
+           etc.).  If not edges are not specified, then all edges are
+           assumed and the returned graph is an induced subgraph.  In
+           the case of multiple edges, specifying an edge as (u,v)
+           means to keep all edges (u,v), regardless of the label.
+
         EXAMPLES:
             sage: G = graphs.CompleteGraph(9)
             sage: H = G.subgraph([0,1,2]); H
             Subgraph of (Complete graph): Graph on 3 vertices
             sage: G
             Complete graph: Graph on 9 vertices
+            sage: J = G.subgraph(edges=[(0,1)])
+            sage: J.edges(labels=False)
+            [(0, 1)]
+            sage: J.vertices()==G.vertices()
+            True
             sage: G.subgraph([0,1,2], inplace=True); G
             Subgraph of (Complete graph): Graph on 3 vertices
             sage: G.subgraph()==G
             True
 
+            A more complicated example involving multiple edges and labels.
+
+            sage: G = Graph(multiedges=True)
+            sage: G.add_edges([(0,1,'a'), (0,1,'b'), (1,0,'c'), (0,2,'d'), (0,2,'e'), (2,0,'f'), (1,2,'g')])
+            sage: G.subgraph(edges=[(0,1), (0,2,'d'), (0,2,'not in graph')]).edges()
+            [(0, 1, 'a'), (0, 1, 'b'), (0, 1, 'c'), (0, 2, 'd')]
+            sage: J = G.subgraph(vertices=[0,1], edges=[(0,1,'a'), (0,2,'c')])
+            sage: J.edges()
+            [(0, 1, 'a')]
+            sage: J.vertices()
+            [0, 1]
+            
+
         """
-        if inplace:
-            self._nxg = self._nxg.subgraph(vertices, inplace, create_using)
+        NXG = self._nxg.subgraph(vertices, inplace, create_using)
+        if edges is not None:
+            edges_graph = [sorted(e[0:2])+[e[2]] for e in self.edges()]
+            edges_to_keep_labeled = [sorted(e[0:2])+[e[2]] for e in edges if len(e)==3]
+            edges_to_keep_unlabeled = [sorted(e) for e in edges if len(e)==2]
+            edges_to_delete=[]
+            for e in edges_graph:
+                if e not in edges_to_keep_labeled and e[0:2] not in edges_to_keep_unlabeled:
+                    edges_to_delete.append(tuple(e))
+
+            NXG.delete_edges_from(edges_to_delete)
+        
+	if inplace:
+            self._nxg = NXG
         else:
-            NXG = self._nxg.subgraph(vertices, inplace, create_using)
             return Graph(NXG)
     
     ### Visualization
@@ -5185,6 +5223,146 @@ class Graph(GenericGraph):
         else:
             a,b = search_tree(self, partition, dig=self.loops(), verbosity=verbosity)
             return b
+
+    def min_spanning_tree(self, weight_function=lambda e: 1,
+                          algorithm='Kruskal',
+                          starting_vertex=None ):
+        """
+        Returns the edges of a minimum spanning tree, if one exists,
+        otherwise returns False.
+
+
+        INPUT:
+
+            weight_function -- A function that takes an edge and
+                returns a numeric weight.  Defaults to assigning each edge
+                a weight of 1.
+            
+            algorithm -- Three variants of algorithms are implemented:
+                'Kruskal', 'Prim fringe', and 'Prim edge' (the last
+                two are variants of Prim's algorithm).  Defaults to
+                'Kruskal'.  Currently, 'Prim fringe' ignores the
+                labels on the edges.
+            
+            starting_vertex -- The vertex with which to start Prim's
+                algorithm.
+
+        OUTPUT:
+            the edges of a minimum spanning tree.
+
+        EXAMPLES:
+            sage: g=graphs.CompleteGraph(5)
+            sage: len(g.min_spanning_tree())
+            4
+            sage: weight = lambda e: 1/( (e[0]+1)*(e[1]+1) )
+            sage: g.min_spanning_tree(weight_function=weight)
+            [(3, 4, None), (2, 4, None), (1, 4, None), (0, 4, None)]
+            sage: g.min_spanning_tree(algorithm='Prim edge', starting_vertex=2, weight_function=weight)
+            [(2, 4, None), (3, 4, None), (1, 3, None), (0, 4, None)]
+            sage: g.min_spanning_tree(algorithm='Prim fringe', starting_vertex=2, weight_function=weight)
+            [(4, 2), (3, 4), (1, 4), (0, 4)]
+
+
+        """
+        if self.is_connected()==False:
+            return False
+
+        if algorithm=='Kruskal':
+            # Kruskal's algorithm
+            edges=[]
+            sorted_edges_iterator=iter(sorted(self.edges(), key=weight_function))
+            union_find = dict([(v,None) for v in self.vertex_iterator()])
+            while len(edges) < self.order()-1:
+                # get next edge
+                e=sorted_edges_iterator.next()
+                components=[]
+                for start_v in e[0:2]:
+                    v=start_v
+                    children=[]
+
+                    # Find the component a vertex lives in.  
+                    while union_find[v] != None:
+                        children.append(v)
+                        v=union_find[v]
+
+                    # Compress the paths as much as we can for
+                    # efficiency reasons.
+                    for child in children:
+                        union_find[child]=v
+
+                    components.append(v)
+
+                if components[0]!=components[1]:
+                    # put in edge
+                    edges.append(e)
+
+                    # Union the components by making one the parent of the
+                    # other.
+                    union_find[components[0]]=components[1]
+
+            return edges
+        
+        elif algorithm=='Prim fringe':
+            if starting_vertex is None:
+                v = self.vertex_iterator().next()
+            else:
+                v = starting_vertex
+            tree=set([v])
+            edges=[]
+
+            # initialize fringe_list with v's neighbors.  fringe_list
+            # contains fringe_vertex: (vertex_in_tree, weight) for each
+            # fringe vertex
+            fringe_list=dict([u,(v,weight_function((v,u)))] for u in self[v])
+
+            for i in xrange(self.order()-1):
+                # Find the smallest-weight fringe vertex
+                v=min(fringe_list,key=lambda x: fringe_list[x][1])
+                edges.append((v,fringe_list[v][0]))
+                tree.add(v)
+                fringe_list.pop(v)
+
+                # Update fringe list
+                for neighbor in [u for u in self[v] if u not in tree]:
+                    w=weight_function((v,neighbor))
+                    if neighbor not in fringe_list or \
+                           (neighbor in fringe_list and fringe_list[neighbor][1]>w):
+                        fringe_list[neighbor]=(v,weight_function((v,neighbor)))
+            return edges
+
+        elif algorithm=='Prim edge':
+            if starting_vertex is None:
+                v = self.vertex_iterator().next()
+            else:
+                v = starting_vertex
+            sorted_edges=sorted(self.edges(), key=weight_function)
+            tree=set([v])
+            edges=[]
+
+            for i in xrange(self.order()-1):
+                # Find a minimum-weight edge connecting a vertex in
+                # the tree to something outside the tree.  Remove the
+                # edges between tree vertices for efficiency.
+
+                for i in xrange(len(sorted_edges)):
+                    e=sorted_edges[i]
+                    v0,v1=e[0],e[1]
+                    if v0 in tree:
+                        if v1 not in tree:
+                            edges.append(e)
+                            sorted_edges[i:i+1]=[]
+                            tree.add(v1)
+                            break
+                        else:
+                            sorted_edges[i:i+1]=[]
+                    elif v1 in tree:
+                        edges.append(e)
+                        sorted_edges[i:i+1]=[]
+                        tree.add(v0)
+                        break
+            return edges
+        else:
+            raise NotImplementedError, "Minimum Spanning Tree algorithm '%s' is not implemented."%algorithm
 
 class DiGraph(GenericGraph):
     """
@@ -6234,33 +6412,78 @@ class DiGraph(GenericGraph):
         G = DiGraph(NXG)
         return G
 
-    def subgraph(self, vertices=None, inplace=False, create_using=None):
+    def subgraph(self, vertices=None, edges=None, inplace=False, create_using=None):
         """
-        Returns the subgraph induced by the given vertices.
+        Returns the subgraph containing the given vertices and edges.
+        If either vertices or edges are not specified, they are
+        assumed to be all vertices or edges.  If edges are not
+        specified, returns the subgraph induced by the vertices.
 
         INPUT:
         inplace -- Using inplace is True will simply delete the extra vertices
-        and edges from the current graph.
+           and edges from the current graph. This will modify the graph.
         vertices -- Vertices can be a single vertex or an iterable container
-        of vertices, e.g. a list, set, graph, file or numeric array.  If not passed, defaults to the entire graph.
+           of vertices, e.g. a list, set, graph, file or numeric array.
+           If not passed, defaults to the entire graph.
         create_using -- Can be an existing graph object or a call to a graph
-        object, such as create_using=DiGraph().
-        
+           object, such as create_using=Graph(). Must be a NetworkX object.
+        edges -- As with vertices, edges can be a single edge or an iterable
+           container of edges (e.g., a list, set, file, numeric array,
+           etc.).  If not edges are not specified, then all edges are
+           assumed and the returned graph is an induced subgraph.  In
+           the case of multiple edges, specifying an edge as (u,v)
+           means to keep all edges (u,v), regardless of the label.
+
         EXAMPLES:
             sage: D = graphs.CompleteGraph(9).to_directed()
             sage: H = D.subgraph([0,1,2]); H
             Subgraph of (Complete graph): Digraph on 3 vertices
+            sage: H = D.subgraph(edges=[(0,1), (0,2)])
+            sage: H.edges(labels=False)
+            [(0, 1), (0, 2)]
+            sage: H.vertices()==D.vertices()
+            True
             sage: D
             Complete graph: Digraph on 9 vertices
             sage: D.subgraph([0,1,2], inplace=True); D
             Subgraph of (Complete graph): Digraph on 3 vertices
+            sage: D.subgraph()==D
+            True
+
+            A more complicated example involving multiple edges and labels.
+
+            sage: D = DiGraph(multiedges=True)
+            sage: D.add_edges([(0,1,'a'), (0,1,'b'), (1,0,'c'), (0,2,'d'), (0,2,'e'), (2,0,'f'), (1,2,'g')])
+            sage: D.subgraph(edges=[(0,1), (0,2,'d'), (0,2,'not in graph')]).edges()
+            [(0, 1, 'a'), (0, 1, 'b'), (0, 2, 'd')]
+            sage: H = D.subgraph(vertices=[0,1], edges=[(0,1,'a'), (0,2,'c')])
+            sage: H.edges()
+            [(0, 1, 'a')]
+            sage: H.vertices()
+            [0, 1]
+            
+            
 
         """
-        if inplace:
-            self._nxg = self._nxg.subgraph(vertices, inplace, create_using)
+        NXG = self._nxg.subgraph(vertices, inplace, create_using)
+        if edges is not None:
+            edges_graph = self.edges()
+            edges_to_keep_labeled = [e for e in edges if len(e)==3]
+            edges_to_keep_unlabeled = [e for e in edges if len(e)==2]
+            edges_to_delete=[]
+            for e in edges_graph:
+                if e not in edges_to_keep_labeled and e[0:2] not in edges_to_keep_unlabeled:
+                    edges_to_delete.append(tuple(e))
+
+            NXG.delete_edges_from(edges_to_delete)
+        
+	if inplace:
+            self._nxg = NXG
         else:
-            NXG = self._nxg.subgraph(vertices, inplace, create_using)
             return DiGraph(NXG)
+
+
+
 
     ### Visualization
 

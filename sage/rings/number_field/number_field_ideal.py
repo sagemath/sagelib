@@ -30,6 +30,8 @@ We test that pickling works:
 
 import operator
 
+import sage.misc.latex as latex
+
 import sage.rings.field_element as field_element
 import sage.rings.polynomial.polynomial_element as polynomial
 import sage.rings.polynomial.polynomial_ring as polynomial_ring
@@ -109,6 +111,17 @@ class NumberFieldIdeal(Ideal_fractional):
             raise TypeError, "field (=%s) must be a number field."%field
 
         Ideal_generic.__init__(self, field, gens, coerce)
+
+    def _latex_(self):
+        """
+        EXAMPLES:
+            sage: K.<a> = NumberField(x^2 + 23)
+            sage: latex(K.fractional_ideal([2, 1/2*a - 1/2]))
+            \left(2, \frac{1}{2}a - \frac{1}{2}\right)
+        """
+        return '\\left(%s\\right)'%(", ".join([latex.latex(g) for g in \
+                                                 self.gens_reduced()]))
+        
 
     def __cmp__(self, other):
         """
@@ -214,6 +227,9 @@ class NumberFieldIdeal(Ideal_fractional):
             sage: I._repr_short()
             '(17, a^2 - 6)'        
         """
+        #NOTE -- we will *have* to not reduce the gens soon, since this
+        # makes things insanely slow in general.
+        # When I fix this, I *have* to also change the _latex_ method.
         return '(%s)'%(', '.join([str(x) for x in self.gens_reduced()]))
 
     def __div__(self, other):
@@ -438,7 +454,7 @@ class NumberFieldIdeal(Ideal_fractional):
                 gens = [ gens[1] ]
             self.__reduced_generators = tuple(gens)
             return self.__reduced_generators
-        
+
     def integral_basis(self):
         r"""
         Return a list of generators for this ideal as a $\mathbb{Z}$-module.
@@ -590,6 +606,24 @@ class NumberFieldIdeal(Ideal_fractional):
                 g = K(R(bnf.getattr('zk') * v[1]))
                 self.__reduced_generators = tuple([g])
             return self.__is_principal
+
+    def is_trivial(self, proof=None):
+        """
+        Returns True if this is a trivial ideal. 
+        
+        EXAMPLES: 
+            sage: F.<a> = QuadraticField(-5)
+            sage: I = F.ideal(3)
+            sage: I.is_trivial()
+            False
+            sage: J = F.ideal(5)
+            sage: J.is_trivial()
+            False
+            sage: (I+J).is_trivial()
+            True
+        """
+        return self.is_zero() or \
+            self == self.number_field().ideal(1)
 
     def is_zero(self):
         """
