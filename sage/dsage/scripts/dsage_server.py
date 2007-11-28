@@ -54,10 +54,10 @@ def usage():
     """
     
     # usage options
-    usage = ['usage: %prog [options]\n',
+    usage_ = ['usage: %prog [options]\n',
               'Bug reports to <yqiang@gmail.com>']
     
-    parser = OptionParser(usage=''.join(usage))
+    parser = OptionParser(usage=''.join(usage_))
     
     parser.add_option('-p', '--port', 
                       dest='port', 
@@ -112,9 +112,9 @@ def usage():
                       help='tells that the server was ' + 
                            'started in blocking mode')
                     
-    (options, args) = parser.parse_args()
+    (options_, args) = parser.parse_args()
     
-    return options
+    return options_
 
 def create_manhole():
     """
@@ -209,7 +209,7 @@ def main(options):
             cred.session_params.compressions = (COMP_LZO,
                                                 COMP_DEFLATE,
                                                 COMP_NULL)
-            reactor.listenTLS(SERVER_PORT, client_factory, cred)                    
+            reactor.listenTLS(SERVER_PORT, client_factory, cred)
         else:
             reactor.listenTCP(SERVER_PORT, client_factory)
     except Exception, msg:

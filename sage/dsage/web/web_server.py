@@ -65,10 +65,10 @@ def create_jobs_table(jdicts):
             update_time = jdict['update_time'].strftime('%F %r')
         except AttributeError: # This is a fix for older databases. 
             update_time = "N/A"
-        html+="""
+        html += """
         <tr class='tr%s'
         """ % (i % 2)
-        html+="""
+        html += """
             <td><a href='#%s' onClick="getJobDetails('%s')">%s</a></td>
             <td>%s</td>
             <td>%s</td>
@@ -152,13 +152,7 @@ class GetJobs(resource.PostableResource):
         Builds an XML structure from a list of jdicts.
         
         """
-        
 
-        from xml.etree.ElementTree import (ElementTree as ET,
-                                           Element,
-                                           SubElement,
-                                           dump,
-                                           XML)
         root = Element('jobs')   
              
         for jdict in jdicts:
@@ -212,7 +206,7 @@ class GetJobDetails(resource.PostableResource):
                 <td>%s</td>
                 <td>%s</td>
                 </tr>
-                """ %(k, v)
+                """ % (k, v)
             
             html += """
             </tbody>
