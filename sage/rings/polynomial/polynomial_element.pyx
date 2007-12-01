@@ -1575,11 +1575,16 @@ cdef class Polynomial(CommutativeAlgebraElement):
             v = [(S([from_M(x) for x in f.list()]), e) for f, e in g.factor()]
             return Factorization(v, from_M(F.unit()))
 
-
-        elif is_NumberField(R) or is_FiniteField(R):
+        elif is_FiniteField(R):
             v = [x._pari_("a") for x in self.list()]
             f = pari(v).Polrev()
             G = list(f.factor())
+
+            
+        elif is_NumberField(R) or is_FiniteField(R):
+            v = [x._pari_("a") for x in self.list()]
+            f = pari(v).Polrev()
+            G = list(R.pari_polynomial("a").nfinit().nffactor(f))
 
         elif is_RealField(R):
             n = pari.set_real_precision(int(3.5*R.prec()) + 1)
@@ -2915,6 +2920,16 @@ sage: rts[0][0] == rt2
         it doesn't factor:
             sage: R(4).is_irreducible()
             True
+
+        TESTS:
+            sage: F.<t> = NumberField(x^2-5)
+            sage: Fx.<xF> = PolynomialRing(F)
+            sage: f = Fx([2*t - 5, 5*t - 10, 3*t - 6, -t, -t + 2, 1])
+            sage: f.is_irreducible()
+            False
+            sage: f = Fx([2*t - 3, 5*t - 10, 3*t - 6, -t, -t + 2, 1])
+            sage: f.is_irreducible()
+            True            
         """
         if self.is_zero():
             raise ValueError, "self must be nonzero"
