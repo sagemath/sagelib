@@ -1522,6 +1522,16 @@ cdef class Polynomial(CommutativeAlgebraElement):
             [(T - a, 1), (T - 40085763200/924556084127*a^5 - 145475769880/924556084127*a^4 + 527617096480/924556084127*a^3 + 1289745809920/924556084127*a^2 - 3227142391585/924556084127*a - 401502691578/924556084127, 1)]
             sage: expand(F)
             T^6 + 10/7*T^5 + (-867/49)*T^4 + (-76/245)*T^3 + 3148/35*T^2 + (-25944/245)*T + 48771/1225
+
+            sage: f = x^2 - 1/3 ; K.<a> = NumberField(f) ; A.<T> = K[] ; g = A(x^2-1)
+            sage: g.factor()
+            (T - 1) * (T + 1)
+
+            sage: h = A(3*x^2-1) ; h.factor()
+            (3) * (T - a) * (T + a)
+
+            sage: h = A(x^2-1/3) ; h.factor()
+            (T - a) * (T + a)
         
         Over the real double field:
             sage: x = polygen(RDF)
@@ -1592,7 +1602,8 @@ cdef class Polynomial(CommutativeAlgebraElement):
             raise ValueError, "factorization of 0 not defined"
         G = None
         
-        from sage.rings.number_field.all import is_NumberField, is_RelativeNumberField
+        from sage.rings.number_field.all import is_NumberField, \
+             is_RelativeNumberField, NumberField
         from sage.rings.finite_field import is_FiniteField
 
         n = None
@@ -1615,11 +1626,55 @@ cdef class Polynomial(CommutativeAlgebraElement):
             v = [(S([from_M(x) for x in f.list()]), e) for f, e in g.factor()]
             return Factorization(v, from_M(F.unit()))
 
-
-        elif is_NumberField(R) or is_FiniteField(R):
+        elif is_FiniteField(R):
             v = [x._pari_("a") for x in self.list()]
             f = pari(v).Polrev()
             G = list(f.factor())
+
+            
+        elif is_NumberField(R):
+            if (R.defining_polynomial().denominator() == 1) and \
+                   (self.denominator() == 1):
+                v = [ x._pari_("a") for x in self.list() ]
+                f = pari(v).Polrev()
+                Rpari = R.pari_nf()
+                if (Rpari.variable() != "a"):
+                    Rpari = Rpari.copy()
+                    Rpari[0] = Rpari[0]("a")
+                    Rpari[6] = [ x("a") for x in Rpari[6] ]
+                G = list(Rpari.nffactor(f))
+
+            else:
+
+                Rdenom = R.defining_polynomial().denominator()
+
+                new_Rpoly = (R.defining_polynomial() * Rdenom).change_variable_name("a")
+
+                Rpari, Rdiff = new_Rpoly._pari_().nfinit(3)
+
+                AZ = polynomial_ring.PolynomialRing(QQ,'z')
+                Raux = NumberField(AZ(Rpari[0]),'alpha')
+
+                S, gSRaux, fRauxS = Raux.change_generator(Raux(Rdiff))
+
+                phi_RS = R.Hom(S)([S.gen(0)])
+                phi_SR = S.Hom(R)([R.gen(0)])
+
+                unit = self.leading_coefficient()
+                temp_f = self * 1/unit
+
+                v = [ gSRaux(phi_RS(x))._pari_("a") for x in temp_f.list() ]
+                f = pari(v).Polrev()
+
+                pari_factors = Rpari.nffactor(f)
+
+                factors = [ ( self.parent([ phi_SR(fRauxS(Raux(pari_factors[0][i][j])))
+                                            for j in range(len(pari_factors[0][i])) ]) ,
+                             int(pari_factors[1][i]) )
+                            for i in range(pari_factors.nrows()) ]
+
+                return Factorization(factors, unit)
+        
 
         elif is_RealField(R):
             n = pari.set_real_precision(int(3.5*R.prec()) + 1)
@@ -3030,6 +3085,16 @@ sage: rts[0][0] == rt2
         it doesn't factor:
             sage: R(4).is_irreducible()
             True
+
+        TESTS:
+            sage: F.<t> = NumberField(x^2-5)
+            sage: Fx.<xF> = PolynomialRing(F)
+            sage: f = Fx([2*t - 5, 5*t - 10, 3*t - 6, -t, -t + 2, 1])
+            sage: f.is_irreducible()
+            False
+            sage: f = Fx([2*t - 3, 5*t - 10, 3*t - 6, -t, -t + 2, 1])
+            sage: f.is_irreducible()
+            True            
         """
         if self.is_zero():
             raise ValueError, "self must be nonzero"
