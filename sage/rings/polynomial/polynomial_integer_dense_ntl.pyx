@@ -18,7 +18,6 @@ AUTHORS:
 
 include "../../ext/stdsage.pxi"
 
-
 from sage.rings.polynomial.polynomial_element cimport Polynomial
 from sage.structure.element cimport ModuleElement, RingElement
 
@@ -217,7 +216,6 @@ cdef class Polynomial_integer_dense_ntl(Polynomial):
         return Polynomial_integer_dense_ntl, \
                (self.parent(), self.list(), False, self.is_gen())
 
-        
     def __getitem__(self, long n):
         r"""
         Returns coefficient of x^n, or zero if n is negative.
