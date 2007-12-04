@@ -215,12 +215,17 @@ class QuotientRing_generic(commutative_ring.CommutativeRing, sage.structure.pare
         EXAMPLES:
             sage: R = Integers(8)
             sage: R.is_integral_domain()
-            False        
+            False
+            sage: R.<a,b,c> = ZZ['a','b','c']
+            sage: I = R.ideal(a,b)
+            sage: Q = R.quotient_ring(I)
+            sage: Q.is_integral_domain()
+            Traceback (most recent call last):
+            ...
+            NotImplementedError
+
         """
-        try:
-            return self.defining_ideal().is_prime()
-        except NotImplementedError:
-            return False
+        return self.defining_ideal().is_prime()
 
     def cover_ring(self):
         return self.__R
