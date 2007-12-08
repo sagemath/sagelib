@@ -1145,6 +1145,8 @@ setup(name        = 'sage',
                      'sage.modular.ssmod',
                      
                      'sage.monoids',
+
+                     'sage.numerical', 
                      
                      'sage.plot',
                      'sage.plot.mpl3d',
