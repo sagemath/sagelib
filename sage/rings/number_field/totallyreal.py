@@ -46,13 +46,13 @@ def odlyzko_bound_totallyreal(n):
     r"""
     This function returns the unconditional Odlyzko bound for the root
     discriminant of a totally real number field of degree n.
-    
+
     NOTE:
     The bounds for n > 50 are not necessarily optimal.
 
     INPUT:
     n -- integer, the degree
- 
+
     OUTPUT:
     a lower bound on the root discriminant
 
@@ -86,22 +86,22 @@ def odlyzko_bound_totallyreal(n):
 
 def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc=False, keep_fields=False):
     r"""
-    This function enumerates (primitive) totally real fields of 
-    degree $n>1$ with discriminant $d \leq B$; optionally one can 
-    specify the first few coefficients, where the sequence $a$ 
+    This function enumerates (primitive) totally real fields of
+    degree $n>1$ with discriminant $d \leq B$; optionally one can
+    specify the first few coefficients, where the sequence $a$
     corresponds to a polynomial by
         $$ a[d]*x^n + ... + a[0]*x^(n-d) $$
-    if length(a) = d+1, so in particular always a[d] = 1.  
+    if length(a) = d+1, so in particular always a[d] = 1.
     If verbose == 1 (or 2), then print to the screen (really) verbosely; if
     verbose is a string, then print verbosely to the file specified by verbose.
     If return_seqs, then return the polynomials as sequences (for easier
     exporting to a file).
-    If keep_fields, then keep fields up to B*log(B); if keep_fields is 
+    If keep_fields, then keep fields up to B*log(B); if keep_fields is
     an integer, then keep fields up to that integer.
 
-    NOTE: 
+    NOTE:
     This is guaranteed to give all primitive such fields, and
-    seems in practice to give many imprimitive ones.  
+    seems in practice to give many imprimitive ones.
 
     INPUT:
     n -- integer, the degree
@@ -111,7 +111,7 @@ def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc
     phc -- boolean or integer (default: False)
 
     OUTPUT:
-    the list of fields with entries [d,f], where 
+    the list of fields with entries [d,f], where
       d is the discriminant and f is a defining polynomial,
     sorted by discriminant.
 
@@ -154,7 +154,7 @@ def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc
     We see that there are 9 such fields (up to isomorphism!).
 
     NOTES:
-    This function uses Hunter's algorithm [C, Section 9.3] and 
+    This function uses Hunter's algorithm [C, Section 9.3] and
     modifications due to Takeuchi [T] and the author (not yet published).
 
     We enumerate polynomials
@@ -162,14 +162,14 @@ def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc
     Hunter's theorem gives bounds on a[n-1] and a[n-2];
     then given a[n-1] and a[n-2], one can recursively compute bounds on
     a[n-3], ..., a[0] using the fact that the polynomial is totally real
-    by looking at the zeros of successive derivatives and applying 
+    by looking at the zeros of successive derivatives and applying
     Rolle's theorem!  See [T] for more details.
 
         REFERENCES:
-            [C] Henri Cohen, Advanced topics in computational number 
+            [C] Henri Cohen, Advanced topics in computational number
                 theory, Graduate Texts in Mathematics, vol. 193,
-                Springer-Verlag, New York, 2000. 
-            [T] Kisao Takeuchi, Totally real algebraic number fields of 
+                Springer-Verlag, New York, 2000.
+            [T] Kisao Takeuchi, Totally real algebraic number fields of
                 degree 9 with small discriminant, Saitama Math. J.
                 17 (1999), 63--85 (2000).
 
@@ -184,7 +184,7 @@ def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc
             raise TypeError, "cannot coerce n (= %s) to an integer"%n
     if (n < 1):
         raise ValueError, "n must be at least 1."
-    
+
     # Initialize
     T = tr_data(n,B,a)
     S = []
@@ -211,7 +211,9 @@ def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc
             fsock = open(verbose, 'w')
             sys.stdout = fsock
         # Else, print to screen
+
     f_out = [0]*n + [1]
+
     if verbose == 2:
         T.incr(f_out,verbose,phc=phc)
     else:
@@ -221,10 +223,10 @@ def enumerate_totallyreal_fields(n, B, a = [], verbose=0, return_seqs=False, phc
         if verbose:
             print "==>", f_out,
 
-        nf = pari(str(f_out)).Polrev()
+        nf = pari(f_out).Polrev()
         d = nf.poldisc()
         counts[0] += 1
-        if d > 0:
+        if d > 0 and nf.polsturm_full() == n:
             da = int_has_small_square_divisor(Integer(d))
             if d > dB or d <= B*da:
                 counts[1] += 1
@@ -374,7 +376,7 @@ def timestr(m):
 
 def __selberg_zograf_bound(n, g):
     r"""
-    Returns an upper bound on the possible root discriminant of a 
+    Returns an upper bound on the possible root discriminant of a
     totally real field of degree n which gives rise to an arithmetic
     Fuchsian group of genus g.  The bound is:
        (16/3*(g+1))^(2/(3*n))*(2*pi)^(4/3).
@@ -394,3 +396,4 @@ def __selberg_zograf_bound(n, g):
         15.851871776151311
     """
     return ((16./3)*(g+1))**(2./(3*n))*(2*3.1415926535897931)**(4./3)
+
