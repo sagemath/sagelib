@@ -330,9 +330,10 @@ class IndexedSequence(SageObject):
             sage: I = CC.0; pi = CC(pi)
             sage: A = [exp(-2*pi*i*I/5) for i in J]
             sage: s = IndexedSequence(A,J)
+
             sage: s.dst()        # discrete sine
-            Indexed sequence: [0.000000000000000111022302462516 - 2.50000000000000*I, 0.000000000000000111022302462516 - 2.50000000000000*I, 0.000000000000000111022302462516 - 2.50000000000000*I, 0.000000000000000111022302462516 - 2.50000000000000*I, 0.000000000000000111022302462516 - 2.50000000000000*I]
-                indexed by [0, 1, 2, 3, 4]            
+            Indexed sequence: [1.11022302462516e-16 - 2.50000000000000*I, 1.11022302462516e-16 - 2.50000000000000*I, 1.11022302462516e-16 - 2.50000000000000*I, 1.11022302462516e-16 - 2.50000000000000*I, 1.11022302462516e-16 - 2.50000000000000*I]
+                indexed by [0, 1, 2, 3, 4]
         """
         F = self.base_ring()   ## elements must be coercible into RR
         J = self.index_object()   ## must be = range(N)
