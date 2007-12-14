@@ -762,8 +762,6 @@ cdef class BooleanPolynomial(MPolynomial):
     cdef ModuleElement _add_c_impl(left, ModuleElement right):
         cdef BooleanPolynomial p = new_BP_from_PBPoly(\
                 (<BooleanPolynomial>left)._parent, (<BooleanPolynomial>left)._P)
-        # activate the parent ring of left, otherwise we get crashes after creating a second ring
-        (<BooleanPolynomialRing>left._parent)._R.activate()
         p._P.iadd( (<BooleanPolynomial>right)._P )
         return p
 
@@ -782,8 +780,6 @@ cdef class BooleanPolynomial(MPolynomial):
     cdef RingElement _mul_c_impl(left, RingElement right):
         cdef BooleanPolynomial p = new_BP_from_PBPoly(\
                 (<BooleanPolynomial>left)._parent, (<BooleanPolynomial>left)._P)
-        # activate the parent ring of left, otherwise we get crashes after creating a second ring
-        (<BooleanPolynomialRing>left._parent)._R.activate()
         p._P.imul( (<BooleanPolynomial>right)._P )
         return p
     
@@ -1649,9 +1645,17 @@ def VariableBlock(size, start_index, offset, reverse):
     else:
         return VariableBlockFalse(size, start_index, offset)
 
+cdef int M4RI_init = 0
+
 def init_M4RI():
-    buildAllCodes()
-    setupPackingMasks()
+    global M4RI_init
+    if M4RI_init is int(0):
+        buildAllCodes()
+        setupPackingMasks()
+        M4RI_init = 1
+
+def free_m4ri():
+    destroyAllCodes()
 
 def recursively_insert(CCuddNavigator n, int ind, CCuddNavigator m):
     cdef PBSet b
