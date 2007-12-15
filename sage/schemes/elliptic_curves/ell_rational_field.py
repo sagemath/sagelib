@@ -788,13 +788,8 @@ class EllipticCurve_rational_field(EllipticCurve_number_field):
         r"""
         Given a curve with no 2-torsion, computes (probably) the rank
         of the Mordell-Weil group, with certainty the rank of the
-        2-Selmer group, and a list of independent points on
-        some mysterious model of the curve.
+        2-Selmer group, and a list of independent points on the curve.
 
-        \note{The points are not translated back to self only because
-        nobody has written code to do this yet.  Implement it and send 
-        a patch.}
-        
         INPUT:
             verbose -- integer, 0,1,2,3; (default: 0), the verbosity level
             lim1    -- (default: 5) limite des points triviaux sur les quartiques
@@ -809,7 +804,7 @@ class EllipticCurve_rational_field(EllipticCurve_number_field):
         OUTPUT:
             integer -- "probably" the rank of self
             integer -- the 2-rank of the Selmer group
-            list    -- list of independent points on some (myserious!!) model for the curve.
+            list    -- list of independent points on the curve.
 
         IMPLEMENTATION: Uses {\bf Denis Simon's} GP/PARI scripts from
                          \url{http://www.math.unicaen.fr/~simon/}
@@ -823,13 +818,13 @@ class EllipticCurve_rational_field(EllipticCurve_number_field):
             (0, 0, [])
             sage: E = EllipticCurve('37a1')
             sage: E.simon_two_descent()
-            (1, 1, [(0 : 4 : 1)])
+            (1, 1, [(0 : 0 : 1)])
             sage: E = EllipticCurve('389a1')
             sage: E.simon_two_descent()
-            (2, 2, [(57/4 : 621/8 : 1), (57 : 243 : 1)])
+            (2, 2, [(1 : 0 : 1), (-11/9 : -55/27 : 1)])
             sage: E = EllipticCurve('5077a1')
             sage: E.simon_two_descent()
-            (3, 3, [(1 : 17 : 1), (-8 : 28 : 1), (8 : 4 : 1)])
+            (3, 3, [(1 : 0 : 1), (2 : -1 : 1), (0 : 2 : 1)])
 
 
         In this example Simon's program does not find any points, though
@@ -857,15 +852,11 @@ class EllipticCurve_rational_field(EllipticCurve_number_field):
             sage: r, s, G = E.simon_two_descent(); r,s       # long time
             (8, 8)
         """
-        if self.torsion_order() % 2 == 0:
-            raise ArithmeticError, "curve must not have rational 2-torsion\nThe *only* reason for this is that I haven't finished implementing the wrapper\nin this case.  It wouldn't be too difficult.\nPerhaps you could do it?!  Email me (wstein@gmail.com)."
-        F = self.integral_weierstrass_model()
-        a1,a2,a3,a4,a6 = F.a_invariants()
-        t = simon_two_descent(a2,a4,a6, verbose=verbose, lim1=lim1, lim3=lim3, limtriv=limtriv,
+        t = simon_two_descent(self, verbose=verbose, lim1=lim1, lim3=lim3, limtriv=limtriv,
                               maxprob=maxprob, limbigprime=limbigprime)
         prob_rank = rings.Integer(t[0])
         two_selmer_rank = rings.Integer(t[1])
-        prob_gens = [F(P) for P in t[2]]
+        prob_gens = [self(P) for P in t[2]]
         return prob_rank, two_selmer_rank, prob_gens
 
     two_descent_simon = simon_two_descent
@@ -1412,11 +1403,6 @@ class EllipticCurve_rational_field(EllipticCurve_number_field):
                 return False
         return True
 
-    def is_isomorphic(self, E):
-        if not isinstance(E, EllipticCurve_rational_field):
-            raise TypeError, "E (=%s) must be an elliptic curve over the rational numbers"%E
-        return E.minimal_model() == self.minimal_model()
-
     def kodaira_type(self, p):
         """
         Local Kodaira type of the elliptic curve at $p$.
@@ -1577,6 +1563,46 @@ class EllipticCurve_rational_field(EllipticCurve_number_field):
         """
         F = self.minimal_model()
         return EllipticCurve_number_field.weierstrass_model(F)
+        
+    def local_integral_model(self,p):
+        r"""
+        Return a model of self which is integral at the prime $p$
+        
+        EXAMPLES:
+            sage: E=EllipticCurve([0, 0, 1/216, -7/1296, 1/7776])
+            sage: E.local_integral_model(2)
+	     Elliptic Curve defined by y^2 + 1/27*y = x^3 - 7/81*x + 2/243 over Rational Field
+            sage: E.local_integral_model(3)
+             Elliptic Curve defined by y^2 + 1/8*y = x^3 - 7/16*x + 3/32 over Rational Field
+            sage: E.local_integral_model(2).local_integral_model(3) == EllipticCurve('5077a1')
+            True
+        """
+        ai = self.a_invariants()
+        e  = min([(ai[i].valuation(p)/[1,2,3,4,6][i]) for i in range(5)]).floor()
+        return constructor.EllipticCurve([ai[i]/p**(e*[1,2,3,4,6][i]) for i in range(5)])
+
+    def global_integral_model(self):
+        r"""
+        Return a model of self which is integral at all primes
+        
+        EXAMPLES:
+            sage: E=EllipticCurve([0, 0, 1/216, -7/1296, 1/7776])
+            sage: E.global_integral_model() == EllipticCurve('5077a1')
+            True
+        """
+        ai = self.a_invariants()
+        for a in ai:
+            if not a.is_integral():
+               for p, _ in a.denom().factor():
+                  e  = min([(ai[i].valuation(p)/[1,2,3,4,6][i]) for i in range(5)]).floor()
+                  ai = [ai[i]/p**(e*[1,2,3,4,6][i]) for i in range(5)]
+            return constructor.EllipticCurve(ai)
+
+    integral_model = global_integral_model
+    
+    def integral_model(self):
+        F = self.global_integral_model()
+        return F, self.isomorphism_to(F)
 
     def integral_weierstrass_model(self):
         r"""
