@@ -866,9 +866,13 @@ ext_modules = [ \
     Extension('sage.graphs.graph_isom',
               ['sage/graphs/graph_isom.pyx']
               ), \
-                            
+
     Extension('sage.graphs.bruhat_sn',
               ['sage/graphs/bruhat_sn.pyx']
+              ), \
+
+    Extension('sage.coding.binary_code',
+              ['sage/coding/binary_code.pyx']
               ), \
 
 
