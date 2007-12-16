@@ -108,4 +108,9 @@ class Texture_class(SageObject):
                    "illum %s" % (2 if sum(self.specular) > 0 else 1),
                    "Ns %s" % self.shininess,
                    "d %s" % self.opacity, ])
-        
+
+    def jmol_str(self, obj):
+        return "color %s [%s,%s,%s]" % (obj, int(255*self.color[0]), int(255*self.color[1]), int(255*self.color[2]))
+
+
+
