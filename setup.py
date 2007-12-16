@@ -1189,8 +1189,8 @@ code = setup(name        = 'sage',
                      
                      'sage.monoids',
 
-                     'sage.numerical', 
-                     
+                     'sage.numerical',
+
                      'sage.plot',
                      'sage.plot.mpl3d',
                      'sage.plot.plot3d',
@@ -1209,6 +1209,8 @@ code = setup(name        = 'sage',
                      'sage.tests',
                      
                      'sage.sets',
+                     
+                     'sage.stats', 
                      
                      'sage.schemes',
                      'sage.schemes.generic',
