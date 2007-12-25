@@ -1513,6 +1513,9 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
         cdef poly *p, *q
         cdef number *h
         cdef int ret = 0
+
+        if left is right:
+            return ret
         
         r = (<MPolynomialRing_libsingular>left._parent)._ring
         if(r != currRing): rChangeCurrRing(r)
