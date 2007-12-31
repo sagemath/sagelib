@@ -136,6 +136,14 @@ cdef class ParametricSurface(IndexFaceSet):
         if self.fcount == 0:
             self.triangulate()
         return IndexFaceSet.dual(self)
+
+    def bounding_box(self):
+        # We must triangulate before computing the bounding box; otherwise
+        # we'll get an empty bounding box, as the bounding box is computed
+        # using the triangulation, and before triangulating the triangulation
+        # is empty. 
+        self.triangulate()
+        return IndexFaceSet.bounding_box(self)
         
     def triangulate(self, render_params=None):
         """
@@ -158,7 +166,7 @@ cdef class ParametricSurface(IndexFaceSet):
         if self.render_grid == (urange, vrange) and self.fcount != 0:
             # Already triangulated at on this grid. 
             return
-        
+
         cdef Py_ssize_t i, j
         cdef Py_ssize_t n = len(urange) - 1
         cdef Py_ssize_t m = len(vrange) - 1
@@ -172,7 +180,7 @@ cdef class ParametricSurface(IndexFaceSet):
                 for v in vrange:
                     self.eval_c(&self.vs[ix], u, v)
                     ix += 1
-        except:
+        except:       # TODO -- this would catch control-C,etc. -- FIX THIS TO CATCH WHAT IS RAISED!!!!
             _sig_off
             self.fcount = self.vcount = 0
             self.render_grid = None
