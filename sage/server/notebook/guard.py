@@ -159,10 +159,10 @@ class MySessionWrapper(object):
             l = server.parsePOSTData(request)
             l.addCallback(lambda _: self.requestPasswordAuthentication(request, segments))
             return l
-        
+            
         session = self.getSession(request)
         if session is None:
-            #log.msg("unknown session")
+            # log.msg("unknown session")
             return self.requestAnonymousAuthentication(request, segments)
         else:
             if segments and segments[0] == "logout":
