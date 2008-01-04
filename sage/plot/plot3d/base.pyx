@@ -459,6 +459,9 @@ end_scene""" % (
             filename = '%s-size%s%s'%(base, fg*100, ext)
             ext = "jmol"
             archive_name = "%s.%s.zip" % (filename, ext)
+            if EMBEDDED_MODE:
+                # jmol doesn't seem to correctly parse the ?params part of a URL
+                archive_name = "%s-%s.%s.zip" % (filename, randint(0, 1 << 30), ext)
 
             T = self._prepare_for_jmol(frame, axes, frame_aspect_ratio, aspect_ratio, zoom)
             T.export_jmol(archive_name, force_reload=EMBEDDED_MODE, **kwds)
@@ -547,8 +550,7 @@ class TransformGroup(Graphics3dGroup):
             pass
             
         cdef Transformation T = self.get_transformation()
-        v = [obj.bounding_box() for obj in self.all]
-        w = [T.transform_point(box[0]) for box in v] + [T.transform_point(box[1]) for box in v]
+        w = sum([T.transform_bounding_box(obj.bounding_box()) for obj in self.all], ())
         self._bounding_box = point_list_bounding_box(w)
         return self._bounding_box
 
@@ -790,7 +792,7 @@ def point_list_bounding_box(v):
         point_c_lower_bound(&lower, lower, cur)
         point_c_upper_bound(&upper, upper, cur)
     return (lower.x, lower.y, lower.z), (upper.x, upper.y, upper.z)
-
+    
 def optimal_aspect_ratios(ratios):
     # average the aspect ratios
     n = len(ratios)
