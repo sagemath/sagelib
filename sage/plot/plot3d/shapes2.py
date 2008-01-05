@@ -9,6 +9,8 @@ from sage.misc.misc import srange
 
 from texture import Texture
 
+TACHYON_PIXEL = 1/200.0
+
 from shapes import Text, Sphere
 
 def line3d(points, thickness=1, radius=None, arrow_head=False, **kwds):
@@ -41,12 +43,17 @@ def line3d(points, thickness=1, radius=None, arrow_head=False, **kwds):
     """
     if len(points) < 2:
         raise ValueError, "there must be at least 2 points"
-    if False and radius is None:
-        # make a zoom-invariant line
-        return Line(points, thickness=thickness, **kwds)
+    for i in range(len(points)):
+        x, y, z = points[i]
+        points[i] = float(x), float(y), float(z)
+    if radius is None:
+        return Line(points, thickness=thickness, arrow_head=arrow_head, **kwds)
     else:
         v = []
         texture = Texture(kwds)
+        if kwds.has_key('texture'):
+            kwds = kwds.copy()
+            del kwds['texture']
         for i in range(len(points) - 1):
             line = shapes.Arrow if i == len(points)-2 and arrow_head else shapes.LineSegment
             v.append(line(points[i], points[i+1], texture=texture, radius=radius, **kwds))
@@ -260,7 +267,7 @@ class Point(PrimitiveObject):
     """
     def __init__(self, center, size=1, **kwds):
         PrimitiveObject.__init__(self, **kwds)
-        self.loc = center
+        self.loc = (float(center[0]), float(center[1]), float(center[2]))
         self.size = size
         self._set_extra_kwds(kwds)
         
@@ -273,8 +280,18 @@ class Point(PrimitiveObject):
             cen = self.loc
         else:
             cen = transform.transform_point(self.loc)
-        return "Sphere center %s %s %s Rad %s %s" % (cen[0], cen[1], cen[2], self.size, self.texture.id)
+        return "Sphere center %s %s %s Rad %s %s" % (cen[0], cen[1], cen[2], self.size * TACHYON_PIXEL, self.texture.id)
         
+    def obj_repr(self, render_params):
+        T = render_params.transform
+        if T is None:
+            import transform
+            T = transform.Transformation()
+        render_params.push_transform(~T)
+        cmds = shapes.Sphere(radius=self.size / 200.0).translate(T(P)).obj_repr(render_params)
+        render_params.pop_transform()
+        return cmds
+                
     def jmol_repr(self, render_params):
         name = render_params.unique_name('point')
         transform = render_params.transform
