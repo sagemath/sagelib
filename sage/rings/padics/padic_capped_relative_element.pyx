@@ -296,6 +296,8 @@ cdef class pAdicCappedRelativeElement(pAdicBaseGenericElement):
         self.ordp = num_ordp - den_ordp
             
         if self.ordp < 0 and self.prime_pow.in_field == 0:
+            mpz_clear(num_unit)
+            mpz_clear(den_unit)
             raise ValueError, "p divides the denominator." 
 
         if (absprec is infinity):
@@ -338,6 +340,8 @@ cdef class pAdicCappedRelativeElement(pAdicBaseGenericElement):
             mpz_mod(self.unit, self.unit, self.prime_pow.pow_mpz_t_tmp(self.relprec)[0])
             _sig_off
 
+        mpz_clear(num_unit)
+        mpz_clear(den_unit)
         return 0
 
     cdef void set_exact_zero(pAdicCappedRelativeElement self):
@@ -507,6 +511,7 @@ cdef class pAdicCappedRelativeElement(pAdicBaseGenericElement):
             if mpz_fits_slong_p(tmp) == 0:
                 raise ValueError, "Valuation too large"
             ans.ordp = mpz_get_si(tmp)
+            mpz_clear(tmp)
             _sig_on
             mpz_powm(ans.unit, (<pAdicCappedRelativeElement>self).unit, (<Integer>right).value, ans.prime_pow.pow_mpz_t_tmp(ans.relprec)[0])
             _sig_off
