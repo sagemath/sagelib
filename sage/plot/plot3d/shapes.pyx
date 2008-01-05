@@ -477,7 +477,7 @@ class Text(PrimitiveObject):
             radv = transform.transform_vector((self.radius,0,0))
             rad = sqrt(sum([x*x for x in radv]))
         return "Sphere center %s %s %s Rad %s %s" % (cen[0], cen[1], cen[2], rad, self.texture.id)
-        
+
     def jmol_repr(self, render_params):
         cen = render_params.transform.transform_point((0,0,0))
         render_params.atom_list.append(cen)
