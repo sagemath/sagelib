@@ -1990,7 +1990,7 @@ function check_for_cell_update_callback(status, response_text) {
     
     set_output_text(id, output_text, output_text_wrapped,
                     output_html, stat, introspect_html);
-
+    
     if (stat == 'd') {
         active_cell_list = delete_from_array(active_cell_list, id);
 
