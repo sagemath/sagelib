@@ -5075,7 +5075,7 @@ class SymbolicComposition(SymbolicOperation):
     def _complex_mpfr_field_(self, field):
         """
         Coerce to a multiprecision complex number.
-        
+    
         EXAMPLES:
             sage: ComplexField(100)(sin(2)+cos(2)+I)
             0.49315059027853930839845163641 + 1.0000000000000000000000000000*I
@@ -5700,6 +5700,7 @@ class Function_arcsin(PrimitiveFunction):
         return math.asin(x)
 
 arcsin = Function_arcsin()
+asin = arcsin
 _syms['asin'] = arcsin
 
 class Function_arcsinh(PrimitiveFunction):
@@ -5732,6 +5733,7 @@ class Function_arcsinh(PrimitiveFunction):
         return float(pari(float(x)).asinh())
 
 arcsinh = Function_arcsinh()
+asinh = arcsinh
 _syms['asinh'] = arcsinh
 
 class Function_arccosh(PrimitiveFunction):
@@ -5771,6 +5773,7 @@ class Function_arccosh(PrimitiveFunction):
         return float(pari(float(x)).acosh())
 
 arccosh = Function_arccosh()
+acosh = arccosh
 _syms['acosh'] = arccosh
 
 class Function_arctanh(PrimitiveFunction):
