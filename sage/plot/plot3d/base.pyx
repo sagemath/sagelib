@@ -66,13 +66,17 @@ cdef class Graphics3d(SageObject):
     def __str__(self):
         return "Graphics3d Object"
 
-    def __add__(self, other):
+    def __add__(left, right):
         # Use == not "other is 0" here, since e.g., Sage integer zero is not 0.
-        if other == 0 or other is None:
-            return self
-        elif self == 0 or self is None:
-            return other
-        return Graphics3dGroup([self, other])
+        if right == 0 or right is None:
+            return left
+        elif left == 0 or left is None:
+            return right
+        elif not isinstance(left, Graphics3d):
+            left = left.plot3d()
+        elif not isinstance(right, Graphics3d):
+            right = right.plot3d()
+        return Graphics3dGroup([left, right])
 
     def _set_extra_kwds(self,kwds):
         self._extra_kwds = kwds
@@ -534,7 +538,7 @@ class Graphics3dGroup(Graphics3d):
         self.frame_aspect_ratio(optimal_aspect_ratios([a.frame_aspect_ratio() for a in all]))
         self.aspect_ratio(optimal_aspect_ratios([a.aspect_ratio() for a in all]))
         self._set_extra_kwds(optimal_extra_kwds([a._extra_kwds for a in all if a._extra_kwds is not None]))
-
+        
     def bounding_box(self):
         # Box that contains the bounding boxes of
         # all the objects that make up self.
