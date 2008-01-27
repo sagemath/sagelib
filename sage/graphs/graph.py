@@ -214,8 +214,8 @@ AUTHORS:
             sage: T = graphs.TetrahedralGraph()
             sage: T.vertices()
             [0, 1, 2, 3]
-            sage: T.associate(d)
-            sage: T.obj(1)
+            sage: T.set_vertices(d)
+            sage: T.get_vertex(1)
             Flower Snark: Graph on 20 vertices
         
         \subsection{Database}
@@ -462,6 +462,47 @@ class GenericGraph(SageObject):
 
         """
         raise NotImplementedError('To include a graph in LaTeX document, see function Graph.write_to_eps().')
+
+    def copy(self):
+        """
+        Creates a copy of the graph.
+
+        EXAMPLES:
+            sage: g=Graph({0:[0,1,1,2]},loops=True,multiedges=True)
+            sage: g==g.copy()
+            True
+            sage: g=DiGraph({0:[0,1,1,2],1:[0,1]},loops=True,multiedges=True)
+            sage: g==g.copy()
+            True
+        
+        Note that vertex associations are also kept:
+            sage: d = {0 : graphs.DodecahedralGraph(), 1 : graphs.FlowerSnark(), 2 : graphs.MoebiusKantorGraph(), 3 : graphs.PetersenGraph() }
+            sage: T = graphs.TetrahedralGraph()
+            sage: T.set_vertices(d)
+            sage: T2 = T.copy()
+            sage: T2.get_vertex(0)
+            Dodecahedron: Graph on 20 vertices
+
+        Notice that the copy is at least as deep as the objects:
+            sage: T2.get_vertex(0) is T.get_vertex(0)
+            False
+            sage: T2.get_vertex(0)._nxg is T.get_vertex(0)._nxg
+            False
+
+        """
+        if self.is_directed():
+            G = DiGraph(self._nxg.copy(), name=self._nxg.name, pos=self._pos, boundary=self._boundary)
+        else:
+            G = Graph(self._nxg.copy(), name=self._nxg.name, pos=self._pos, boundary=self._boundary)
+        if hasattr(self, '_assoc'):
+            from copy import copy
+            G._assoc = {}
+            for v in self._assoc:
+                try:
+                    G._assoc[v] = self._assoc[v].copy()
+                except:
+                    G._assoc[v] = copy(self._assoc[v])
+        return G
 
     def _matrix_(self, R=None):
         """
@@ -863,7 +904,7 @@ class GenericGraph(SageObject):
         """
         return self._nxg.node_boundary(vertices1, vertices2)
     
-    def associate(self, vertex_dict):
+    def set_vertices(self, vertex_dict):
         """
         Associate arbitrary objects with each vertex, via an association dictionary.
 
@@ -877,8 +918,8 @@ class GenericGraph(SageObject):
             sage: T = graphs.TetrahedralGraph()
             sage: T.vertices()
             [0, 1, 2, 3]
-            sage: T.associate(d)
-            sage: T.obj(1)
+            sage: T.set_vertices(d)
+            sage: T.get_vertex(1)
             Flower Snark: Graph on 20 vertices
 
         """
@@ -890,7 +931,30 @@ class GenericGraph(SageObject):
             for v in vertex_dict:
                 self._assoc[v] = vertex_dict[v]
     
-    def obj(self, vertex):
+    def set_vertex(self, vertex, object):
+        """
+        Associate an arbitrary object with a vertex.
+        
+        INPUT:
+            vertex -- which vertex
+            object -- object to associate to vertex
+        
+        EXAMPLE:
+            sage: T = graphs.TetrahedralGraph()
+            sage: T.vertices()
+            [0, 1, 2, 3]
+            sage: T.set_vertex(1, graphs.FlowerSnark())
+            sage: T.get_vertex(1)
+            Flower Snark: Graph on 20 vertices
+        
+        """
+        try:
+            self._assoc[vertex] = object
+        except:
+            self._assoc = {}
+            self._assoc[vertex] = object
+    
+    def get_vertex(self, vertex):
         """
         Retrieve the object associated with a given vertex.
         
@@ -904,8 +968,8 @@ class GenericGraph(SageObject):
             sage: T = graphs.TetrahedralGraph()
             sage: T.vertices()
             [0, 1, 2, 3]
-            sage: T.associate(d)
-            sage: T.obj(1)
+            sage: T.set_vertices(d)
+            sage: T.get_vertex(1)
             Flower Snark: Graph on 20 vertices
 
         """
@@ -913,6 +977,32 @@ class GenericGraph(SageObject):
             return self._assoc[vertex]
         except:
             return None
+    
+    def get_vertices(self, verts=None):
+        """
+        Return a dictionary of the objects associated to each vertex.
+        
+        INPUT:
+            verts -- iterable container of vertices
+        
+        EXAMPLES:
+            sage: d = {0 : graphs.DodecahedralGraph(), 1 : graphs.FlowerSnark(), 2 : graphs.MoebiusKantorGraph(), 3 : graphs.PetersenGraph() }
+            sage: T = graphs.TetrahedralGraph()
+            sage: T.set_vertices(d)
+            sage: T.get_vertices([1,2])
+            {1: Flower Snark: Graph on 20 vertices,
+             2: Moebius-Kantor Graph: Graph on 16 vertices}
+
+        """
+        if verts is None:
+            verts = self.vertices()
+        output = {}
+        for v in verts:
+            try:
+                output[v] = self._assoc[v]
+            except:
+                output[v] = None
+        return output
     
     def loop_vertices(self):
         """
@@ -932,7 +1022,7 @@ class GenericGraph(SageObject):
         boundary, associated objects, and position information.
 
         EXAMPLE:
-            sage: G=graphs.CycleGraph(4); G.associate({0:'vertex0'})
+            sage: G=graphs.CycleGraph(4); G.set_vertices({0:'vertex0'})
             sage: G.order(); G.size()
             4
             4
@@ -940,7 +1030,7 @@ class GenericGraph(SageObject):
             4
             sage: G.name()
             'Cycle graph'
-            sage: G.obj(0)
+            sage: G.get_vertex(0)
             'vertex0'
             sage: G.clear()
             sage: G.order(); G.size()
@@ -949,7 +1039,7 @@ class GenericGraph(SageObject):
             sage: len(G._pos)
             0
             sage: G.name()
-            sage: G.obj(0)
+            sage: G.get_vertex(0)
 
         """
         self._nxg.clear()
@@ -3555,20 +3645,6 @@ class Graph(GenericGraph):
             name = self._nxg.name + ": " + name
         return name
 
-    def copy(self):
-        """
-        Creates a copy of the graph.
-
-        EXAMPLE:
-            sage: g=Graph({0:[0,1,1,2]},loops=True,multiedges=True)
-            sage: g==g.copy()
-            True
-
-
-        """
-        G = Graph(self._nxg.copy(), name=self._nxg.name, pos=self._pos, boundary=self._boundary)
-        return G
-
     def to_directed(self):
         """
         Returns a directed version of the graph. A single edge becomes two
@@ -5789,19 +5865,6 @@ class DiGraph(GenericGraph):
         if not self._nxg.name is None and not self._nxg.name == "":
             name = self._nxg.name + ": " + name
         return name
-
-    def copy(self):
-        """
-        Creates a copy of the graph.
-
-        EXAMPLE:
-            sage: g=DiGraph({0:[0,1,1,2],1:[0,1]},loops=True,multiedges=True)
-            sage: g==g.copy()
-            True
-
-        """
-        G = DiGraph(self._nxg.copy(), name=self._nxg.name, pos=self._pos, boundary=self._boundary)
-        return G
 
     def to_directed(self):
         """
