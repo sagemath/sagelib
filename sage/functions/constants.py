@@ -418,6 +418,10 @@ class Constant(Function):
             pi
         """
         return self
+        
+    def _fast_float_(self, *vars):
+        from sage.ext.fast_eval import fast_float_constant
+        return fast_float_constant(self)
 
     def floor(self):
         """
