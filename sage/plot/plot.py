@@ -1170,6 +1170,14 @@ class Graphics(SageObject):
         return self
         
     def plot3d(self, z=0, **kwds):
+        """
+        Returns an embedding of this 2D plot into the xy-plane of 3D space, as 
+        a 3D plot object. An optional parameter z can be given to specify the
+        z-coordinate. 
+
+        EXAMPLES: 
+            sage: sum([plot(z*sin(x), 0, 10).plot3d(z) for z in range(6)])
+        """
         from sage.plot.plot3d.base import Graphics3dGroup
         g = Graphics3dGroup([g.plot3d(**kwds) for g in self.__objects])
         if z:
