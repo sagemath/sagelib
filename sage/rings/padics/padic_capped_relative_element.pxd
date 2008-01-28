@@ -1,5 +1,4 @@
 include "../../ext/cdefs.pxi"
-include "../../libs/pari/decl.pxi"
 
 cimport sage.rings.padics.padic_base_generic_element
 from sage.rings.padics.padic_base_generic_element cimport pAdicBaseGenericElement
@@ -16,7 +15,7 @@ from sage.rings.rational cimport Rational
 cimport sage.rings.padics.pow_computer
 from sage.rings.padics.pow_computer cimport PowComputer_class
 
-import sage.libs.pari.gen
+#import sage.libs.pari.gen
 cimport sage.libs.pari.gen
 from sage.libs.pari.gen cimport gen as pari_gen
 from sage.libs.pari.gen cimport PariInstance
@@ -32,7 +31,7 @@ cdef class pAdicCappedRelativeElement(pAdicBaseGenericElement):
     cdef void _set_zero(pAdicCappedRelativeElement self, absprec)
     cdef void _set_prec(pAdicCappedRelativeElement self, long relprec)
     cdef void _set(pAdicCappedRelativeElement self, long ordp, mpz_t unit, long relprec)
-    cdef int _set_from_CR(pAdicCappedRelativeElement self, pAdicCappedRelativeElement other) except -1      
+    cdef int _set_from_CR(pAdicCappedRelativeElement self, pAdicCappedRelativeElement other) except -1
 
     cdef pAdicCappedRelativeElement _new_c(pAdicCappedRelativeElement self)
     cdef void _normalize(pAdicCappedRelativeElement self)
