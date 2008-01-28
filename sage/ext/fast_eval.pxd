@@ -5,8 +5,7 @@ cdef union double_op_params:
 
 cdef struct fast_double_op:
     char type
-    double_op_params params
-    
+    double_op_params params    
 
 cdef class FastDoubleFunc:
     cdef readonly int max_height
