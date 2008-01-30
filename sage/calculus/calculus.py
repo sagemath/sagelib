@@ -283,6 +283,8 @@ import sage.functions.constants
 import math
 import sage.functions.functions
 
+import sage.ext.fast_eval as fast_float
+
 #needed for converting from SymPy to SAGE
 import sympy
 
@@ -654,7 +656,6 @@ class SymbolicExpression(RingElement):
                 else:
                     param = A[0]
                 f = lambda x: self(x)
-                #f = self.fast_float_function()
             else:
                 A = self.variables()
                 if len(A) == 0:
@@ -3085,11 +3086,22 @@ class SymbolicExpression(RingElement):
     ###################################################################
     # Fast Evaluation
     ###################################################################
-    def fast_float_function(self):
-        return self._fast_float_()
 
-    def _fast_float_(self):
-        return   lambda x: float(self(x))
+    def _fast_float_(self, *vars):
+        """
+        EXAMPLES: 
+            sage: x,y,z = var('x,y,z')
+            sage: f = 1 + sin(x)/x + sqrt(z^2+y^2)/cosh(x)
+            sage: ff = f._fast_float_('x', 'y', 'z')
+            sage: f(1.0,2.0,3.0)
+            4.1780638977866...
+            sage: ff(1.0,2.0,3.0)
+            4.17806389778660...
+        """
+        try:
+            return fast_float.fast_float_constant(float(self))
+        except:
+            raise NotImplementedError # return lambda x: float(self(x))
         
 
 class Symbolic_object(SymbolicExpression):
@@ -3113,6 +3125,9 @@ class Symbolic_object(SymbolicExpression):
         EXAMPLES:
         """
         return self._obj
+        
+    def _fast_float_(self, *vars):
+        return fast_float.fast_float_constant(float(self))
 
     def __float__(self):
         """
@@ -3245,9 +3260,8 @@ class SymbolicConstant(Symbolic_object):
                 if isinstance(self._obj, int):
                     return True
 
-    def _fast_float_(self):
-        z = float(self)
-        return lambda x: z
+    def _fast_float_(self, *vars):
+        return fast_float.fast_float_constant(float(self))
 
     def _recursive_sub(self, kwds):
         """
@@ -3566,6 +3580,11 @@ class SymbolicPolynomial(Symbolic_object):
             return f
         return f.change_ring(base_ring)
 
+    def _fast_float_(self, *vars):
+        # use Horners rule
+        return self._obj._fast_float_(*vars)
+
+
 ##################################################################
         
 
@@ -3849,6 +3868,18 @@ class SymbolicArithmetic(SymbolicOperation):
         else:
             new_ops = [op._recursive_sub_over_ring(kwds, ring=ring) for op in ops]
         return ring(self._operator(*new_ops))
+
+    def _fast_float_(self, *vars):
+        """
+        EXAMPLES: 
+            sage: x,y = var('x,y')
+            sage: f = x*x-y
+            sage: ff = f._fast_float_('x','y')
+            sage: ff(2,3)
+            1.0
+        """
+        fops = [op._fast_float_(*vars) for op in self._operands]
+        return self._operator(*fops)
 
     def _convert(self, typ):
         """
@@ -4300,8 +4331,23 @@ class SymbolicVariable(SymbolicExpression):
     def __hash__(self):
         return hash(self._name)
 
-    def _fast_float_(self):
-        return lambda x: x
+    def _fast_float_(self, *vars):
+        r"""
+        Returns a quickly-evaluating function with named parameters 
+        \code{vars}. Specifically, if \code{self} is the $n$-th parameter
+        it returns a function extracting the $n$-th item out of a tuple. 
+        
+        EXAMPLES: 
+            sage: f = x._fast_float_('x', 'y')
+            sage: f(1,2)
+            1.0
+            sage: f = x._fast_float_('y', 'x')
+            sage: f(1,2)
+            2.0
+        """
+        if self._name not in vars:
+            raise ValueError, "free variable: %s" % self._name
+        return fast_float.fast_float_arg(list(vars).index(self._name))
 
     def _recursive_sub(self, kwds):
         # do the replacement if needed
@@ -4613,6 +4659,9 @@ class CallableSymbolicExpression(SymbolicExpression):
 
     def _maxima_init_(self):
         return self._expr._maxima_init_()
+        
+    def _fast_float_(self, *vars):
+        return self._expr._fast_float_(*vars)
 
     def __float__(self):
         return float(self._expr)
@@ -5043,9 +5092,16 @@ class SymbolicComposition(SymbolicOperation):
         g = self._operands[1]
         return float(f._approx_(float(g)))
 
-    def _fast_float_(self):
-        f = self._operands[0]._fast_float_()
-        g = self._operands[1]._fast_float_()
+    def _fast_float_(self, *vars):
+        f = self._operands[0]
+        g = self._operands[1]._fast_float_(*vars)
+        try:
+            return f(g)
+        except TypeError:
+            if f is abs_symbolic:
+                return abs(g) # special case
+            else:
+                return fast_float.fast_float_func(f, g)
         return lambda x: f(g(x))
 
     def __complex__(self):
@@ -5336,7 +5392,7 @@ class Function_abs(PrimitiveFunction):
 
     def __call__(self, x): # special case
         return SymbolicComposition(self, SR(x))
-
+        
 abs_symbolic = Function_abs()
 _syms['abs'] = abs_symbolic
 
