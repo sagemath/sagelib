@@ -333,7 +333,7 @@ def cmp_props(left, right, props):
         if c: return c
     return 0
 
-from sage.misc.misc_c import prod
+from sage.misc.misc_c import prod, running_total
 
 # alternative name for prod
 mul = prod
@@ -888,6 +888,8 @@ def ellipsis_range(*args, **kwds):
         if skip:
             skip = False
         elif args[i] is Ellipsis:
+            if len(args) == i+1:
+                raise IndexError, "Ellipsis range must have an endpoint, use (n..) for infinite sequence."
             start, end = args[i-1], args[i+1]
             if i < 2 or args[i-2] is not Ellipsis:
                 L.pop()

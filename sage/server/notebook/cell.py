@@ -535,10 +535,13 @@ class Cell(Cell_generic):
               onKeyDown  = 'return input_keydown(%s,event);'
               onInput    = 'cell_input_resize(this); return true;'
               onBlur     = 'cell_blur(%s); return true;'
-              onFocus    = 'this.className = "cell_input_active"; return true;'
+              onFocus    = 'this.className = "cell_input_active"; set_class("eval_button%s","eval_button_active"); return true;'
               %s
            >%s</textarea>
-        """%(cls, r, ncols, id, id, id, id,'readonly=1' if do_print else '', t)
+        """%(cls, r, ncols, id, id, id, id, id, 'readonly=1' if do_print else '', t)
+
+        if not do_print:
+           s+= '<a href="javascript:evaluate_cell(%s,0)" class="eval_button" id="eval_button%s" alt="Click here or press shift-return to evaluate">evaluate</a>'%(id,id)
 
         t = t.replace("<","&lt;")+" "
 
@@ -599,14 +602,21 @@ class Cell(Cell_generic):
                 if i != -1:
                     size = F[i+5:-5]
                 else:
-                    size = 200
-                popup  = """<br><a href="javascript:jmol_popup('%s');">Enlarge 3d View</a>"""%url
-                script = '<script>jmol_applet(%s, "%s");</script>%s' % (size, url, popup)
+                    size = 500
+
+                #popup  = """<br><a href="javascript:jmol_popup('%s');">Enlarge</a>"""%url
+                #script = '<script>jmol_applet(%s, "%s");</script>%s' % (size, url, popup)
+                #script = '<script>jmol_popup("%s");</script>' % (url)
+
+                script = '<div><script>jmol_applet(%s, "%s?%d");</script></div>' % (size, url, self.version())
                 images.append(script)
-            elif F.endswith('.pmesh'):
+            elif F.endswith('.jmol.zip'):
                 pass # jmol data
             else:
-                files.append('<a href="%s" class="file_link">%s</a>'%(url, F))
+                link_text = str(F)
+                if len(link_text) > 40:
+                    link_text = link_text[:10] + '...' + link_text[-20:]
+                files.append('<a href="%s" class="file_link">%s</a>'%(url, link_text))
         if len(images) == 0:
             images = ''
         else:

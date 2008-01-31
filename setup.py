@@ -705,7 +705,7 @@ ext_modules = [ \
     Extension('sage.rings.padics.padic_capped_relative_element',
               sources = ['sage/rings/padics/padic_capped_relative_element.pyx', \
                          'sage/rings/padics/padic_generic_element.c'],
-              libraries=['gmp']),
+              libraries=['gmp', 'csage']),
 
 
     Extension('sage.rings.memory', \
@@ -1070,7 +1070,7 @@ def hash_of_cython_file_timestamps():
             z = dir + '/' + f
             if os.path.isdir(z):
                 h += hash_of_dir(z)
-            elif f[-4:] in extensions:
+            elif f[-4:] in extensions and f[0] != '.':
                 h += hash(os.path.getmtime(z))
         return h
     return hash_of_dir('sage')
@@ -1132,6 +1132,8 @@ code = setup(name        = 'sage',
                      'sage.coding',
 
                      'sage.combinat',
+                     
+                     'sage.combinat.sf',
                      
                      'sage.crypto',
 

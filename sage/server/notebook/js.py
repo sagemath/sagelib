@@ -36,18 +36,18 @@ def javascript():
 def jmol_lib():
     s = r"""
 function jmol_applet(size, url) {
-    if(use_cell_writer) {
-        /* It is very important to *only* use the cell writer
-           after the page has been completely loaded. */
-        jmolSetDocument(cell_writer);
-    }     
+    jmolSetDocument(cell_writer);
     jmolApplet(size, "script " + url);
 }
 
 function jmol_popup(url) {
-    win = window.open ("", url, "width=400,height=400,resizable=1");
+    win = window.open ("", "jmol viewer", "width=600,height=600,resizable=1,statusbar=0");
+    win.document.body.innerHTML = "";
+    win.document.title = "Sage 3d Viewer";
+    win.document.writeln("<h1 align=center>Sage 3d Viewer</h1>");
     jmolSetDocument(win.document);
     jmolApplet("100%", "script" + url);
+    win.focus(); 
 }
     """
 
@@ -820,7 +820,6 @@ function archive_button() {
 function history_window() {
     window.open ("/history", 
       "", "menubar=1,scrollbars=1,width=800,height=600, toolbar=1,resizable=1");
-
 }
 
 function upload_worksheet_button() {
@@ -1221,11 +1220,12 @@ function cell_blur(id) {
     var cell = get_cell(id);
     if(cell == null) return;
 
+    setTimeout("set_class('eval_button"+id+"','eval_button')", 100); //this is unclickable if we don't add a little delay.
+
     /* Disable coloring and change to div for now */
     cell.className="cell_input";
     cell_input_minimize_size(cell);
     return true;  /* disable for now */
-
 
     cell.className="hidden";
 
@@ -1888,6 +1888,10 @@ function set_attached_files_list(objects) {
     objlist.innerHTML = objects;
 }
 
+/* When the page is loaded, let javascript write
+ * directly to the document. After that, make sure 
+ * javascript writes to a CellWriter object. */
+
 function CellWriter() {
     function write(s) {
         this.buffer += s;
@@ -1896,8 +1900,7 @@ function CellWriter() {
     this.buffer = "";
 }
 
-use_cell_writer = false;
-cell_writer = new CellWriter();
+cell_writer = document;
 
 function eval_script_tags(text) {
    var s = text; //text.replaceAll('\n','');
@@ -1906,7 +1909,7 @@ function eval_script_tags(text) {
        var j = s.indexOf('<'+'/script>');
        var code = s.slice(8+i,j);
        try {
-           cell_writer.buffer = "";
+           cell_writer = new CellWriter();
            window.eval(code);
        } catch(e) {
            alert(e);

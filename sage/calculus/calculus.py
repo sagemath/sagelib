@@ -245,7 +245,7 @@ from sage.rings.all import (CommutativeRing, RealField, is_Polynomial,
                             Integer, Rational, CC,
                             QuadDoubleElement,
                             PolynomialRing, ComplexField,
-                            algdep, Integer, RealNumber)
+                            algdep, Integer, RealNumber, RealIntervalField)
 
 from sage.rings.real_mpfr import create_RealNumber
 
@@ -440,7 +440,11 @@ class SymbolicExpressionRing_class(CommutativeRing):
         return Integer(0)
 
     def _an_element_impl(self):
-        return SymbolicVariable('_generic_variable_name_')
+        try:
+            return self.__zero
+        except AttributeError:
+            self.__zero = SR(0)
+        return self.__zero
         
     def is_field(self):
         return True
@@ -584,6 +588,26 @@ class SymbolicExpression(RingElement):
         return hash(self._repr_(simplify=False))
 
     def plot(self, *args, **kwds):
+        """
+        Plot a symbolic expression.
+
+        All arguments are passed onto the standard plot command. 
+        
+        EXAMPLES:
+        This displays a straight line:
+            sage: sin(2).plot((x,0,3))
+
+        This draws a red oscillatory curve:
+            sage: sin(x^2).plot((x,0,2*pi), rgbcolor=(1,0,0))
+
+        Another plot using the variable theta:
+            sage: var('theta')
+            theta
+            sage: (cos(theta) - erf(theta)).plot((theta,-2*pi,2*pi))
+
+        A very thick green plot with a frame:
+            sage: sin(x).plot((x,-4*pi, 4*pi), thickness=20, rgbcolor=(0,0.7,0)).show(frame=True)
+        """
         from sage.plot.plot import plot
 
         # see if the user passed a variable in.
@@ -600,7 +624,7 @@ class SymbolicExpression(RingElement):
         F = self.simplify()
         if isinstance(F, Symbolic_object):
             if hasattr(F._obj, '__call__'):
-                f = lambda x: F._obj(x)
+                f = lambda x: F.subs(x)
             else:
                 y = float(F._obj)
                 f = lambda x: y
@@ -621,7 +645,7 @@ class SymbolicExpression(RingElement):
                     f = lambda x: y
                 else:
                     param = A[0]
-                f = self.function(param)
+                    f = self.function(param)
         else:
             f = self.function(param)
         return plot(f, *args, **kwds)
@@ -4027,6 +4051,10 @@ class SymbolicArithmetic(SymbolicOperation):
             -1/3
             sage: (-1)^(1/4)
             (-1)^(1/4)
+
+            sage: (-(x-1)/2)._latex_(simplify=False)
+            '\\frac{-\\left( x - 1 \\right)}{2}'
+
         """
         if simplify:
             if hasattr(self, '_simp'):
@@ -4173,6 +4201,8 @@ class SymbolicArithmetic(SymbolicOperation):
                 s[0] = r'\left( %s \right)' % s[0]
             return '{%s}^{%s} ' % (s[0], s[1])
         elif op is operator.neg:
+            if ops[0]._has_op(operator.add) or ops[0]._has_op(operator.sub):
+                s[0] = r'\left( %s \right)'%s[0]
             return '-%s' % s[0]
 
     def _maxima_init_(self):
@@ -5286,6 +5316,20 @@ class Function_ceil(PrimitiveFunction):
     """
     The ceiling function.
 
+    The ceiling of x is computed it the following manner.
+      1) x.ceil() method is called and returned if it is there.
+         If it is not, then Sage checks if x is one of Python's
+         native numeric data types.  If so, then it calls
+         and returns Integer(int(math.ceil(x))).
+      2) Sage tries to convert x into a RealIntervalField.  The
+         ceilings of the endpoints are computed.  If they are the same,
+         then that value is returned.  Otherwise, the precision of
+         the RealIntervalField is increased until they do match up
+         or it reaches maximum_bits of precision.
+      3) If none of the above work, Sage returns a SymbolicComposition
+         object.
+
+         
     EXAMPLES:
         sage: a = ceil(2/5 + x)
         sage: a
@@ -5305,7 +5349,14 @@ class Function_ceil(PrimitiveFunction):
         sage: ceil(5.4)
         6
         sage: type(ceil(5.4))
-        <type 'sage.rings.integer.Integer'>        
+        <type 'sage.rings.integer.Integer'>
+
+        sage: ceil(factorial(50)/exp(1))
+        11188719610782480504630258070757734324011354208865721592720336801
+        sage: ceil(SR(10^50 + 10^(-50)))
+        100000000000000000000000000000000000000000000000001
+        sage: ceil(SR(10^50 - 10^(-50)))
+        100000000000000000000000000000000000000000000000000
     """
     def _repr_(self, simplify=True):
         return "ceil"
@@ -5318,13 +5369,38 @@ class Function_ceil(PrimitiveFunction):
 
     _approx_ = math.ceil
 
-    def __call__(self, x):
+    def __call__(self, x, maximum_bits=20000):
         try:
             return x.ceil()
         except AttributeError:
             if isinstance(x, (float, int, long, complex)):
-                return int(math.ceil(x))
-        return SymbolicComposition(self, SR(x))
+                return Integer(int(math.ceil(x)))
+
+        #If x can be coerced into a real interval, then we should
+        #try increasing the number of bits of precision until
+        #we get the ceiling at each of the endpoints is the same.
+        #The precision will continue to be increased up to maximum_bits
+        #of precision at which point it will raise a value error.
+        bits = 53
+        try:
+            x_interval = RealIntervalField(bits)(x)
+            upper_ceil = x_interval.upper().ceil()
+            lower_ceil = x_interval.lower().ceil()
+            while upper_ceil != lower_ceil and bits < maximum_bits:
+                bits += 100
+                x_interval = RealIntervalField(bits)(x)
+                upper_ceil = x_interval.upper().ceil()
+                lower_ceil = x_interval.lower().ceil()
+
+            if bits < maximum_bits:
+                return lower_ceil
+            else:
+                raise ValueError, "x (= %s) requires more than %s bits of precision to compute its ceiling"%(x, maximum_bits)
+            
+        except TypeError:
+            #If x cannot be coerced into a RealField, then
+            #it should be left as a symbolic expression.
+            return SymbolicComposition(self, SR(x))
 
 ceil = Function_ceil()
 _syms['ceiling'] = ceil   # spelled ceiling in maxima
@@ -5333,6 +5409,19 @@ _syms['ceiling'] = ceil   # spelled ceiling in maxima
 class Function_floor(PrimitiveFunction):
     """
     The floor function.
+
+    The floor of x is computed it the following manner.
+      1) x.floor() method is called and returned if it is there.
+         If it is not, then Sage checks if x is one of Python's
+         native numeric data types.  If so, then it calls
+         and returns Integer(int(math.floor(x))).
+      2) Sage tries to convert x into a RealIntervalField.  The
+         floors of the endpoints are computed.  If they are the same,
+         then that value is returned.  Otherwise, the precision of
+         the RealIntervalField is increased until they do match up
+         or it reaches maximum_bits of precision.
+      3) If none of the above work, Sage returns a SymbolicComposition
+         object.
 
     EXAMPLES:
         sage: floor(5.4)
@@ -5344,7 +5433,13 @@ class Function_floor(PrimitiveFunction):
         sage: a = floor(5.4 + x); a
         floor(x + 0.400000000000000) + 5
         sage: a(2)
-        7        
+        7
+        sage: floor(factorial(50)/exp(1))
+        11188719610782480504630258070757734324011354208865721592720336800
+        sage: floor(SR(10^50 + 10^(-50)))
+        100000000000000000000000000000000000000000000000000
+        sage: floor(SR(10^50 - 10^(-50)))
+        99999999999999999999999999999999999999999999999999
     """
     def _repr_(self, simplify=True):
         return "floor"
@@ -5357,13 +5452,39 @@ class Function_floor(PrimitiveFunction):
 
     _approx_ = math.floor
 
-    def __call__(self, x):
+    def __call__(self, x, maximum_bits=20000):
         try:
             return x.floor()
         except AttributeError:
             if isinstance(x, (float, int, long, complex)):
-                return int(math.floor(x))
-        return SymbolicComposition(self, SR(x))
+                return Integer(int(math.floor(x)))
+
+        #If x can be coerced into a real interval, then we should
+        #try increasing the number of bits of precision until
+        #we get the floor at each of the endpoints is the same.
+        #The precision will continue to be increased up to maximum_bits
+        #of precision at which point it will raise a value error.
+        bits = 53
+        try:
+            x_interval = RealIntervalField(bits)(x)
+            upper_floor = x_interval.upper().floor()
+            lower_floor = x_interval.lower().floor()
+            while upper_floor != lower_floor and bits < maximum_bits:
+                bits += 100
+                x_interval = RealIntervalField(bits)(x)
+                upper_floor = x_interval.upper().floor()
+                lower_floor = x_interval.lower().floor()
+
+            if bits < maximum_bits:
+                return lower_floor
+            else:
+                raise ValueError, "x (= %s) requires more than %s bits of precision to compute its floor"%(x, maximum_bits)
+            
+        except TypeError:
+            #If x cannot be coerced into a RealField, then
+            #it should be left as a symbolic expression.
+            return SymbolicComposition(self, SR(x))
+
 
 floor = Function_floor()
 _syms['floor'] = floor   # spelled ceiling in maxima

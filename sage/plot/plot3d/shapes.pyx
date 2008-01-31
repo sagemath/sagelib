@@ -57,6 +57,8 @@ from base import Graphics3dGroup, Graphics3d
 class Box(IndexFaceSet):
     """
     EXAMPLES:
+        sage: from sage.plot.plot3d.shapes import Box
+        
     A square black box:
         sage: show(Box([1,1,1]))
 
@@ -85,6 +87,7 @@ class Box(IndexFaceSet):
     def bounding_box(self):
         """
         EXAMPLES:
+            sage: from sage.plot.plot3d.shapes import Box
             sage: Box([1,2,3]).bounding_box()
             ((-1.0, -2.0, -3.0), (1.0, 2.0, 3.0))
         """
@@ -108,6 +111,7 @@ def ColorCube(size, colors, opacity=1, **kwds):
 
     EXAMPLES:
     A color cube with translucent sides:
+        sage: from sage.plot.plot3d.shapes import ColorCube
         sage: c = ColorCube([1,2,3], ['red', 'blue', 'green', 'black', 'white', 'orange'], opacity=0.5)
         sage: c.show()
         sage: list(c.texture_set())[0].opacity
@@ -183,15 +187,8 @@ cdef class Cylinder(ParametricSurface):
             # Tachyon can't do sqashed
             return ParametricSurface.tachyon_repr(self, render_params)
             
-        if transform is None:
-            base = (0,0,0)
-            top = (0,0,self.height)
-            rad = self.radius
-        else:
-            base = transform.transform_point((0,0,0))
-            top = transform.transform_point((0,0,self.height))
-            radv = transform.transform_vector((self.radius,0,0))
-            rad = sqrt(sum([x*x for x in radv]))
+        base, top = self.get_endpoints(transform)
+        rad = self.get_radius(transform)
         cyl = """FCylinder 
    Base %s %s %s
    Apex %s %s %s
@@ -206,6 +203,42 @@ cdef class Cylinder(ParametricSurface):
             return [base_cap, cyl, top_cap]
         else:
             return cyl
+            
+    def jmol_repr(self, render_params):
+        transform = render_params.transform
+        base, top = self.get_endpoints(transform)
+        rad = self.get_radius(transform)
+        
+        cdef double ratio = sqrt(rad*rad / ((base[0]-top[0])**2 + (base[1]-top[1])**2 + (base[2]-top[2])**2))
+        #print ratio
+
+        if ratio > .02:
+            if not (transform is None or transform.is_uniform_on([(1,0,0),(0,1,0)])) or ratio > .05:
+                # Jmol can't do sqashed
+                return ParametricSurface.jmol_repr(self, render_params)
+            
+        name = render_params.unique_name('line')
+        return ["""
+draw %s width %s {%s %s %s} {%s %s %s}\n%s
+""" % (name, 
+       rad,
+       base[0], base[1], base[2],
+       top [0], top [1], top [2],
+       self.texture.jmol_str("$" + name)) ]
+       
+    def get_endpoints(self, transform=None):
+        if transform is None:
+            return (0,0,0), (0,0,self.height)
+        else:
+            return transform.transform_point((0,0,0)), transform.transform_point((0,0,self.height))
+            
+    def get_radius(self, transform=None):
+        if transform is None:
+            return self.radius
+        else:
+            radv = transform.transform_vector((self.radius,0,0))
+            return sqrt(sum([x*x for x in radv]))
+    
 
     def get_grid(self, ds):
         twoPi = 2*RDF.pi()
@@ -271,7 +304,34 @@ def LineSegment(start, end, thickness=1, radius=None, **kwds):
         theta = -acos(diff[2]/height)
         return cyl.rotate(axis, theta).translate(start)
 
-def Arrow(start, end, thickness=1, radius=None, head_radius=None, head_len=None, **kwds):
+def arrow3d(start, end, thickness=1, radius=None, head_radius=None, head_len=None, **kwds):
+    """
+    Create a 3d arrow.
+
+    INPUT:
+        start -- (x,y,z) point; the starting point of the arrow
+        end -- (x,y,z) point; the end point
+        thickness -- (default: 1); how thick the arrow is
+        radius -- (default: thickness/50.0) the radius of the arrow
+        head_radius -- (default: 3*radius); radius of arrow head
+        head_len -- (default: 3*head_radius); len of arrow head
+
+    EXAMPLES:
+    The default arrow:
+        sage: arrow3d((0,0,0), (1,1,1), 1)
+
+    A fat arrow:
+        sage: arrow3d((0,0,0), (1,1,1), radius=0.1)
+
+    A green arrow:
+        sage: arrow3d((0,0,0), (1,1,1), color='green')
+
+    A fat arrow head:
+        sage: arrow3d((2,1,0), (1,1,1), color='green', head_radius=0.3, aspect_ratio=[1,1,1])
+
+    Many arrow arranged in a circle (flying spears?):
+        sage: sum([arrow3d((cos(t),sin(t),0),(cos(t),sin(t),1)) for t in [0,0.3,..,2*pi]])
+    """
     if radius is None:
         radius = thickness/50.0
     if head_radius == None:
@@ -305,6 +365,7 @@ cdef class Sphere(ParametricSurface):
         Return the bounding box that contains this sphere.
         
         EXAMPLES:
+            sage: from sage.plot.plot3d.shapes import Sphere
             sage: Sphere(3).bounding_box()
             ((-3.0, -3.0, -3.0), (3.0, 3.0, 3.0))
         """
@@ -400,33 +461,34 @@ class Text(PrimitiveObject):
     def x3d_geometry(self):
         return "<Text string='%s' solid='true'/>"%self.string
 
+    def obj_repr(self, render_params):
+        return ''
+        
+    def tachyon_repr(self, render_params):
+        return ''
+        # Text in Tachyon not implemented yet.
+        # I have no idea what the code below is supposed to do.
+##         transform = render_params.transform
+##         if not (transform is None or transform.is_uniform()):
+##             return ParametricSurface.tachyon_repr(self, render_params)
+            
+##         if transform is None:
+##             cen = (0,0,0)
+##             rad = self.radius
+##         else:
+##             cen = transform.transform_point((0,0,0))
+##             radv = transform.transform_vector((self.radius,0,0))
+##             rad = sqrt(sum([x*x for x in radv]))
+##         return "Sphere center %s %s %s Rad %s %s" % (cen[0], cen[1], cen[2], rad, self.texture.id)
 
-def parametric_plot_3d(funcs, tmin, tmax, plot_points=50, show=None, thickness=0.2, polar=False, **kwargs):
-
-    if polar:
-        raise NotImplementedError, "3d parametric polar plots not implemented"
-
-    f,g,h = funcs
-
-    # normalize number of points to an integer
-    plot_points = int(plot_points)
-    if plot_points <= 1:
-        plot_points = 1
-
-    
-    v = srange(tmin, tmax, (tmax-tmin)/plot_points, include_endpoint=True)
-    t0 = v[0]
-    P =  (f(t0), g(t0), h(t0))
-    G = 0
-    for i in range(1, len(v)):
-        t1 = v[i]
-        Q = (f(t1), g(t1), h(t1))
-        G += LineSegment(P, Q, **kwargs)
-        P = Q
-
-    if show:
-        G.show(**kwargs)
-    
-    return G
-    
+    def jmol_repr(self, render_params):
+        cen = render_params.transform.transform_point((0,0,0))
+        render_params.atom_list.append(cen)
+        atom_no = len(render_params.atom_list)
+        return ['select atomno = %s' % atom_no,
+                self.get_texture().jmol_str("atom"),
+                'label "%s"' % self.string] #.replace('\n', '|')]
+                
+    def bounding_box(self):
+        return (0,0,0), (0,0,0)
 

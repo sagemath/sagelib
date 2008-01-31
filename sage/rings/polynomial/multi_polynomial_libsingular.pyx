@@ -295,7 +295,10 @@ cdef class MPolynomialRing_libsingular(MPolynomialRing_generic):
         if currRing != self._ring:
             oldRing = currRing
             rChangeCurrRing(self._ring)
-        rDelete(self._ring)
+            rDelete(self._ring)
+        else:
+            (&currRing)[0] = NULL
+            rDelete(self._ring)
         if oldRing != NULL:
             rChangeCurrRing(oldRing)
    
@@ -1513,6 +1516,9 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
         cdef poly *p, *q
         cdef number *h
         cdef int ret = 0
+
+        if left is right:
+            return ret
         
         r = (<MPolynomialRing_libsingular>left._parent)._ring
         if(r != currRing): rChangeCurrRing(r)
@@ -3119,6 +3125,19 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
             sage: p = (4*v^4*u^2 - 16*v^2*u^4 + 16*u^6 - 4*v^4*u + 8*v^2*u^3 + v^4)
             sage: p.factor()
             (-2*v^2*u + 4*u^3 + v^2)^2
+
+        Factorization of multivariate polynomials over non-prime
+        finite fields is only implemented in Singular, and
+        unfortunately Singular is currently very buggy at this
+        computation.  So we disable it in Sage:
+        
+            sage: k.<a> = GF(9)
+            sage: R.<x,y> = PolynomialRing(k)
+            sage: f = (x-a)*(y-a)
+            sage: f.factor()
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: factorization of multivariate polynomials over non-prime fields explicitly disabled due to bugs in Singular
         """
         cdef ring *_ring
         cdef poly *ptemp
@@ -3127,7 +3146,10 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
         cdef ideal *I
         cdef MPolynomialRing_libsingular parent
         cdef int i
-        
+
+        if self.base_ring().is_finite() and not self.base_ring().is_prime_field():
+            raise NotImplementedError, "factorization of multivariate polynomials over non-prime fields explicitly disabled due to bugs in Singular"
+            
         parent = self._parent
         _ring = parent._ring
 

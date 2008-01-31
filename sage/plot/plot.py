@@ -3,27 +3,6 @@ r"""
 
 Sage provides both Mathematica-style and Matlab-style plotting.
 
-MATLAB-LIKE PLOTTING:
-SAGE provides 2D plotting with an interface that is an exact
-clone of Matlab (namely matplotlib).  For example,
-
-    sage: from pylab import *
-    sage: t = arange(0.0, 2.0, 0.01)
-    sage: s = sin(2*pi*t)
-    sage: P = plot(t, s, linewidth=1.0)
-    sage: xl = xlabel('time (s)')
-    sage: yl = ylabel('voltage (mV)')
-    sage: t = title('About as simple as it gets, folks')
-    sage: grid(True)
-    sage: savefig('sage.png')
-
-Since the above overwrites many Sage plotting functions, we
-reset the state of Sage, so that the examples below work!
-    sage: reset()
-
-See \url{http://matplotlib.sourceforge.net} for complete documentation
-about how to use Matplotlib.
-
 MATHEMATICA-LIKE PLOTTING:
 SAGE provides 2D plotting functionality with an interface inspired by
 the interface for plotting in Mathematica.  The underlying rendering
@@ -68,7 +47,7 @@ We construct a plot involving several graphics objects:
 
     sage: G = plot(cos, -5, 5, thickness=5, rgbcolor=(0.5,1,0.5))
     sage: P = polygon([[1,2], [5,6], [5,0]], rgbcolor=(1,0,0))
-    sage: P.show()
+    sage: P   # show it
 
 Next we construct the reflection of the above polygon about the
 $y$-axis by iterating over the qlist of first-coordinates of the first
@@ -76,12 +55,12 @@ graphic element of $P$ (which is the actual Polygon; note that $P$ is
 a Graphics object, which consists of a single polygon):
 
     sage: Q = polygon([(-x,y) for x,y in P[0]], rgbcolor=(0,0,1))
-    sage: Q.show()
+    sage: Q   # show it
 
 We combine together different graphics objects using "+":
 
     sage: H = G + P + Q
-    sage: H
+    sage: print H
     Graphics object consisting of 3 graphics primitives
     sage: type(H)
     <class 'sage.plot.plot.Graphics'>
@@ -89,7 +68,7 @@ We combine together different graphics objects using "+":
     Polygon defined by 3 points
     sage: list(H[1])
     [(1.0, 2.0), (5.0, 6.0), (5.0, 0.0)]
-    sage: H.show()
+    sage: H       # show it
 
 We can put text in a graph:
 
@@ -107,9 +86,9 @@ see the first few zeros:
     sage: i = CDF.0      # define i this way for maximum speed.
     sage: p1 = plot(lambda t: arg(zeta(0.5+t*i)), 1,27,rgbcolor=(0.8,0,0))
     sage: p2 = plot(lambda t: abs(zeta(0.5+t*i)), 1,27,rgbcolor=hue(0.7))
-    sage: p1 + p2
+    sage: print p1 + p2
     Graphics object consisting of 2 graphics primitives
-    sage: (p1+p2).show()
+    sage: p1 + p2    # display it
 
 Here is a pretty graph:
     sage: g = Graphics()
@@ -132,7 +111,7 @@ These are some examples of plots similar to some of the plots in the
 PyX (http://pyx.sourceforge.net) documentation:
 
 Symbolline:
-    sage: y(x) = x*sin(x**2)
+    sage: y(x) = x*sin(x^2)
     sage: v = [(x, y(x)) for x in [-3,-2.95,..,3]]
     sage: show(points(v, rgbcolor=(0.2,0.6, 0.1), pointsize=30) + plot(spline(v), -3.1, 3))
 
@@ -150,7 +129,7 @@ this is really a bad example:
 
     sage: g1 = plot(sin(x), 0, 2*pi)
     sage: g2 = plot(cos(x), 0, 2*pi, linestyle = "--")
-    sage: show(g1 + g2)
+    sage: g1 + g2    # show their sum
 
 An illustration of integration:
     sage: def f(x): return (x-3)*(x-5)*(x-7)+40
@@ -159,8 +138,30 @@ An illustration of integration:
     sage: P += polygon([(2,0),(2,f(2))] + [(x, f(x)) for x in [2,2.1,..,8]] + [(8,0),(2,0)],  rgbcolor=(0.8,0.8,0.8))
     sage: P += text("$\\int_{a}^b f(x) dx$", (5, 20), fontsize=16, rgbcolor=(0,0,0))
     sage: P += plot(f, 1, 8.5, thickness=3)
-    sage: show(P) 
+    sage: P    # show the result
     
+MATLAB-LIKE PLOTTING:
+SAGE provides 2D plotting with an interface that is an exact
+clone of Matlab (namely matplotlib).  For example,
+
+    sage: from pylab import *
+    sage: t = arange(0.0, 2.0, 0.01)
+    sage: s = sin(2*pi*t)
+    sage: P = plot(t, s, linewidth=1.0)
+    sage: xl = xlabel('time (s)')
+    sage: yl = ylabel('voltage (mV)')
+    sage: t = title('About as simple as it gets, folks')
+    sage: grid(True)
+    sage: savefig('sage.png')
+
+Since the above overwrites many Sage plotting functions, we
+reset the state of Sage, so that the examples below work!
+    sage: reset()
+
+See \url{http://matplotlib.sourceforge.net} for complete documentation
+about how to use Matplotlib.
+
+
 AUTHORS:
     -- Alex Clemesha and William Stein (2006-04-10): initial version
     -- David Joyner: examples
@@ -171,7 +172,9 @@ AUTHORS:
     -- Robert Miller (2006-10-30): tuning, NetworkX primitive
     -- Alex Clemesha (2006-11-25): added plot_vector_field, matrix_plot, arrow, 
                                    bar_chart, Axes class usage (see axes.py)
-
+    -- Bobby Moretti and William Stein (2008-01): Change plot to specify ranges
+                                   using the (varname, min, max) notation.
+                                   
 TODO:
     [] ability to change all properties of a graph easily, e.g.,
        the rgbcolor. 
@@ -194,32 +197,33 @@ DEFAULT_FIGSIZE=[6, 5]
 DEFAULT_DPI = 100
 EMBEDDED_MODE = False
 DOCTEST_MODE = False
-SHOW_DEFAULT = False
+SHOW_DEFAULT = True
 
 def show_default(default=None):
     """
-    Set the default for showing plots using the following commands:
-        plot, parametric_plot, polar_plot, and list_plot.
-
+    Set the default for showing plots using any plot commands.
     If called with no arguments, returns the current default.
 
+    If this is True (the default) then any plot object when displayed
+    will be displayed as an actual plot instead of text, i.e., the
+    show command is not needed. 
+
     EXAMPLES:
-    The default starts out as False:
-        sage: show_default()
-        False
-
-    We set it to True.  
-        sage: show_default(True)
-
-    We see that it is True.
+    The default starts out as True:
         sage: show_default()
         True
 
-    Now certain plot commands will display their plots by default.
-
-    Turn of default display.
+    We set it to False.  
         sage: show_default(False)
 
+    We see that it is False.
+        sage: show_default()
+        False
+
+    Now plot commands will not display their plots by default.
+
+    Turn back on default display.
+        sage: show_default(True)
     """
     global SHOW_DEFAULT
     if default is None:
@@ -266,10 +270,10 @@ class Graphics(SageObject):
     to the empty object.
     
     EXAMPLES:
-        sage: G = Graphics(); G
+        sage: G = Graphics(); print G
         Graphics object consisting of 0 graphics primitives
         sage: c = circle((1,1), 1)
-        sage: G+=c; G
+        sage: G+=c; print G
         Graphics object consisting of 1 graphics primitive
         
     Here we make a graphic of embeded isoceles triangles,
@@ -425,7 +429,7 @@ class Graphics(SageObject):
 
     def xmax(self, new=None):
         """
-        sage: G = Graphics(); G
+        sage: G = Graphics(); print G
         Graphics object consisting of 0 graphics primitives
         sage: G.xmax()
         1
@@ -436,7 +440,7 @@ class Graphics(SageObject):
 
     def xmin(self, new=None):
         """
-        sage: G = Graphics(); G
+        sage: G = Graphics(); print G
         Graphics object consisting of 0 graphics primitives
         sage: G.xmin()
         -1
@@ -447,7 +451,7 @@ class Graphics(SageObject):
 
     def ymax(self, new=None):
         """
-        sage: G = Graphics(); G
+        sage: G = Graphics(); print G
         Graphics object consisting of 0 graphics primitives
         sage: G.ymax()
         1
@@ -458,7 +462,7 @@ class Graphics(SageObject):
     
     def ymin(self, new=None):
         """
-        sage: G = Graphics(); G
+        sage: G = Graphics(); print G
         Graphics object consisting of 0 graphics primitives
         sage: G.ymin()
         -1
@@ -468,6 +472,13 @@ class Graphics(SageObject):
         self.__ymin = new
 
     def _repr_(self):
+        if SHOW_DEFAULT:
+            self.show()
+            return ''
+        else:
+            return self.__str__()
+
+    def __str__(self):
         pr, i = '', 0
         for x in self:
             pr += '\n\t%s -- %s'%(i, x)
@@ -482,7 +493,7 @@ class Graphics(SageObject):
         Returns the ith graphics primitive object:
 
         EXAMPLE:
-            sage: G = circle((1,1),2) + circle((2,2),5); G
+            sage: G = circle((1,1),2) + circle((2,2),5); print G
             Graphics object consisting of 2 graphics primitives
             sage: G[1]
             Circle defined by (2.0,2.0) with r=5.0
@@ -497,7 +508,7 @@ class Graphics(SageObject):
 
         EXAMPLES:
 
-            sage: G = circle((1,1),1) + circle((1,2),1) + circle((1,2),5); G
+            sage: G = circle((1,1),1) + circle((1,2),1) + circle((1,2),5); print G
             Graphics object consisting of 3 graphics primitives
             sage: len(G)
             3
@@ -511,12 +522,12 @@ class Graphics(SageObject):
         primitive making up that object.
 
         EXAMPLES:
-            sage: G = circle((1,1),1) + circle((1,2),1) + circle((1,2),5); G
+            sage: G = circle((1,1),1) + circle((1,2),1) + circle((1,2),5); print G
             Graphics object consisting of 3 graphics primitives
             sage: len(G)
             3
             sage: del(G[2])
-            sage: G
+            sage: print G
             Graphics object consisting of 2 graphics primitives
             sage: len(G)
             2
@@ -529,13 +540,14 @@ class Graphics(SageObject):
         in a Graphics object G with any other GraphicPrimitive
 
         EXAMPLES:
-            sage: G = circle((1,1),1) + circle((1,2),1) + circle((1,2),5); G
+            sage: G = circle((1,1),1) + circle((1,2),1) + circle((1,2),5); print G
             Graphics object consisting of 3 graphics primitives
 
-            sage: p = polygon([[1,3],[2,-2],[1,1],[1,3]]);p
+            sage: p = polygon([[1,3],[2,-2],[1,1],[1,3]]); print p
             Graphics object consisting of 1 graphics primitive
 
-            sage: G[1] = p[0]; G.show()
+            sage: G[1] = p[0]
+            sage: G    # show the plot
 
         """
         if not isinstance(x, GraphicPrimitive):
@@ -555,10 +567,9 @@ class Graphics(SageObject):
         G4 = G1 + G2 + G3
   
         EXAMPLES:
-            sage: g1 = plot(abs(sqrt(x^3  - 1)), 1, 5)
-            sage: g2 = plot(-abs(sqrt(x^3  - 1)), 1, 5)
-            sage: h = g1 + g2
-            sage: h.show()
+            sage: g1 = plot(abs(sqrt(x^3-1)), (x,1,5))
+            sage: g2 = plot(-abs(sqrt(x^3-1)), (x,1,5), rgbcolor=(1,0,0))
+            sage: g1 + g2  # displays the plot
         """
         if isinstance(other, int) and other == 0:
             return self
@@ -1031,7 +1042,7 @@ class GraphicPrimitive_Line(GraphicPrimitive):
         return len(self.xdata)
 
     def _render_on_subplot(self, subplot):
-        import matplotlib.patches as patches        
+        import matplotlib.patches as patches
         options = dict(self.options())
         del options['alpha']
         del options['thickness']
@@ -1657,6 +1668,9 @@ class GraphicPrimitiveFactory_disk(GraphicPrimitiveFactory):
 
 class GraphicPrimitiveFactory_text(GraphicPrimitiveFactory):
     def __call__(self, string, point, **kwds):
+        if len(point) == 3:
+            from sage.plot.plot3d.shapes2 import text3d
+            return text3d(string, point, **kwds)
         options = dict(self.options)
         for k, v in kwds.iteritems():
             options[k] = v
@@ -1725,16 +1739,13 @@ class ArrowFactory(GraphicPrimitiveFactory_arrow):
     EXAMPLES:
 
     A straight, black arrow
-       sage: a1 = arrow((1, 1), (3, 3))
-       sage: a1.show()
+       sage: arrow((1, 1), (3, 3))
     
     Make a red arrow:
-       sage: a2 = arrow((-1, -1), (2, 3), rgbcolor=(1,0,0))
-       sage: a2.show()
+       sage: arrow((-1, -1), (2, 3), rgbcolor=(1,0,0))
 
     You can change the width of an arrow:
-        sage: a3 = arrow((1, 1), (3, 3), width=0.05)
-        sage: a3.show()
+        sage: arrow((1, 1), (3, 3), width=0.05)
     """
     def _reset(self):
         self.options={'width':0.02,'rgbcolor':(0, 0, 1)}
@@ -1757,17 +1768,13 @@ class BarChartFactory(GraphicPrimitiveFactory_bar_chart):
 
     EXAMPLES:
     A bar_chart with blue bars:
-        sage: bc1 = bar_chart([1,2,3,4])
-        sage: bc1.show()
+        sage: bar_chart([1,2,3,4])
 
     A bar_chart with thinner bars:
-        sage: bc2 = bar_chart([x^2 for x in range(1,20)], width=0.2)
-        sage: bc2.show()
+        sage: bar_chart([x^2 for x in range(1,20)], width=0.2)
 
     A bar_chart with negative values and red bars:
-        sage: bc3 = bar_chart([-3,5,-6,11], rgbcolor=(1,0,0))
-        sage: bc3.show()
-
+        sage: bar_chart([-3,5,-6,11], rgbcolor=(1,0,0))
     """
     def _reset(self):
         self.options={'width':0.5,'rgbcolor':(0, 0, 1)}
@@ -1808,26 +1815,25 @@ class CircleFactory(GraphicPrimitiveFactory_circle):
 
     EXAMPLES:
         sage: c = circle((1,1), 1, rgbcolor=(1,0,0))
-        sage: c.show()
+        sage: c
 
     To correct the apect ratio of certain graphics, it is necessary
     to show with a 'figsize' of square dimensions.
 
-    sage: c.show(figsize=[5,5],xmin=-1,xmax=3,ymin=-1,ymax=3)
+        sage: c.show(figsize=[5,5],xmin=-1,xmax=3,ymin=-1,ymax=3)
 
     Here we make an more complicated plot with many circles of different colors
 
-    sage: g = Graphics()
-    sage: step=6; ocur=1/5; paths=16;
-    sage: PI = math.pi    # numerical for speed -- fine for graphics
-    sage: for r in range(1,paths+1):
-    ...       for x,y in [((r+ocur)*math.cos(n), (r+ocur)*math.sin(n)) for n in srange(0, 2*PI+PI/step, PI/step)]:
-    ...           g += circle((x,y), ocur, rgbcolor=hue(r/paths))
-    ...       rnext = (r+1)^2
-    ...       ocur = (rnext-r)-ocur
-    ...
-    sage: g.show(xmin=-(paths+1)^2, xmax=(paths+1)^2, ymin=-(paths+1)^2, ymax=(paths+1)^2, figsize=[6,6])
-    
+        sage: g = Graphics()
+        sage: step=6; ocur=1/5; paths=16;
+        sage: PI = math.pi    # numerical for speed -- fine for graphics
+        sage: for r in range(1,paths+1):
+        ...       for x,y in [((r+ocur)*math.cos(n), (r+ocur)*math.sin(n)) for n in srange(0, 2*PI+PI/step, PI/step)]:
+        ...           g += circle((x,y), ocur, rgbcolor=hue(r/paths))
+        ...       rnext = (r+1)^2
+        ...       ocur = (rnext-r)-ocur
+        ...
+        sage: g.show(xmin=-(paths+1)^2, xmax=(paths+1)^2, ymin=-(paths+1)^2, ymax=(paths+1)^2, figsize=[6,6])
     """
     def _reset(self):
         self.options={'alpha':1,'fill':False,'thickness':1,'rgbcolor':(0, 0, 1)}
@@ -1875,22 +1881,19 @@ class ContourPlotFactory(GraphicPrimitiveFactory_contour_plot):
     Here we plot a simple funtion of two variables:
         sage: def f(x,y):
         ...       return cos(x^2 + y^2)
-        sage: C = contour_plot(f, (-4, 4), (-4, 4))
-        sage: C.show()
+        sage: contour_plot(f, (-4, 4), (-4, 4))
          
         
     Here we change the ranges and add some options:
         sage: def h(x,y):
         ...       return (x^2)*cos(x*y)
-        sage: C = contour_plot(h, (-10, 5), (-5, 5), fill=False, plot_points=100)
-        sage: C.show()
+        sage: contour_plot(h, (-10, 5), (-5, 5), fill=False, plot_points=100)
         
 
     An even more complicated plot.
         sage: def f(x,y):
         ...       return sin(x^2 + y^2)*cos(x)*sin(y)
-        sage: C = contour_plot(f, (-4, 4), (-4, 4),plot_points=100)
-        sage: C.show()
+        sage: contour_plot(f, (-4, 4), (-4, 4),plot_points=100)
     """
     def _reset(self):
         self.options={'plot_points':25, 'fill':True, 'cmap':'gray', 'contours':None}
@@ -1941,56 +1944,48 @@ class LineFactory(GraphicPrimitiveFactory_from_point_list):
     A blue conchoid of Nicomedes:
  
         sage: L = [[1+5*cos(pi/2+pi*i/100), tan(pi/2+pi*i/100)*(1+5*cos(pi/2+pi*i/100))] for i in range(1,100)]
-        sage: p = line(L, rgbcolor=(1/4,1/8,3/4))
-        sage: p.show()
+        sage: line(L, rgbcolor=(1/4,1/8,3/4))
 
     A line with 2 complex points:
         sage: i = CC.0
-        sage: show(line([1+i, 2+3*i]))
+        sage: line([1+i, 2+3*i])
  
     A blue hypotrochoid (3 leaves):
         sage: n = 4; h = 3; b = 2
         sage: L = [[n*cos(pi*i/100)+h*cos((n/b)*pi*i/100),n*sin(pi*i/100)-h*sin((n/b)*pi*i/100)] for i in range(200)]
-        sage: p = line(L, rgbcolor=(1/4,1/4,3/4))
-        sage: p.show()
+        sage: line(L, rgbcolor=(1/4,1/4,3/4))
  
     A blue hypotrochoid (4 leaves):
  
         sage: n = 6; h = 5; b = 2
         sage: L = [[n*cos(pi*i/100)+h*cos((n/b)*pi*i/100),n*sin(pi*i/100)-h*sin((n/b)*pi*i/100)] for i in range(200)]
-        sage: p = line(L, rgbcolor=(1/4,1/4,3/4))
-        sage: p.show()
+        sage: line(L, rgbcolor=(1/4,1/4,3/4))
  
     A red limacon of Pascal:
  
         sage: L = [[sin(pi*i/100)+sin(pi*i/50),-(1+cos(pi*i/100)+cos(pi*i/50))] for i in range(-100,101)]
-        sage: p = line(L, rgbcolor=(1,1/4,1/2))
-        sage: p.show()
+        sage: line(L, rgbcolor=(1,1/4,1/2))
  
     A light green trisectrix of Maclaurin:
  
         sage: L = [[2*(1-4*cos(-pi/2+pi*i/100)^2),10*tan(-pi/2+pi*i/100)*(1-4*cos(-pi/2+pi*i/100)^2)] for i in range(1,100)]
-        sage: p = line(L, rgbcolor=(1/4,1,1/8))
-        sage: p.show()        
+        sage: line(L, rgbcolor=(1/4,1,1/8))
  
     A green lemniscate of Bernoulli:
  
         sage: v = [(1/cos(-pi/2+pi*i/100), tan(-pi/2+pi*i/100)) for i in range(201)]
         sage: L = [(a/(a^2+b^2), b/(a^2+b^2)) for a,b in v]
-        sage: p = line(L, rgbcolor=(1/4,3/4,1/8))
-        sage: p.show()        
+        sage: line(L, rgbcolor=(1/4,3/4,1/8))
  
     A red plot of the Jacobi elliptic function $\text{sn}(x,2)$, $-3<x<3$:
  
         sage: L = [(i/100.0, jacobi('sn', i/100.0 ,2.0)) for i in range(-300,300,30)]    
-        sage: p = line(L, rgbcolor=(3/4,1/4,1/8))
-        sage: p.show()
+        sage: line(L, rgbcolor=(3/4,1/4,1/8))
         
     A red plot of $J$-Bessel function $J_2(x)$, $0<x<10$:
 
         sage: L = [(i/10.0, bessel_J(2,i/10.0)) for i in range(100)]
-        sage: p = line(L, rgbcolor=(3/4,1/4,5/8))    
-        sage: p.show()   
+        sage: line(L, rgbcolor=(3/4,1/4,5/8))    
         
  
     A purple plot of the Riemann zeta function $\zeta(1/2 + it)$, $0<t<30$:
@@ -1998,24 +1993,21 @@ class LineFactory(GraphicPrimitiveFactory_from_point_list):
         sage: i = CDF.gen()
         sage: v = [zeta(0.5 + n/10 * i) for n in range(300)]
         sage: L = [(z.real(), z.imag()) for z in v]
-        sage: p = line(L, rgbcolor=(3/4,1/2,5/8))
-        sage: p.show()
+        sage: line(L, rgbcolor=(3/4,1/2,5/8))
  
     A purple plot of the Hasse-Weil $L$-function $L(E, 1 + it)$, $-1<t<10$:
 
         sage: E = EllipticCurve('37a')
         sage: vals = E.Lseries().values_along_line(1-I, 1+10*I, 100) # critical line
         sage: L = [(z[1].real(), z[1].imag()) for z in vals]
-        sage: p = line(L, rgbcolor=(3/4,1/2,5/8))
-        sage: p.show()
+        sage: line(L, rgbcolor=(3/4,1/2,5/8))
  
     A red, blue, and green "cool cat":
 
         sage: G = plot(-cos(x), -2, 2, thickness=5, rgbcolor=(0.5,1,0.5))
         sage: P = polygon([[1,2], [5,6], [5,0]], rgbcolor=(1,0,0))
         sage: Q = polygon([(-x,y) for x,y in P[0]], rgbcolor=(0,0,1))
-        sage: H = G + P + Q
-        sage: H.show()
+        sage: G + P + Q   # show the plot
     """
     def _reset(self):
         self.options = {'alpha':1,'rgbcolor':(0,0,1),'thickness':1}
@@ -2056,15 +2048,15 @@ class MatrixPlotFactory(GraphicPrimitiveFactory_matrix_plot):
     
     A matrix over ZZ colored with different grey levels:
     
-        sage: show(matrix_plot(matrix([[1,3,5,1],[2,4,5,6],[1,3,5,7]])))
+        sage: matrix_plot(matrix([[1,3,5,1],[2,4,5,6],[1,3,5,7]]))
 
     Here we make a random matrix over RR and use cmap='hsv'
     to color the matrix elements different RGB colors:
 
-        sage: show(matrix_plot(random_matrix(RDF, 50), cmap='hsv'))
+        sage: matrix_plot(random_matrix(RDF, 50), cmap='hsv')
 
     Another random plot, but over GF(389):
-        sage: show(matrix_plot(random_matrix(GF(389), 10), cmap='Oranges'))
+        sage: matrix_plot(random_matrix(GF(389), 10), cmap='Oranges')
     """
     def _reset(self):
         self.options={'cmap':'gray'}
@@ -2155,12 +2147,10 @@ class PointFactory(GraphicPrimitiveFactory_from_point_list):
 
     EXAMPLES:
         A purple point from a single tuple or coordinates:
-        sage: p1 = point((0.5, 0.5), rgbcolor=hue(0.75))
-        sage: p1.show()
+        sage: point((0.5, 0.5), rgbcolor=hue(0.75))
 
         Here are some random larger red points, given as a list of tuples
-        sage: p2 = point(((0.5, 0.5), (1, 2), (0.5, 0.9), (-1, -1)), rgbcolor=hue(1), pointsize=30)
-        sage: p2.show()
+        sage: point(((0.5, 0.5), (1, 2), (0.5, 0.9), (-1, -1)), rgbcolor=hue(1), pointsize=30)
 
     """
     def _reset(self):
@@ -2195,62 +2185,52 @@ class PolygonFactory(GraphicPrimitiveFactory_from_point_list):
     EXAMPLES:
     We create a purple-ish polygon:
         sage: polygon([[1,2], [5,6], [5,0]], rgbcolor=(1,0,1))
-        Graphics object consisting of 1 graphics primitive
 
     Some modern art -- a random polygon:
         sage: v = [(randrange(-5,5), randrange(-5,5)) for _ in range(10)]
         sage: polygon(v)
-        Graphics object consisting of 1 graphics primitive
 
     A purple hexagon:
 
         sage: L = [[cos(pi*i/3),sin(pi*i/3)] for i in range(6)]
-        sage: p = polygon(L, rgbcolor=(1,0,1))
-        sage: p.show()
+        sage: polygon(L, rgbcolor=(1,0,1))
 
     A green deltoid:
 
         sage: L = [[-1+cos(pi*i/100)*(1+cos(pi*i/100)),2*sin(pi*i/100)*(1-cos(pi*i/100))] for i in range(200)]
-        sage: p = polygon(L, rgbcolor=(1/8,3/4,1/2))
-        sage: p.show()
+        sage: polygon(L, rgbcolor=(1/8,3/4,1/2))
 
     A blue hypotrochoid:
 
         sage: L = [[6*cos(pi*i/100)+5*cos((6/2)*pi*i/100),6*sin(pi*i/100)-5*sin((6/2)*pi*i/100)] for i in range(200)]
-        sage: p = polygon(L, rgbcolor=(1/8,1/4,1/2))
-        sage: p.show()
+        sage: polygon(L, rgbcolor=(1/8,1/4,1/2))
         
     Another one:
 
         sage: n = 4; h = 5; b = 2
         sage: L = [[n*cos(pi*i/100)+h*cos((n/b)*pi*i/100),n*sin(pi*i/100)-h*sin((n/b)*pi*i/100)] for i in range(200)]
-        sage: p = polygon(L, rgbcolor=(1/8,1/4,3/4))
-        sage: p.show()        
+        sage: polygon(L, rgbcolor=(1/8,1/4,3/4))
 
     A purple epicycloid:
 
         sage: m = 9; b = 1
         sage: L = [[m*cos(pi*i/100)+b*cos((m/b)*pi*i/100),m*sin(pi*i/100)-b*sin((m/b)*pi*i/100)] for i in range(200)]
-        sage: p = polygon(L, rgbcolor=(7/8,1/4,3/4))
-        sage: p.show()        
+        sage: polygon(L, rgbcolor=(7/8,1/4,3/4))
 
     A brown astroid:
 
         sage: L = [[cos(pi*i/100)^3,sin(pi*i/100)^3] for i in range(200)]
-        sage: p = polygon(L, rgbcolor=(3/4,1/4,1/4))
-        sage: p.show()
+        sage: polygon(L, rgbcolor=(3/4,1/4,1/4))
 
     And, my favorite, a greenish blob:
 
         sage: L = [[cos(pi*i/100)*(1+cos(pi*i/50)), sin(pi*i/100)*(1+sin(pi*i/50))] for i in range(200)]
-        sage: p = polygon(L, rgbcolor=(1/8, 3/4, 1/2))
-        sage: p.show()        
+        sage: polygon(L, rgbcolor=(1/8, 3/4, 1/2))
 
     This one is for my wife:
 
         sage: L = [[sin(pi*i/100)+sin(pi*i/50),-(1+cos(pi*i/100)+cos(pi*i/50))] for i in range(-100,100)]
-        sage: p = polygon(L, rgbcolor=(1,1/4,1/2))
-        sage: p.show()
+        sage: polygon(L, rgbcolor=(1,1/4,1/2))
 
     AUTHORS:
         -- David Joyner (2006-04-14): the long list of examples above.
@@ -2337,39 +2317,40 @@ class PlotFactory(GraphicPrimitiveFactory):
     
     EXAMPLES:
     We plot the sin function:
-        sage: P = plot(sin, 0,10); P
+        sage: P = plot(sin, (0,10)); print P
         Graphics object consisting of 1 graphics primitive
         sage: len(P)     # number of graphics primitives
         1
         sage: len(P[0])  # how many points were computed
-        201
-        sage: P.show()   # render
+        200
+        sage: P          # render
         
-        sage: P = plot(sin, 0,10, plot_points=10); P
+        sage: P = plot(sin, (0,10), plot_points=10); print P
         Graphics object consisting of 1 graphics primitive
         sage: len(P[0])  # random output
         80
-        sage: P.show()   # render
+        sage: P          # render
         
     We plot several functions together by passing a list
     of functions as input:
-       sage: show(plot([sin(n*x) for n in [1..4]], 0, pi))
+        sage: plot([sin(n*x) for n in [1..4]], (0, pi))
 
 
     The function $\sin(1/x)$ wiggles wildtly near $0$, so the
     first plot below won't look perfect.  Sage adapts to this
     and plots extra points near the origin.
-       sage: show(plot(sin(1/x), -1, 1))
+        sage: plot(sin(1/x), (x, -1, 1))
 
     The \code{plot_points} option, you can increase the number
     of sample points, to obtain a more accurate plot. 
-       sage: show(plot(sin(1/x), -1, 1, plot_points=1000))
+        sage: plot(sin(1/x), (x, -1, 1), plot_points=1000)
+
+    Note that the independent variable may be omitted if there is no
+    ambiguity:
+        sage: plot(sin(1/x), (-1, 1), plot_points=1000)
 
     The actual sample points are slightly randomized, so the above
     plots may look slightly different each time you draw them.
-
-    Use \code{show(plot(sin, 0,10))} or \code{plot(sin,0,10).show()}
-    to show the corresponding graphics object.
 
     We draw the graph of an elliptic curve as the union
     of graphs of 2 functions.
@@ -2377,17 +2358,15 @@ class PlotFactory(GraphicPrimitiveFactory):
         sage: def h2(x): return -abs(sqrt(x^3  - 1))
         sage: P = plot([h1, h2], 1,4)    # slightly random output because of random sampling
         Graphics object consisting of 2 graphics primitives
-        sage: P.show()
+        sage: P          # show the result
 
     We can also directly plot the elliptic curve:
         sage: E = EllipticCurve([0,-1])
-        sage: P = plot(E, 1, 4, rgbcolor=hue(0.6))
-        sage: P.show()        
+        sage: plot(E, (1, 4), rgbcolor=hue(0.6))
 
     We can change the line style to one of '--' (dashed), '-.' (dash dot),
     '-' (solid), 'steps', ':' (dotted):
-        sage: g = plot(sin(x), 0, 10, linestyle='-.')
-        sage: g.show()
+        sage: plot(sin(x), 0, 10, linestyle='-.')
     """
     def _reset(self):
         o = self.options
@@ -2406,32 +2385,33 @@ class PlotFactory(GraphicPrimitiveFactory):
             del kwds['show']
         if hasattr(funcs, 'plot'):
             G = funcs.plot(*args, **kwds)
+        # if we are using the generic plotting method
         else:
-            G = self._call(funcs, *args, **kwds)
+            n = len(args)
+            # if there are no extra args, pick some silly default
+            if n == 0:
+                G = self._call(funcs, (-1, 1), *args, **kwds)
+            # if there is one extra arg, then it had better be a tuple
+            elif n == 1:
+                G = self._call(funcs, *args, **kwds)
+            elif n == 2:
+            # if ther eare two extra args, then pull them out and pass them as a tuple
+                xmin = args[0]
+                xmax = args[1]
+                args = args[2:]
+                G = self._call(funcs, (xmin, xmax), *args, **kwds)
+            else:
+                print "there were %s extra arguments (besides %s)" % (n, funcs)
         if do_show:
             G.show()
         return G
             
-    def _call(self, funcs, xmin=None, xmax=None, parametric=False,
-              polar=False, label='', show=None, **kwds):
-        if show is None:
-            show = SHOW_DEFAULT
-        if xmin is None:
-            xmin = -1
-        if xmax is None:
-            xmax = 1  # defaults
+    def _call(self, funcs, xrange, parametric=False,
+              polar=False, label='', **kwds):
         options = dict(self.options)
         for k, v in kwds.iteritems():
             options[k] = v
-        #check to see if funcs is a list of functions that will
-        #be all plotted together.
-        if isinstance(funcs, (list, tuple)) and not parametric:
-            G = Graphics()
-            for i in range(0, len(funcs)):
-                G += plot(funcs[i], xmin=xmin, xmax=xmax, polar=polar, **kwds)
-            if show:
-                G.show(**kwds)
-            return G
+
         #parametric_plot will be a list or tuple of two functions (f,g)
         #and will plotted as (f(x), g(x)) for all x in the given range
         if parametric:
@@ -2446,26 +2426,38 @@ class PlotFactory(GraphicPrimitiveFactory):
         #or we have only a single function to be plotted:
         else:
             f = funcs
-        xmin = float(xmin)
-        xmax = float(xmax)
+
         plot_points = int(options['plot_points'])
         del options['plot_points']
+        x, data = var_and_list_of_values(xrange, plot_points)
+        data = list(data)
+        xmin = data[0]
+        xmax = data[-1]
+
+        #check to see if funcs is a list of functions that will
+        #be all plotted together.
+        if isinstance(funcs, (list, tuple)) and not parametric:
+            G = Graphics()
+            for i in range(0, len(funcs)):
+                G += plot(funcs[i], (xmin, xmax), polar=polar, **kwds)
+            return G
+
         delta = (xmax - xmin) / plot_points
-        data = []
         dd = delta
+
         exceptions = 0; msg=''
-        for i in xrange(plot_points + 1):
-            x = xmin + i*delta
+        for i in range(plot_points):
+            xi = xmin + i*delta
             if i < plot_points:
-                x += delta*random.random()
-                if x > xmax:
-                    x = xmax
+                xi += delta*random.random()
+                if xi > xmax:
+                    xi = xmax
             else:
-                x = xmax  # guarantee that we get the last point.
+                xi = xmax  # guarantee that we get the last point.
                 
             try:
-                y = f(x)
-                data.append((x, float(y)))
+                y = f(xi)
+                data[i] = (float (xi), float(y))
             except (ZeroDivisionError, TypeError, ValueError), msg:
                 sage.misc.misc.verbose("%s\nUnable to compute f(%s)"%(msg, x),1)
                 exceptions += 1
@@ -2507,8 +2499,6 @@ class PlotFactory(GraphicPrimitiveFactory):
             G += text(label, data[-1], horizontal_alignment='left',
                       vertical_alignment='center')
             
-        if show:
-            G.show(**kwds)
         return G
 
 # unique plot instance
@@ -2517,34 +2507,40 @@ plot = PlotFactory()
 
 class TextFactory(GraphicPrimitiveFactory_text):
     """
-    Text at the point (x,y)
-    Type text.options for a dictionary of options.
-
-    text(string, position, options...)
+    text(txt, point, **kwds):
     
-    OPTIONS:
+    Returns a 2d or 3d text graphics object at the point (x,y)
+
+    Type text.options for a dictionary of options for 2d text.  The 3d options
+    are as for other 3d graphics objects (i.e., mainly just rgbcolor at present). 
+
+    2D OPTIONS:
         fontsize -- How big the text is
         rgbcolor -- The color as an rgb tuple
         hue -- The color given as a hue
         vertical_alignment -- how to align vertically: top, center, bottom
         horizontal_alignment -- how to align horizontally: left, center, right
 
+    3D OPTIONS:
+        rgbcolor -- the color of the text
+
     EXAMPLES:
-        Type this to see some text in top right plane:
+    Some 2d text:
+        sage: text("SAGE is really neat!!",(2,12))
 
-        sage: t = text("SAGE is really neat!!",(2,12))
+    The same text, but in 3d:
+        sage: text("SAGE is really neat!!",(2,12,1))
 
-        Type this to see the same text in larger font and colored red:
+    The same text in larger font and colored red:
+        sage: text("SAGE is really neat!!",(2,12),fontsize=20,rgbcolor=(1,0,0))
 
-        sage: t = text("SAGE is really neat!!",(2,12),fontsize=20,rgbcolor=(1,0,0))
+    And in 3d in two places:
+        sage: text("SAGE is...",(2,12,1), rgbcolor=(1,0,0)) + text("quite powerful!!",(4,10,0), rgbcolor=(0,0,1))
 
-        You can also center text differently:
-
+    You can also align 2d text differently:
         sage: t1 = text("Hello",(1,1), vertical_alignment="top")
         sage: t2 = text("World", (1,0.5), horizontal_alignment="left")
-
-        sage: (t1+t2).show()
-
+        sage: t1 + t2   # render the sume
     """
     def _reset(self):
         self.options = {'fontsize':10, 'rgbcolor':(0,0,1),
@@ -2565,7 +2561,7 @@ text = TextFactory()
 
 ########## misc functions ###################
 
-def parametric_plot(funcs, tmin, tmax, show=None, **kwargs):
+def parametric_plot(funcs, tmin, tmax, **kwargs):
     """
     parametric_plot takes two functions as a list or a tuple and make
     a plot with the first function giving the x coordinates and the
@@ -2575,48 +2571,37 @@ def parametric_plot(funcs, tmin, tmax, show=None, **kwargs):
         funcs -- 2 or 3-tuple of functions
         tmin -- start value of t
         tmax -- end value of t
-        show -- bool or None
-                (default: use the default as set by the show_default command)
-                 whether or not to show the plot immediately
         other options -- passed to plot.
 
     EXAMPLE:
     We draw a 2d parametric plot:
         sage: t = var('t')
-        sage: G = parametric_plot( (sin(t), sin(2*t)), 0, 2*pi, rgbcolor=hue(0.6) )
-        sage: G.show()
+        sage: parametric_plot( (sin(t), sin(2*t)), 0, 2*pi, rgbcolor=hue(0.6) )
 
     We draw a 3d parametric plot:
-        sage: show(parametric_plot( (5*cos(x), 5*sin(x), x), -12, 12, plot_points=150, color="red"))    
+        sage: parametric_plot3d( (5*cos(x), 5*sin(x), x), (-12, 12), plot_points=150, color="red")
     """
-    if show is None:
-        show = SHOW_DEFAULT
-    return plot(funcs, tmin, tmax, parametric=True, show=show, **kwargs)            
+    return plot(funcs, tmin, tmax, parametric=True, **kwargs)            
 
-def polar_plot(funcs, xmin, xmax, show=None, **kwargs):
+def polar_plot(funcs, xmin, xmax, **kwargs):
     """
     polar_plot takes a single function or a list or tuple of functions
     and plots them parametrically in the given range.
 
     EXAMPLES:
     Here is a blue 8-leaved petal:
-        sage: p1 = polar_plot(lambda x:sin(5*x)^2, 0, 2*pi, rgbcolor=hue(0.6))
-        sage: p1.show()
+        sage: polar_plot(lambda x:sin(5*x)^2, 0, 2*pi, rgbcolor=hue(0.6))
 
     A red figure-8:
-        sage: p2 = polar_plot(lambda x:abs(sqrt(1 - sin(x)^2)), 0, 2*pi, rgbcolor=hue(1.0))
-        sage: p2.show()
+        sage: polar_plot(lambda x:abs(sqrt(1 - sin(x)^2)), 0, 2*pi, rgbcolor=hue(1.0))
 
     A green limacon of Pascal:
-        sage: p3 = polar_plot(lambda x:2 + 2*cos(x), 0, 2*pi, rgbcolor=hue(0.3))
-        sage: p3.show()
+        sage: polar_plot(lambda x:2 + 2*cos(x), 0, 2*pi, rgbcolor=hue(0.3))
         
     """
-    if show is None:
-        show = SHOW_DEFAULT
     return plot(funcs, xmin, xmax, polar=True, **kwargs)
 
-def list_plot(data, plotjoined=False, show=None, **kwargs):
+def list_plot(data, plotjoined=False, **kwargs):
     """
     list_plot takes a single list of data, in which case it forms a
     list of tuples (i,di) where i goes from 0 to len(data)-1 and di is
@@ -2628,28 +2613,21 @@ def list_plot(data, plotjoined=False, show=None, **kwargs):
     instead.
     
     EXAMPLES:
-        sage: L = list_plot([i^2 for i in range(5)])
-        sage: L.show()
+        sage: list_plot([i^2 for i in range(5)])
 
     Here are a bunch of random red points:
         sage: r = [(random(),random()) for _ in range(20)]
-        sage: L = list_plot(r,rgbcolor=(1,0,0))
-        sage: L.show()
+        sage: list_plot(r,rgbcolor=(1,0,0))
 
     This gives all the random points joined in a purple line:
-        sage: L = list_plot(r, plotjoined=True, rgbcolor=(1,0,1))
-        sage: L.show()
+        sage: list_plot(r, plotjoined=True, rgbcolor=(1,0,1))
     """
-    if show is None:
-        show = SHOW_DEFAULT
     if not isinstance(data[0], (list, tuple)):
         data = zip(range(len(data)),data)
     if plotjoined:
         P = line(data, **kwargs)
     else:
         P = point(data, **kwargs)
-    if show:
-        P.show(**kwargs)
     return P
 
 def networkx_plot(graph, pos=None, vertex_labels=True, vertex_size=300, vertex_colors=None,
@@ -2679,8 +2657,7 @@ def networkx_plot(graph, pos=None, vertex_labels=True, vertex_size=300, vertex_c
     EXAMPLES:
         sage: import networkx
         sage: D = networkx.dodecahedral_graph()
-        sage: g = networkx_plot(D)
-        sage: g.show()
+        sage: networkx_plot(D)
     
         sage: import networkx
         sage: from math import sin, cos, pi
@@ -2697,8 +2674,7 @@ def networkx_plot(graph, pos=None, vertex_labels=True, vertex_size=300, vertex_c
         ...    y = float(0.5*sin(pi/2 + ((2*pi)/5)*i))
         ...    pos_dict[i] = [x,y]
         ...
-        sage: g = networkx_plot(graph=P, vertex_colors=d, pos=pos_dict)
-        sage: g.show()
+        sage: networkx_plot(graph=P, vertex_colors=d, pos=pos_dict)
 
         sage: C = graphs.CubeGraph(5)
         sage: from sage.plot.plot import rainbow
@@ -2710,8 +2686,7 @@ def networkx_plot(graph, pos=None, vertex_labels=True, vertex_size=300, vertex_c
         ...    for i in range(5):
         ...        if u[i] != v[i]:
         ...            edge_colors[R[i]].append((u,v,l))
-        sage: P = networkx_plot(C._nxg, pos=C.__get_pos__(), edge_colors=edge_colors, vertex_labels=False, vertex_size=0)
-        sage: P.show()
+        sage: networkx_plot(C._nxg, pos=C.__get_pos__(), edge_colors=edge_colors, vertex_labels=False, vertex_size=0)
     """
     g = Graphics()
     NGP = GraphicPrimitive_NetworkXGraph(graph, pos=pos, vertex_labels=vertex_labels, vertex_size=vertex_size, vertex_colors=vertex_colors, edge_colors=edge_colors, scaling_term=scaling_term)
@@ -2767,8 +2742,7 @@ def hue(h, s=1, v=1):
       hue is an easy way of getting a broader
       range of colors for graphics
         
-        sage: p = plot(sin, -2, 2, rgbcolor=hue(0.6))
-        sage: p.show()
+        sage: plot(sin, -2, 2, rgbcolor=hue(0.6))
 
     """
     h = float(h); s = float(s); v = float(v)
@@ -2814,8 +2788,15 @@ class GraphicsArray(SageObject):
                     raise TypeError, "every element of array must be a Graphics object"
                 self._glist.append(g)
         self._figsize = DEFAULT_FIGSIZE
-    
+
     def _repr_(self):
+        if SHOW_DEFAULT:
+            self.show()
+            return ''
+        else:
+            return self.__str__()
+
+    def __str__(self):
         return "Graphics Array of size %s x %s"%(self._rows, self._cols)
 
     def nrows(self):
@@ -2955,16 +2936,14 @@ def graphics_array(array, n=None, m=None):
     Now make a graphics array out of the plots;
     Ten you can type either: \code{ga.show()} or \code{ga.save()}.
 
-        sage: ga = graphics_array(((p1,p2),(p3,p4)))
-        sage: ga.show()
+        sage: graphics_array(((p1,p2),(p3,p4)))
 
     Here we give only one row:
         sage: p1 = plot(sin,-4,4)
         sage: p2 = plot(cos,-4,4)
-        sage: g = graphics_array([p1, p2]); g
+        sage: g = graphics_array([p1, p2]); print g
         Graphics Array of size 1 x 2
         sage: g.show()
-
     """
     if not n is None:
         # Flatten then reshape input
@@ -3051,3 +3030,54 @@ def rainbow(n, format='hex'):
                 R.append((1.,0.,1. - r))
     return R
 
+def var_and_list_of_values(v, plot_points):
+    """
+    INPUT:
+        plot_points -- integer >= 2 (the endpoints)
+        v -- (v0, v1) or (var, v0, v1); if the former return
+             the range of values between v0 and v1 taking
+             plot_points steps; if var is given, also return var.
+
+    OUTPUT:
+        var -- a variable or None
+        list -- a list of floats
+    """
+    plot_points = int(plot_points)
+    if plot_points < 2:
+        raise ValueError, "plot_points must be positive"
+    if not isinstance(v, (tuple, list)):
+        raise TypeError, "v must be a tuple or list"
+    if len(v) == 3:
+        var = v[0]
+        a, b = v[1], v[2]
+    elif len(v) == 2:
+        var = None
+        a, b = v
+    else:
+        raise ValueError, "parametric value range must be a list of 2 or 3-tuple."
+
+    a = float(a)
+    b = float(b)
+    if plot_points == 2:
+        return var, [a, b]
+    else:
+        step = (b-a)/float(plot_points)
+        values = [a + step*i for i in xrange(plot_points)]
+        # want to make sure that we plot exactly as many points as requested
+#         rng.append(b)
+        return var, values
+
+# def float_range(a, b, step):
+#     """
+#     Returns a list of floating point numbers from a to b with the
+#     given step
+#     """
+#     (a,b,step) = (float(a),float(b),float(step))
+#     v = [a]
+#     w = a + step
+#     while w < b:
+#         v.append(w)
+#         w += step
+#     if w < b:
+#         v.append(b)
+#     return v

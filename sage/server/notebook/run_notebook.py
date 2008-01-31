@@ -143,7 +143,11 @@ def notebook_twisted(self,
                 address, port, secure)
 
         if open_viewer:
-            open_page = "from sage.server.misc import open_page; open_page('%s', %s, %s, '%s')"%(address, port, secure, start_path)
+            if secure:
+                start_path = "'/?startup_token=%s' % startup_token"
+            else:
+                start_path = "'/'"
+            open_page = "from sage.server.misc import open_page; open_page('%s', %s, %s, %s)"%(address, port, secure, start_path)
         else:
             open_page = ''
         
@@ -168,13 +172,17 @@ twist.init_updates()
 import sage.server.notebook.worksheet as worksheet
 worksheet.init_sage_prestart(twist.notebook.get_server(), twist.notebook.get_ulimit())
 
-import signal, sys
+import signal, sys, random
 def my_sigint(x, n):
     twist.notebook.save()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     print "(Notebook cleanly saved. Press control-C again to exit.)"
     
 signal.signal(signal.SIGINT, my_sigint)
+
+## Disable client-side certificate request for gnutls
+import gnutls.connection
+gnutls.connection.CERT_REQUEST = 0
 
 ## Authentication framework (ported from Knooboo)
 from twisted.web2 import log, server, channel
@@ -186,6 +194,10 @@ from twisted.cred import portal
 
 realm = avatars.LoginSystem()
 p = portal.Portal(realm)
+startup_token = '%%x' %% random.randint(0, 2**128)
+startup_checker = avatars.OneTimeTokenChecker()
+startup_checker.token = startup_token
+p.registerChecker(startup_checker)
 password_checker = avatars.PasswordChecker()
 p.registerChecker(password_checker)
 p.registerChecker(checkers.AllowAnonymousAccess())
