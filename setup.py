@@ -207,6 +207,11 @@ ntl_mat_GF2E = Extension('sage.libs.ntl.ntl_mat_GF2E',
                  libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
                  language='c++')
 
+ntl_GF2EContext = Extension('sage.libs.ntl.ntl_GF2EContext',
+                 sources = ["sage/libs/ntl/ntl_GF2EContext.pyx"],
+                 libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
+                 language = "c++")
+
 mwrank =  Extension("sage.libs.mwrank.mwrank",
                     sources = ["sage/libs/mwrank/mwrank.pyx",
                          "sage/libs/mwrank/wrap.cc"],
@@ -694,7 +699,13 @@ ext_modules = [ \
     Extension('sage.rings.padics.pow_computer',
               sources = ['sage/rings/padics/pow_computer.pyx'],
               libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
-              language='c++'),
+              language='c++'), \
+    
+    Extension('sage.rings.padics.pow_computer_ext',
+              sources = ['sage/rings/padics/pow_computer_ext.pyx'],
+              libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
+              language='c++'), \
+
     Extension('sage.rings.padics.local_generic_element',
               sources = ['sage/rings/padics/local_generic_element.pyx']),
     Extension('sage.rings.padics.padic_generic_element',
@@ -713,8 +724,36 @@ ext_modules = [ \
               sources = ['sage/rings/padics/padic_capped_relative_element.pyx', \
                          'sage/rings/padics/padic_generic_element.c'],
               libraries=['gmp', 'csage']),
-
-
+    Extension('sage.rings.padics.padic_ext_element',
+              sources = ['sage/rings/padics/padic_ext_element.pyx'],
+              libraries=['gmp', 'ntl', 'csage', 'gmpxx', 'm', 'stdc++'],
+              language='c++'),
+    Extension('sage.rings.padics.padic_ZZ_pX_element',
+              sources = ['sage/rings/padics/padic_ZZ_pX_element.pyx'],
+              libraries=['gmp', 'ntl', 'csage', 'gmpxx', 'm', 'stdc++'],
+              language='c++'),
+    Extension('sage.rings.padics.padic_ZZ_pX_FM_element',
+              sources = ['sage/rings/padics/padic_ZZ_pX_FM_element.pyx'],
+              libraries=['gmp', 'ntl', 'csage', 'gmpxx', 'm', 'stdc++'],
+              language='c++'),
+    Extension('sage.rings.padics.padic_ZZ_pX_CR_element',
+              sources = ['sage/rings/padics/padic_ZZ_pX_CR_element.pyx'],
+              libraries=['gmp','ntl','csage','gmpxx','m','stdc++'],
+              language='c++'),
+    Extension('sage.rings.padics.padic_ZZ_pX_CA_element',
+              sources = ['sage/rings/padics/padic_ZZ_pX_CA_element.pyx'],
+              libraries = ['gmp','ntl','csage','gmpxx','m','stdc++'],
+              language='c++'),
+    
+    Extension('sage.rings.padics.padic_printing',
+              sources = ['sage/rings/padics/padic_printing.pyx'],
+              libraries=['gmp', 'ntl', 'csage', 'gmpxx', 'm', 'stdc++'],
+              language='c++'),
+    #Extension('sage.rings.padics.morphism',
+    #          sources = ['sage/rings/padics/morphism.pyx'],
+    #          libraries=['gmp', 'ntl', 'csage', 'gmpxx', 'm', 'stdc++'],
+    #          language='c++'),                 
+    
     Extension('sage.rings.memory', \
               sources = ['sage/rings/memory.pyx'], \
               libraries=['gmp','stdc++']), \

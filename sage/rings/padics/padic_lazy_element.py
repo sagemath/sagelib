@@ -208,7 +208,9 @@ class pAdicLazyElement(pAdicBaseGenericElement):
                 return False
         return True
 
-    def is_zero(self, prec):
+    def is_zero(self, prec=None):
+        if prec is None:
+            return self._cache == 0
         return self.is_equal_to(pAdicLazy_zero(self.parent()), prec)
 
     def lift(self):
@@ -327,8 +329,8 @@ class pAdicLazyElement(pAdicBaseGenericElement):
 class pAdicLazy_integer(pAdicLazyElement): 
     def __init__(self, parent, x, absprec=infinity, relprec=infinity): #cannot call with input zero
         """
-        sage: a = ZpL(5)(-3); loads(dumps(a)) == a
-        True
+        #sage: a = ZpL(5)(-3); loads(dumps(a)) == a
+        #True
         """
         pAdicLazyElement.__init__(self, parent)
         self._set_base_valuation(x.valuation(parent.prime()))
