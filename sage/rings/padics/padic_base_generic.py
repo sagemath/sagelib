@@ -45,7 +45,9 @@ class pAdicBaseGeneric(padic_generic.pAdicGeneric):
         return is_instance(ring, pAdicBaseGeneric) and self.prime() == ring.prime() and self.is_field() == ring.is_field()
 
     def uniformizer_pow(self, n):
-        return self(self.prime_pow(n))        
+        return self(self.prime_pow(n))
+
+    uniformiser_pow = uniformizer_pow
 
     def _uniformizer_print(self):
         return self.variable_name()
