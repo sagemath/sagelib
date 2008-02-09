@@ -22,6 +22,8 @@ from sage.structure.element    import Element
 from sage.combinat.cartan_type import CartanType
 from sage.combinat.cartesian_product  import CombinatorialObject, CartesianProduct
 from crystals                  import Crystal, CrystalElement
+from letters                   import CrystalOfLetters
+from sage.misc.flatten         import flatten
 
 ##############################################################################
 # Support classes
@@ -30,6 +32,9 @@ from crystals                  import Crystal, CrystalElement
 class ImmutableListWithParent(CombinatorialObject, Element):
     r"""
     A class for lists having a parent
+
+    Specification: any subclass C should implement __init__ which accepts the following 
+    form C(parent, list = list)
 
     We create an immutable list whose parent is the class list:
 
@@ -71,7 +76,7 @@ class ImmutableListWithParent(CombinatorialObject, Element):
 
     def sibling(self, list): # Makes some hypothesis on the constructor!
                              # of subclasses
-        return self.__class__(self.parent(), list)
+        return self.__class__(self.parent(), list=list)
 
     def reverse(self):
         return self.sibling([ i for i in reversed(self.list)])
@@ -148,7 +153,7 @@ class TensorProductOfCrystals(Crystal):
 
     def __call__(self, *args):
         return TensorProductOfCrystalsElement(self,
-                                              [crystal for crystal in args]);
+                                              [crystalElement for crystalElement in args]);
 
 class TensorProductOfCrystalsElement(ImmutableListWithParent, CrystalElement):
     r"""
@@ -171,9 +176,9 @@ class TensorProductOfCrystalsElement(ImmutableListWithParent, CrystalElement):
 	if position == []:
 	    return None
 	k = position[len(position)-1]
-	self = self.set_index(k, self[k].f(i))
+	return self.set_index(k, self[k].f(i))
 #	self[k] = self[k].f(i)
-	return self
+#	return self
 
     def phi(self, i):
 	self = self.reverse()
@@ -228,3 +233,41 @@ class TensorProductOfCrystalsElement(ImmutableListWithParent, CrystalElement):
 	list.reverse()
 	return [len(self)-1-list[j] for j in range(len(list))]
 	
+class CrystalOfTableaux(TensorProductOfCrystals):
+    def __init__(self, type, shape):
+	C=CrystalOfLetters(type)
+	module_generator = flatten([[C(i+1)]*shape[i] for i in range(len(shape))])
+	module_generator.reverse()
+        TensorProductOfCrystals.__init__(self, *[C]*shape.size(), **{'generators':[module_generator]})
+	self._name = "The crystal of tableaux of type%s"%type
+
+    def __call__(self, *args, **options):
+	if not options.has_key('rows') and isinstance(args[0], Element) and args[0].parent() == self:
+	    return args[0];
+        return CrystalOfTableauxElement(self, *args, **options);
+
+class CrystalOfTableauxElement(TensorProductOfCrystalsElement):
+    def __init__(self, parent, *args, **options):
+	if options.has_key('list'):
+	    list = options['list']
+	elif options.has_key('rows'):
+	    rows=options['rows']
+	    C=CrystalOfLetters(parent.cartanType)
+	    list = []
+	    l = len(rows)
+	    for i in range(l):
+		for x in rows[i]:
+		    list.append(C(x))
+        else:
+	    list = [i for i in args]
+	TensorProductOfCrystalsElement.__init__(self, parent, list=list)
+
+    def to_tableau(self):
+	tab = [ [self[0]] ]
+	for i in range(1,len(self)):
+	    if self[i-1].value > self[i].value:
+		tab.append([self[i]])
+	    else:
+		l = len(tab)-1
+		tab[l].append(self[i])
+	return tab
