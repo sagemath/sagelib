@@ -802,7 +802,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
     def _r_action(self, s):
         """
         EXAMPLES:
-            sage: 8 * [0]
+            sage: 8 * [0] #indirect doctest
             [0, 0, 0, 0, 0, 0, 0, 0]
             sage: 8 * 'hi'
             'hihihihihihihihi'
@@ -814,7 +814,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
     def _l_action(self, s):
         """
         EXAMPLES:
-            sage: [0] * 8
+            sage: [0] * 8 #indirect doctest
             [0, 0, 0, 0, 0, 0, 0, 0]
             sage: 'hi' * 8
             'hihihihihihihihi'
@@ -1524,6 +1524,12 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: hash(long(n))
             -873977844            # 32-bit
             6874330978542788722   # 64-bit
+        """
+        return mpz_pythonhash(self.value)
+
+    cdef hash_c(self):
+        """
+        A C version of the __hash__ function.
         """
         return mpz_pythonhash(self.value)
 
