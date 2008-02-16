@@ -699,9 +699,12 @@ cdef class Matrix(sage.structure.element.Matrix):
             if self._mutability._is_immutable:
                 return self
             return self.copy()
-        
-        M = sage.matrix.matrix_space.MatrixSpace(ring, self._nrows, self._ncols, sparse=self.is_sparse())
-        return M(self.list(), coerce=True, copy=False)
+
+        try:
+            return self._change_ring(ring)
+        except (AttributeError, NotImplementedError):
+            M = sage.matrix.matrix_space.MatrixSpace(ring, self._nrows, self._ncols, sparse=self.is_sparse())
+            return M(self.list(), coerce=True, copy=False)
             
     def _matrix_(self, R):
         """
