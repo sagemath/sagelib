@@ -1001,6 +1001,34 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             # linbox is very buggy for p=2
             return matrix_dense.Matrix_dense.rank(self)
     
+    def determinant(self):
+        """
+        Return the determinant of this matrix.
+        
+        EXAMPLES:
+            sage: m = matrix(GF(101),5,range(25))      
+            sage: m.det()                              
+            0
+
+            sage: m = matrix(Integers(4), 2, [2,2,2,2])           
+            sage: m.det()                              
+            0
+
+        """
+        if self.p > 2 and is_prime(self.p):
+            x = self.fetch('det')
+            if not x is None:
+                return x
+            self._init_linbox()
+            _sig_on
+            d = linbox.det()
+            _sig_off
+            d2 = self._coerce_element(d)
+            self.cache('det', d2)
+            return d2
+        else:
+            return matrix_dense.Matrix_dense.determinant(self)	
+
     def randomize(self, density=1):
         """
         Randomize density proportion of the entries of this matrix,
