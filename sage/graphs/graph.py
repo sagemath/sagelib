@@ -2927,7 +2927,7 @@ class GenericGraph(SageObject):
             for v in self.loop_vertices():
                 L.append(circle((pos[v][0],pos[v][1]-loop_size), loop_size, rgbcolor=(0,0,0)))
             G = sum(L) + G
-        G.axes(False)
+            G.axes(False)
         return G
 
     def show(self, pos=None, layout=None, vertex_labels=True,
