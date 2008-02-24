@@ -281,7 +281,7 @@ class NewWorksheet(resource.Resource):
     
     def render(self, ctx):
         W = notebook.create_new_worksheet("Untitled", self.username)
-        return http.RedirectResponse('/home/'+W.filename())        
+        return http.RedirectResponse('/home/'+W.filename())
         
 
 ############################
@@ -1606,9 +1606,12 @@ class RedirectLogin(resource.PostableResource):
     def childFactory(self, request, name):
         return RedirectLogin()
 
+import sage.server.simple.twist
+
 class Toplevel(resource.PostableResource):
     child_logout = Logout()
     child_login = RedirectLogin()
+    child_simple = sage.server.simple.twist.SimpleServer()
     
     def __init__(self, cookie, username):
         self.cookie = cookie
