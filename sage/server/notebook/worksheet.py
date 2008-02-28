@@ -427,8 +427,7 @@ class Worksheet:
 
     def move_out_of_trash(self, user):
         self.set_active(user)
-
-
+        
     #############
 
     def delete_cells_directory(self):
