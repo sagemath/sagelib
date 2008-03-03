@@ -30,7 +30,8 @@ class ModAbVar_modsym_factor(ModularAbelianVariety_modsym):
     """
     def __init__(self, ambient, modsym):
         """
-        Create a modular abelian variety factor attached to a modular symbols space.
+        Create a modular abelian variety factor attached to a modular
+        symbols space.
         
         EXAMPLES:
             sage: A = J0(389)[0]; A
@@ -53,7 +54,7 @@ class ModAbVar_modsym_factor(ModularAbelianVariety_modsym):
             sage: A = J0(33)[1]; A
             Modular abelian variety quotient of dimension 2 and level 33
             sage: A.ambient_variety()
-            Jacobian of the modular curve associated to the congruence subgroup Gamma0(33)        
+            Jacobian of the modular curve associated to the congruence subgroup Gamma0(33)
         """
         return self._ambient
 
@@ -137,6 +138,8 @@ class ModAbVar_modsym_factor(ModularAbelianVariety_modsym):
             sage: D[0] + D[0]
             Modular abelian variety quotient of dimension 1 and level 42
             sage: D[0] + D[0] == D[0]
+            True
+            sage: sum(D, D[0]) == A
             True
         """
         if not isinstance(other, ModularAbelianVariety):
