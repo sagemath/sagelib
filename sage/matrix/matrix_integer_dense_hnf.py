@@ -847,7 +847,7 @@ def probable_hnf(A, include_zero_rows, proof):
 
     pivots = pivots_of_hnf_matrix(H)
 
-    # Now H is the HNF of the matrix B
+    # Now H is the HNF of the matrix B.
     # Finally we add all remaining rows of A to H using
     # the add_row function.
 
@@ -886,8 +886,8 @@ def probable_hnf(A, include_zero_rows, proof):
                     verbose("hnf -- got identity matrix -- early abort (2)")
                     if include_zero_rows: H = pad_zeros(H, A.nrows())
                     return H, pivots
-                    
-    if include_zero_rows: H = pad_zeros(H, A.nrows())        
+
+    if include_zero_rows: H = pad_zeros(H, A.nrows())
     return H, pivots
 
 def pad_zeros(A, nrows):
