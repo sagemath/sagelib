@@ -1505,7 +1505,7 @@ class Worksheet:
             raise TypeError
         if C.worksheet() != self:
             raise ValueError, "C must be have self as worksheet."
-            
+
         # Now enqueue the requested cell.
         if not (C in self.__queue):
             if C.is_asap():
