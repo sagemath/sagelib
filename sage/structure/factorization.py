@@ -576,8 +576,9 @@ class Factorization(SageObject):
                         except (AttributeError, NotImplementedError):
                             return cmp(f[0], g[0])
                 except (AttributeError, NotImplementedError):
-                    _cmp = cmp
-
+                    self.__x.sort()
+                    return
+        
         self.__x.sort(_cmp)
 
     def unit(self):
