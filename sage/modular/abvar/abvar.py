@@ -284,6 +284,15 @@ class ModularAbelianVariety_abstract(ParentWithBase):
             2
         """
         return self._ambient_dimension()
+
+    def endomorphism_ring(self):
+        try:
+            return self.__endomorphism_ring
+        except AttributeError:
+            pass
+
+        self.__endomorphism_ring = homspace.EndomorphismSubring(self)
+        return self.__endomorphism_ring
     
     def is_subvariety(self, other):
         """
