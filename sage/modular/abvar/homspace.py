@@ -136,8 +136,14 @@ class EndomorphismSubring(Homspace, Ring):
                 M = M.change_ring(ZZ)
 
         return morphism.Morphism(self._End(), M)
-        
-        
-        
 
-    
+    def image_of_hecke_algebra(self):
+        A = self.abelian_variety()
+        #if A.is_hecke_stable():
+        return 
+        
+class EndomorphismSubAlgebra(EndomorphismSubring):
+    def __init__(self, A):
+        EndomorphismSubring.__init__(self, A)
+
+
