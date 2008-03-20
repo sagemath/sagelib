@@ -182,7 +182,7 @@ class ModularForm_abstract(ModuleElement):
             q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 + O(q^6)        
         """
         return self.q_expansion(prec)
- 
+        
 
     def __eq__(self, other):
         """
@@ -582,7 +582,7 @@ class Newform(ModularForm_abstract):
         return self.__modsym_space
 
     def number(self):
-        return self._defining_modular_symbols().ambient().cuspidal_subspace().decomposition().index(self._defining_modular_symbols())
+        return self._defining_modular_symbols().ambient().cuspidal_subspace().new_subspace().decomposition().index(self._defining_modular_symbols())
 
     def __nonzero__(self):
         """
