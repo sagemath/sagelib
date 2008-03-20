@@ -381,12 +381,11 @@ def permutation_action(g,v):
         sage: A = MS([[1,0,0,0,1,1,0],[0,1,0,1,0,1,0],[0,0,0,0,0,0,1]])
         sage: S5 = SymmetricGroup(5)
         sage: g = S5([(1,2,3)])
-        sage: A; permutation_action(g,A)
-        <BLANKLINE>
+        sage: A
         [1 0 0 0 1 1 0]
         [0 1 0 1 0 1 0]
         [0 0 0 0 0 0 1]
-        <BLANKLINE>
+        sage: permutation_action(g,A)
         [0 1 0 1 0 1 0]
         [0 0 0 0 0 0 1]
         [1 0 0 0 1 1 0]
@@ -573,8 +572,7 @@ def CyclicCodeFromGeneratingPolynomial(n,g,ignore=True):
         sage: g = x^3+x+1
         sage: C = CyclicCodeFromGeneratingPolynomial(7,g); C
         Linear code of length 7, dimension 4 over Finite Field of size 2
-        sage: C.gen_mat()
-        <BLANKLINE>
+        sage: C.gen_mat()        
         [1 1 0 1 0 0 0]
         [0 1 1 0 1 0 0]
         [0 0 1 1 0 1 0]
@@ -583,7 +581,6 @@ def CyclicCodeFromGeneratingPolynomial(n,g,ignore=True):
         sage: C = CyclicCodeFromGeneratingPolynomial(4,g); C
         Linear code of length 4, dimension 3 over Finite Field of size 2
         sage: C.gen_mat()
-        <BLANKLINE>
         [1 1 0 0]
         [0 1 1 0]
         [0 0 1 1]
@@ -676,8 +673,7 @@ def DuadicCodeEvenPair(F,S1,S2):
         sage: S2 = C[2]
         sage: is_a_splitting(S1,S2,11)
         (True, 2)
-        sage: DuadicCodeEvenPair(GF(q),S1,S2)
-        <BLANKLINE>
+        sage: DuadicCodeEvenPair(GF(q),S1,S2)        
         (Linear code of length 11, dimension 5 over Finite Field of size 3,
          Linear code of length 11, dimension 5 over Finite Field of size 3)
 
@@ -720,8 +716,7 @@ def DuadicCodeOddPair(F,S1,S2):
         sage: S2 = C[2]
         sage: is_a_splitting(S1,S2,11)
         (True, 2)
-        sage: DuadicCodeOddPair(GF(q),S1,S2)
-        <BLANKLINE>
+        sage: DuadicCodeOddPair(GF(q),S1,S2)        
         (Linear code of length 11, dimension 6 over Finite Field of size 3,
          Linear code of length 11, dimension 6 over Finite Field of size 3)
 
@@ -904,8 +899,7 @@ def LinearCodeFromCheckMatrix(H):
 
     EXAMPLES:
         sage: C = HammingCode(3,GF(2))
-        sage: H = C.check_mat(); H
-        <BLANKLINE>
+        sage: H = C.check_mat(); H        
         [1 0 0 1 1 0 1]
         [0 1 0 1 0 1 1]
         [0 0 1 1 1 1 0]
@@ -913,7 +907,6 @@ def LinearCodeFromCheckMatrix(H):
         True
         sage: C = HammingCode(2,GF(3))
         sage: H = C.check_mat(); H
-        <BLANKLINE>
         [1 0 2 2]
         [0 1 2 1]
         sage: LinearCodeFromCheckMatrix(H) == C
@@ -978,16 +971,13 @@ def QuadraticResidueCodeEvenPair(n,F):
     and N is the non-residues.
 
     EXAMPLES:
-        sage: QuadraticResidueCodeEvenPair(17,GF(13))
-        <BLANKLINE>
+        sage: QuadraticResidueCodeEvenPair(17,GF(13))        
         (Linear code of length 17, dimension 8 over Finite Field of size 13,
          Linear code of length 17, dimension 8 over Finite Field of size 13)
         sage: QuadraticResidueCodeEvenPair(17,GF(2))
-        <BLANKLINE>
         (Linear code of length 17, dimension 8 over Finite Field of size 2,
          Linear code of length 17, dimension 8 over Finite Field of size 2)
         sage: QuadraticResidueCodeEvenPair(13,GF(9,"z"))
-        <BLANKLINE>
         (Linear code of length 13, dimension 6 over Finite Field in z of size 3^2,
          Linear code of length 13, dimension 6 over Finite Field in z of size 3^2)
         sage: C1 = QuadraticResidueCodeEvenPair(7,GF(2))[0]
@@ -1027,16 +1017,13 @@ def QuadraticResidueCodeOddPair(n,F):
     and N is the non-residues.
 
     EXAMPLES:
-        sage: QuadraticResidueCodeOddPair(17,GF(13))
-        <BLANKLINE>
+        sage: QuadraticResidueCodeOddPair(17,GF(13))        
         (Linear code of length 17, dimension 9 over Finite Field of size 13,
          Linear code of length 17, dimension 9 over Finite Field of size 13)
         sage: QuadraticResidueCodeOddPair(17,GF(2))
-        <BLANKLINE>
         (Linear code of length 17, dimension 9 over Finite Field of size 2,
          Linear code of length 17, dimension 9 over Finite Field of size 2)
         sage: QuadraticResidueCodeOddPair(13,GF(9,"z"))
-        <BLANKLINE>
         (Linear code of length 13, dimension 7 over Finite Field in z of size 3^2,
          Linear code of length 13, dimension 7 over Finite Field in z of size 3^2)
         sage: C1 = QuadraticResidueCodeOddPair(17,GF(2))[1]
@@ -1145,8 +1132,7 @@ def ReedSolomonCode(n,k,F,pts = None):
     REFERENCES:
         [HP] W. C. Huffman, V. Pless, Fundamentals of Error-Correcting Codes,
         Cambridge Univ. Press, 2003.
-
-        http://en.wikipedia.org/wiki/Reed-Solomon
+        [W] http://en.wikipedia.org/wiki/Reed-Solomon
 
     """
     q = F.order()
