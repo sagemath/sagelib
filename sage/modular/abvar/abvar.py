@@ -193,7 +193,6 @@ class ModularAbelianVariety_abstract(ParentWithBase):
     def label(self):
         degen = str(self.number()).replace(' ','')
         return '%s%s%s'%(self.newform_level(), cremona_letter_code(self.isogeny_number()), degen)
-                              
 
     def _isogeny_to_newform_abelian_variety(self):
         D = self.decomposition()
@@ -201,7 +200,10 @@ class ModularAbelianVariety_abstract(ParentWithBase):
             raise ValueError, "self is not simple"
 
         t, N = D[0].number()
-        return self.degeneracy_map(self.newform_level(),t)
+        m = self.degeneracy_map(self.newform_level(),t)
+        Af = AbelianVariety(self.newform_label())
+
+        return m.restrict_codomain(Af)
 
     def _simple_isogeny(self, other):
         """
