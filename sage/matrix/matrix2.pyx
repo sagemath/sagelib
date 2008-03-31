@@ -35,7 +35,6 @@ import matrix_space
 import berlekamp_massey
 from sage.modules.free_module_element import is_FreeModuleElement
 
-
 from random import randint
 
 cdef class Matrix(matrix1.Matrix):
@@ -74,8 +73,29 @@ cdef class Matrix(matrix1.Matrix):
         """
         v = [a.subs(in_dict, **kwds) for a in self.list()]
         return self.new_matrix(self.nrows(), self.ncols(), v)
+
+    def solve_left(self, B, check=True):
+        """
+        If self is a matrix $A$, then this function returns a vector
+        or matrix $X$ such that $X A = B$.  If $B$ is a vector then
+        $X$ is a vector and if $B$ is a matrix, then $X$ is a matrix.
+
+        INPUT:
+            B -- a matrix
+            check -- bool (default: True) -- if False and self is nonsquare,
+                     may not raise an error message even if there is no solution.
+                     This is faster but more dangerous.
+
+        EXAMPLES:
+            sage: A = matrix(QQ,4,2, [0, -1, 1, 0, -2, 2, 1, 0])
+            sage: B = matrix(QQ,2,2, [1, 0, 1, -1])
+            sage: X = A.solve_left(B)
+            sage: X*A == B
+            True
+        """
+        return self.transpose().solve_right(B.transpose(), check=check).transpose()
     
-    def solve_right(self, B):
+    def solve_right(self, B, check=True):
         r"""
         If self is a matrix $A$, then this function returns a vector
         or matrix $X$ such that $A X = B$.  If $B$ is a vector then
@@ -87,9 +107,14 @@ cdef class Matrix(matrix1.Matrix):
 
         INPUT:
             B -- a matrix or vector
+            check -- bool (default: True) -- if False and self is nonsquare,
+                     may not raise an error message even if there is no solution.
+                     This is faster but more dangerous.  
 
         OUTPUT:
             a matrix or vector
+
+        SEE ALSO: solve_left
 
         EXAMPLES:
             sage: A = matrix(QQ, 3, [1,2,3,-1,2,5,2,3,1])
@@ -98,6 +123,53 @@ cdef class Matrix(matrix1.Matrix):
             (-13/12, 23/12, -7/12)
             sage: A * x
             (1, 2, 3)
+
+        We solve with A nonsquare:
+            sage: A = matrix(QQ,2,4, [0, -1, 1, 0, -2, 2, 1, 0]); B = matrix(QQ,2,2, [1, 0, 1, -1])
+            sage: X = A.solve_right(B); X
+            [-3/2  1/2]
+            [  -1    0]
+            [   0    0]
+            [   0    0]
+            sage: A*X == B
+            True
+
+        Another nonsingular example:
+            sage: A = matrix(QQ,2,3, [1,2,3,2,4,6]); v = vector([-1/2,-1])
+            sage: x = A \ v; x
+            (-1/2, 0, 0)
+            sage: A*x == v
+            True
+
+        Same example but over $\ZZ$:
+            sage: A = matrix(ZZ,2,3, [1,2,3,2,4,6]); v = vector([-1,-2])
+            sage: A \ v
+            (-1, 0, 0)
+
+        An example in which there is no solution:
+            sage: A = matrix(QQ,2,3, [1,2,3,2,4,6]); v = vector([1,1])
+            sage: A \ v
+            Traceback (most recent call last):
+            ...
+            ValueError: matrix equation has no solutions
+
+        A ValueError is raised if the input is invalid:
+            sage: A = matrix(QQ,4,2, [0, -1, 1, 0, -2, 2, 1, 0])
+            sage: B = matrix(QQ,2,2, [1, 0, 1, -1])
+            sage: X = A.solve_right(B)
+            Traceback (most recent call last):
+            ...
+            ValueError: number of rows of self must equal number of rows of B
+            
+        
+        We solve with A singular:
+            sage: A = matrix(QQ,2,3, [1,2,3,2,4,6]); B = matrix(QQ,2,2, [6, -6, 12, -12])
+            sage: X = A.solve_right(B); X
+            [ 6 -6]
+            [ 0  0]
+            [ 0  0]
+            sage: A*X == B
+            True
 
         We illustrate left associativity, etc., of the backslash operator. 
             sage: A = matrix(QQ, 2, [1,2,3,4])
@@ -142,8 +214,13 @@ cdef class Matrix(matrix1.Matrix):
             sage: a * x == v
             True        
         """
-        if not self.is_square():
-            raise NotImplementedError, "input matrix must be square"
+
+        if is_Vector(B):
+            if self.nrows() != B.degree():
+                raise ValueError, "number of rows of self must equal degree of B"
+        else:
+            if self.nrows() != B.nrows():
+                raise ValueError, "number of rows of self must equal number of rows of B"
         
         K = self.base_ring()
         if not K.is_integral_domain():
@@ -152,26 +229,131 @@ cdef class Matrix(matrix1.Matrix):
             K = K.fraction_field()
             self = self.change_ring(K)
 
-        if self.rank() != self.nrows():
-            raise ValueError, "input matrix must have full rank but it doesn't"
-
         matrix = True
         if is_Vector(B):
             matrix = False
             C = self.matrix_space(self.nrows(), 1)(B.list())
         else:
             C = B
-        
-        D = self.augment(C).echelon_form()
-        X = D.matrix_from_columns(range(self.ncols(),D.ncols()))
+
+        if not self.is_square():
+            X = self._solve_right_general(C, check=check)
+            if not matrix:
+                # Convert back to a vector
+                return (X.base_ring() ** X.nrows())(X.list())
+            else:
+                return X
+            
+        if self.rank() != self.nrows():
+            X = self._solve_right_general(C, check=check)
+        else:
+            X = self._solve_right_nonsingular_square(C, check_rank=False)
+
         if not matrix:
             # Convert back to a vector
-            return (X.base_ring() ** X.nrows())(X.list())
+            return X.column(0)
         else:
             return X
+
+    def _solve_right_nonsingular_square(self, B, check_rank=True):
+        r"""
+        If self is a matrix $A$ of full rank, then this function
+        returns a matrix $X$ such that $A X = B$.
+
+        SEE ALSO: \code{self.solve_right} and \code{self.solve_left}
+
+        INPUT:
+            B -- a matrix
+            check_rank -- bool (default: True)
+
+        OUTPUT:
+            matrix
+
+        EXAMPLES:
+            sage: A = matrix(QQ,3,[1,2,4,5,3,1,1,2,-1])
+            sage: B = matrix(QQ,3,2,[1,5,1,2,1,5])
+            sage: A._solve_right_nonsingular_square(B)
+            [ -1/7 -11/7]
+            [  4/7  23/7]
+            [    0     0]
+            sage: A._solve_right_nonsingular_square(B, check_rank=False)
+            [ -1/7 -11/7]
+            [  4/7  23/7]
+            [    0     0]
+            sage: X = A._solve_right_nonsingular_square(B, check_rank=False)
+            sage: A*X == B
+            True
+        """
+        D = self.augment(B).echelon_form()
+        return D.matrix_from_columns(range(self.ncols(),D.ncols()))
             
+
+    def pivot_rows(self):
+        """
+        Return the pivot row positions for this matrix, which are a
+        topmost subset of the rows that span the row space and are
+        linearly independent.
+
+        OUTPUT:
+            list -- a list of integers
+
+        EXAMPLES:
+            sage: A = matrix(QQ,3,3, [0,0,0,1,2,3,2,4,6]); A
+            [0 0 0]
+            [1 2 3]
+            [2 4 6]
+            sage: A.pivot_rows()
+            [1]
+        """
+        v = self.fetch('pivot_rows')
+        if v is not None:
+            return list(v)
+        v = self.transpose().pivots()
+        self.cache('pivot_rows', v)
+        return v
         
-        
+    def _solve_right_general(self, B, check=True):
+        r"""
+        This is used internally by the \code{solve_right} command to
+        solve for self*X = B when self is not square or not of full
+        rank.  It does some linear algebra, then solves a full-rank
+        square system.
+
+        INPUT:
+            B -- a matrix
+            check -- bool (default: True); if False, if there is no
+                     solution this function will not detect that fact.
+
+        OUTPUT:
+            matrix
+
+        EXAMPLES:
+            sage: A = matrix(QQ,2,3, [1,2,3,2,4,6]); B = matrix(QQ,2,2, [6, -6, 12, -12])
+            sage: A._solve_right_general(B)
+            [ 6 -6]
+            [ 0  0]
+            [ 0  0]
+        """
+        pivot_cols = self.pivots()
+        A = self.matrix_from_columns(pivot_cols)
+        pivot_rows = A.pivot_rows()
+        A = A.matrix_from_rows(pivot_rows)
+        X = A.solve_right(B.matrix_from_rows(pivot_rows), check=False)
+        if len(pivot_cols) < self.ncols():
+            # Now we have to put in zeros for the non-pivot ROWS, i.e.,
+            # make a matrix from X with the ROWS of X interspersed with
+            # 0 ROWS.
+            Y = X.new_matrix(self.ncols(), X.ncols())
+            # Put the columns of X into the matrix Y at the pivot_cols positions
+            for i, c in enumerate(pivot_cols):
+                Y.set_row(c, X.row(i))
+            X = Y
+        if check:
+            # Have to check that we actually solved the equation.
+            if self*X != B:
+                raise ValueError, "matrix equation has no solutions"
+        return X
+    
     def prod_of_row_sums(self, cols):
         r"""
         Calculate the product of all row sums of a submatrix of $A$ for a
@@ -518,7 +700,7 @@ cdef class Matrix(matrix1.Matrix):
             sage: R.<x,y> = MPolynomialRing(IntegerRing(),2)
             sage: A = MatrixSpace(R,2)([x, y, x**2, y**2])
             sage: A.determinant()
-            -1*x^2*y + x*y^2
+            -x^2*y + x*y^2
             
         TEST:
             sage: A = matrix(5, 5, [next_prime(i^2) for i in range(25)])
@@ -764,16 +946,16 @@ cdef class Matrix(matrix1.Matrix):
             sage: R.<x,y> = MPolynomialRing(ZZ,2)
             sage: A = MatrixSpace(R,2)([x, y, x^2, y^2])
             sage: f = A.charpoly('x'); f
-            x^2 + (-1*y^2 - x)*x - x^2*y + x*y^2
+            x^2 + (-y^2 - x)*x - x^2*y + x*y^2
 
         It's a little difficult to distinguish the variables.  To fix this,
         we temporarily view the indeterminate as $Z$:
             sage: with localvars(f.parent(), 'Z'): print f
-            Z^2 + (-1*y^2 - x)*Z - x^2*y + x*y^2
+            Z^2 + (-y^2 - x)*Z - x^2*y + x*y^2
 
         We could also compute f in terms of Z from the start:
             sage: A.charpoly('Z')
-            Z^2 + (-1*y^2 - x)*Z - x^2*y + x*y^2
+            Z^2 + (-y^2 - x)*Z - x^2*y + x*y^2
 
         TESTS:
             sage: P.<a,b,c> = PolynomialRing(Rationals())
@@ -2023,9 +2205,8 @@ cdef class Matrix(matrix1.Matrix):
         SEE ALSO: restrict()
 
         EXAMPLES:
-            sage: V = VectorSpace(QQ, 3)
-            sage: M = MatrixSpace(QQ, 3)
-            sage: A = M([1,2,0, 3,4,0, 0,0,0])
+            sage: V = QQ^3
+            sage: A = matrix(QQ,3,[1,2,0, 3,4,0, 0,0,0])
             sage: W = V.subspace([[1,0,0], [1,2,3]])
             sage: A.restrict_domain(W)
             [1 2 0]
@@ -2035,8 +2216,44 @@ cdef class Matrix(matrix1.Matrix):
             [ 1  2  0]
             [ 7 10  0]
         """
-        e = [b*self for b in V.basis()]
-        return self.new_matrix(V.dimension(), self.ncols(), e)
+        return V.basis_matrix() * self
+
+    def restrict_codomain(self, V):
+        r"""
+        Suppose that self defines a linear map from some domain to a
+        codomain that contains $V$ and that the image of self is
+        contained in $V$.  This function returns a new matrix $A$ that
+        represents this linear map but as a map to $V$, in the sense
+        that if $x$ is in the domain, then $xA$ is the linear
+        combination of the elements of the basis of $V$ that equals
+        v*self.
+        
+        INPUT:
+            V -- vector space (space of degree \code{self.ncols()})
+                 that contains the image of self.
+
+        SEE ALSO: \code{restrict()}, \code{restrict_domain()}
+
+        EXAMPLES:
+            sage: A = matrix(QQ,3,[1..9])
+            sage: V = (QQ^3).span([[1,2,3], [7,8,9]]); V
+            Vector space of degree 3 and dimension 2 over Rational Field
+            Basis matrix:
+            [ 1  0 -1]
+            [ 0  1  2]
+            sage: z = vector(QQ,[1,2,5])
+            sage: B = A.restrict_codomain(V); B
+            [1 2]
+            [4 5]
+            [7 8]
+            sage: z*B
+            (44, 52)
+            sage: z*A
+            (44, 52, 60)
+            sage: 44*V.0 + 52*V.1
+            (44, 52, 60)
+        """
+        return V.basis_matrix().solve_left(self)
 
     def maxspin(self, v):
         """
@@ -3324,7 +3541,54 @@ cdef class Matrix(matrix1.Matrix):
                 blocks.extend([(eval,i) for i in Partition(diagram).conjugate()])
         return block_diagonal_matrix([jordan_block(eval,size, sparse=sparse) for (eval,size) in blocks],subdivide=subdivide)
 
+    def symplectic_form(self):
+        r"""
+        Find a symplectic form for self if self is an anti-symmetric,
+        alternating matrix defined over a field.
 
+        Returns a pair (F, C) such that the rows of C form a symplectic
+        basis for self and F = C * self * C.transpose().
+
+        Raises a ValueError if not over a field, or self is not
+        anti-symmetric, or self is not alternating.
+
+        Anti-symmetric means that $M = -M^t$.  Alternating means that the
+        diagonal of $M$ is identically zero.
+
+        A symplectic basis is a basis of the form $z_1, \ldots, z_i, e_1,
+        \ldots, e_j, f_1, \ldots f_j$ such that
+            * $z_i M v^t$ = 0 for all vectors $v$;
+            * $e_i M {e_j}^t = 0$ for all $i, j$;
+            * $f_i M {f_j}^t = 0$ for all $i, j$;
+            * $e_i M {f_i}^t = 1$ for all $i$;
+            * $e_i M {f_j}^t = 0$ for all $i$ not equal $j$.
+
+        See the example for a pictorial description of such a basis.
+
+        EXAMPLES:
+            sage: E = matrix(QQ, 8, 8, [0, -1/2, -2, 1/2, 2, 0, -2, 1, 1/2, 0, -1, -3, 0, 2, 5/2, -3, 2, 1, 0, 3/2, -1, 0, -1, -2, -1/2, 3, -3/2, 0, 1, 3/2, -1/2, -1/2, -2, 0, 1, -1, 0, 0, 1, -1, 0, -2, 0, -3/2, 0, 0, 1/2, -2, 2, -5/2, 1, 1/2, -1, -1/2, 0, -1, -1, 3, 2, 1/2, 1, 2, 1, 0]); E
+            [   0 -1/2   -2  1/2    2    0   -2    1]
+            [ 1/2    0   -1   -3    0    2  5/2   -3]
+            [   2    1    0  3/2   -1    0   -1   -2]
+            [-1/2    3 -3/2    0    1  3/2 -1/2 -1/2]
+            [  -2    0    1   -1    0    0    1   -1]
+            [   0   -2    0 -3/2    0    0  1/2   -2]
+            [   2 -5/2    1  1/2   -1 -1/2    0   -1]
+            [  -1    3    2  1/2    1    2    1    0]
+            sage: F, C = E.symplectic_form(); F
+            [ 0  0  0  0  1  0  0  0]
+            [ 0  0  0  0  0  1  0  0]
+            [ 0  0  0  0  0  0  1  0]
+            [ 0  0  0  0  0  0  0  1]
+            [-1  0  0  0  0  0  0  0]
+            [ 0 -1  0  0  0  0  0  0]
+            [ 0  0 -1  0  0  0  0  0]
+            [ 0  0  0 -1  0  0  0  0]        
+            sage: F == C * E * C.transpose()
+            True
+            """
+        import sage.matrix.symplectic_basis
+        return sage.matrix.symplectic_basis.symplectic_basis_over_field(self)
 
     def hadamard_bound(self):
         r"""

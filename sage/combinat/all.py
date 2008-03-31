@@ -65,6 +65,7 @@ from sloane_functions import sloane
 
 
 from sf.all import *
+from matrices.all import *
 
 #import lrcalc
 
