@@ -186,6 +186,34 @@ class ModAbVar_ambient_jacobian_class(ModularAbelianVariety_modsym_abstract):
         """
         return (self.__group,)
 
+    def _calculate_endomorphism_generators(self):
+        D = self.decomposition()
+        phi = self._isogeny_to_product_of_simples()
+        psi = phi.complementary_isogeny()
+
+        m1 = phi.matrix()
+        m2 = psi.matrix()
+
+        H = self.Hom(self)
+        M = H.matrix_space()
+
+        ls = []
+        ind = 0
+        for d in D:
+            to_newform = d._isogeny_to_newform_abelian_variety()
+            n1 = to_newform.matrix()
+            n2 = to_newform.complementary_isogeny().matrix()
+            f_gens = to_newform.codomain()._calculate_endomorphism_generators()
+            small_space = to_newform.parent().matrix_space()
+            f_gens = [ small_space(x.list()) for x in f_gens ]
+            for m in f_gens:
+                mat = H.matrix_space()(0)
+                mat.set_block(ind, ind, n1 * m * n2 )
+                ls.append((m1 * mat * m2).list())
+            ind += 2*d.dimension()
+
+        return [ H( morphism.Morphism(H, M(x)) ) for x in ls ]
+
     def degeneracy_map(self, level, t=1, check=True):
         """
         Return the t-th degeneracy map from self to J(level).  Here t
@@ -202,9 +230,7 @@ class ModAbVar_ambient_jacobian_class(ModularAbelianVariety_modsym_abstract):
 
         EXAMPLES:
             sage: J0(11).degeneracy_map(33)
-            Abelian variety morphism:
-              From: Abelian variety J0(11) of dimension 1
-              To:   Abelian variety J0(33) of dimension 3
+            Degeneracy map from Abelian variety J0(11) of dimension 1 to Abelian variety J0(33) of dimension 3 defined by [1]
             sage: J0(11).degeneracy_map(33).matrix()
             [ 0 -3  2  1 -2  0]
             [ 1 -2  0  1  0 -1]
@@ -236,7 +262,7 @@ class ModAbVar_ambient_jacobian_class(ModularAbelianVariety_modsym_abstract):
         symbol_map = Mself.degeneracy_map(level, t).restrict_codomain(Mdest)
         H = self.Hom(Jdest)
 
-        return H(morphism.Morphism(H,symbol_map.matrix()))
+        return H(morphism.DegeneracyMap(H, symbol_map.matrix(), [t]))
 
     def dimension(self):
         """

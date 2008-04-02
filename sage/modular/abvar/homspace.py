@@ -41,6 +41,8 @@ class Homspace(HomsetWithBase):
         EXAMPLES:
             sage: H = Hom(J0(11), J0(22)); H
             Space of homomorphisms from Abelian variety J0(11) of dimension 1 to Abelian variety J0(22) of dimension 2
+            sage: Hom(J0(11), J0(11))
+            Endomorphism ring of Abelian variety J0(11) of dimension 1
             sage: type(H)
             <class 'sage.modular.abvar.homspace.Homspace'>
             sage: H.homset_category()
@@ -55,6 +57,55 @@ class Homspace(HomsetWithBase):
         HomsetWithBase.__init__(self, domain, codomain, cat)
         
     def __call__(self, M):
+        r"""
+        Create a homomorphism in this space from M. M can
+        be any of the following:
+
+          * a Morphism of abelian varieties
+          * a matrix of the appropriate size (i.e.
+            2*self.domain().dimension() x
+            2*self.codomain().dimension()) whose entries
+            are coercible into self.base_ring()
+          * anything that can be coerced into self.matrix_space()
+
+        EXAMPLES:
+            sage: H = Hom(J0(11), J0(22))
+            sage: phi = H(matrix(ZZ,2,4,[5..12])) ; phi
+            Abelian variety morphism:
+              From: Abelian variety J0(11) of dimension 1
+              To:   Abelian variety J0(22) of dimension 2
+            sage: phi.matrix()
+            [ 5  6  7  8]
+            [ 9 10 11 12]
+            sage: phi.matrix().parent()
+            Full MatrixSpace of 2 by 4 dense matrices over Integer Ring
+
+            sage: H = J0(22).Hom(J0(11)*J0(11))
+            sage: m1 = J0(22).degeneracy_map(11,1).matrix() ; m1
+            [ 0  1]
+            [-1  1]
+            [-1  0]
+            [ 0 -1]
+            sage: m2 = J0(22).degeneracy_map(11,2).matrix() ; m2
+            [ 1 -2]
+            [ 0 -2]
+            [ 1 -1]
+            [ 0 -1]
+            sage: m = m1.transpose().stack(m2.transpose()).transpose() ; m
+            [ 0  1  1 -2]
+            [-1  1  0 -2]
+            [-1  0  1 -1]
+            [ 0 -1  0 -1]
+            sage: phi = H(m) ; phi
+            Abelian variety morphism:
+              From: Abelian variety J0(22) of dimension 2
+              To:   Abelian variety J0(11) x J0(11) of dimension 2
+            sage: phi.matrix()
+            [ 0  1  1 -2]
+            [-1  1  0 -2]
+            [-1  0  1 -1]
+            [ 0 -1  0 -1]
+        """
         if isinstance(M, morphism.Morphism):
             if M.parent() is self:
                 return M
@@ -74,6 +125,17 @@ class Homspace(HomsetWithBase):
         return morphism.Morphism(self, M)
         
     def _coerce_impl(self, x):
+        """
+        Coerce x into self, if possible.
+
+        EXAMPLES:
+            sage: J = J0(37) ; J.Hom(J)._coerce_impl(matrix(ZZ,4,[5..20]))
+            Abelian variety endomorphism of Abelian variety J0(37) of dimension 2
+            sage: K = J0(11) * J0(11) ; J.Hom(K)._coerce_impl(matrix(ZZ,4,[5..20]))
+            Abelian variety morphism:
+              From: Abelian variety J0(37) of dimension 2
+              To:   Abelian variety J0(11) x J0(11) of dimension 2
+        """
         if self.matrix_space().has_coerce_map_from(parent(x)):
             return self(x)
         else: 
@@ -93,7 +155,8 @@ class Homspace(HomsetWithBase):
 
     def _get_matrix(self, g):
         """
-        This is used internally when computing generators for this endomorphism ring.
+        Given an object g, try to return a matrix corresponding to g
+        with dimensions the same as those of self.matrix_space().
 
         INPUT:
             g -- a matrix or morphism or object with a list method
@@ -109,13 +172,43 @@ class Homspace(HomsetWithBase):
             sage: E._get_matrix(J0(11).hecke_operator(2))
             [-2  0]
             [ 0 -2]
+
+sage: H = Hom(J0(11) * J0(17), J0(22))
+
+sage: H._get_matrix(tuple([8..23]))
+
+[ 8  9 10 11]
+[12 13 14 15]
+[16 17 18 19]
+[20 21 22 23]
+
+sage: H._get_matrix(tuple([8..23]))
+
+[ 8  9 10 11]
+[12 13 14 15]
+[16 17 18 19]
+[20 21 22 23]
+
+sage: H._get_matrix([8..23])
+
+[ 8  9 10 11]
+[12 13 14 15]
+[16 17 18 19]
+[20 21 22 23]
+        
         """
-        if g.parent() is self.matrix_space():
-            return g
-        elif isinstance(g, morphism.Morphism):
+        try:
+            if g.parent() is self.matrix_space():
+                return g
+        except AttributeError:
+            pass
+        
+        if isinstance(g, morphism.Morphism):
             return g.matrix()
-        else:
+        elif hasattr(g, 'list'):
             return self.matrix_space()(g.list())
+        else:
+            return self.matrix_space()(g)
             
     def free_module(self):
         r"""
@@ -246,21 +339,66 @@ class Homspace(HomsetWithBase):
             gens = []
             cur_row = 0
             for Afactor in Afactors:
-                cur_row += Afactor.dimension() * 2
-                cur_col = 0
+                            
                 for Bfactor in Bfactors:
                     cur_col += Bfactor.dimension() * 2
                     Asimple = Afactor[0]
                     Bsimple = Bfactor[0]
                     if Asimple.newform_label() == Bsimple.newform_label():
                         for sub_gen in Afactor.Hom(Bfactor).gens():
-                            sub_mat = sub_gen.matrix()
-                            M = self.matrix_space()(0)
-                            M.set_block(cur_row - sub_mat.nrows(), cur_col - sub_mat.ncols(), sub_mat)
-                            gens.append(M)
-                            
-        # set the gens
-        self._gens = gens
+        """
+        Calculate generators for self, where both the domain and
+        codomain for self are assumed to be simple abelian varieties.
+        The saturation of the span of these generators in self will be
+        the full space of homomorphisms from the domain of self to its
+        codomain.
+
+        EXAMPLES:
+            sage: H = Hom(J0(11), J0(22)[0])
+            sage: H._calculate_simple_gens()
+            [[1 0]
+            [1 1]]
+            sage: J = J0(11) * J0(33) ; J.decomposition()
+            [
+            Simple abelian subvariety 11a(1,11) of dimension 1 of J0(11) x J0(33),
+            Simple abelian subvariety 11a(1,33) of dimension 1 of J0(11) x J0(33),
+            Simple abelian subvariety 11a(3,33) of dimension 1 of J0(11) x J0(33),
+            Simple abelian subvariety 33a(1,33) of dimension 1 of J0(11) x J0(33)
+            ]
+            sage: J[0].Hom(J[1])._calculate_simple_gens()
+            [[ 0 -1]
+            [ 1 -1]]
+            sage: J[0].Hom(J[2])._calculate_simple_gens()
+            [[-1  0]
+            [-1 -1]]
+            sage: J[0].Hom(J[0])._calculate_simple_gens()
+            [[1 0]
+            [0 1]]
+            sage: J[1].Hom(J[2])._calculate_simple_gens()
+            [[ 0 -4]
+            [ 4  0]]
+
+            sage: J = J0(23) ; J.decomposition()
+            [
+            Simple abelian variety J0(23) of dimension 2
+            ]
+            sage: J[0].Hom(J[0])._calculate_simple_gens()
+            [[1 0 0 0]
+            [0 1 0 0]
+            [0 0 1 0]
+            [0 0 0 1],
+             [ 0  1 -1  0]
+            [ 0  1 -1  1]
+            [-1  2 -2  1]
+            [-1  1  0 -1]]
+            sage: J.hecke_operator(2).matrix()
+            [ 0  1 -1  0]
+            [ 0  1 -1  1]
+            [-1  2 -2  1]
+            [-1  1  0 -1]
+        """
+        gens = R.submodule([ self._get_matrix(g).list() for g in gens ]).saturation().basis()
+        self._gens = tuple([ self._get_matrix(g) for g in gens ])
             
     def _calculate_simple_gens(self):
         """
@@ -306,28 +444,35 @@ class EndomorphismSubring(Homspace, Ring):
                  tuple of the generators as matrices
 
         EXAMPLES:
+            sage: J0(23).endomorphism_ring()
+            Endomorphism ring of Abelian variety J0(23) of dimension 2
+            sage: sage.modular.abvar.homspace.EndomorphismSubring(J0(25))
+            Endomorphism ring of Abelian variety J0(25) of dimension 0
             sage: type(J0(11).endomorphism_ring())
             <class 'sage.modular.abvar.homspace.EndomorphismSubring'>
         """
         self._J = A.ambient_variety()
         self._A = A
+        Homspace.__init__(self, A, A, A.category())
+        Ring.__init__(self, A.base_ring())
+
         if gens is None:
             self._gens = None
         else:
             self._gens = tuple([ self._get_matrix(g) for g in gens ])
         self._is_full_ring = gens is None
-        Homspace.__init__(self, A, A, A.category())
-        Ring.__init__(self, A.base_ring())
         
     def _repr_(self):
         """
-        Return string representation of this endomorphism subring.
-
-        EXAMPLES:
-            sage: J0(11).endomorphism_ring()._repr_()
-            'Endomorphism ring of Abelian variety J0(11) of dimension 1'
-        """
-        if self._is_full_ring:
+#     def calculate_generators(self):
+#         """
+#         Calculate a set of generators for self.
+#         """
+#         if self._gens is None:
+#             gens = self._A._calculate_endomorphism_generators()
+#             M = ZZ**(4*self._A.dimension()**2)
+#             gens = M.submodule([ x.matrix().list() for x in gens ]).saturation().basis()
+#             self._gens = tuple([ self._get_matrix(g) for g in gens ])
             return "Endomorphism ring of %s" % self._A
         else:
             return "Subring of endomorphism ring of %s" % self._A
@@ -417,15 +562,13 @@ class EndomorphismSubring(Homspace, Ring):
 
         d = A.dimension()
         EndVecZ = ZZ**(4*d**2)
-        T_matrices = [ A.hecke_operator(n).matrix().list() for n in range(1,M.sturm_bound()+1) ]
+        T_matrices = [ A.hecke_operator(n).matrix().list() for n in
+                       range(1,M.sturm_bound()+1) ]
         W = EndVecZ.submodule(T_matrices)
 
         T = EndomorphismSubring(A, W.basis())
         self.__hecke_algebra_image = T
         return self.__hecke_algebra_image
         
-class EndomorphismSubAlgebra(EndomorphismSubring):
-    def __init__(self, A):
-        EndomorphismSubring.__init__(self, A)
 
 
