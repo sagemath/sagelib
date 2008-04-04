@@ -581,13 +581,46 @@ cdef class Matrix(sage.structure.element.Matrix):
             [-1  2 -2 -1  4]
             sage: M[3,4]
             4
-               
+
+            sage: A = matrix(ZZ,3,4, [3, 2, -5, 0, 1, -1, 1, -4, 1, 0, 1, -3]); A
+            [ 3  2 -5  0]
+            [ 1 -1  1 -4]
+            [ 1  0  1 -3]
+
+            sage: A[:,0:4:2]
+            [ 3 -5]
+            [ 1  1]
+            [ 1  1]
+
+            sage: A[1:,0:4:2]
+            [1 1]
+            [1 1]
+            
+            sage: A[2:-1:-1,:]
+            [ 1  0  1 -3]
+            [ 1 -1  1 -4]
+            [ 3  2 -5  0]
+
+            sage: A[1:,3:-1:-1]
+            [-4  1 -1  1]
+            [-3  1  0  1]
+
+            sage: A[1:,3:-1:-2]
+            [-4 -1]
+            [-3  0]
+
+            sage: A[2:-1:-1,3:1:-1]
+            [-3  1]
+            [-4  1]
+            [ 0 -5]
+            
         """
         cdef PyObject* ts1
         cdef PyObject* ts2
         cdef object s1, s2
         cdef Py_ssize_t ss1, ss2
-        
+        cdef int stop
+                
         if PyTuple_CheckExact(key):
             if PyTuple_GET_SIZE(key) != 2:
                 raise IndexError, "index must be an integer or pair of integers"
@@ -609,7 +642,11 @@ cdef class Matrix(sage.structure.element.Matrix):
                 row_range = list(set(s1))
 
             elif PySlice_Check(ts1):
-                row_range = range(s1.start or 0 ,s1.stop or self._nrows ,1 or s1.step )
+                stop = self._nrows
+                if s1.stop is not None:
+                    stop = s1.stop 
+                                
+                row_range = range( s1.start or 0, min(stop ,self._nrows) , s1.step or 1 )
                 
             else:
                 row_range = [s1]
@@ -618,11 +655,15 @@ cdef class Matrix(sage.structure.element.Matrix):
                 col_range = list(set(s2))
 
             elif PySlice_Check(ts2):
-                col_range = range(s2.start or 0,s2.stop or self._ncols, 1 or s2.step )
+                stop = self._ncols
+                if s2.stop is not None:
+                    stop = s2.stop 
+                
+                col_range = range(s2.start or 0,min(stop , self._ncols), s2.step or 1 )
 
             else:
                 col_range = [s2]
-                
+            
             if max(row_range) >= self._nrows or max(col_range)>= self._ncols:
                 raise IndexError, "Row or column out of range"
 
