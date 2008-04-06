@@ -427,8 +427,7 @@ class Worksheet:
 
     def move_out_of_trash(self, user):
         self.set_active(user)
-
-
+        
     #############
 
     def delete_cells_directory(self):
@@ -1307,7 +1306,7 @@ class Worksheet:
             I = C.introspect()[0]
         
         S = self.sage()
-
+        
         id = self.next_block_id()
         C.code_id = id
 
@@ -1331,6 +1330,7 @@ class Worksheet:
         # a cell to know it's ID.
         input += 'sage.server.notebook.interact.SAGE_CELL_ID=%s\n'%(C.id()) 
         
+        print "timing"
         if C.time():
             input += '__SAGE_t__=cputime()\n__SAGE_w__=walltime()\n'
         if I.endswith('?'):
@@ -1367,7 +1367,6 @@ class Worksheet:
         
         if C.time() and not C.introspect():
             input += 'print "CPU time: %.2f s,  Wall time: %.2f s"%(cputime(__SAGE_t__), walltime(__SAGE_w__))\n'
-
 
         input = self.synchronize(input)
         # Unfortunately, this has to go here at the beginning of the file until Python 2.6,

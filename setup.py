@@ -1391,6 +1391,7 @@ code = setup(name        = 'sage',
                      'sage.schemes.hyperelliptic_curves',
 
                      'sage.server',
+                     'sage.server.simple',
                      'sage.server.server1',
                      'sage.server.notebook',
                      'sage.server.notebook.compress',
