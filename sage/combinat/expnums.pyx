@@ -115,7 +115,12 @@ def expnums2(n, aa):
     A vanilla python (but compiled via pyrex) implementation of expnums.
 
     We Compute the first $n$ exponential numbers around $aa$, starting
-    with the zero-th.    
+    with the zero-th.
+
+    EXAMPLES:
+        sage: from sage.combinat.expnums import expnums2
+        sage: expnums2(10, 1)
+        [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147]
     """
     if n < 1:
         return []
