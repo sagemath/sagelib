@@ -18,6 +18,7 @@
 import unittest
 import datetime
 import os
+import tempfile
 from glob import glob
 
 from sage.dsage.database.job import Job, expand_job
@@ -32,9 +33,11 @@ class DSageServerTestCase(unittest.TestCase):
     Tests for DSageServer go here.
     
     """
-        
+    
+    test_db = tempfile.NamedTemporaryFile()
+     
     def setUp(self):
-        Session = init_db('test.db')
+        Session = init_db(self.test_db.name)
         self.jobdb = JobDatabase(Session)
         self.workerdb = WorkerDatabase(Session)
         self.clientdb = ClientDatabase(Session)
@@ -50,9 +53,7 @@ class DSageServerTestCase(unittest.TestCase):
         self.dsage_server.jobdb.sess.close()
         from sqlalchemy.orm import clear_mappers
         clear_mappers()
-        files = glob('*.db*')
-        for file in files:
-           os.remove(file)
+        os.remove(self.test_db.name)
 
     def create_jobs(self, n):
         """This method creates n jobs. """
