@@ -861,6 +861,13 @@ def block_matrix(sub_matrices, nrows=None, ncols=None, subdivide=True):
         ncols = int(n/nrows)
     if nrows * ncols != n:
         raise ValueError, "Given number of rows (%s), columns (%s) incompatable with number of submatrices (%s)" % (nrows, ncols, n)
+
+    # empty matrix
+    if n == 0:
+      ans = Matrix(ZZ,0,0,[])
+      if subdivide:
+        ans.subdivide([0]*(nrows-1),[0]*(ncols-1))
+      return ans
     
     # determine the sub-block dimensions
     row_heights = [None] * nrows
