@@ -3468,12 +3468,17 @@ cdef class Matrix(matrix1.Matrix):
             sage: A = matrix(QQ,3,3,[0,1,2,3,0,0,6,7,8])
             sage: A.density()
             2/3
-        
+
+            sage: a = matrix([[],[],[],[]])
+            sage: a.density()
+            0
         """
         cdef int x,y,k
         k = 0
         nr = self.nrows()
         nc = self.ncols()
+        if nc == 0 or nr == 0:
+            return 0
         for x from 0 <= x < nr:
             for y from 0 <= y < nc:
                 if not self.get_unsafe(x,y).is_zero():
