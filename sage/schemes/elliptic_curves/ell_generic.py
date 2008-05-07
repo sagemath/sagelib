@@ -1840,7 +1840,6 @@ class EllipticCurve_generic(plane_curve.ProjectiveCurve_generic):
             omega_m = (psi(m+2)*psi(m-1)**2 - psi(m-2)*psi(m+1)**2)/(4*y)
             y_coord = normalize(omega_m / psi_m**3)
         return x_coord, y_coord
-    
 
     def isomorphism_to(self, other):
         """
