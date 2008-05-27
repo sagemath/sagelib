@@ -1439,8 +1439,11 @@ code = setup(name        = 'sage',
                      'sage.dsage.web',
                      'sage.dsage.scripts',
                      ],
-      
-      scripts = [ 'spkg-debian-maybe' ],
+
+      scripts = ['sage/dsage/scripts/dsage_worker.py',
+                 'sage/dsage/scripts/dsage_setup.py',
+                 'spkg-debian-maybe',
+                ],
 
       data_files = [('dsage/web/static',                       
                     ['sage/dsage/web/static/dsage_web.css',
