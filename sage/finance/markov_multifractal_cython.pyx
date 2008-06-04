@@ -12,7 +12,7 @@ cdef extern from "math.h":
 from time_series cimport TimeSeries
 
 def simulations(Py_ssize_t n, Py_ssize_t k,
-               double m0, double sigma, double b,
+               double m0, double sigma, 
                int kbar, gamma):
     cdef double m1 = 2 - m0
     cdef Py_ssize_t i, j, a, c
@@ -21,7 +21,7 @@ def simulations(Py_ssize_t n, Py_ssize_t k,
     cdef TimeSeries gamma_vals = TimeSeries(gamma)
     cdef randstate rstate = current_randstate()
 
-    sigma = sigma / 100.0  # model's sigma is a percent
+    sigma = sigma / 100  # model's sigma is a percent
 
     # output list of simulations
     S = []
@@ -41,7 +41,7 @@ def simulations(Py_ssize_t n, Py_ssize_t k,
         for a from 0 <= a < n:
             # Compute next step in the simulation
             t._values[a] = sigma * eps._values[a] * sqrt(markov_state_vector.prod())
-
+            
             # Now update the volatility state vector
             for c from 0 <= c < kbar:
                 if rstate.c_rand_double() <= gamma_vals._values[c]:
