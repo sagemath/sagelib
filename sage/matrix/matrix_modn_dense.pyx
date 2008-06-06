@@ -262,7 +262,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     #   * cdef _cmp_c_impl
     #   * __neg__
     #   * __invert__
-    #   * __copy__
+    # x * __copy__
     #   * _multiply_classical
     #   * _list -- list of underlying elements (need not be a copy)
     #   * _dict -- sparse dictionary of underlying elements (need not be a copy)
@@ -274,7 +274,6 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
     # cdef int _cmp_c_impl(self, Matrix right) except -2:
     # def __neg__(self):
     # def __invert__(self):
-    # def __copy__(self):
     # def _multiply_classical(left, matrix.Matrix _right):
     # def _list(self):
     # def _dict(self):
@@ -1126,3 +1125,68 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
         for i from 0 <= i < self._nrows*self._ncols:
                 v.append(str(self._entries[i]))
         return s + '![%s]'%(','.join(v))
+
+    def _matrices_from_rows(self, Py_ssize_t nrows, Py_ssize_t ncols):
+        """
+        Make a list of matrix from the rows of this matrix.  This is a
+        fairly technical function which is used internally, e.g., by
+        the cyclotomic field linear algebra code.
+        
+        INPUT:
+            nrows, ncols -- integers
+        OUTPUT:
+            list -- list of matrices
+        """
+        if nrows * ncols != self._ncols:
+            raise ValueError, "nrows * ncols must equal self's number of columns"
+
+        from matrix_space import MatrixSpace
+        F = self.base_ring()
+        MS = MatrixSpace(F, nrows, ncols)
+
+        cdef Matrix_modn_dense M
+        cdef Py_ssize_t i
+        cdef Py_ssize_t n = nrows * ncols
+        ans = []
+        for i from 0 <= i < self._nrows:
+            # Quickly construct a new mod-p matrix
+            M = Matrix_modn_dense.__new__(Matrix_modn_dense, MS, 0,0,0)
+            M.p = self.p
+            M.gather = self.gather
+            # Set the entries
+            memcpy(M._entries, self._entries+i*n, sizeof(mod_int)*n)
+            ans.append(M)
+        return ans
+        
+
+def _matrix_from_rows_of_matrices(X):
+    """
+    INPUT:
+        X -- a nonempty list of matrices of the same size mod a single prime p
+    OUTPUT:
+        A single matrix mod p whose ith row is X[i].list().
+    """
+    # The code below is just a fast version of the following:
+    ##     from constructor import matrix
+    ##     K = X[0].base_ring()
+    ##     v = sum([y.list() for y in X],[])
+    ##     return matrix(K, len(X), X[0].nrows()*X[0].ncols(), v)
+
+    from matrix_space import MatrixSpace
+    cdef Matrix_modn_dense A, T
+    cdef Py_ssize_t i, n, m
+    n = len(X)
+
+    T = X[0]
+    m = T._nrows * T._ncols
+    A = Matrix_modn_dense.__new__(Matrix_modn_dense,
+           MatrixSpace(X[0].base_ring(), n, m),
+                                  0, 0, 0)
+    A.p = T.p
+    A.gather = T.gather
+
+    for i from 0 <= i < n:
+        T = X[i]
+        memcpy(A._entries + i*m, T._entries, sizeof(mod_int)*m)
+    return A
+
