@@ -234,7 +234,7 @@ class Latex:
             redirect=''
         lt = 'latex \\\\nonstopmode \\\\input{%s.tex} %s'%(filename, redirect)
         if have_dvipng():
-            dvipng = 'dvipng -q* -T bbox -D %s %s.dvi'%(density, filename)
+            dvipng = 'dvipng -q -T bbox -D %s %s.dvi'%(density, filename)
             cmd = ' ; '.join([lt, dvipng])
             
         else:
@@ -564,6 +564,34 @@ def repr_lincomb(symbols, coeffs):
         s = "0"
     s = s.replace("+ -","- ")
     return s
+
+
+def print_or_typeset(object):
+    """
+    'view' or 'print' the object depending on the situation.
+
+    In particular, if in notebook mode with the typeset box checked,
+    view the object.  Otherwise, print the object.
+
+    INPUT:
+        object: anything
+
+    EXAMPLES:
+        sage: sage.misc.latex.print_or_typeset(3)
+        3
+        sage: sage.misc.latex.EMBEDDED_MODE=True
+        sage: sage.misc.latex.print_or_typeset(3)
+        3
+        sage: sys.displayhook = sage.misc.latex.pretty_print
+        sage: sage.misc.latex.print_or_typeset(3)
+        <html><span class="math">3</span></html>
+        sage: sage.misc.latex.EMBEDDED_MODE=False
+    """
+    import sys
+    if EMBEDDED_MODE and sys.displayhook == pretty_print:
+        view(object)
+    else:
+        print(object)
 
 
 def pretty_print (object):

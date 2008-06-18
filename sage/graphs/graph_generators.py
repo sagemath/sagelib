@@ -397,7 +397,7 @@ class GraphGenerators():
         
         A Circular ladder graph is a ladder graph that is connected at the
         ends, i.e.: a ladder bent around so that top meets bottom.  Thus it
-        can be described as two parrallel cycle graphs connected at each
+        can be described as two parallel cycle graphs connected at each
         corresponding node pair.
         
         This constructor depends on NetworkX numeric labels.
@@ -2899,10 +2899,11 @@ class GraphGenerators():
             4
     
         """
+        import os
         from sage.misc.package import is_package_installed
         if not is_package_installed("nauty"):
             raise TypeError, "the optional nauty package is not installed"
-        return [Graph(g) for g in os.popen("nauty-geng %s"%(options) ).read().split()]
+        return [graph.Graph(g) for g in os.popen("nauty-geng %s"%(options) ).read().split()]
        
         
 

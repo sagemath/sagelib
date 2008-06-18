@@ -128,8 +128,10 @@ cdef class Matrix(matrix0.Matrix):
        """
        return '{' + ', '.join([v._mathematica_init_() for v in self.rows()]) + '}'
 
-    def _magma_init_(self):
+    def _magma_(self, magma):
         r"""
+        Return copy of this matrix in the given magma session.
+        
         EXAMPLES:
         We first coerce a square matrix.
             sage: A = MatrixSpace(QQ,3)([1,2,3,4/3,5/3,6/4,7,8,9])
@@ -151,16 +153,31 @@ cdef class Matrix(matrix0.Matrix):
             ModMatRngElt
             sage: B.Parent()                            # optional
             Full RMatrixSpace of 2 by 3 matrices over IntegerRing(8)
+
+        We coerce a matrix over a cyclotomic field, where the
+        generator must be named during the coercion.
+            sage: K = CyclotomicField(9) ; z = K.0
+            sage: M = matrix(K,3,3,[0,1,3,z,z**4,z-1,z**17,1,0])
+            sage: M
+            [                 0                  1                  3]
+            [             zeta9            zeta9^4          zeta9 - 1]
+            [-zeta9^5 - zeta9^2                  1                  0]
+            sage: magma(M)                             # optional -- requires magma
+            [                   0                    1                    3]
+            [              zeta_9             zeta_9^4           zeta_9 - 1]
+            [-zeta_9^5 - zeta_9^2                    1                    0]
+            sage: magma(M**2) == magma(M)**2           # optional -- requires magma
+            True
         """
-        K = self._base_ring._magma_init_()
+        K = magma(self.base_ring())
         if self._nrows == self._ncols:
-            s = 'MatrixAlgebra(%s, %s)'%(K, self.nrows())
+           s = 'MatrixAlgebra(%s, %s)'%(K.name(), self.nrows())
         else:
-            s = 'RMatrixSpace(%s, %s, %s)'%(K, self.nrows(), self.ncols())
+           s = 'RMatrixSpace(%s, %s, %s)'%(K.name(), self.nrows(), self.ncols())
         v = []
         for x in self.list():
-            v.append(x._magma_init_())
-        return s + '![%s]'%(','.join(v))
+             v.append(x._magma_init_())
+        return magma(s + '![%s]'%(','.join(v)))
 
     def _maple_init_(self):
         """

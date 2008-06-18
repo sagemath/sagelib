@@ -102,6 +102,37 @@ from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.fraction_field import FractionField
 from sage.matrix.matrix_space import MatrixSpace
 
+def direct_product_permgroups(P):
+    """
+    Takes the direct product of the permutation groups listed in P.
+
+    EXAMPLES:
+        sage: G1 = AlternatingGroup([1,2,4,5])
+        sage: G2 = AlternatingGroup([3,4,6,7])
+        sage: D = direct_product_permgroups([G1,G2,G1])
+        sage: D.order()
+        1728
+        sage: D = direct_product_permgroups([G1])
+        sage: D==G1
+        True
+        sage: direct_product_permgroups([])
+        Symmetric group of order 1! as a permutation group
+    """
+    from permgroup_named import SymmetricGroup
+    n = len(P)
+    if n == 0:
+        return SymmetricGroup(1)
+    if n == 1:
+        return P[0]
+    from sage.groups.perm_gps.permgroup_morphism import PermutationGroupMorphism_from_gap
+    G = [H._gap_init_() for H in P]
+    Glist = ""
+    for H in G:
+        Glist = Glist + H + ","
+    cmd = "G:=DirectProduct([" + Glist[:-1] + "])"
+    gap.eval(cmd)
+    return PermutationGroup(gap.eval("G"), from_group = True)
+
 def gap_format(x):
     """
     Put a permutation in Gap format, as a string.
@@ -171,8 +202,7 @@ def PermutationGroup(x, from_group=False, check=True):
         sage: G = PermutationGroup([[(1,2,3),(4,5)],[(3,4)]])
         sage: current_randstate().set_seed_gap()
         sage: G._gap_().DerivedSeries()
-        [ Group( [ (1,2,3)(4,5), (3,4) ] ), 
-          Group( [ (1,5)(3,4), (1,5)(2,4), (1,3,5) ] ) ]
+        [ Group( [ (1,2,3)(4,5), (3,4) ] ), Group( [ (1,5)(3,4), (1,5)(2,3), (1,5,4) ] ) ]
     """
     if not is_ExpectElement(x) and hasattr(x, '_permgroup_'):
         return x._permgroup_()
@@ -411,11 +441,17 @@ class PermutationGroup_generic(group.FiniteGroup):
             sage: G.list()
             [(), (3,4), (2,3), (2,3,4), (2,4,3), (2,4), (1,2), (1,2)(3,4), (1,2,3), (1,2,3,4), (1,2,4,3), (1,2,4), (1,3,2), (1,3,4,2), (1,3), (1,3,4), (1,3)(2,4), (1,3,2,4), (1,4,3,2), (1,4,2), (1,4,3), (1,4), (1,4,2,3), (1,4)(2,3)]
         """
+        try:
+            return list(self.__list)
+        except AttributeError:
+            pass
         from sage.groups.perm_gps.permgroup_element import PermutationGroupElement
         X = self._gap_().Elements()
         n = X.Length()
-        return [PermutationGroupElement(X[i], self, check = False)
+        L = [PermutationGroupElement(X[i], self, check = False)
                             for i in range(1,n+1)]
+        self.__list = L
+        return list(L)
 
     def __contains__(self, item):
         """
@@ -1132,79 +1168,6 @@ class PermutationGroup_generic(group.FiniteGroup):
 	    L = eval(gap.eval("Homology(TR,%s)"%n))
         return AbelianGroup(len(L),L)
 
-    def poincare_series(self, p=2, n=10):
-        """
-        Returns the Poincare series of G mod p (p must be a prime), for n>1 
-        large. In other words, if you input a finite group G, a prime p, 
-        and a positive integer n, it returns a quotient of polynomials 
-        f(x)=P(x)/Q(x) whose coefficient of $x^k$ equals the rank of the 
-        vector space $H_k(G,ZZ/pZZ)$, for all k in the range $1\leq k \leq n$. 
-        
-        REQUIRES:
-            GAP package HAP (in gap_packages-*.spkg).
-
-        EXAMPLES: 
-            sage: G = SymmetricGroup(5)
-            sage: G.poincare_series(2,10)                              # requires optional gap_packages
-            (x^2 + 1)/(x^4 - x^3 - x + 1)
-            sage: G = SymmetricGroup(3)
-            sage: G.poincare_series(2,10)                              # requires optional gap_packages
-            1/(-x + 1)
-
-        AUTHORS:
-            David Joyner and Graham Ellis
-        """
-        gap.eval('RequirePackage("HAP")')
-        from sage.rings.arith import is_prime
-        if not (p == 0 or is_prime(p)):
-            raise ValueError, "p must be 0 or prime"
-        G = self
-        GG = G._gap_init_()
-        ff = gap.eval("ff := PoincareSeriesPrimePart(%s,%s,%s)"%(GG,p,n))
-        R = PolynomialRing(RationalField(),"x")
-	x = R.gen()
-        nn = gap.eval("NumeratorOfRationalFunction(ff)")
-        dd = gap.eval("DenominatorOfRationalFunction(ff)")
-        FF = FractionField(R)
-        return FF(nn)/FF(dd)
-
-    def molien_series(self):
-        r"""
-        Returns the Moien series of a transtive permutation group.
-        The function
-        $$
-        M(x) = (1/|G|)\sum_{g\in G} det(1-x*g)^(-1)
-        $$
-        is sometimes called the "Molien series" of G.
-        GAP's \code{MolienSeries} is associated to a character of a group G.
-        How are these related? A group G, given as a permutation 
-        group on n points, has a "natural" representation of 
-        dimension n, given by permutation matrices. The Molien series 
-        of G is the one associated to that permutation representation of 
-        G using the above formula. Character values then count fixed 
-        points of the corresponding permutations. 
-        
-        EXAMPLES:
-            sage: G = SymmetricGroup(5)
-            sage: G.molien_series()                              # requires optional gap_packages
-            1/(-x^15 + x^14 + x^13 - x^10 - x^9 - x^8 + x^7 + x^6 + x^5 - x^2 - x + 1)
-            sage: G = SymmetricGroup(3)
-            sage: G.molien_series()                              # requires optional gap_packages
-            1/(-x^6 + x^5 + x^4 - x^2 - x + 1)
-
-        """
-        G = self
-        GG = G._gap_init_()
-        gap.eval("pi := NaturalCharacter( %s )"%GG)
-        gap.eval("cc := ConstituentsOfCharacter( pi )")
-        M = gap.eval("M := MolienSeries(Sum(cc))")
-        R = PolynomialRing(RationalField(),"x")
-	x = R.gen()
-        nn = gap.eval("NumeratorOfRationalFunction(M)")
-        dd = gap.eval("DenominatorOfRationalFunction(M)")
-        FF = FractionField(R)
-        return FF(nn.replace("_1",""))/FF(dd.replace("_1",""))
-    
     def character_table(self):
         r"""
         Returns the matrix of values of the irreducible characters of
@@ -1352,24 +1315,56 @@ class PermutationGroup_generic(group.FiniteGroup):
             cl.name(),  cl.name()))
         return [PermutationGroup(L[i], from_group=True, check=False) \
                 for i in range(1,n+1)]
-		
+	
+    def normal_subgroups(self):
+        """
+        Return the normal subgroups of this group as a (sorted in increasing
+        order) list of permutation groups.
+
+        The normal subgroups of $H = PSL(2,7)xPSL(2,7)$ are $1$, two copies
+        of $PSL(2,7)$ and $H$ itself, as the following example shows.
+        EXAMPLES:
+            sage: G = PSL(2,7)
+            sage: D = G.direct_product(G)
+            sage: H = D[0]
+            sage: NH = H.normal_subgroups()
+            sage: len(NH)
+            4
+            sage: NH[1].is_isomorphic(G)
+            True
+            sage: NH[2].is_isomorphic(G)
+            True
+
+        """
+        ans = []
+        NS = self._gap_().NormalSubgroups()
+        n = NS.Length()
+        for i in range(1,n+1):
+            ans.append(PermutationGroup(NS[i].GeneratorsOfGroup()))
+        return ans
+
     def normalizer(self,g):
         """
         Returns the normalizer of g in self.
 
         EXAMPLES:
             sage: G = PermutationGroup([[(1,2),(3,4)], [(1,2,3,4)]])
-            sage: g = G.random_element(); g
-            (1,3)
+            sage: g = G([(1,3)])
             sage: G.normalizer(g)
-            Group( [ (1,3), (2,4) ] )
+            Permutation Group with generators [(1,3), (2,4)]
             sage: g = G([(1,2,3,4)])
             sage: G.normalizer(g)
-            Group( [ (1,2,3,4), (1,3)(2,4), (2,4) ] )
+            Permutation Group with generators [(1,2,3,4), (1,3)(2,4), (2,4)]
+            sage: H = G.subgroup([G([(1,2,3,4)])])
+            sage: G.normalizer(H)
+            Permutation Group with generators [(1,2,3,4), (1,3)(2,4), (2,4)]
 
         """
-        N = self._gap_().Normalizer(str(g))
-        return N
+        if g in self:
+            N = self._gap_().Normalizer(str(g))
+        else:
+            N = self._gap_().Normalizer(gap(g).name()) 
+        return PermutationGroup(N.GeneratorsOfGroup())
 
     def isomorphism_type_info_simple_group(self):
         """
@@ -1680,7 +1675,7 @@ class PermutationGroup_generic(group.FiniteGroup):
     
     def composition_series(self):
         """
-        Return the derived series of this group as a list of
+        Return the composition series of this group as a list of
         permutation groups.
 
         EXAMPLES:
@@ -1688,10 +1683,8 @@ class PermutationGroup_generic(group.FiniteGroup):
         seed for reproducible testing.
             sage: set_random_seed(0)
             sage: G = PermutationGroup([[(1,2,3),(4,5)],[(3,4)]])
-            sage: G.composition_series()
-            [Permutation Group with generators [(1,2,3)(4,5), (3,4)],
-             Permutation Group with generators [(1,5)(3,4), (1,5)(2,3), (1,5,4)],
-             Permutation Group with generators [()]]
+            sage: G.composition_series()  # random output
+            [Permutation Group with generators [(1,2,3)(4,5), (3,4)], Permutation Group with generators [(1,5)(3,4), (1,5)(2,3), (1,5,4)], Permutation Group with generators [()]]
 
         """
         current_randstate().set_seed_gap()
@@ -1712,9 +1705,8 @@ class PermutationGroup_generic(group.FiniteGroup):
         seed for reproducible testing.
             sage: set_random_seed(0)
             sage: G = PermutationGroup([[(1,2,3),(4,5)],[(3,4)]])
-            sage: G.derived_series()
-            [Permutation Group with generators [(1,2,3)(4,5), (3,4)], 
-             Permutation Group with generators [(1,5)(3,4), (1,5)(2,4), (2,4)(3,5)]]
+            sage: G.derived_series()  # random output
+            [Permutation Group with generators [(1,2,3)(4,5), (3,4)], Permutation Group with generators [(1,5)(3,4), (1,5)(2,4), (2,4)(3,5)]]
         """
         current_randstate().set_seed_gap()
         ans = []
@@ -1726,7 +1718,7 @@ class PermutationGroup_generic(group.FiniteGroup):
     
     def lower_central_series(self):
         """
-        Return the derived series of this group as a list of
+        Return the lower central series of this group as a list of
         permutation groups.
 
         EXAMPLES:
@@ -1734,9 +1726,8 @@ class PermutationGroup_generic(group.FiniteGroup):
         seed for reproducible testing.
             sage: set_random_seed(0)
             sage: G = PermutationGroup([[(1,2,3),(4,5)],[(3,4)]])
-            sage: G.lower_central_series()
-            [Permutation Group with generators [(1,2,3)(4,5), (3,4)],
-             Permutation Group with generators [(1,5)(3,4), (1,5)(2,3), (1,3)(2,4)]]
+            sage: G.lower_central_series()  # random output
+            [Permutation Group with generators [(1,2,3)(4,5), (3,4)], Permutation Group with generators [(1,5)(3,4), (1,5)(2,3), (1,3)(2,4)]]
 
         """
         current_randstate().set_seed_gap()
@@ -1747,9 +1738,179 @@ class PermutationGroup_generic(group.FiniteGroup):
             ans.append(PermutationGroup(DS[i].GeneratorsOfGroup()))
         return ans
 
+    def molien_series(self):
+        r"""
+        Returns the Molien series of a transtive permutation group.
+        The function
+        $$
+        M(x) = (1/|G|)\sum_{g\in G} det(1-x*g)^(-1)
+        $$
+        is sometimes called the "Molien series" of G.
+        GAP's \code{MolienSeries} is associated to a character of a group G.
+        How are these related? A group G, given as a permutation 
+        group on n points, has a "natural" representation of 
+        dimension n, given by permutation matrices. The Molien series 
+        of G is the one associated to that permutation representation of 
+        G using the above formula. Character values then count fixed 
+        points of the corresponding permutations. 
+        
+        EXAMPLES:
+            sage: G = SymmetricGroup(5)
+            sage: G.molien_series()                              # requires optional gap_packages
+            1/(-x^15 + x^14 + x^13 - x^10 - x^9 - x^8 + x^7 + x^6 + x^5 - x^2 - x + 1)
+            sage: G = SymmetricGroup(3)
+            sage: G.molien_series()                              # requires optional gap_packages
+            1/(-x^6 + x^5 + x^4 - x^2 - x + 1)
+
+        """
+        G = self
+        GG = G._gap_init_()
+        gap.eval("pi := NaturalCharacter( %s )"%GG)
+        gap.eval("cc := ConstituentsOfCharacter( pi )")
+        M = gap.eval("M := MolienSeries(Sum(cc))")
+        R = PolynomialRing(RationalField(),"x")
+	x = R.gen()
+        nn = gap.eval("NumeratorOfRationalFunction(M)")
+        dd = gap.eval("DenominatorOfRationalFunction(M)")
+        FF = FractionField(R)
+        return FF(nn.replace("_1",""))/FF(dd.replace("_1",""))
+    
+    def normal_subgroups(self):
+        """
+        Return the normal subgroups of this group as a (sorted in increasing
+        order) list of permutation groups.
+
+        The normal subgroups of $H = PSL(2,7)xPSL(2,7)$ are $1$, two copies
+        of $PSL(2,7)$ and $H$ itself, as the following example shows.
+        EXAMPLES:
+            sage: G = PSL(2,7)
+            sage: D = G.direct_product(G)
+            sage: H = D[0]
+            sage: NH = H.normal_subgroups()
+            sage: len(NH)
+            4
+            sage: NH[1].is_isomorphic(G)
+            True
+            sage: NH[2].is_isomorphic(G)
+            True
+
+        """
+        ans = []
+        NS = self._gap_().NormalSubgroups()
+        n = NS.Length()
+        for i in range(1,n+1):
+            ans.append(PermutationGroup(NS[i].GeneratorsOfGroup()))
+        return ans
+
+    def normalizer(self,g):
+        """
+        Returns the normalizer of g in self.
+
+        EXAMPLES:
+            sage: G = PermutationGroup([[(1,2),(3,4)], [(1,2,3,4)]])
+            sage: g = G([(1,3)])
+            sage: G.normalizer(g)
+            Permutation Group with generators [(1,3), (2,4)]
+            sage: g = G([(1,2,3,4)])
+            sage: G.normalizer(g)
+            Permutation Group with generators [(1,2,3,4), (1,3)(2,4), (2,4)]
+            sage: H = G.subgroup([G([(1,2,3,4)])])
+            sage: G.normalizer(H)
+            Permutation Group with generators [(1,2,3,4), (1,3)(2,4), (2,4)]
+
+        """
+        if g in self:
+            N = self._gap_().Normalizer(str(g))
+        else:
+            N = self._gap_().Normalizer(gap(g).name()) 
+        return PermutationGroup(N.GeneratorsOfGroup())
+
+    def poincare_series(self, p=2, n=10):
+        """
+        Returns the Poincare series of G mod p (p must be a prime), for n>1 
+        large. In other words, if you input a finite group G, a prime p, 
+        and a positive integer n, it returns a quotient of polynomials 
+        f(x)=P(x)/Q(x) whose coefficient of $x^k$ equals the rank of the 
+        vector space $H_k(G,ZZ/pZZ)$, for all k in the range $1\leq k \leq n$. 
+        
+        REQUIRES:
+            GAP package HAP (in gap_packages-*.spkg).
+
+        EXAMPLES: 
+            sage: G = SymmetricGroup(5)
+            sage: G.poincare_series(2,10)                              # requires optional gap_packages
+            (x^2 + 1)/(x^4 - x^3 - x + 1)
+            sage: G = SymmetricGroup(3)
+            sage: G.poincare_series(2,10)                              # requires optional gap_packages
+            1/(-x + 1)
+
+        AUTHORS:
+            David Joyner and Graham Ellis
+        """
+        gap.eval('RequirePackage("HAP")')
+        from sage.rings.arith import is_prime
+        if not (p == 0 or is_prime(p)):
+            raise ValueError, "p must be 0 or prime"
+        G = self
+        GG = G._gap_init_()
+        ff = gap.eval("ff := PoincareSeriesPrimePart(%s,%s,%s)"%(GG,p,n))
+        R = PolynomialRing(RationalField(),"x")
+	x = R.gen()
+        nn = gap.eval("NumeratorOfRationalFunction(ff)")
+        dd = gap.eval("DenominatorOfRationalFunction(ff)")
+        FF = FractionField(R)
+        return FF(nn)/FF(dd)
+
+    def smallest_moved_point(self):
+        """
+        Return the smallest point moved by a permutation in this group.
+        
+        EXAMPLES:
+            sage: G = PermutationGroup([[(3,4)], [(2,3,4)]])
+            sage: G.smallest_moved_point()
+            2
+            sage: G = PermutationGroup([[(1,2),(3,4)], [(1,2,3,4,10)]])
+            sage: G.smallest_moved_point()
+            1
+        """
+        try:
+            return self.__smallest_moved_point
+        except AttributeError:
+            n = Integer(self._gap_().SmallestMovedPoint())
+        self.__smallest_moved_point = n
+        return n
+
+    def sylow_subgroup(self, p):
+        """
+        Returns a Sylow p-subgroups of the finite group G, where p is
+        a prime. This is a p-subgroup of G whose index in G is coprime to p.
+        Wraps the GAP function SylowSubgroup.
+
+        EXAMPLES:
+            sage: G = PermutationGroup(['(1,2,3)', '(2,3)'])
+            sage: G.sylow_subgroup(2)
+            Permutation Group with generators [(2,3)]
+            sage: G.sylow_subgroup(5)
+            Permutation Group with generators [()]
+
+        """
+        from sage.groups.perm_gps.permgroup_element import PermutationGroupElement
+        G = self
+        gap.eval("G := %s"%G._gap_init_())
+        gap.eval("Ssgp := SylowSubgroup(G, %s);"%p)
+        gap.eval("gens := GeneratorsOfGroup( Ssgp );")
+        N = Integer(gap.eval("N := Length(gens);"))
+        if N>0:
+            gens = [PermutationGroupElement(gap.eval("gens[%s];"%j)) for j in range(1,N+1)]
+            H = PermutationGroup(gens)
+        else:
+            H = PermutationGroup([()])
+        return H
+
+        
     def upper_central_series(self):
         """
-        Return the derived series of this group as a list of
+        Return the upper central series of this group as a list of
         permutation groups.
 
         EXAMPLES:
@@ -1767,38 +1928,6 @@ class PermutationGroup_generic(group.FiniteGroup):
         for i in range(1,n+1):
             ans.append(PermutationGroup(DS[i].GeneratorsOfGroup()))
         return ans
-
-def direct_product_permgroups(P):
-    """
-    Takes the direct product of the permutation groups listed in P.
-
-    EXAMPLES:
-        sage: G1 = AlternatingGroup([1,2,4,5])
-        sage: G2 = AlternatingGroup([3,4,6,7])
-        sage: D = direct_product_permgroups([G1,G2,G1])
-        sage: D.order()
-        1728
-        sage: D = direct_product_permgroups([G1])
-        sage: D==G1
-        True
-        sage: direct_product_permgroups([])
-        Symmetric group of order 1! as a permutation group
-    """
-    from permgroup_named import SymmetricGroup
-    n = len(P)
-    if n == 0:
-        return SymmetricGroup(1)
-    if n == 1:
-        return P[0]
-    from sage.groups.perm_gps.permgroup_morphism import PermutationGroupMorphism_from_gap
-    G = [H._gap_init_() for H in P]
-    Glist = ""
-    for H in G:
-        Glist = Glist + H + ","
-    cmd = "G:=DirectProduct([" + Glist[:-1] + "])"
-    gap.eval(cmd)
-    return PermutationGroup(gap.eval("G"), from_group = True)
-
 
 class PermutationGroup_subgroup(PermutationGroup_generic):
     """

@@ -337,15 +337,13 @@ matrix_mod2_dense = Extension('sage.matrix.matrix_mod2_dense',
 matrix_modn_sparse = Extension('sage.matrix.matrix_modn_sparse',
                                ['sage/matrix/matrix_modn_sparse.pyx'])
     
-matrix_field_dense = Extension('sage.matrix.matrix_field_dense',
-                       ['sage/matrix/matrix_field_dense.pyx'])
-    
-matrix_field_sparse = Extension('sage.matrix.matrix_field_sparse',
-                       ['sage/matrix/matrix_field_sparse.pyx'])
-
 matrix_rational_dense = Extension('sage.matrix.matrix_rational_dense',
                                   ['sage/matrix/matrix_rational_dense.pyx'],
                                  libraries = ['gmp'])
+
+matrix_cyclo_dense = Extension('sage.matrix.matrix_cyclo_dense',
+                                  ['sage/matrix/matrix_cyclo_dense.pyx'],
+                                 libraries = [])
 
 matrix_integer_sparse = Extension('sage.matrix.matrix_integer_sparse',
                                   ['sage/matrix/matrix_integer_sparse.pyx'],
@@ -475,6 +473,7 @@ symmetrica = Extension('sage.libs.symmetrica.symmetrica',
                        include_dirs=debian_include_dirs + ['/usr/include/malloc/'],
                        libraries = ["symmetrica"])
 
+time_series = Extension('sage.finance.time_series',['sage/finance/time_series.pyx'])
 
 #####################################################
 
@@ -532,12 +531,12 @@ ext_modules = [ \
 ##     matrix_pid_dense,
 ##     matrix_pid_sparse,
 
-##     matrix_field_dense,
-##     matrix_field_sparse,
-
      matrix_integer_dense,
      matrix_rational_dense,
      matrix_rational_sparse,
+
+     matrix_cyclo_dense,
+    
      matrix_integer_2x2,
      matrix_integer_sparse,    
      matrix_real_double_dense,
@@ -587,6 +586,8 @@ ext_modules = [ \
     sagex_ds,
 
     symmetrica,
+
+    time_series,
 
     Extension('sage.media.channels',
               sources = ['sage/media/channels.pyx']), \
@@ -667,7 +668,7 @@ ext_modules = [ \
               sources = ['sage/groups/perm_gps/permgroup_element.pyx']), \
 
     Extension('sage.structure.sage_object',
-              sources = ['sage/structure/sage_object.pyx'], libraries=['ntl']), \
+              sources = ['sage/structure/sage_object.pyx']), \
 
     Extension('sage.structure.parent',
               sources = ['sage/structure/parent.pyx']), \
@@ -720,6 +721,9 @@ ext_modules = [ \
     Extension('sage.rings.integer',
               sources = ['sage/ext/arith.pyx', 'sage/rings/integer.pyx'],
               libraries=['ntl', 'gmp']), \
+
+    Extension('sage.misc.allocator',
+              sources = ['sage/misc/allocator.pyx']), \
 
     Extension('sage.rings.integer_ring',
               sources = ['sage/rings/integer_ring.pyx'],
@@ -1292,13 +1296,13 @@ code = setup(name        = 'sage',
 
       version     =  SAGE_VERSION,
       
-      description = 'SAGE: System for Algebra and Geometry Experimentation',
+      description = 'Sage: Open Source Mathematics Software',
 
       license     = 'GNU Public License (GPL)',
       
-      author      = 'William Stein',
+      author      = 'William Stein et al.',
 
-      author_email= 'wstein@gmail.com',
+      author_email= 'http://groups.google.com/group/sage-support',
       
       url         = 'http://www.sagemath.org',
       
@@ -1333,6 +1337,8 @@ code = setup(name        = 'sage',
                      'sage.ext',
                      
                      'sage.calculus',
+
+                     'sage.finance',
 
                      'sage.functions',
 
@@ -1444,8 +1450,11 @@ code = setup(name        = 'sage',
                      'sage.dsage.web',
                      'sage.dsage.scripts',
                      ],
-      
-      scripts = [ 'spkg-debian-maybe' ],
+
+      scripts = ['sage/dsage/scripts/dsage_worker.py',
+                 'sage/dsage/scripts/dsage_setup.py',
+                 'spkg-debian-maybe',
+                ],
 
       data_files = [('dsage/web/static',                       
                     ['sage/dsage/web/static/dsage_web.css',

@@ -6249,9 +6249,9 @@ _syms = {}
 class Function_erf(PrimitiveFunction):
     r"""
     The error function, defined as $\text{erf}(x) =
-    \frac{2}{\sqrt{\pi}}\int_0^x e^{-t^2} dt$.
+    \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} dt$.
 
-    \sage currently \strong{only} implements the error function (via a call to
+    \sage currently only implements the error function (via a call to
     PARI) when the input is real.
     """
 
@@ -7411,7 +7411,26 @@ class Function_log(PrimitiveFunction):
     _approx_ = math.log
 
 function_log = Function_log()
-ln = function_log
+
+def ln(x):
+    """
+    The natural logarithm of x.
+
+    INPUT:
+        x -- positive real number
+
+    OUTPUT:
+        ln(x) -- real number
+
+    EXAMPLES:
+        sage: ln(e^2)
+        2 
+        sage: ln(2)
+        log(2)
+        sage: ln(2.0)
+        0.693147180559945
+    """
+    return function_log(x)
 
 def log(x, base=None):
     """
@@ -7459,12 +7478,12 @@ def log(x, base=None):
         try:
             return x.log()
         except AttributeError: 
-            return function_log(x)
+            return ln(x)
     else:
         try:
             return x.log(base)
         except AttributeError:
-            return function_log(x) / function_log(base)
+            return ln(x) / ln(base)
             
 _syms['log'] = log
 _syms['ln'] = log
