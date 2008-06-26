@@ -1411,6 +1411,8 @@ code = setup(name        = 'sage',
                      'sage.sets',
                      
                      'sage.stats', 
+
+                     'sage.parallel', 
                      
                      'sage.schemes',
                      'sage.schemes.generic',
