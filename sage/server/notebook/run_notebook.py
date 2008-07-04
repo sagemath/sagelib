@@ -130,7 +130,7 @@ def notebook_twisted(self,
         nb._migrate_worksheets()
         os.unlink('%s/nb-older-backup.sobj'%directory)
         print "Updating to new format complete."
-        
+
     nb.save()
     del nb
 
