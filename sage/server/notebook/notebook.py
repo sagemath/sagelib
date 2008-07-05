@@ -1,5 +1,5 @@
 """
-The \sage Notebook object
+The Sage Notebook object
 """
 
 #############################################################################
@@ -16,11 +16,12 @@ import shutil
 import socket
 import time
 import bz2
+import cPickle
 
 # Sage libraries
 from   sage.structure.sage_object import SageObject, load
 from   sage.misc.misc       import (alarm, cancel_alarm,
-                                    tmp_dir, pad_zeros)
+                                    tmp_dir, pad_zeros, cputime)
 from   sage.misc.package   import is_package_installed
 # Sage Notebook
 import css          # style
@@ -81,7 +82,6 @@ class Notebook(SageObject):
         self.__log_server = log_server #log all POST's and GET's
         self.__server_log = [] #server log list
         self.__show_debug = show_debug
-        self.save()
         self.__admins = []
         self.__conf = server_conf.ServerConfiguration()
 
@@ -92,6 +92,10 @@ class Notebook(SageObject):
         import sage.server.notebook.twist
         sage.server.notebook.twist.notebook = self
 
+        # This must happen after twist.notebook is set. 
+        self.save()
+
+        
     def _migrate_worksheets(self):
         v = []
         for key, W in self.__worksheets.iteritems():
@@ -431,7 +435,7 @@ class Notebook(SageObject):
         else:
             dirname = '0'
 
-        W = worksheet.Worksheet(worksheet_name, dirname, self,
+        W = worksheet.Worksheet(worksheet_name, dirname, self.worksheet_directory(),
                                 system = self.system(username),
                                 owner=username,
                                 docbrowser = docbrowser,
@@ -623,11 +627,7 @@ class Notebook(SageObject):
     ##########################################################
     def user_history(self, username):
         U = self.user(username)
-        try:
-            return U.history
-        except AttributeError:
-            U.history = []
-            return U.history
+        return U.history_list()
 
     def create_new_worksheet_from_history(self, name, username, maxlen=None):
         W = self.create_new_worksheet(name, username)
@@ -961,7 +961,7 @@ class Notebook(SageObject):
     def DIR(self):
         """
         Return the absolute path to the directory that contains
-        the \sage Notebook directory.
+        the Sage Notebook directory.
         """
         P = os.path.abspath('%s/..'%self.__dir)
         if not os.path.exists(P):
@@ -1646,7 +1646,7 @@ class Notebook(SageObject):
     # Saving the whole notebook
     ###########################################################
 
-    def save(self, filename=None):
+    def save(self, filename=None, verbose=False):
         
         if filename is None:
             F = os.path.abspath(self.__filename)
@@ -1670,9 +1670,17 @@ class Notebook(SageObject):
         D, _ = os.path.split(F)
         if not os.path.exists(D):
             os.makedirs(D)
-        SageObject.save(self, F, compress=False)
-        #print "Saved notebook to '%s'."%F
-        #print "Press control-C to stop the notebook server."
+
+        t = cputime()
+        out = cPickle.dumps(self, 2)
+        if verbose: print "Dumped notebook to pickle (%s seconds)"%cputime(t)
+
+        t = cputime()
+        # Assuming an exception wasn't raised during pickling we write to the file.
+        # This is vastly superior to writing to a file immediately, which can easily
+        # result in a poor empty file.
+        open(F,'w').write(out)
+        if verbose: print "Wrote notebook pickle to file '%s' (%s seconds)"%(F,cputime(t))
 
     def delete_doc_browser_worksheets(self):
         names = self.worksheet_names()
@@ -2397,7 +2405,6 @@ def load_notebook(dir, address=None, port=None, secure=None):
                         print "Failed to load backup '%s'"%file
                     else:
                         print "Successfully loaded backup '%s'"%file
-                        nb.save()
                         break
                 if nb is None:
                     print "Unable to restore notebook from *any* auto-saved backups."
