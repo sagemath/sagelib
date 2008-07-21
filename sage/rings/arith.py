@@ -1580,14 +1580,19 @@ def __factor_using_pari(n, int_=False, debug_level=0, proof=None):
     return v
 
 
-#todo: add a limit option to factor, so it will only split off 
+#todo: add a limit option to factor, so it will only split off
 # primes at most a given limit.
 
 def factor(n, proof=None, int_=False, algorithm='pari', verbose=0, **kwds):
     """
-    Returns the factorization of the integer n as a sorted list of
-    tuples (p,e).
-    
+    Returns the factorization of n. The result depends on the type of n.
+
+    If n is an integer, factor returns the factorization of the integer n as a
+    sorted list of tuples (p,e). If n is not an integer, n.factor(proof=proof,
+    **kwds) gets called. See n.factor?? for more documentation in this case.
+
+    What follows is a documentation for n integer.
+
     INPUT:
         n -- an nonzero integer
         proof -- bool or None (default: None)
@@ -1612,7 +1617,7 @@ def factor(n, proof=None, int_=False, algorithm='pari', verbose=0, **kwds):
 
         The factorization prints in user-friendly format but the (p,e)
         pairs can easily be accessed -- see examples
-        
+
     EXAMPLES:
         sage: factor(500)
         2^2 * 5^3
@@ -1621,7 +1626,7 @@ def factor(n, proof=None, int_=False, algorithm='pari', verbose=0, **kwds):
 
         sage: factor(500, algorithm='kash')     # requires optional kash package
         2^2 * 5^3
-        
+
         sage: factor(0)
         Traceback (most recent call last):
         ...
@@ -1660,6 +1665,7 @@ def factor(n, proof=None, int_=False, algorithm='pari', verbose=0, **kwds):
     """
     Z = integer_ring.ZZ
     if not isinstance(n, (int,long, integer.Integer)):
+        # this happens for example if n = x**2 + y**2 + 2*x*y
         try:
             return n.factor(proof=proof, **kwds)
         except AttributeError:
@@ -1676,7 +1682,7 @@ def factor(n, proof=None, int_=False, algorithm='pari', verbose=0, **kwds):
         n = -n
     else:
         unit = Z(1)
-        
+
     if n == 0:
         raise ArithmeticError, "Prime factorization of 0 not defined."
     if n == 1:
