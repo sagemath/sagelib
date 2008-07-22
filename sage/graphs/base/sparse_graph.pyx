@@ -1465,15 +1465,23 @@ class SparseGraphBackend(CGraphBackend):
         DOCTEST:
             sage: G = sage.graphs.base.sparse_graph.SparseGraphBackend(9)
             sage: G.set_edge_label(1,2,'a',True)
-        """        
+        """
         if not self.has_edge(u, v, None):
             return
         if self.multiple_edges(None):
             if len(self.get_edge_label(u, v)) > 1:
                 raise RuntimeError("Cannot set edge label, since there are multiple edges from %s to %s."%(u,v))
+        # now we know there is exactly one edge from u to v
         if directed:
+            ll = self.get_edge_label(u,v)
+            if ll is not None:
+                self._cg.del_arc_label(u, v, ll)
             self._cg.add_arc_label(u, v, l)
         else:
+            ll = self.get_edge_label(u,v)
+            if ll is not None:
+                self._cg.del_arc_label(u, v, ll)
+                self._cg.del_arc_label(v, u, ll)
             self._cg.add_arc_label(u, v, l)
             self._cg.add_arc_label(v, u, l)
 
