@@ -17,6 +17,8 @@ cdef class Map(Element):
 
     cpdef domain(self)
     cpdef codomain(self)
+    
+    cdef _repr_type_str
 
 
 cdef class Section(Map):
