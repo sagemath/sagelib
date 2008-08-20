@@ -998,6 +998,11 @@ ext_modules = [ \
                  sources = ['sage/symbolic/expression.pyx'],
                  language = 'c++',
                  libraries = ["ginac"]), \
+    
+    Extension('sage.symbolic.pynac',
+                 sources = ['sage/symbolic/pynac.pyx'],
+                 language = 'c',
+                 libraries = ["ginac"]), \
 
     Extension('sage.modular.modsym.heilbronn',
               ['sage/modular/modsym/heilbronn.pyx',
