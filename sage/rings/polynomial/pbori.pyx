@@ -1065,7 +1065,7 @@ cdef class BooleanPolynomialRing(MPolynomialRing_generic):
             
         Now we find interpolation points mapping to zero and to one.
 
-            sage: zeros = set([(1, 0, 1, 0, 0, 0), (1, 0, 0, 0, 1, 0), \ 
+            sage: zeros = set([(1, 0, 1, 0, 0, 0), (1, 0, 0, 0, 1, 0), \
                                 (0, 0, 1, 1, 1, 1), (1, 0, 1, 1, 1, 1), \
                                 (0, 0, 0, 0, 1, 0), (0, 1, 1, 1, 1, 0), \
                                 (1, 1, 0, 0, 0, 1), (1, 1, 0, 1, 0, 1)])

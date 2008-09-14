@@ -48,7 +48,7 @@ def line3d(points, thickness=1, radius=None, arrow_head=False, **kwds):
 
     A Dodecahedral complex of 5 tetrahedrons (a more elaborate examples from Peter Jipsen):
         sage: def tetra(col): 
-        ...       return line3d([(0,0,1), (2*sqrt(2.)/3,0,-1./3), (-sqrt(2.)/3, sqrt(6.)/3,-1./3),\ 
+        ...       return line3d([(0,0,1), (2*sqrt(2.)/3,0,-1./3), (-sqrt(2.)/3, sqrt(6.)/3,-1./3),\
         ...              (-sqrt(2.)/3,-sqrt(6.)/3,-1./3), (0,0,1), (-sqrt(2.)/3, sqrt(6.)/3,-1./3),\
         ...              (-sqrt(2.)/3,-sqrt(6.)/3,-1./3), (2*sqrt(2.)/3,0,-1./3)],\
         ...              color=col, thickness=10, aspect_ratio=[1,1,1])
