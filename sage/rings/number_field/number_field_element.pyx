@@ -1818,6 +1818,24 @@ cdef class NumberFieldElement_absolute(NumberFieldElement):
         h = f.Mod(g)
         self.__pari[var] = h
         return h
+
+    def _magma_(self, magma):
+        """
+        Return Magma version of this number field element.
+
+        INPUT:
+            magma -- a Magma interpreter
+        OUTPUT:
+            MagmaElement that has parent the Magma object
+            corresponding to the parent number field.
+
+        EXAMPLES:
+            sage: K.<a> = NumberField(x^3 + 2)
+            sage: magma((2/3)*a^2 - 17/3)
+            1/3*(2*a^2 - 17)
+        """
+        K = magma(self.parent())
+        return K(self.list())
         
     cdef void _parent_poly_c_(self, ZZX_c *num, ZZ_c *den):
         """
@@ -2078,7 +2096,6 @@ cdef class OrderElement_absolute(NumberFieldElement_absolute):
 
     cdef number_field(self):
         return self._number_field
-
 
 cdef class OrderElement_relative(NumberFieldElement_relative):
     """
