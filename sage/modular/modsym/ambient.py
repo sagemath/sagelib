@@ -612,7 +612,7 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
             x^6 + 3*x^4 - 19*x^3 + 24*x^2 - 9*x
         """
         # note -- p doesn't have to be prime despite the function name
-        p = int(p)
+        p = int(rings.Integer(p))   # go through Integer so p = 2.5 gives an error.
         # NOTE -- it is actually NOT necessary that p be prime.
         if isinstance(rows, list):
             rows = tuple(rows)        
@@ -633,7 +633,6 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
         if not rows is None:
             B = [B[i] for i in rows]
         cols = []
-        N = self.level()
         mod2term = self._mod2term
         R = self.manin_gens_to_basis()
         K = self.base_ring()
@@ -1438,6 +1437,95 @@ class ModularSymbolsAmbient(space.ModularSymbolsSpace, hecke.AmbientHeckeModule)
         self.__integral_structure = W
         return self.__integral_structure
     
+    ######################################################################
+    # Eigenvalues
+    #######################################################################
+    def compact_newform_eigenvalues(self, v, names='alpha'):
+        r"""
+        Return compact systems of eigenvalues for each Galois conjugacy
+        class of cuspidal newforms in this ambient space.
+
+        INPUT:
+            v -- list of positive integers
+        OUTPUT:
+            list -- of pairs (E, x),  where E*x is a vector with entries
+            the eigenvalues $a_n$ for $n \in v$.
+
+        EXAMPLES:
+            sage: M = ModularSymbols(43,2,1)
+            sage: X = M.compact_newform_eigenvalues(prime_range(10))
+            sage: X[0][0] * X[0][1]
+            (-2, -2, -4, 0)
+            sage: X[1][0] * X[1][1]
+            (alpha1, -alpha1, -alpha1 + 2, alpha1 - 2)
+
+            sage: M = ModularSymbols(DirichletGroup(24,QQ).1,2,sign=1)
+            sage: M.compact_newform_eigenvalues(prime_range(10),'a')
+            [([-1/2 -1/2]
+            [ 1/2 -1/2]
+            [  -1    1]
+            [  -2    0], (1, -2*a0 - 1))]
+            sage: a = M.compact_newform_eigenvalues([1..10],'a')[0]
+            sage: a[0]*a[1]
+            (1, a0, a0 + 1, -2*a0 - 2, -2*a0 - 2, -a0 - 2, -2, 2*a0 + 4, -1, 2*a0 + 4)
+            sage: M = ModularSymbols(DirichletGroup(13).0^2,2,sign=1)
+            sage: M.compact_newform_eigenvalues(prime_range(10),'a')
+            [([  -zeta6 - 1]
+            [ 2*zeta6 - 2]
+            [-2*zeta6 + 1]
+            [           0], (1))]
+            sage: a = M.compact_newform_eigenvalues([1..10],'a')[0]
+            sage: a[0]*a[1]
+            (1, -zeta6 - 1, 2*zeta6 - 2, zeta6, -2*zeta6 + 1, -2*zeta6 + 4, 0, 2*zeta6 - 1, -zeta6, 3*zeta6 - 3)            
+        """
+        if self.sign() == 0:
+            raise ValueError, "sign must be nonzero"
+        v = list(v)
+        
+        # Get decomposition of this space
+        D = self.cuspidal_submodule().new_subspace().decomposition()
+        for A in D:
+            # since sign is zero and we're on the new cuspidal subspace
+            # each factor is definitely simple.
+            A._is_simple = True 
+        B = [A.dual_free_module().basis_matrix().transpose() for A in D]
+
+        # Normalize the names strings.
+        names = ['%s%s'%(names,i) for i in range(len(B))]
+        
+        # Find an integer i such that the i-th columns of the basis for the
+        # dual modules corresponding to the factors in D are all nonzero.
+        nz = None
+        for i in range(self.dimension()):
+            # Decide if this i works, i.e., ith row of every element of B is nonzero.
+            bad = False
+            for C in B:
+                if C.row(i) == 0:
+                    # i is bad.
+                    bad = True
+                    continue
+            if bad: continue
+            # It turns out that i is not bad.
+            nz = i
+            break
+
+        if nz is not None:
+            R = self.hecke_images(nz, v)
+            return [(R*m, D[i].dual_eigenvector(names=names[i], lift=False, nz=nz)) for i, m in enumerate(B)]
+        else:
+            # No single i works, so we do something less uniform.
+            ans = []
+            cache = {}
+            for i in range(len(D)):
+                nz = D[i]._eigen_nonzero()
+                if cache.has_key(nz):
+                     R = cache[nz]
+                else:
+                     R = self.hecke_images(nz, v)
+                     cache[nz] = R
+                ans.append((R*B[i], D[i].dual_eigenvector(names=names[i], lift=False, nz=nz)))
+            return ans
+            
 
 class ModularSymbolsAmbient_wtk_g0(ModularSymbolsAmbient):
     r"""
@@ -1591,6 +1679,54 @@ class ModularSymbolsAmbient_wtk_g0(ModularSymbolsAmbient):
                                      base_ring=self.base_ring())
 
 
+    def _hecke_images(self, i, v):
+        """
+        Return matrix whose rows are the images of the $i$-th standard
+        basis vector under the Hecke operators $T_p$ for all integers
+        in $v$.
+
+        INPUT:
+            i -- nonnegative integer
+            v -- a list of positive integer
+        OUTPUT:
+            matrix -- whose rows are the Hecke images
+
+        EXAMPLES:
+            sage: M = ModularSymbols(11,4,1)
+            sage: M._hecke_images(0,[1,2,3,4])
+            [ 1  0  0  0]
+            [ 9  0  1 -1]
+            [28  2 -1 -1]
+            [73  2  5 -7]
+            sage: M.T(1)(M.0).element()
+            (1, 0, 0, 0)
+            sage: M.T(2)(M.0).element()
+            (9, 0, 1, -1)
+            sage: M.T(3)(M.0).element()
+            (28, 2, -1, -1)
+            sage: M.T(4)(M.0).element()
+            (73, 2, 5, -7)
+            sage: M = ModularSymbols(12,4)
+            sage: M._hecke_images(0,[1,2,3,4])
+            [  1   0   0   0   0   0   0   0   0   0   0   0]
+            [  8   1  -1  -2   2   2  -3   1  -2   3  -1   0]
+            [ 27   4  -4  -8   8  10 -14   4  -9  14  -5   0]
+            [ 64  10 -10 -20  20  26 -36  10 -24  38 -14   0]
+            sage: M.T(1)(M.0).element()
+            (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            sage: M.T(2)(M.0).element()
+            (8, 1, -1, -2, 2, 2, -3, 1, -2, 3, -1, 0)
+            sage: M.T(3)(M.0).element()
+            (27, 4, -4, -8, 8, 10, -14, 4, -9, 14, -5, 0)
+            sage: M.T(4)(M.0).element()
+            (64, 10, -10, -20, 20, 26, -36, 10, -24, 38, -14, 0)
+        """
+        # Find basis vector for ambient space such that it is not in
+        # the kernel of the dual space corresponding to self.
+        c = self.manin_generators()[self.manin_basis()[i]]
+        N = self.level()
+        return heilbronn.hecke_images_gamma0_weight_k(c.u,c.v, c.i, N, self.weight(),
+                                                      v, self.manin_gens_to_basis())
     
 class ModularSymbolsAmbient_wt2_g0(ModularSymbolsAmbient_wtk_g0):
     """
@@ -1719,7 +1855,51 @@ class ModularSymbolsAmbient_wt2_g0(ModularSymbolsAmbient_wtk_g0):
         self.__boundary_space = boundary.BoundarySpace_wtk_g0(
             self.level(), self.weight(), self.sign(), self.base_ring())
         return self.__boundary_space
-    
+
+    def _hecke_image_of_ith_basis_vector(self, n, i):
+        """
+        Return $T_n(e_i)$, where $e_i$ is the $i$th basis vector of
+        this ambient space.
+
+        INPUT:
+            n -- an integer which should be prime.
+
+        OUTPUT:
+            modular symbol -- element of this ambient space
+
+        EXAMPLES:
+            sage: M = ModularSymbols(43,2,1)
+            sage: M._hecke_image_of_ith_basis_vector(2, 0)
+            3*(1,0) - 2*(1,33)
+            sage: M.hecke_operator(2)(M.0)
+            3*(1,0) - 2*(1,33)
+            sage: M._hecke_image_of_ith_basis_vector(6, 1)
+            -2*(1,33)
+            sage: M.hecke_operator(6)(M.1)
+            -2*(1,33)
+        """
+        c = self.manin_generators()[self.manin_basis()[i]]
+        N = self.level()
+        I = heilbronn.hecke_images_gamma0_weight2(c.u,c.v,N,[n], self.manin_gens_to_basis())
+        return self(I[0])
+
+    def _hecke_images(self, i, v):
+        """
+        Return images of the $i$-th standard basis vector under the
+        Hecke operators $T_p$ for all integers in $v$.
+
+        INPUT:
+            i -- nonnegative integer
+            v -- a list of positive integer
+        OUTPUT:
+            matrix -- whose rows are the Hecke images
+        """
+        # Find basis vector for ambient space such that it is not in
+        # the kernel of the dual space corresponding to self.
+        c = self.manin_generators()[self.manin_basis()[i]]
+        N = self.level()
+        return heilbronn.hecke_images_gamma0_weight2(c.u,c.v,N, v, self.manin_gens_to_basis())
+
         
 class ModularSymbolsAmbient_wtk_g1(ModularSymbolsAmbient):
     def __init__(self, level, weight, sign, F):
@@ -2102,3 +2282,29 @@ class ModularSymbolsAmbient_wtk_eps(ModularSymbolsAmbient):
         """
         return modsym.ModularSymbols(self.character(), k, self.sign(), self.base_ring())
     
+    def _hecke_images(self, i, v):
+        """
+        Return images of the $i$-th standard basis vector under the
+        Hecke operators $T_p$ for all integers in $v$.
+
+        INPUT:
+            i -- nonnegative integer
+            v -- a list of positive integer
+
+        OUTPUT:
+            matrix -- whose rows are the Hecke images
+        """
+        if self.weight() != 2:
+            raise NotImplementedError, "hecke images only implemented when the weight is 2"
+        chi = self.character()
+        # Find basis vector for ambient space such that it is not in
+        # the kernel of the dual space corresponding to self.
+        c = self.manin_generators()[self.manin_basis()[i]]
+        N = self.level()
+        if chi.order() > 2:
+            return heilbronn.hecke_images_nonquad_character_weight2(c.u,c.v,N,
+                                 v, chi, self.manin_gens_to_basis())
+        else:
+            return heilbronn.hecke_images_quad_character_weight2(c.u,c.v,N,
+                                 v, chi, self.manin_gens_to_basis())
+        raise NotImplementedError
