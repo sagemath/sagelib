@@ -30,21 +30,6 @@ from parent import Set_PythonType, Set_PythonType_class
 include '../ext/python_object.pxi'
 include '../ext/python_bool.pxi'
 include '../ext/stdsage.pxi'
-
-def is_Parent(x):
-    """
-    Return True if x is a parent object, i.e., derives from
-    sage.structure.parent.Parent and False otherwise.
-
-    EXAMPLES:
-        sage: is_Parent(2/3)
-        False
-        sage: is_Parent(ZZ)
-        True
-        sage: is_Parent(Primes())
-        True    
-    """
-    return PyBool_FromLong(PyObject_TypeCheck(x, Parent))
     
 cdef inline check_old_coerce(Parent p):
     if p._element_constructor is not None:

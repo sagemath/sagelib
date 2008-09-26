@@ -492,7 +492,8 @@ def is_ComplexDoubleElement(x):
     """
     Return True if x is a is_ComplexDoubleElement.
     
-    EXAMPLES: 
+    EXAMPLES:
+        sage: from sage.rings.complex_double import is_ComplexDoubleElement
         sage: is_ComplexDoubleElement(0)
         False
         sage: is_ComplexDoubleElement(CDF(0))

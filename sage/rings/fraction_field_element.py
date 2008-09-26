@@ -38,7 +38,8 @@ def is_FractionFieldElement(x):
     """
     Returns whether or not x is of type FractionFieldElement
     
-    EXAMPLES: 
+    EXAMPLES:
+        sage: from sage.rings.fraction_field_element import is_FractionFieldElement
         sage: R.<x> = ZZ[]
         sage: is_FractionFieldElement(x/2)
         False
