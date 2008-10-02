@@ -78,6 +78,8 @@ class FiniteField_prime_modn(FiniteField_generic, integer_mod_ring.IntegerModRin
         """
         if not isinstance(other, FiniteField_prime_modn):
             return cmp(type(self), type(other))
+#        elif other.__class__ != FiniteField_prime_modn:
+#            return -cmp(other, self)
         return cmp(self.__char, other.__char)
 
     def _is_valid_homomorphism_(self, codomain, im_gens):
@@ -115,7 +117,7 @@ class FiniteField_prime_modn(FiniteField_generic, integer_mod_ring.IntegerModRin
                x.parent().characteristic() == self.characteristic():
             return self(x)
         raise TypeError, "no canonical coercion of x"
-
+        
     def characteristic(self):
         r"""
         Return the characteristic of \code{self}.
