@@ -122,8 +122,8 @@ def EllipticCurve(x, y=None):
         
     if isinstance(x, str):
         return ell_rational_field.EllipticCurve_rational_field(x)
-
-    if rings.is_RingElement(x):
+        
+    if rings.is_RingElement(x) and y is None:
         # Fixed for all characteristics and cases by John Cremona
         j=x
         F=j.parent().fraction_field()
