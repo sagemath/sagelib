@@ -807,17 +807,29 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             1101101011101100011110001110010010100111010001101010001111111000101000000000101111000010000011
         """
         return self.str(2)
-    
+
     def bits(self):
+        """
+        Return the bits in self as a list, least significant first.
+
+        EXAMPLES:
+        sage: 500.bits()
+        [0, 0, 1, 0, 1, 1, 1, 1, 1]
+        sage: 11.bits()
+        [1, 1, 0, 1]
+        """
+        return self.digits(base=2)
+    
+    def nbits(self):
         """
         Return the number of bits in self.
 
         EXAMPLES: 
-            sage: 500.bits()
+            sage: 500.nbits()
             9
-            sage: 5.bits()
+            sage: 5.nbits()
             3
-            sage: 12345.bits() == len(12345.binary())
+            sage: 12345.nbits() == len(12345.binary())
             True
         """
         return int(mpz_sizeinbase(self.value, 2))
