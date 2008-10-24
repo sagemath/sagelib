@@ -229,7 +229,7 @@ class Magma(Expect):
                         server = server, 
                         server_tmpdir = server_tmpdir,
                         script_subdirectory = script_subdirectory,
-                        restart_on_ctrlc = True,
+                        restart_on_ctrlc = False,
                         logfile = logfile,
                         eval_using_file_cutoff=100)
         # We use "-n" above in the Magma startup command so
@@ -915,7 +915,7 @@ class Magma(Expect):
             'false'
         """        
         return 'false'
-    
+
     def console(self):
         """
         Run a command line Magma session.  This session is
