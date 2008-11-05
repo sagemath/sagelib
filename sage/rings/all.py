@@ -140,7 +140,8 @@ from fraction_field_element import is_FractionFieldElement
 from contfrac import continued_fraction, CFF, ContinuedFractionField
 
 # Arithmetic
-from arith import *                   
+from arith import *
+from fast_arith import prime_range
 
 from bernoulli_mod_p import bernoulli_mod_p, bernoulli_mod_p_single
 
