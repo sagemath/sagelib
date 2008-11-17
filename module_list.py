@@ -835,6 +835,9 @@ ext_modules = [
               sources = ['sage/rings/finite_field_ntl_gf2e.pyx'],
               libraries = ['ntl', 'gmp'],
               language = 'c++'),
+
+    Extension('sage.rings.fraction_field_element',
+              sources = ['sage/rings/fraction_field_element.pyx']),
     
     Extension('sage.rings.integer_mod',
               sources = ['sage/rings/integer_mod.pyx'],
