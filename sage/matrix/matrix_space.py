@@ -300,14 +300,19 @@ class MatrixSpace_generic(parent_gens.ParentWithGens):
             sage: MS([1,2,3,4], rows=False)
             [1 3]
             [2 4]
-            
+
+            sage: MS = MatrixSpace(ZZ, 2)
+            sage: g = Gamma0(5)([1,1,0,1])
+            sage: MS(g)
+            [1 1]
+            [0 1]
         """
         if entries is None:
             entries = 0
 
         if entries == 0 and hasattr(self, '__zero_matrix'):
             return self.zero_matrix()
-        
+
         if isinstance(entries, (list, tuple)) and len(entries) > 0 and \
            sage.modules.free_module_element.is_FreeModuleElement(entries[0]):
             #Try to determine whether or not the entries should
@@ -339,7 +344,7 @@ class MatrixSpace_generic(parent_gens.ParentWithGens):
 
         if rows is None:
             rows = True
-            
+
         if not self.__is_sparse and isinstance(entries, dict):
             entries = dict_to_list(entries, self.__nrows, self.__ncols)
             coerce = True
@@ -348,7 +353,8 @@ class MatrixSpace_generic(parent_gens.ParentWithGens):
             entries = list_to_dict(entries, self.__nrows, self.__ncols, rows=rows)
             coerce = True
             copy = False
-        elif sage.groups.matrix_gps.matrix_group_element.is_MatrixGroupElement(entries):
+        elif sage.groups.matrix_gps.matrix_group_element.is_MatrixGroupElement(entries) \
+             or isinstance(entries, sage.modular.congroup_element.CongruenceSubgroupElement):
             return self(entries.matrix(), copy=False)
 
         return self.matrix(entries, copy=copy, coerce=coerce, rows=rows)
