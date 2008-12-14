@@ -164,7 +164,13 @@ class DistributedSage(object):
                               ssl=False)
         else:
             d = BlockingDSage(server='localhost', port=port)
-                
+
+        conn_time = 0
+        while(conn_time < 10):
+            if d.is_connected():
+                break
+            time.sleep(.1)
+        
         return d
     
     def kill_all(self):
