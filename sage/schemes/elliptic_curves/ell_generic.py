@@ -564,6 +564,9 @@ class EllipticCurve_generic(plane_curve.ProjectiveCurve_generic):
         the elliptic curve reduced modulo p. Used to coerce points between
         curves when p is a factor of the denominator of one of the
         coordinates.
+
+        This functionality is used internally in the \code{call} method for
+        elliptic curves.
         
         INPUT:
             R -- a point on an elliptic curve
@@ -589,8 +592,8 @@ class EllipticCurve_generic(plane_curve.ProjectiveCurve_generic):
             sage: E11(S)
             (0 : 1 : 0)
 
-        Note that one need not explicitly call \code{EllipticCurve._reduce()}.
-        This functionality is implemented in the \code{__call__} method.
+        Note that one need not explicitly call  
+        \code{EllipticCurve._reduce_point}
         """
         x, y = R.xy()
         d = arith.LCM(x.denominator(), y.denominator())
