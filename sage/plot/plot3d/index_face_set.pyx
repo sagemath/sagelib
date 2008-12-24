@@ -612,7 +612,7 @@ cdef class IndexFaceSet(PrimitiveObject):
         cdef Transformation transform = render_params.transform
         cdef Py_ssize_t i
         cdef point_c res
-               
+        
         self._seperate_creases(render_params.crease_threshold)
                  
         _sig_on
