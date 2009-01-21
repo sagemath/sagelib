@@ -33,6 +33,10 @@ def css(color='default'):
 body {
   background-color: white;
 }
+
+body.worksheet-online {
+  margin-bottom: 80%;
+}
     
 div.hidden {
   display:none;
