@@ -646,7 +646,7 @@ class SymbolicExpression(RingElement):
         4
         sage: type(a)
         <class 'sage.calculus.calculus.SymbolicConstant'>
-    
+
     """
     def __init__(self):
         """
