@@ -14,11 +14,13 @@ We deal with the case of zero rows or zero columns:
     sage: m = MatrixSpace(CDF,0,3)
     sage: m.zero_matrix()
     []
-
+    
 TESTS:
     sage: a = matrix(CDF,2,[i+(4-i)*I for i in range(4)], sparse=False)
     sage: loads(dumps(a)) == a
     True
+    sage: Mat(CDF,0,0).zero_matrix().inverse()
+    []
 
 AUTHORS:
     -- Jason Grout, Sep 2008: switch to numpy backend
