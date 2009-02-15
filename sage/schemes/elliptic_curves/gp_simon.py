@@ -65,8 +65,12 @@ def simon_two_descent(E, verbose=0, lim1=5, lim3=50, limtriv=10, maxprob=20, lim
     init()
 
     current_randstate().set_seed_gp(gp)
-
-    K = E.base_ring().change_names('a')
+    
+    K = E.base_ring()
+    # The following is to correct the bug at \#5204: the gp script
+    # fails when K is a number field whose generator is called 'x'.
+    if not K is QQ:
+        K = K.change_names('a')
     E = E.change_ring(K)
     F = E.integral_model()
     
