@@ -1,9 +1,10 @@
 """
 Dense matrices over the rational field.
 
-EXAMPLES:
-We create a 3x3 matrix with rational entries and do some
-operations with it. 
+EXAMPLES: We create a 3x3 matrix with rational entries and do some
+operations with it.
+
+::
 
     sage: a = matrix(QQ, 3,3, [1,2/3, -4/5, 1,1,1, 8,2, -3/19]); a
     [    1   2/3  -4/5]
@@ -32,7 +33,8 @@ operations with it.
     [0 1 0]
     [0 0 1]
 
-TESTS:
+TESTS::
+
     sage: a = matrix(QQ,2,range(4), sparse=False)
     sage: loads(dumps(a)) == a
     True
@@ -89,20 +91,29 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     ########################################################################
     def __new__(self, parent, entries, copy, coerce):
         """
-        Create and allocate memory for the matrix. 
-
-        Unlike over matrix_integer_dense, mpq_init() is called (as there is no mpq_init_set function).
+        Create and allocate memory for the matrix.
+        
+        Unlike over matrix_integer_dense, mpq_init() is called (as there
+        is no mpq_init_set function).
         
         INPUT:
-            parent, entries, coerce, copy -- as for __init__.
-
-        EXAMPLES:
+        
+        
+        -  ``parent, entries, coerce, copy`` - as for
+           __init__.
+        
+        
+        EXAMPLES::
+        
             sage: from sage.matrix.matrix_rational_dense import Matrix_rational_dense
             sage: a = Matrix_rational_dense.__new__(Matrix_rational_dense, Mat(ZZ,3), 0,0,0)
             sage: type(a)
             <type 'sage.matrix.matrix_rational_dense.Matrix_rational_dense'>
+        
+        .. warning::
 
-        WARNING: This is for internal use only, or if you really know what you're doing.
+           This is for internal use only, or if you really know what
+           you're doing.
         """
         matrix_dense.Matrix_dense.__init__(self, parent)
 
@@ -215,13 +226,13 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     cpdef _export_as_string(self, int base=10):
         """
-        Return space separated string of the entries in this matrix, in the given base.
-        This is optimized for speed.
-
-        INPUT:
-            base --an integer <= 36; (default: 10)
-
-        EXAMPLES:
+        Return space separated string of the entries in this matrix, in the
+        given base. This is optimized for speed.
+        
+        INPUT: base -an integer = 36; (default: 10)
+        
+        EXAMPLES::
+        
             sage: m = matrix(QQ,2,3,[1,2/3,-3/4,1,-2/3,-45/17])
             sage: m._export_as_string(10)
             '1 2/3 -3/4 1 -2/3 -45/17'
@@ -298,7 +309,8 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     cpdef ModuleElement _lmul_(self, RingElement right):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: a = matrix(QQ,2,range(6))
             sage: (3/4) * a
             [   0  3/4  3/2]
@@ -316,8 +328,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     cpdef ModuleElement _add_(self, ModuleElement right):
         """
         Add two dense matrices over QQ.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = MatrixSpace(QQ,3)(range(9))
             sage: b = MatrixSpace(QQ,3)([1/n for n in range(1,10)])
             sage: a+b
@@ -326,7 +339,6 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
             [43/7 57/8 73/9]
             sage: b.swap_rows(1,2)
             sage: #a+b
-        
         """
         cdef Py_ssize_t i, j
         cdef Matrix_rational_dense M
@@ -351,8 +363,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     cpdef ModuleElement _sub_(self, ModuleElement right):
         """
         Subtract two dense matrices over QQ.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = MatrixSpace(QQ,3)(range(9))
             sage: b = MatrixSpace(QQ,3)([1/n for n in range(1,10)])
             sage: a-b
@@ -399,14 +412,17 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     cdef Vector _vector_times_matrix_(self, Vector v):
         """
         Returns the vector times matrix product.
-
+        
         INPUT:
-                v -- a free module element.
-
-        OUTPUT:
-                The vector times matrix product v*A.
-
-        EXAMPLES:
+        
+        
+        -  ``v`` - a free module element.
+        
+        
+        OUTPUT: The vector times matrix product v\*A.
+        
+        EXAMPLES::
+        
             sage: B = matrix(QQ,2, [1,2,3,4])
             sage: V = QQ^2
             sage: w = V([-1,5/2])
@@ -437,8 +453,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def __neg__(self):
         """
         Negate a matrix over QQ.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = MatrixSpace(QQ,3)([1/n for n in range(1,10)])
             sage: -a
             [  -1 -1/2 -1/3]
@@ -465,8 +482,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def __copy__(self):
         """
         Copy a matrix over QQ.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = MatrixSpace(QQ,3)([1/n for n in range(1,10)])
             sage: -a
             [  -1 -1/2 -1/3]
@@ -517,7 +535,8 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     ########################################################################
     def __invert__(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: a = matrix(QQ,3,range(9))
             sage: a^(-1)
             Traceback (most recent call last):
@@ -533,29 +552,37 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def invert(self, check_invertible=True, algorithm="iml"):
         """
         INPUT:
-           check_invertible -- default: True (whether to check that
-                               matrix is invertible) algorithm --"iml" (only option right now)
-           
-        OUTPUT:
-           -- the inverse of self
+        
+        
+        -  ``check_invertible`` - default: True (whether to
+           check that matrix is invertible) algorithm -"iml" (only option
+           right now)
+        
+        
+        OUTPUT: the inverse of self
+        
+        .. note::
 
-        NOTES:
-         * If self is not invertible, a ZeroDivisionError is raised.
-         * The n x n cases for n <= 2 are handcoded for speed. 
+           - If self is not invertible, a ZeroDivisionError is raised.
 
-        EXAMPLES:
+           - The n x n cases for n = 2 are handcoded for speed.
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ,3,[1,2,5,3,2,1,1,1,1,])
             sage: a.invert(check_invertible=False)
             [1/2 3/2  -4]
             [ -1  -2   7]
             [1/2 1/2  -2]
-
-        A 1x1 matrix (a special case):
+        
+        A 1x1 matrix (a special case)::
+        
             sage: a = matrix(QQ, 1, [390284089234])
             sage: a.invert()
             [1/390284089234]
-
-        A 2x2 matrix (a special hand-coded case):
+        
+        A 2x2 matrix (a special hand-coded case)::
+        
             sage: a = matrix(QQ, 2, [1, 5, 17, 3]); a
             [ 1  5]
             [17  3]
@@ -620,16 +647,23 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def determinant(self, proof=None):
         """
         Return the determinant of this matrix.
-
+        
         INPUT:
-            proof -- bool or None; if None use proof.linear_algebra(); only
-                     relevant for the padic algorithm.
-                     NOTE: It would be *VERY VERY* hard for det to fail
-                     even with proof=False. 
+        
+        -  ``proof`` - bool or None; if None use
+           proof.linear_algebra(); only relevant for the padic algorithm.
 
-        ALGORITHM: Clear denominators and call the integer determinant function.
+        .. note::
 
-        EXAMPLES:
+           It would be *VERY VERY* hard for det to fail even with
+           proof=False.
+        
+        
+        ALGORITHM: Clear denominators and call the integer determinant
+        function.
+        
+        EXAMPLES::
+        
             sage: m = matrix(QQ,3,[1,2/3,4/5, 2,2,2, 5,3,2/5])
             sage: m.determinant()
             -34/15
@@ -650,11 +684,11 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def denominator(self):
         """
         Return the denominator of this matrix.
-
-        OUTPUT:
-            -- SAGE Integer
-
-        EXAMPLES:
+        
+        OUTPUT: a Sage Integer
+        
+        EXAMPLES::
+        
             sage: b = matrix(QQ,2,range(6)); b[0,0]=-5007/293; b
             [-5007/293         1         2]
             [        3         4         5]
@@ -682,13 +716,17 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def _clear_denom(self):
         """
         INPUT:
-            self -- a matrix
-        OUTPUT:
-            D*self, D
-
+        
+        
+        -  ``self`` - a matrix
+        
+        
+        OUTPUT: D\*self, D
+        
         The product is a matrix over ZZ
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ,2,[-1/6,-7,3,5/4]); a
             [-1/6   -7]
             [   3  5/4]
@@ -725,23 +763,26 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def charpoly(self, var='x', algorithm='linbox'):
         """
         Return the characteristic polynomial of this matrix.
-
+        
         INPUT:
-            var -- 'x' (string)
-            algorithm -- 'linbox' (default)
-                         'generic'
-                         
-        OUTPUT:
-            a polynomial over the rational numbers.
-
-        EXAMPLES:
+        
+        
+        -  ``var`` - 'x' (string)
+        
+        -  ``algorithm`` - 'linbox' (default) 'generic'
+        
+        
+        OUTPUT: a polynomial over the rational numbers.
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ, 3, [4/3, 2/5, 1/5, 4, -3/2, 0, 0, -2/3, 3/4])
             sage: f = a.charpoly(); f
             x^3 - 7/12*x^2 - 149/40*x + 97/30
             sage: f(a)
             [0 0 0]
             [0 0 0]
-            [0 0 0]        
+            [0 0 0]
         """
         key = 'charpoly_%s_%s'%(algorithm, var)
         x = self.fetch(key)
@@ -763,16 +804,19 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def minpoly(self, var='x', algorithm='linbox'):
         """
         Return the minimal polynomial of this matrix.
-
+        
         INPUT:
-            var -- 'x' (string)
-            algorithm -- 'linbox' (default)
-                         'generic'
-                         
-        OUTPUT:
-            a polynomial over the rational numbers.
-
-        EXAMPLES:
+        
+        
+        -  ``var`` - 'x' (string)
+        
+        -  ``algorithm`` - 'linbox' (default) 'generic'
+        
+        
+        OUTPUT: a polynomial over the rational numbers.
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ, 3, [4/3, 2/5, 1/5, 4, -3/2, 0, 0, -2/3, 3/4])
             sage: f = a.minpoly(); f           
             x^3 - 7/12*x^2 - 149/40*x + 97/30
@@ -781,7 +825,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
             x * (x^2 - 30*x - 80)
             sage: f(a) == 0                    
             True
-            
+        
+        ::
+        
             sage: a = matrix(QQ, 4, [1..4^2])
             sage: factor(a.minpoly())
             x * (x^2 - 34*x - 80)
@@ -819,28 +865,36 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     def _multiply_over_integers(self, Matrix_rational_dense right, algorithm='default'):
         """
-        Multiply this matrix by right using a multimodular algorithm
-        and return the result.
-
+        Multiply this matrix by right using a multimodular algorithm and
+        return the result.
+        
         INPUT:
-            self -- matrix over QQ
-            right -- matrix over QQ
-            algorithm -- 'default': use whatever is the defalt for A*B when A, B are over ZZ.
-                         'multimodular': use a multimodular algorithm
-                         
-        EXAMPLES:
+        
+        
+        -  ``self`` - matrix over QQ
+        
+        -  ``right`` - matrix over QQ
+        
+        -  ``algorithm`` - 'default': use whatever is the
+           defalt for A\*B when A, B are over ZZ. 'multimodular': use a
+           multimodular algorithm
+        
+        
+        EXAMPLES::
+        
             sage: a = MatrixSpace(QQ,10,5)(range(50))
             sage: b = MatrixSpace(QQ,5,12)([1/n for n in range(1,61)])
             sage: a._multiply_over_integers(b) == a._multiply_over_integers(b, algorithm='multimodular')
             True
-
+        
+        ::
+        
             sage: a = MatrixSpace(QQ,3)(range(9))
             sage: b = MatrixSpace(QQ,3)([1/n for n in range(1,10)])
             sage: a._multiply_over_integers(b, algorithm = 'multimodular')
             [ 15/28   9/20   7/18]
             [  33/7 117/40   20/9]
             [249/28   27/5  73/18]
-            
         """
         cdef Matrix_integer_dense A, B, AB
         cdef Matrix_rational_dense res
@@ -880,13 +934,13 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def height(self):
         """
         Return the height of this matrix, which is the maximum of the
-        absolute values of all numerators and denominators of entries
-        in this matrix.
-
-        OUTPUT:
-            -- Integer
-
-        EXAMPLES:
+        absolute values of all numerators and denominators of entries in
+        this matrix.
+        
+        OUTPUT: an Integer
+        
+        EXAMPLES::
+        
             sage: b = matrix(QQ,2,range(6)); b[0,0]=-5007/293; b
             [-5007/293         1         2]
             [        3         4         5]
@@ -933,8 +987,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
         Return the adjoint of this matrix.
         
         Assumes self is a square matrix (checked in adjoint).
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: m = matrix(QQ,3,[1..9])/9; m
             [1/9 2/9 1/3]
             [4/9 5/9 2/3]
@@ -948,7 +1003,8 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     def _magma_init_(self, magma):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: m = matrix(QQ,2,3,[1,2/3,-3/4,1,-2/3,-45/17])
             sage: m._magma_init_(magma)
             'Matrix(RationalField(),2,3,StringToIntegerSequence("204 136 -153 204 -136 -540"))/204'
@@ -989,13 +1045,20 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def kernel(self, algorithm='padic', **kwds):
         """
         Return the left kernel of this matrix, as a vector space over QQ.
-
+        
         INPUT:
-           algorithm -- 'padic' (or 'default'): use IML's p-adic nullspace algorithm
-                       anything else -- passed on to the generic echelon-form based algorithm.
-                            **kwds -- passed onto to echelon form algorithm in the echelon case.
+        
+        -  ``algorithm`` - 'padic' (or 'default'): use IML's
+           p-adic nullspace algorithm
+        
+        -  ``anything else`` - passed on to the generic
+           echelon-form based algorithm.
+        
+        -  ``**kwds`` - passed onto to echelon form algorithm
+           in the echelon case.
 
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: M=Matrix(QQ,[[1/2,3],[0,1],[1,1]])
             sage: M.kernel()
             Vector space of degree 3 and dimension 1 over Rational Field
@@ -1025,10 +1088,11 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     ################################################
     def change_ring(self, R):
         """
-        Create the matrix over R with entries the entries of self
-        coerced into R.
-
-        EXAMPLES:
+        Create the matrix over R with entries the entries of self coerced
+        into R.
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ,2,[1/2,-1,2,3])
             sage: a.change_ring(GF(3))
             [2 2]
@@ -1041,7 +1105,7 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
             [1/2  -1]
             [  2   3]
             sage: b.parent()
-            Full MatrixSpace of 2 by 2 dense matrices over Univariate Polynomial Ring in x over Rational Field        
+            Full MatrixSpace of 2 by 2 dense matrices over Univariate Polynomial Ring in x over Rational Field
         """
         if not is_Ring(R):
             raise TypeError, "R must be a ring"
@@ -1072,20 +1136,30 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
                    height_guess=None, proof=None, **kwds):
         """
         INPUT:
-            algorithm -- 'default' (default): use heuristic choice
-                         'padic': an algorithm based on the IML p-adic solver.
-                         'multimodular': uses a multimodular algorithm the uses linbox
-                                         modulo many primes.
-            height_guess, **kwds -- all passed to the multimodular algorithm; ignored
-                                           by the p-adic algorithm.
-            proof -- bool or None (default: None, see proof.linear_algebra or
-                         sage.structure.proof).  Passed to the multimodular algorithm.
-                         Note that the Sage global default is proof=True.
-
+        
+        
+        -  ``algorithm`` - 'default' (default): use heuristic
+           choice 'padic': an algorithm based on the IML p-adic solver.
+           'multimodular': uses a multimodular algorithm the uses linbox
+           modulo many primes.
+        
+        -  ``height_guess, **kwds`` - all passed to the
+           multimodular algorithm; ignored by the p-adic algorithm.
+        
+        -  ``proof`` - bool or None (default: None, see
+           proof.linear_algebra or sage.structure.proof). Passed to the
+           multimodular algorithm. Note that the Sage global default is
+           proof=True.
+        
+        
         OUTPUT:
-            matrix -- the reduced row echelon for of self.
-
-        EXAMPLES:
+        
+        
+        -  ``matrix`` - the reduced row echelon for of self.
+        
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ, 4, range(16)); a[0,0] = 1/19; a[0,1] = 1/5; a
             [1/19  1/5    2    3]
             [   4    5    6    7]
@@ -1096,13 +1170,15 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
             [      0       1       0  -5/157]
             [      0       0       1 238/157]
             [      0       0       0       0]
-            
+        
+        ::
+        
             sage: a = matrix(QQ, 4, range(16)); a[0,0] = 1/19; a[0,1] = 1/5
             sage: a.echelonize(algorithm='multimodular'); a
             [      1       0       0 -76/157]
             [      0       1       0  -5/157]
             [      0       0       1 238/157]
-            [      0       0       0       0]            
+            [      0       0       0       0]
         """
                  
         x = self.fetch('in_echelon_form')
@@ -1127,20 +1203,26 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
                      height_guess=None, proof=None, **kwds):
         """
         INPUT:
-            algorithm -- 'default' (default): use heuristic choice
-                         'padic': an algorithm based on the IML p-adic solver.
-                         'multimodular': uses a multimodular algorithm the uses linbox
-                                         modulo many primes.
-            height_guess, **kwds -- all passed to the multimodular algorithm; ignored
-                                           by the p-adic algorithm.
-            proof -- bool or None (default: None, see proof.linear_algebra or
-                         sage.structure.proof).  Passed to the multimodular algorithm.
-                         Note that the Sage global default is proof=True.
-
-        OUTPUT:
-            self is no in reduced row echelon form.
-
-        EXAMPLES:
+        
+        
+        -  ``algorithm`` - 'default' (default): use heuristic
+           choice 'padic': an algorithm based on the IML p-adic solver.
+           'multimodular': uses a multimodular algorithm the uses linbox
+           modulo many primes.
+        
+        -  ``height_guess, **kwds`` - all passed to the
+           multimodular algorithm; ignored by the p-adic algorithm.
+        
+        -  ``proof`` - bool or None (default: None, see
+           proof.linear_algebra or sage.structure.proof). Passed to the
+           multimodular algorithm. Note that the Sage global default is
+           proof=True.
+        
+        
+        OUTPUT: self is no in reduced row echelon form.
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ, 4, range(16)); a[0,0] = 1/19; a[0,1] = 1/5; a
             [1/19  1/5    2    3]
             [   4    5    6    7]
@@ -1155,7 +1237,7 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
             [      1       0       0 -76/157]
             [      0       1       0  -5/157]
             [      0       0       1 238/157]
-            [      0       0       0       0]        
+            [      0       0       0       0]
         """
         label = 'echelon_form_%s'%algorithm
         x = self.fetch(label)
@@ -1180,7 +1262,8 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     # p-adic echelonization algorithms
     def _echelon_form_padic(self, include_zero_rows=True):
         """
-        Compute and return the echelon form of self using a p-adic nullspace algorithm.
+        Compute and return the echelon form of self using a p-adic
+        nullspace algorithm.
         """
         cdef Matrix_integer_dense X
         cdef Matrix_rational_dense E
@@ -1279,16 +1362,21 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     def _echelon_form_multimodular(self, height_guess=None, proof=None):
         """
-        Returns reduced row-echelon form using a multi-modular
-        algorithm.  Does not change self.
+        Returns reduced row-echelon form using a multi-modular algorithm.
+        Does not change self.
+        
+        REFERENCE:
 
-        REFERENCE: Chapter 7 of Stein's "Explicitly Computing Modular Forms".
-
+        - Chapter 7 of Stein's "Explicitly Computing Modular Forms".
+        
         INPUT:
-            height_guess -- integer or None
-            proof -- boolean (default: None, see proof.linear_algebra or
-                         sage.structure.proof)
-                         Note that the Sage global default is proof=True.
+        
+        
+        -  ``height_guess`` - integer or None
+        
+        -  ``proof`` - boolean (default: None, see
+           proof.linear_algebra or sage.structure.proof) Note that the Sage
+           global default is proof=True.
         """
         import misc
         return misc.matrix_rational_echelon_form_multimodular(self,
@@ -1297,45 +1385,57 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def decomposition(self, is_diagonalizable=False, dual=False,
                       algorithm='default', height_guess=None, proof=None):
         """
-        Returns the decomposition of the free module on which this
-        matrix A acts from the right (i.e., the action is x goes to x
-        A), along with whether this matrix acts irreducibly on each
-        factor.  The factors are guaranteed to be sorted in the same
-        way as the corresponding factors of the characteristic
-        polynomial.
-
-        Let A be the matrix acting from the on the vector space V of
-        column vectors.  Assume that A is square.  This function
-        computes maximal subspaces W_1, ..., W_n corresponding to
-        Galois conjugacy classes of eigenvalues of A.  More precisely,
-        let f(X) be the characteristic polynomial of A.  This function
-        computes the subspace $W_i = ker(g_(A)^n)$, where g_i(X) is an
-        irreducible factor of f(X) and g_i(X) exactly divides f(X).
-        If the optional parameter is_diagonalizable is True, then we
-        let W_i = ker(g(A)), since then we know that ker(g(A)) =
-        $ker(g(A)^n)$.
-
-        If dual is True, also returns the corresponding decomposition
-        of V under the action of the transpose of A.  The factors are
-        guarenteed to correspond.
-
+        Returns the decomposition of the free module on which this matrix A
+        acts from the right (i.e., the action is x goes to x A), along with
+        whether this matrix acts irreducibly on each factor. The factors
+        are guaranteed to be sorted in the same way as the corresponding
+        factors of the characteristic polynomial.
+        
+        Let A be the matrix acting from the on the vector space V of column
+        vectors. Assume that A is square. This function computes maximal
+        subspaces W_1, ..., W_n corresponding to Galois conjugacy classes
+        of eigenvalues of A. More precisely, let f(X) be the characteristic
+        polynomial of A. This function computes the subspace
+        `W_i = ker(g_(A)^n)`, where g_i(X) is an irreducible
+        factor of f(X) and g_i(X) exactly divides f(X). If the optional
+        parameter is_diagonalizable is True, then we let W_i = ker(g(A)),
+        since then we know that ker(g(A)) = `ker(g(A)^n)`.
+        
+        If dual is True, also returns the corresponding decomposition of V
+        under the action of the transpose of A. The factors are guarenteed
+        to correspond.
+        
         INPUT:
-            is_diagonizalible -- ignored
-            dual -- whether to also return decompositions for the dual
-            algorithm -- 'default': use default algorithm for computing Echelon forms,
-                         'multimodular': much better if the answers factors have small height
-            height_guess -- positive integer; only used by the multimodular algorithm
-            proof -- bool or None (default: None, see proof.linear_algebra or
-                         sage.structure.proof); only used by the multimodular algorithm.
-                         Note that the Sage global default is proof=True.
+        
+        
+        -  ``is_diagonizalible`` - ignored
+        
+        -  ``dual`` - whether to also return decompositions for
+           the dual
+        
+        -  ``algorithm`` - 'default': use default algorithm for
+           computing Echelon forms, 'multimodular': much better if the answers
+           factors have small height
+        
+        -  ``height_guess`` - positive integer; only used by
+           the multimodular algorithm
+        
+        -  ``proof`` - bool or None (default: None, see
+           proof.linear_algebra or sage.structure.proof); only used by the
+           multimodular algorithm. Note that the Sage global default is
+           proof=True.
+        
+        
+        .. note::
 
-        IMPORTANT NOTE:
-        If you expect that the subspaces in the answer are spanned by vectors
-        with small height coordinates, use algorithm='multimodular' and
-        height_guess=1; this is potentially much faster than the default.
-        If you know for a fact the answer will be very small, use
-           algorithm='multimodular', height_guess=bound on height, proof=False
-           
+           IMPORTANT: If you expect that the subspaces in the answer
+           are spanned by vectors with small height coordinates, use
+           algorithm='multimodular' and height_guess=1; this is
+           potentially much faster than the default. If you know for a
+           fact the answer will be very small, use
+           algorithm='multimodular', height_guess=bound on height,
+           proof=False
+        
         You can get very very fast decomposition with proof=False.
         """
         X = self._decomposition_rational(is_diagonalizable=is_diagonalizable,
@@ -1352,33 +1452,42 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
                                 kernel_algorithm='default',
                                 **kwds):
         """
-        Returns the decomposition of the free module on which this
-        matrix A acts from the right (i.e., the action is x goes to x
-        A), along with whether this matrix acts irreducibly on each
-        factor.  The factors are guaranteed to be sorted in the same
-        way as the corresponding factors of the characteristic
-        polynomial.
-
+        Returns the decomposition of the free module on which this matrix A
+        acts from the right (i.e., the action is x goes to x A), along with
+        whether this matrix acts irreducibly on each factor. The factors
+        are guaranteed to be sorted in the same way as the corresponding
+        factors of the characteristic polynomial.
+        
         INPUT:
-            self -- a square matrix over the rational numbers
-            echelon_algorithm -- 'default'
-                                 'multimodular' -- use this if the 
-                                 answers have small height
-            **kwds -- passed on to echelon function.
+        
+        
+        -  ``self`` - a square matrix over the rational
+           numbers
+        
+        -  ``echelon_algorithm`` - 'default'
+        
+        -  ``'multimodular'`` - use this if the answers have
+           small height
+        
+        -  ``**kwds`` - passed on to echelon function.
+        
+        .. note::
 
-        IMPORTANT NOTE:
-        If you expect that the subspaces in the answer are spanned by vectors
-        with small height coordinates, use algorithm='multimodular' and
-        height_guess=1; this is potentially much faster than the default.
-        If you know for a fact the answer will be very small, use
-           algorithm='multimodular', height_guess=bound on height, proof=False
-
+           IMPORTANT: If you expect that the subspaces in the answer are
+           spanned by vectors with small height coordinates, use
+           algorithm='multimodular' and height_guess=1; this is potentially
+           much faster than the default. If you know for a fact the answer
+           will be very small, use algorithm='multimodular',
+           height_guess=bound on height, proof=False
+        
+        
         OUTPUT:
-            Sequence -- list of tuples (V,t), where V is a vector spaces
-                    and t is True if and only if the charpoly of self on V
-                    is irreducible.
-                    The tuples are in order corresponding to the elements
-                    of the sorted list self.charpoly().factor().
+        
+        
+        -  ``Sequence`` - list of tuples (V,t), where V is a
+           vector spaces and t is True if and only if the charpoly of self on
+           V is irreducible. The tuples are in order corresponding to the
+           elements of the sorted list self.charpoly().factor().
         """
         cdef Py_ssize_t k
         
@@ -1612,14 +1721,14 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     def _lift_crt_rr_with_lcm(self, res, mm):
         """
-            Optimizations: When doing the rational_recon lift of a (mod m) 
-            first see if |a| < sqrt(m/2) in which case it lifts to 
-            an integer (often a=0 or 1). 
-            
-            If that fails, keep track of the lcm d of denominators found so far, 
-            and check to see if z = a*d lifts to an integer with |z| <= sqrt(m/2).
-            If so, no need to do rational recon.  This should be the case
-            for most a after a while, and should saves substantial time!
+        Optimizations: When doing the rational_recon lift of a (mod m)
+        first see if a sqrt(m/2) in which case it lifts to an integer
+        (often a=0 or 1).
+        
+        If that fails, keep track of the lcm d of denominators found so
+        far, and check to see if z = a\*d lifts to an integer with z =
+        sqrt(m/2). If so, no need to do rational recon. This should be the
+        case for most a after a while, and should saves substantial time!
         """
         cdef Integer m
         cdef Matrix_integer_dense ZA
@@ -1687,12 +1796,11 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
 
     def randomize(self, density=1, num_bound=2, den_bound=2, distribution=None):
         """
-        Randomize density proportion of the entries of this matrix,
-        leaving the rest unchanged.
-
+        Randomize density proportion of the entries of this matrix, leaving
+        the rest unchanged.
+        
         If x and y are given, randomized entries of this matrix have
-        numerators and denominators bounded by x and y and have
-        density 1.
+        numerators and denominators bounded by x and y and have density 1.
         """
         density = float(density)
         if density == 0:
@@ -1760,15 +1868,16 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def set_row_to_multiple_of_row(self, Py_ssize_t i, Py_ssize_t j, s):
         """
         Set row i equal to s times row j.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ,2,3,range(6)); a
             [0 1 2]
             [3 4 5]
             sage: a.set_row_to_multiple_of_row(1,0,-3)
             sage: a
             [ 0  1  2]
-            [ 0 -3 -6]        
+            [ 0 -3 -6]
         """
         self.check_row_bounds_and_mutability(i,j)
         cdef Py_ssize_t n
@@ -1787,17 +1896,24 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
                                                                  Py_ssize_t r, cols,
                                                                  cols_index=None):
         """
-        Set row i of self to -(row r of A), but where we only take
-        the given column positions in that row of A.  We do not
-        zero out the other entries of self's row i either. 
-
-        INPUT:
-            i -- integer, index into the rows of self
-            A -- a matrix
-            r -- integer, index into rows of A
-            cols -- a *sorted* list of integers. 
+        Set row i of self to -(row r of A), but where we only take the
+        given column positions in that row of A. We do not zero out the
+        other entries of self's row i either.
         
-        EXAMPLES:
+        INPUT:
+        
+        
+        -  ``i`` - integer, index into the rows of self
+        
+        -  ``A`` - a matrix
+        
+        -  ``r`` - integer, index into rows of A
+        
+        -  ``cols`` - a *sorted* list of integers.
+        
+        
+        EXAMPLES::
+        
             sage: a = matrix(QQ,2,3,range(6)); a
             [0 1 2]
             [3 4 5]
@@ -1834,9 +1950,9 @@ cdef class Matrix_rational_dense(matrix_dense.Matrix_dense):
     def _add_col_j_of_A_to_col_i_of_self(self,
                Py_ssize_t i, Matrix_rational_dense A, Py_ssize_t j):
         """
-        Unsafe technical function that very quickly adds the j-th
-        column of A to the i-th column of self.
-
+        Unsafe technical function that very quickly adds the j-th column of
+        A to the i-th column of self.
+        
         Does not check mutability.
         """
         if A._nrows != self._nrows:

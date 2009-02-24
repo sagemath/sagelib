@@ -41,10 +41,11 @@ cdef class Matrix_sparse(matrix.Matrix):
 
     def __copy__(self):
         """
-        Return a copy of this matrix.  Changing the entries of the
-        copy will not change the entries of this matrix.
-
-        EXAMPLES:
+        Return a copy of this matrix. Changing the entries of the copy will
+        not change the entries of this matrix.
+        
+        EXAMPLES::
+        
             sage: A = matrix(QQ['x,y'], 2, [0,-1,2,-2], sparse=True); A
             [ 0 -1]
             [ 2 -2]
@@ -68,22 +69,26 @@ cdef class Matrix_sparse(matrix.Matrix):
     def __hash__(self):
         """
         Return the hash of this matrix.
-
-        Equal matrices should have equal hashes, even if one is sparse and
-        the other is dense. 
         
-        EXAMPLES:
+        Equal matrices should have equal hashes, even if one is sparse and
+        the other is dense.
+        
+        EXAMPLES::
+        
             sage: m = matrix(2, range(6), sparse=True)
             sage: m.set_immutable()
             sage: hash(m)
             5
-
-        The sparse and dense hashes should agree:
+        
+        The sparse and dense hashes should agree::
+        
             sage: d = m.dense_matrix()
             sage: d.set_immutable()
             sage: hash(d)
             5
-
+        
+        ::
+        
             sage: A = Matrix(ZZ[['t']], 2, 2, range(4), sparse=True)
             sage: hash(A)
             Traceback (most recent call last):
@@ -122,7 +127,8 @@ cdef class Matrix_sparse(matrix.Matrix):
 
     def _multiply_classical(Matrix_sparse left, Matrix_sparse right):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: A = matrix(QQ['x,y'], 2, [0,-1,2,-2], sparse=True)
             sage: type(A)
             <type 'sage.matrix.matrix_generic_sparse.Matrix_generic_sparse'>
@@ -174,14 +180,15 @@ cdef class Matrix_sparse(matrix.Matrix):
 
     def _multiply_classical_with_cache(Matrix_sparse left, Matrix_sparse right):
         """
-        This function computes the locations of the end of the rows/columns 
-        in the non-zero entries list once O(rows+cols) time and space, then 
-        uses these values in the inner loops. For large matrices this can be 
-        a 2x or more speedup, but the matrices can no longer be arbitrarily 
-        large as the runtime and space requirements are no longer functions 
-        of the total number of entries only. 
+        This function computes the locations of the end of the rows/columns
+        in the non-zero entries list once O(rows+cols) time and space, then
+        uses these values in the inner loops. For large matrices this can
+        be a 2x or more speedup, but the matrices can no longer be
+        arbitrarily large as the runtime and space requirements are no
+        longer functions of the total number of entries only.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: A = matrix(QQ['x,y'], 2, [0,-1,2,-2], sparse=True)
             sage: type(A)
             <type 'sage.matrix.matrix_generic_sparse.Matrix_generic_sparse'>
@@ -277,9 +284,11 @@ cdef class Matrix_sparse(matrix.Matrix):
         """
         Returns the transpose of self, without changing self.
         
-        EXAMPLES:
-        We create a matrix, compute its transpose, and note that the
-        original matrix is not changed.
+        EXAMPLES: We create a matrix, compute its transpose, and note that
+        the original matrix is not changed.
+        
+        ::
+        
             sage: M = MatrixSpace(QQ,  2, sparse=True)
             sage: A = M([1,2,3,4])
             sage: B = A.transpose()
@@ -323,14 +332,14 @@ cdef class Matrix_sparse(matrix.Matrix):
     def charpoly(self, var='x', **kwds):
         """
         Return the characteristic polynomial of this matrix.
-
-        Note -- the generic sparse charpoly implementation in Sage is
-        to just compute the charpoly of the corresponding dense
-        matrix, so this could use a lot of memory.  In particular,
-        for this matrix, the charpoly will be computed using a dense
-        algorithm.
-
-        EXAMPLES:
+        
+        Note - the generic sparse charpoly implementation in Sage is to
+        just compute the charpoly of the corresponding dense matrix, so
+        this could use a lot of memory. In particular, for this matrix, the
+        charpoly will be computed using a dense algorithm.
+        
+        EXAMPLES::
+        
             sage: A = matrix(ZZ, 4, range(16), sparse=True)
             sage: A.charpoly()
             x^4 - 30*x^3 - 80*x^2
@@ -349,18 +358,21 @@ cdef class Matrix_sparse(matrix.Matrix):
     def apply_morphism(self, phi):
         """
         Apply the morphism phi to the coefficients of this sparse matrix.
-
+        
         The resulting matrix is over the codomain of phi.
-
+        
         INPUT:
-            phi -- a morphism, so phi is callable and phi.domain()
-                   and phi.codomain() are defined.  The codomain
-                   must be a ring. 
-
-        OUTPUT:
-            a matrix over the codomain of phi
-
-        EXAMPLES:
+        
+        
+        -  ``phi`` - a morphism, so phi is callable and
+           phi.domain() and phi.codomain() are defined. The codomain must be a
+           ring.
+        
+        
+        OUTPUT: a matrix over the codomain of phi
+        
+        EXAMPLES::
+        
             sage: m = matrix(ZZ, 3, range(9), sparse=True)
             sage: phi = ZZ.hom(GF(5))
             sage: m.apply_morphism(phi)
@@ -377,19 +389,24 @@ cdef class Matrix_sparse(matrix.Matrix):
 
     def apply_map(self, phi, R=None, sparse=True):
         """
-        Apply the given map phi (an arbitrary Python function or
-        callable object) to this matrix.  If R is not given,
-        automatically determine the base ring of the resulting matrix.
-
+        Apply the given map phi (an arbitrary Python function or callable
+        object) to this matrix. If R is not given, automatically determine
+        the base ring of the resulting matrix.
+        
         INPUT:
-            phi -- arbitrary Python function or callable object
-            R -- (optional) ring
             sparse -- False to make the output a dense matrix; default True
-
-        OUTPUT:
-            a matrix over R
-
-        EXAMPLES:
+        
+        
+        -  ``phi`` - arbitrary Python function or callable
+           object
+        
+        -  ``R`` - (optional) ring
+        
+        
+        OUTPUT: a matrix over R
+        
+        EXAMPLES::
+        
             sage: m = matrix(ZZ, 10000, {(1,2): 17}, sparse=True)
             sage: k.<a> = GF(9)
             sage: f = lambda x: k(x)
@@ -398,23 +415,28 @@ cdef class Matrix_sparse(matrix.Matrix):
             Full MatrixSpace of 10000 by 10000 sparse matrices over Finite Field in a of size 3^2
             sage: n[1,2]
             2
-
-        An example where the codomain is explicitly specified. 
+        
+        An example where the codomain is explicitly specified.
+        
+        ::
+        
             sage: n = m.apply_map(lambda x:x%3, GF(3))
             sage: n.parent()
             Full MatrixSpace of 10000 by 10000 sparse matrices over Finite Field of size 3
             sage: n[1,2]
             2
-
+        
         If we didn't specify the codomain, the resulting matrix in the
-        above case ends up over ZZ again:
+        above case ends up over ZZ again::
+        
             sage: n = m.apply_map(lambda x:x%3)
             sage: n.parent()
             Full MatrixSpace of 10000 by 10000 sparse matrices over Integer Ring
             sage: n[1,2]
             2
-
-        If self is subdivided, the result will be as well:
+        
+        If self is subdivided, the result will be as well::
+        
             sage: m = matrix(2, 2, [0, 0, 3, 0])
             sage: m.subdivide(None, 1); m
             [0|0]
@@ -425,6 +447,9 @@ cdef class Matrix_sparse(matrix.Matrix):
 
         If the map sends zero to a non-zero value, then it may be useful to
         get the result as a dense matrix.
+        
+        ::
+        
             sage: m = matrix(ZZ, 3, 3, [0] * 7 + [1,2], sparse=True); m
             [0 0 0]
             [0 0 0]
@@ -437,8 +462,9 @@ cdef class Matrix_sparse(matrix.Matrix):
             [    x x + 1 x + 2]
             sage: parent(n)
             Full MatrixSpace of 3 by 3 dense matrices over Univariate Polynomial Ring in x over Rational Field
-
-        TESTS:
+        
+        TESTS::
+        
             sage: m = matrix([], sparse=True)
             sage: m.apply_map(lambda x: x*x) == m
             True
@@ -446,13 +472,15 @@ cdef class Matrix_sparse(matrix.Matrix):
             sage: m.apply_map(lambda x: x*x, sparse=False).parent()
             Full MatrixSpace of 0 by 0 dense matrices over Integer Ring
 
-        Check that we don't unnecessarily apply phi to 0 in the sparse case:
+        Check that we don't unnecessarily apply phi to 0 in the sparse case::
+        
             sage: m = matrix(QQ, 2, 2, range(1, 5), sparse=True)
             sage: m.apply_map(lambda x: 1/x)
             [  1 1/2]
             [1/3 1/4]
 
-        Test subdivisions when phi maps 0 to non-zero:
+        Test subdivisions when phi maps 0 to non-zero::
+        
             sage: m = matrix(2, 2, [0, 0, 3, 0])
             sage: m.subdivide(None, 1); m
             [0|0]
@@ -502,13 +530,15 @@ cdef class Matrix_sparse(matrix.Matrix):
 
     def _derivative(self, var=None):
         """
-        Differentiate with respect to var by differentiating each
-        element with respect to var.
+        Differentiate with respect to var by differentiating each element
+        with respect to var.
+        
+        .. seealso::
 
-        SEE ALSO:
-            self.derivative()
-
-        EXAMPLES:
+           :meth:`derivative`
+        
+        EXAMPLES::
+        
             sage: m = matrix(2, [x^i for i in range(4)], sparse=True)
             sage: m._derivative(x)
             [    0     1]
