@@ -72,11 +72,13 @@ class ConwayPolynomials(sage.databases.db.Database):
     def __init__(self, read_only=True):
         """
         Initialize the database.
-
+        
         INPUT:
-            read_only -- bool (default: True), if True, then the
-                         database is read_only and changes cannot be
-                         commited to disk.
+        
+        
+        -  ``read_only`` - bool (default: True), if True, then
+           the database is read_only and changes cannot be commited to
+           disk.
         """
         sage.databases.db.Database.__init__(self,
              name="conway_polynomials", read_only=read_only)
