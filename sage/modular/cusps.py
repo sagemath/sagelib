@@ -1,9 +1,12 @@
 r"""
-The set $\PP^1(\Q)$ of cusps
+The set `\mathbb{P}^1(\mathbb{Q})` of cusps
 
-EXAMPLES:
+EXAMPLES::
+
     sage: Cusps
     Set P^1(QQ) of all cusps
+
+::
 
     sage: Cusp(oo)
     Infinity
@@ -34,8 +37,9 @@ import congroup
 class Cusps_class(ParentWithBase):
     """
     The set of cusps.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: C = Cusps; C
         Set P^1(QQ) of all cusps
         sage: loads(C.dumps()) == C
@@ -43,9 +47,10 @@ class Cusps_class(ParentWithBase):
     """
     def __init__(self):
         r"""
-        The set of cusps, i.e. $\PP^1(\Q)$.
-
-        EXAMPLES:
+        The set of cusps, i.e. `\mathbb{P}^1(\mathbb{Q})`.
+        
+        EXAMPLES::
+        
             sage: C = sage.modular.cusps.Cusps_class() ; C
             Set P^1(QQ) of all cusps
             sage: Cusps == C
@@ -56,8 +61,9 @@ class Cusps_class(ParentWithBase):
     def __cmp__(self, right):
         """
         Return equality only if right is the set of cusps.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Cusps == Cusps
             True
             sage: Cusps == QQ
@@ -68,8 +74,9 @@ class Cusps_class(ParentWithBase):
     def _repr_(self):
         """
         String representation of the set of cusps.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Cusps
             Set P^1(QQ) of all cusps
             sage: Cusps._repr_()
@@ -86,8 +93,9 @@ class Cusps_class(ParentWithBase):
     def _latex_(self):
         """
         Return latex representation of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: latex(Cusps)
             \mathbf{P}^1(\mathbf{Q})
             sage: latex(Cusps) == Cusps._latex_()
@@ -98,8 +106,9 @@ class Cusps_class(ParentWithBase):
     def __call__(self, x):
         """
         Coerce x into the set of cusps.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = Cusps(-4/5); a
             -4/5
             sage: Cusps(a) is a
@@ -119,7 +128,8 @@ class Cusps_class(ParentWithBase):
         """
         Canonical coercion of x into the set of cusps.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: Cusps._coerce_(7/13)
             7/13
             sage: Cusps._coerce_(GF(7)(3))
@@ -144,28 +154,30 @@ Cusps = Cusps_class()
 class Cusp(Element):
     """
     A cusp.
-
-    A cusp is either a rational number or infinity, i.e., an element
-    of the projective line over Q.  A Cusp is stored as a pair (a,b),
-    where gcd(a,b)=1 and a,b are of type Integer.
-
-    EXAMPLES:
+    
+    A cusp is either a rational number or infinity, i.e., an element of
+    the projective line over Q. A Cusp is stored as a pair (a,b), where
+    gcd(a,b)=1 and a,b are of type Integer.
+    
+    EXAMPLES::
+    
         sage: a = Cusp(2/3); b = Cusp(oo)
         sage: a.parent()
         Set P^1(QQ) of all cusps
         sage: a.parent() is b.parent()
-        True        
+        True
     """
 
     def __init__(self, a, b=None, parent=None):
         r"""
-        Create the cusp a/b in $\PP^1(\Q)$, where if b=0 this is the
-        cusp at infinity.
-
+        Create the cusp a/b in `\mathbb{P}^1(\mathbb{Q})`, where if b=0
+        this is the cusp at infinity.
+        
         When present, b must either be Infinity or coercible to an
         Integer.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Cusp(2,3)
             2/3
             sage: Cusp(3,6)
@@ -182,24 +194,31 @@ class Cusp(Element):
             3/2
             sage: Cusp(int(7))
             7
-
+        
+        ::
+        
             sage: I**2
             -1
             sage: Cusp(I)
             Traceback (most recent call last):
             ...
             TypeError: Unable to convert I to a Cusp
-
+        
+        ::
+        
             sage: a = Cusp(2,3)
             sage: loads(a.dumps()) == a
             True
-
+        
+        ::
+        
             sage: Cusp(1/3,0)
             Infinity
             sage: Cusp((1,0))
             Infinity
-
-        TESTS:
+        
+        TESTS::
+        
             sage: Cusp("1/3", 5)
             1/15
             sage: Cusp(Cusp(3/5), 7)
@@ -212,22 +231,27 @@ class Cusp(Element):
             7/15
             sage: Cusp(int(5), 7)
             5/7
-
+        
+        ::
+        
             sage: Cusp(0,0)
             Traceback (most recent call last):
             ...
             TypeError: Unable to convert (0, 0) to a Cusp
-            
+        
+        ::
+        
             sage: Cusp(oo,oo)
             Traceback (most recent call last):
             ...
             TypeError: Unable to convert (+Infinity, +Infinity) to a Cusp
-            
+        
+        ::
+        
             sage: Cusp(Cusp(oo),oo)
             Traceback (most recent call last):
             ...
             TypeError: Unable to convert (Infinity, +Infinity) to a Cusp
-            
         """
         if parent is None:
             parent = Cusps
@@ -327,49 +351,72 @@ class Cusp(Element):
             
     def __cmp__(self, right):
         """
-        Compare the cusps self and right.  Comparison is as for
-        rational numbers, except with the cusp oo greater than
-        everything but itself.
-
-        The ordering in comparison is only really meaningful
-        for infinity or elements that coerce to the rationals.
-
-        EXAMPLES:
+        Compare the cusps self and right. Comparison is as for rational
+        numbers, except with the cusp oo greater than everything but
+        itself.
+        
+        The ordering in comparison is only really meaningful for infinity
+        or elements that coerce to the rationals.
+        
+        EXAMPLES::
+        
             sage: Cusp(2/3) == Cusp(oo)
             False
-
+        
+        ::
+        
             sage: Cusp(2/3) < Cusp(oo)
             True
-
+        
+        ::
+        
             sage: Cusp(2/3)> Cusp(oo)
             False
-
+        
+        ::
+        
             sage: Cusp(2/3) > Cusp(5/2)
             False
-
+        
+        ::
+        
             sage: Cusp(2/3) < Cusp(5/2)
             True
-
+        
+        ::
+        
             sage: Cusp(2/3) == Cusp(5/2)
             False
-
+        
+        ::
+        
             sage: Cusp(oo) == Cusp(oo)
             True
-
+        
+        ::
+        
             sage: 19/3 < Cusp(oo)
             True
-
+        
+        ::
+        
             sage: Cusp(oo) < 19/3
             False
-
+        
+        ::
+        
             sage: Cusp(2/3) < Cusp(11/7)
             True
-
+        
+        ::
+        
             sage: Cusp(11/7) < Cusp(2/3)
             False
-
+        
+        ::
+        
             sage: 2 < Cusp(3)
-            True        
+            True
         """
         if not self.__b:
             # self is oo, which is bigger than everything but oo.
@@ -387,22 +434,24 @@ class Cusp(Element):
     def is_infinity(self):
         """
         Returns True if this is the cusp infinity.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Cusp(3/5).is_infinity()
             False
             sage: Cusp(1,0).is_infinity()
             True
             sage: Cusp(0,1).is_infinity()
-            False        
+            False
         """
         return self.__b == 0
 
     def numerator(self):
         """
         Return the numerator of the cusp a/b.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: x=Cusp(6,9); x
             2/3
             sage: x.numerator()
@@ -417,8 +466,9 @@ class Cusp(Element):
     def denominator(self):
         """
         Return the denominator of the cusp a/b.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: x=Cusp(6,9); x
             2/3
             sage: x.denominator()
@@ -426,15 +476,16 @@ class Cusp(Element):
             sage: Cusp(oo).denominator()
             0
             sage: Cusp(-5/10).denominator()
-            2        
+            2
         """        
         return self.__b
 
     def _rational_(self):
         """
         Coerce to a rational number.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: QQ(Cusp(oo))
             Traceback (most recent call last):
             ...
@@ -457,13 +508,16 @@ class Cusp(Element):
     def _integer_(self, ZZ=None):
         """
         Coerce to an integer.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: ZZ(Cusp(-19))
             -19
             sage: Cusp(4,2)._integer_()
             2
-
+        
+        ::
+        
             sage: ZZ(Cusp(oo))
             Traceback (most recent call last):
             ...
@@ -481,7 +535,8 @@ class Cusp(Element):
         """
         String representation of this cusp.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: a = Cusp(2/3); a
             2/3
             sage: a._repr_()
@@ -499,8 +554,9 @@ class Cusp(Element):
     def _latex_(self):
         r"""
         Latex representation of this cusp.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: latex(Cusp(-2/7))
             \frac{-2}{7}
             sage: latex(Cusp(oo))
@@ -518,32 +574,45 @@ class Cusp(Element):
     def __neg__(self):
         """
         The negative of this cusp.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: -Cusp(2/7)
             -2/7
             sage: -Cusp(oo)
-            Infinity        
+            Infinity
         """
         return Cusp(-self.__a, self.__b)
 
     def is_gamma0_equiv(self, other, N, transformation = False):
         r"""
-        Return whether self and other are equivalent modulo the action
-        of $\Gamma_0(N)$ via linear fractional transformations.
+        Return whether self and other are equivalent modulo the action of
+        `\Gamma_0(N)` via linear fractional transformations.
         
         INPUT:
-            other -- Cusp
-            N -- an integer (specifies the group Gamma_0(N))
-            transformation -- bool (default: False), if True, also
-                              return upper left entry of a matrix in
-                              Gamma_0(N) that sends self to other.
-
+        
+        
+        -  ``other`` - Cusp
+        
+        -  ``N`` - an integer (specifies the group
+           Gamma_0(N))
+        
+        -  ``transformation`` - bool (default: False), if True,
+           also return upper left entry of a matrix in Gamma_0(N) that sends
+           self to other.
+        
+        
         OUTPUT:
-            bool -- True if self and other are equivalent
-            integer -- returned only if transformation is True
-
-        EXAMPLES:
+        
+        
+        -  ``bool`` - True if self and other are equivalent
+        
+        -  ``integer`` - returned only if transformation is
+           True
+        
+        
+        EXAMPLES::
+        
             sage: x = Cusp(2,3)
             sage: y = Cusp(4,5)
             sage: x.is_gamma0_equiv(y, 2)
@@ -559,10 +628,9 @@ class Cusp(Element):
             sage: z = Cusp(1,0)
             sage: x.is_gamma0_equiv(z, 3, True)
             (True, 2)
-
-        ALGORITHM:
-            See Proposition 2.2.3 of Cremona's book "Algorithms for Modular
-            Elliptic Curves", or Prop 2.27 of Stein's Ph.D. thesis. 
+        
+        ALGORITHM: See Proposition 2.2.3 of Cremona's book "Algorithms for
+        Modular Elliptic Curves", or Prop 2.27 of Stein's Ph.D. thesis.
         """
         if not isinstance(other, Cusp):
             other = Cusp(other)
@@ -614,26 +682,33 @@ class Cusp(Element):
 
     def is_gamma1_equiv(self, other, N):
         """
-        Return whether self and other are equivalent modulo the action
-        of Gamma_1(N) via linear fractional transformations.
+        Return whether self and other are equivalent modulo the action of
+        Gamma_1(N) via linear fractional transformations.
         
         INPUT:
-            other -- Cusp
-            N -- an integer (specifies the group Gamma_1(N))
-
+        
+        
+        -  ``other`` - Cusp
+        
+        -  ``N`` - an integer (specifies the group
+           Gamma_1(N))
+        
+        
         OUTPUT:
-            bool -- True if self and other are equivalent
-            int -- 0, 1 or -1, gives further information
-                   about the equivalence:  If the two cusps
-                   are u1/v1 and u2/v2, then they are equivalent
-                   if and only if
-                        v1 = v2 (mod N) and u1 = u2 (mod gcd(v1,N))
-                   or
-                        v1 = -v2 (mod N) and u1 = -u2 (mod gcd(v1,N))
-                   The sign is +1 for the first and -1 for the second.
-                   If the two cusps are not equivalent then 0 is returned.
-                   
-        EXAMPLES:
+        
+        
+        -  ``bool`` - True if self and other are equivalent
+        
+        -  ``int`` - 0, 1 or -1, gives further information
+           about the equivalence: If the two cusps are u1/v1 and u2/v2, then
+           they are equivalent if and only if v1 = v2 (mod N) and u1 = u2 (mod
+           gcd(v1,N)) or v1 = -v2 (mod N) and u1 = -u2 (mod gcd(v1,N)) The
+           sign is +1 for the first and -1 for the second. If the two cusps
+           are not equivalent then 0 is returned.
+        
+        
+        EXAMPLES::
+        
             sage: x = Cusp(2,3)
             sage: y = Cusp(4,5)
             sage: x.is_gamma1_equiv(y,2)
@@ -667,27 +742,36 @@ class Cusp(Element):
 
     def is_gamma_h_equiv(self, other, G):
         """
-        Return a pair (b, t), where b is True or False as self
-        and other are equivalent under the action of G, and t
-        is 1 or -1, as described below.
-
-        Two cusps $u1/v1$ and $u2/v2$ are equivalent modulo Gamma_H(N)
-        if and only if
-            $v1 =  h*v2 (mod N)$ and $u1 =  h^(-1)*u2 (mod gcd(v1,N))$
-        or
-            $v1 = -h*v2 (mod N)$ and $u1 = -h^(-1)*u2 (mod gcd(v1,N))$
-        for some $h \in H$. Then t is 1 or -1 as c and c' fall into
-        the first or second case, respectively.
+        Return a pair (b, t), where b is True or False as self and other
+        are equivalent under the action of G, and t is 1 or -1, as
+        described below.
+        
+        Two cusps `u1/v1` and `u2/v2` are equivalent modulo
+        Gamma_H(N) if and only if `v1 =  h*v2 (\mathrm{mod} N)` and
+        `u1 =  h^{(-1)}*u2 (\mathrm{mod} gcd(v1,N))` or
+        `v1 = -h*v2 (mod N)` and
+        `u1 = -h^{(-1)}*u2 (\mathrm{mod} gcd(v1,N))` for some
+        `h \in H`. Then t is 1 or -1 as c and c' fall into the
+        first or second case, respectively.
         
         INPUT:
-            other -- Cusp
-            G -- a congruence subgroup Gamma_H(N)
-
+        
+        
+        -  ``other`` - Cusp
+        
+        -  ``G`` - a congruence subgroup Gamma_H(N)
+        
+        
         OUTPUT:
-            bool -- True if self and other are equivalent
-            int -- -1, 0, 1; extra info
-                   
-        EXAMPLES:
+        
+        
+        -  ``bool`` - True if self and other are equivalent
+        
+        -  ``int`` - -1, 0, 1; extra info
+        
+        
+        EXAMPLES::
+        
             sage: x = Cusp(2,3)
             sage: y = Cusp(4,5)
             sage: x.is_gamma_h_equiv(y,GammaH(13,[2]))
@@ -698,18 +782,24 @@ class Cusp(Element):
             (False, 0)
             sage: x.is_gamma_h_equiv(y,GammaH(23,[4]))
             (True, -1)
-
+        
         Enumerating the cusps for a space of modular symbols uses this
         function.
+        
+        ::
+        
             sage: G = GammaH(25,[6]) ; M = G.modular_symbols() ; M
             Modular Symbols space of dimension 11 for Congruence Subgroup Gamma_H(25) with H generated by [6] of weight 2 with sign 0 and over Rational Field
             sage: M.cusps()
             [37/75, 1/2, 31/125, 1/4, -2/5, 2/5, -1/5, 1/10, -3/10, 1/15, 7/15, 9/20]
             sage: len(M.cusps())
             12
-            
+        
         This is always one more than the associated space of Eisenstein
         series.
+        
+        ::
+        
             sage: sage.modular.dims.dimension_eis_H(G,2)
             11
             sage: M.cuspidal_subspace()
@@ -741,17 +831,17 @@ class Cusp(Element):
 
     def apply(self, g):
         """
-        Return g(self), where g=[a,b,c,d] is a list of length 4, which
-        we view as a linear fractional transformation.
-
-        EXAMPLES:
-            Apply the identity matrix:
+        Return g(self), where g=[a,b,c,d] is a list of length 4, which we
+        view as a linear fractional transformation.
+        
+        EXAMPLES: Apply the identity matrix::
+        
             sage: Cusp(0).apply([1,0,0,1])
             0
             sage: Cusp(0).apply([0,-1,1,0])
             Infinity
             sage: Cusp(0).apply([1,-3,0,1])
-            -3        
+            -3
         """
         return Cusp(g[0]*self.__a + g[1]*self.__b, g[2]*self.__a + g[3]*self.__b)
 
