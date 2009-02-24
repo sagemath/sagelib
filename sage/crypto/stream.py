@@ -25,26 +25,26 @@ class LFSRCryptosystem(SymmetricKeyCryptosystem):
     def __init__(self, field = None):
         """
         Create a linear feedback shift cryptosystem.
-
-        INPUT: 
-            A string monoid over a binary alphabet.
         
-        OUTPUT: 
-	    
-        EXAMPLES:
-            sage: E = LFSRCryptosystem(FiniteField(2))
-	    sage: E
-            LFSR cryptosystem over Finite Field of size 2
-
-        TESTS:
+        INPUT: A string monoid over a binary alphabet.
+        
+        OUTPUT:
+        
+        EXAMPLES::
+        
+                   sage: E = LFSRCryptosystem(FiniteField(2))
+            sage: E
+                   LFSR cryptosystem over Finite Field of size 2
+        
+        TESTS::
+        
             sage: E = LFSRCryptosystem(FiniteField(2))
             sage: E == loads(dumps(E))
             True
-
-
-	TODO: Implement LFSR cryptosytem for arbitrary rings. The current 
-	implementation if limitated to the finite field of 2 elements only 
-        because of the dependence on binary strings. 
+        
+        TODO: Implement LFSR cryptosytem for arbitrary rings. The current
+        implementation if limitated to the finite field of 2 elements only
+        because of the dependence on binary strings.
         """
 	if field is None:
 	   field = FiniteField(2)
@@ -61,9 +61,8 @@ class LFSRCryptosystem(SymmetricKeyCryptosystem):
     def __call__(self, key):
         """
         Create a LFSR cipher.
-
-        INPUT: 
-            A polynomial and inital state of the LFSR.
+        
+        INPUT: A polynomial and inital state of the LFSR.
         """        
 	if not isinstance(key, (list,tuple)) and len(key) == 2:
 	    raise TypeError, "Argument key (= %s) must be a list of tuple of length 2" % key
@@ -94,17 +93,16 @@ class ShrinkingGeneratorCryptosystem(SymmetricKeyCryptosystem):
     def __init__(self, field = None):
         """
         Create a shrinking generator cryptosystem.
-
-        INPUT: 
-            A string monoid over a binary alphabet.
         
-        OUTPUT: 
-	    
-
-        EXAMPLES:
-            sage: E = ShrinkingGeneratorCryptosystem()
-	    sage: E
-            Shrinking generator cryptosystem over Finite Field of size 2
+        INPUT: A string monoid over a binary alphabet.
+        
+        OUTPUT:
+        
+        EXAMPLES::
+        
+                   sage: E = ShrinkingGeneratorCryptosystem()
+            sage: E
+                   Shrinking generator cryptosystem over Finite Field of size 2
         """
 	if field is None:
 	   field = FiniteField(2)
@@ -118,13 +116,11 @@ class ShrinkingGeneratorCryptosystem(SymmetricKeyCryptosystem):
     def __call__(self, key):
         """
         Create a Shrinking generator cipher.
-
-        INPUT: 
-            A list or tuple consisting of two LFSR ciphers (e1,e2). 
-
-        OUTPUT: 
-            The shrinking generator cipher with key stream generator e1 and decimating 
-            cipher e2.
+        
+        INPUT: A list or tuple consisting of two LFSR ciphers (e1,e2).
+        
+        OUTPUT: The shrinking generator cipher with key stream generator e1
+        and decimating cipher e2.
         """        
 	if not isinstance(key, (list,tuple)) and len(key) == 2:
 	    raise TypeError, "Argument key (= %s) must be a list of tuple of length 2" % key

@@ -36,38 +36,38 @@ class HillCryptosystem(SymmetricKeyCryptosystem):
 
     def __init__(self, S, m):
         """
-        Create a Hill cryptosystem defined by the m x m matrix space over Z/NZ 
-	where N is the alphabet size of the string monoid S.
-
-        INPUT: 
-            A string monoid S over some alphabet, and a block length m.
+        Create a Hill cryptosystem defined by the m x m matrix space over
+        Z/NZ where N is the alphabet size of the string monoid S.
         
-        EXAMPLES:
+        INPUT: A string monoid S over some alphabet, and a block length m.
+        
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = HillCryptosystem(S,3)
             sage: E
-	    Hill cryptosystem on Free alphabetic string monoid on A-Z of block length 3
-	    sage: R = IntegerModRing(26)
-	    sage: M = MatrixSpace(R,3,3)
+            Hill cryptosystem on Free alphabetic string monoid on A-Z of block length 3
+            sage: R = IntegerModRing(26)
+            sage: M = MatrixSpace(R,3,3)
             sage: A = M([[1,0,1],[0,1,1],[2,2,3]])
-	    sage: A
-	    [1 0 1]
-	    [0 1 1]
-	    [2 2 3]
-	    sage: e = E(A)
+            sage: A
+            [1 0 1]
+            [0 1 1]
+            [2 2 3]
+            sage: e = E(A)
             sage: e
-	    [1 0 1]
-	    [0 1 1]
-	    [2 2 3]
+            [1 0 1]
+            [0 1 1]
+            [2 2 3]
             sage: e(S("LAMAISONBLANCHE"))
-	    JYVKSKQPELAYKPV
-
-        TESTS:
+            JYVKSKQPELAYKPV
+        
+        TESTS::
+        
             sage: S = AlphabeticStrings()
             sage: E = HillCryptosystem(S,3)
             sage: E == loads(dumps(E))
             True
-            
         """
         if not isinstance(S, StringMonoid_class):
             raise TypeError, "S (= %s) must be a string monoid."%S
@@ -78,32 +78,32 @@ class HillCryptosystem(SymmetricKeyCryptosystem):
     def __call__(self, A):
         """
         Create a Hill cipher.
-
-        INPUT: 
-            A matrix which specifies a block permutation.
         
-        EXAMPLES:
+        INPUT: A matrix which specifies a block permutation.
+        
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = HillCryptosystem(S,3)
             sage: E
             Hill cryptosystem on Free alphabetic string monoid on A-Z of block length 3
-	    sage: M = E.key_space() 
+            sage: M = E.key_space() 
             sage: A = M([[1,0,1],[0,1,1],[2,2,3]])
-	    sage: A
-	    [1 0 1]
-	    [0 1 1]
-	    [2 2 3]
-	    sage: e = E(A)
+            sage: A
+            [1 0 1]
+            [0 1 1]
+            [2 2 3]
+            sage: e = E(A)
             sage: e
-	    [1 0 1]
-	    [0 1 1]
-	    [2 2 3]
-	    sage: m = S("LAMAISONBLANCHE")
+            [1 0 1]
+            [0 1 1]
+            [2 2 3]
+            sage: m = S("LAMAISONBLANCHE")
             sage: e(m)
             JYVKSKQPELAYKPV
             sage: c = e.inverse()
             sage: c(e(m))
-	    LAMAISONBLANCHE
+            LAMAISONBLANCHE
         """
         M = self.key_space()
         m = self.block_length()
@@ -134,7 +134,8 @@ class HillCryptosystem(SymmetricKeyCryptosystem):
 
     def inverse_key(self,A):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = HillCryptosystem(S,3)
             sage: A = E.random_key()
@@ -184,11 +185,11 @@ class SubstitutionCryptosystem(SymmetricKeyCryptosystem):
     def __init__(self, S):
         """
         Create a substitution cryptosystem.
-
-        INPUT: 
-            A string monoid over some alphabet.
         
-        EXAMPLES:
+        INPUT: A string monoid over some alphabet.
+        
+        EXAMPLES::
+        
             sage: M = AlphabeticStrings()
             sage: E = SubstitutionCryptosystem(M)
             sage: E
@@ -200,13 +201,13 @@ class SubstitutionCryptosystem(SymmetricKeyCryptosystem):
             sage: m = M("THECATINTHEHAT")
             sage: e(m)
             GSVXZGRMGSVSZG
-
-        TESTS:
+        
+        TESTS::
+        
             sage: M = AlphabeticStrings()
             sage: E = SubstitutionCryptosystem(M)
             sage: E == loads(dumps(E))
             True
-
         """
         if not isinstance(S, StringMonoid_class):
             raise TypeError, "S (= %s) must be a string monoid."%S
@@ -215,11 +216,11 @@ class SubstitutionCryptosystem(SymmetricKeyCryptosystem):
     def __call__(self, K):
         """
         Create a substitution cipher.
-
-        INPUT: 
-            A key which is a permutation of the cryptosystem alphabet.
         
-        EXAMPLES:
+        INPUT: A key which is a permutation of the cryptosystem alphabet.
+        
+        EXAMPLES::
+        
             sage: M = AlphabeticStrings()
             sage: E = SubstitutionCryptosystem(M)
             sage: E
@@ -249,7 +250,8 @@ class SubstitutionCryptosystem(SymmetricKeyCryptosystem):
 
     def inverse_key(self,K):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = SubstitutionCryptosystem(S)
             sage: K = E.random_key()
@@ -289,11 +291,11 @@ class TranspositionCryptosystem(SymmetricKeyCryptosystem):
     def __init__(self, S, n):
         """
         Create a transposeition cryptosystem of block length n.
-
-        INPUT: 
-            A string monoid S over some alphabet, and a block length n.
         
-        EXAMPLES:
+        INPUT: A string monoid S over some alphabet, and a block length n.
+        
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = TranspositionCryptosystem(S,14)
             sage: E
@@ -304,13 +306,13 @@ class TranspositionCryptosystem(SymmetricKeyCryptosystem):
             sage: e = E(K)
             sage: e(S("THECATINTHEHAT"))
             TAHEHTNITACEHT
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = TranspositionCryptosystem(S,14)
             sage: E == loads(dumps(E))
             True
-
         """
         if not isinstance(S, StringMonoid_class):
             raise TypeError, "S (= %s) must be a string monoid."%S
@@ -320,11 +322,11 @@ class TranspositionCryptosystem(SymmetricKeyCryptosystem):
     def __call__(self, K):
         """
         Create a transposition cipher.
-
-        INPUT: 
-            A key which specifies a block permutation.
         
-        EXAMPLES:
+        INPUT: A key which specifies a block permutation.
+        
+        EXAMPLES::
+        
             sage: M = AlphabeticStrings()
             sage: E = TranspositionCryptosystem(M,14)
             sage: E
@@ -357,6 +359,7 @@ class TranspositionCryptosystem(SymmetricKeyCryptosystem):
 
     def inverse_key(self,K,check = True):
         """
+        
         """
         if check:
             if not K in self.key_space():
@@ -388,11 +391,11 @@ class VigenereCryptosystem(SymmetricKeyCryptosystem):
     def __init__(self, S, n):
         """
         Create a Vigenere cryptosystem of block length n.
-
-        INPUT: 
-            A string monoid S over some alphabet, and a block length n.
         
-        EXAMPLES:
+        INPUT: A string monoid S over some alphabet, and a block length n.
+        
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = VigenereCryptosystem(S,14)
             sage: E
@@ -405,13 +408,13 @@ class VigenereCryptosystem(SymmetricKeyCryptosystem):
             ABCDEFGHIJKLMN
             sage: e(S("THECATINTHEHAT"))
             TIGFEYOUBQOSMG
-
-        TESTS:
+        
+        TESTS::
+        
             sage: S = AlphabeticStrings()
             sage: E = VigenereCryptosystem(S,14)
             sage: E == loads(dumps(E))
             True
-            
         """
         if not isinstance(S, StringMonoid_class):
             raise TypeError, "S (= %s) must be a string monoid."%S
@@ -420,11 +423,11 @@ class VigenereCryptosystem(SymmetricKeyCryptosystem):
     def __call__(self, K):
         """
         Create a Vigenere cipher.
-
-        INPUT: 
-            A key which specifies a block permutation.
         
-        EXAMPLES:
+        INPUT: A key which specifies a block permutation.
+        
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = VigenereCryptosystem(S,14)
             sage: E
@@ -461,7 +464,8 @@ class VigenereCryptosystem(SymmetricKeyCryptosystem):
 
     def inverse_key(self,K):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: S = AlphabeticStrings()
             sage: E = VigenereCryptosystem(S,14)
             sage: K = E.random_key()

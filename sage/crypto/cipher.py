@@ -21,12 +21,11 @@ class Cipher(Element):
     """
     def __init__(self, parent, key):
         """
-	Create a cipher.
-
+        Create a cipher.
+        
         INPUT: Parent and key
         
-        EXAMPLES: 
-            None yet
+        EXAMPLES: None yet
         """
 	self._parent = parent
 	self._key = key
@@ -56,11 +55,10 @@ class SymmetricKeyCipher(Cipher):
     def __init__(self, parent, key):
         """
         Create a symmetric cipher
-
+        
         INPUT: Parent and key
         
-        EXAMPLES: 
-            None yet
+        EXAMPLES: None yet
         """
 	Cipher.__init__(self, parent, key)
 
@@ -71,11 +69,10 @@ class PublicKeyCipher(Cipher):
     def __init__(self, parent, key, public = True):
         """
         Create a public key cipher
-
+        
         INPUT: Parent and key
         
-        EXAMPLES: 
-            None yet
+        EXAMPLES: None yet
         """
 	Cipher.__init__(self, parent, key)
 	self._public = public
