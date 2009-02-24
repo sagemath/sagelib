@@ -1,65 +1,88 @@
 r"""
 Interface to Maxima
 
-Maxima is a free GPL'd general purpose computer algebra system whose
-development started in 1968 at MIT.  It contains symbolic manipulation
-algorithms, as well as implementations of special functions, including
-elliptic functions and generalized hypergeometric functions. Moreover,
-Maxima has implementations of many functions relating to the invariant
-theory of the symmetric group $S_n$.  (However, the commands for group
-invariants, and the corresponding Maxima documenation, are in French.)
-For many links to Maxima documentation see
-         \url{http://maxima.sourceforge.net/docs.shtml/}.
+Maxima is a free GPL'd general purpose computer algebra system
+whose development started in 1968 at MIT. It contains symbolic
+manipulation algorithms, as well as implementations of special
+functions, including elliptic functions and generalized
+hypergeometric functions. Moreover, Maxima has implementations of
+many functions relating to the invariant theory of the symmetric
+group `S_n`. (However, the commands for group invariants,
+and the corresponding Maxima documenation, are in French.) For many
+links to Maxima documentation see
+http://maxima.sourceforge.net/docs.shtml/.
 
-AUTHORS OF THIS MODULE:
-    - William Stein (2005-12): Initial version
-    - David Joyner: Improved documentation
-    - William Stein (2006-01-08): Fixed bug in parsing
-    - William Stein (2006-02-22): comparisons (following suggestion of David Joyner)
-    - William Stein (2006-02-24): *greatly* improved robustness by adding
-                                  sequence numbers to IO bracketing in _eval_line
-    
+AUTHORS:
+
+- William Stein (2005-12): Initial version
+
+- David Joyner: Improved documentation
+
+- William Stein (2006-01-08): Fixed bug in parsing
+
+- William Stein (2006-02-22): comparisons (following suggestion of
+  David Joyner)
+
+- William Stein (2006-02-24): *greatly* improved robustness by adding
+  sequence numbers to IO bracketing in _eval_line
+
 If the string "error" (case insensitive) occurs in the output of
 anything from maxima, a RuntimeError exception is raised.
 
-EXAMPLES:
-We evaluate a very simple expression in maxima.
+EXAMPLES: We evaluate a very simple expression in maxima.
+
+::
+
     sage: maxima('3 * 5')
     15
 
-We factor $x^5 - y^5$ in Maxima in several different ways.
+We factor `x^5 - y^5` in Maxima in several different ways.
 The first way yields a Maxima object.
+
+::
+
     sage: F = maxima.factor('x^5 - y^5')
     sage: F
     -(y-x)*(y^4+x*y^3+x^2*y^2+x^3*y+x^4)
     sage: type(F)
     <class 'sage.interfaces.maxima.MaximaElement'>
 
-Note that Maxima objects can also be displayed using ``ASCII art'';
-to see a normal linear representation of any Maxima object x.
-Just use the print command:
-use \code{str(x)}.
+Note that Maxima objects can also be displayed using "ASCII art";
+to see a normal linear representation of any Maxima object x. Just
+use the print command: use ``str(x)``.
+
+::
+
     sage: print F
                                4      3    2  2    3      4
                    - (y - x) (y  + x y  + x  y  + x  y + x )
 
-You can always use \code{repr(x)} to obtain the linear representation
-of an object.  This can be useful for moving maxima data to other
-systems.
+You can always use ``repr(x)`` to obtain the linear
+representation of an object. This can be useful for moving maxima
+data to other systems.
+
+::
+
     sage: repr(F)
     '-(y-x)*(y^4+x*y^3+x^2*y^2+x^3*y+x^4)'
     sage: F.str()
     '-(y-x)*(y^4+x*y^3+x^2*y^2+x^3*y+x^4)'
-    
-The \code{maxima.eval} command evaluates an expression in maxima
-and returns the result as a \emph{string} not a maxima object.
+
+The ``maxima.eval`` command evaluates an expression in
+maxima and returns the result as a *string* not a maxima object.
+
+::
 
     sage: print maxima.eval('factor(x^5 - y^5)')
     -(y-x)*(y^4+x*y^3+x^2*y^2+x^3*y+x^4)
 
-We can create the polynomial $f$ as a Maxima polynomial, then call
-the factor method on it.  Notice that the notation \code{f.factor()}
-is consistent with how the rest of \sage works.
+We can create the polynomial `f` as a Maxima polynomial,
+then call the factor method on it. Notice that the notation
+``f.factor()`` is consistent with how the rest of Sage
+works.
+
+::
+
     sage: f = maxima('x^5 - y^5')
     sage: f^2
     (x^5-y^5)^2
@@ -67,23 +90,33 @@ is consistent with how the rest of \sage works.
     -(y-x)*(y^4+x*y^3+x^2*y^2+x^3*y+x^4)
 
 Control-C interruption works well with the maxima interface,
-because of the excellent implementation of maxima.  For example,
-try the following sum but with a much bigger range, and hit
-control-C.
+because of the excellent implementation of maxima. For example, try
+the following sum but with a much bigger range, and hit control-C.
+
+::
+
     sage: maxima('sum(1/x^2, x, 1, 10)')
     1968329/1270080
 
-\subsection{Tutorial}
+Tutorial
+--------
+
 We follow the tutorial at
-\url{http://maxima.sourceforge.net/docs/intromax/}.
+http://maxima.sourceforge.net/docs/intromax/.
+
+::
 
     sage: maxima('1/100 + 1/101')
     201/10100
+
+::
 
     sage: a = maxima('(1 + sqrt(2))^5'); a
     (sqrt(2)+1)^5
     sage: a.expand()
     29*sqrt(2)+41
+
+::
 
     sage: a = maxima('(1 + sqrt(2))^5')
     sage: float(a)                
@@ -91,13 +124,19 @@ We follow the tutorial at
     sage: a.numer()
     82.01219330881975
 
+::
+
     sage: maxima.eval('fpprec : 100')
     '100'
     sage: a.bfloat()
     8.20121933088197564152489730020812442785204843859314941221237124017312418754011041266612384955016056b1
 
+::
+
     sage: maxima('100!')
     93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
+
+::
 
     sage: f = maxima('(x + 3*y + x^2*y)^3')
     sage: f.expand()
@@ -110,22 +149,29 @@ We follow the tutorial at
     sage: h.factor()
     (3*y*z^2+5*z+25*y)^3/z^6
 
+::
+
     sage: eqn = maxima(['a+b*c=1', 'b-a*c=0', 'a+b=5'])
     sage: s = eqn.solve('[a,b,c]'); s
     [[a=(25*sqrt(79)*%i+25)/(6*sqrt(79)*%i-34),b=(5*sqrt(79)*%i+5)/(sqrt(79)*%i+11),c=(sqrt(79)*%i+1)/10],[a=(25*sqrt(79)*%i-25)/(6*sqrt(79)*%i+34),b=(5*sqrt(79)*%i-5)/(sqrt(79)*%i-11),c=-(sqrt(79)*%i-1)/10]]
 
-Here is an example of solving an algebraic equation:
+Here is an example of solving an algebraic equation::
+
     sage: maxima('x^2+y^2=1').solve('y')
     [y=-sqrt(1-x^2),y=sqrt(1-x^2)]
     sage: maxima('x^2 + y^2 = (x^2 - y^2)/sqrt(x^2 + y^2)').solve('y')
     [y=-sqrt((-y^2-x^2)*sqrt(y^2+x^2)+x^2),y=sqrt((-y^2-x^2)*sqrt(y^2+x^2)+x^2)]
 
-You can even nicely typeset the solution in latex:
+You can even nicely typeset the solution in latex::
+
     sage: latex(s)
     \left[ \left[ a={{25\,\sqrt{79}\,i+25}\over{6\,\sqrt{79}\,i-34}} ,   b={{5\,\sqrt{79}\,i+5}\over{\sqrt{79}\,i+11}} , c={{\sqrt{79}\,i+1  }\over{10}} \right]  , \left[ a={{25\,\sqrt{79}\,i-25}\over{6\,  \sqrt{79}\,i+34}} , b={{5\,\sqrt{79}\,i-5}\over{\sqrt{79}\,i-11}} ,   c=-{{\sqrt{79}\,i-1}\over{10}} \right]  \right] 
 
-To have the above appear onscreen via \code{xdvi}, type \code{view(s)}.
-(TODO: For OS X should create pdf output and use preview instead?)
+To have the above appear onscreen via ``xdvi``, type
+``view(s)``. (TODO: For OS X should create pdf output
+and use preview instead?)
+
+::
 
     sage: e = maxima('sin(u + v) * cos(u)^3'); e
     cos(u)^3*sin(v+u)
@@ -137,13 +183,17 @@ To have the above appear onscreen via \code{xdvi}, type \code{view(s)}.
     sage: f = w^2 + maxima('%e')^w
     sage: f.realpart()
     %e^3*cos(k)-k^2+9
-    
+
+::
+
     sage: f = maxima('x^3 * %e^(k*x) * sin(w*x)'); f
     x^3*%e^(k*x)*sin(w*x)
     sage: f.diff('x')
     k*x^3*%e^(k*x)*sin(w*x)+3*x^2*%e^(k*x)*sin(w*x)+w*x^3*%e^(k*x)*cos(w*x)
     sage: f.integrate('x')
     (((k*w^6+3*k^3*w^4+3*k^5*w^2+k^7)*x^3+(3*w^6+3*k^2*w^4-3*k^4*w^2-3*k^6)*x^2+(-18*k*w^4-12*k^3*w^2+6*k^5)*x-6*w^4+36*k^2*w^2-6*k^4)*%e^(k*x)*sin(w*x)+((-w^7-3*k^2*w^5-3*k^4*w^3-k^6*w)*x^3+(6*k*w^5+12*k^3*w^3+6*k^5*w)*x^2+(6*w^5-12*k^2*w^3-18*k^4*w)*x-24*k*w^3+24*k^3*w)*%e^(k*x)*cos(w*x))/(w^8+4*k^2*w^6+6*k^4*w^4+4*k^6*w^2+k^8)
+
+::
 
     sage: f = maxima('1/x^2')
     sage: f.integrate('x', 1, 'inf')
@@ -152,12 +202,18 @@ To have the above appear onscreen via \code{xdvi}, type \code{view(s)}.
     sage: g.taylor('x', 0, 3)
     f/(k^4*x^4)-2*f/(3*k^2*x^2)+11*f/45-62*k^2*f*x^2/945
 
+::
+
     sage: maxima.taylor('asin(x)','x',0, 10)
     x+x^3/6+3*x^5/40+5*x^7/112+35*x^9/1152
 
-\subsection{Examples involving matrices}
-We illustrate computing with the matrix whose $i,j$ entry
-is $i/j$, for $i,j=1,\ldots,4$.
+Examples involving matrices
+---------------------------
+
+We illustrate computing with the matrix whose `i,j` entry
+is `i/j`, for `i,j=1,\ldots,4`.
+
+::
 
     sage: f = maxima.eval('f[i,j] := i/j')
     sage: A = maxima('genmatrix(f,4,4)'); A
@@ -171,7 +227,8 @@ is $i/j$, for $i,j=1,\ldots,4$.
     sage: A.eigenvectors()
     [[[0,4],[3,1]],[1,0,0,-4],[0,1,0,-2],[0,0,1,-4/3],[1,2,3,4]]
 
-We can also compute the echelon form in \sage:
+We can also compute the echelon form in Sage::
+
     sage: B = matrix(QQ, A)
     sage: B.echelon_form()
     [  1 1/2 1/3 1/4]
@@ -181,19 +238,28 @@ We can also compute the echelon form in \sage:
     sage: B.charpoly('x').factor()
     (x - 4) * x^3
 
-\subsection{Laplace Transforms}
-We illustrate Laplace transforms:
+Laplace Transforms
+------------------
+
+We illustrate Laplace transforms::
+
     sage: _ = maxima.eval("f(t) := t*sin(t)")
     sage: maxima("laplace(f(t),t,s)")
     2*s/(s^2+1)^2
 
+::
+
     sage: maxima("laplace(delta(t-3),t,s)") #Dirac delta function
     %e^-(3*s)
-    
+
+::
+
     sage: _ = maxima.eval("f(t) := exp(t)*sin(t)")
     sage: maxima("laplace(f(t),t,s)")
     1/(s^2-2*s+2)
-    
+
+::
+
     sage: _ = maxima.eval("f(t) := t^5*exp(t)*sin(t)")
     sage: maxima("laplace(f(t),t,s)")
     360*(2*s-2)/(s^2-2*s+2)^4-480*(2*s-2)^3/(s^2-2*s+2)^5+120*(2*s-2)^5/(s^2-2*s+2)^6
@@ -204,13 +270,19 @@ We illustrate Laplace transforms:
                 2           4     2           5     2           6
               (s  - 2 s + 2)    (s  - 2 s + 2)    (s  - 2 s + 2)
 
+::
+
     sage: maxima("laplace(diff(x(t),t),t,s)")
     s*?%laplace(x(t),t,s)-x(0)
-    
+
+::
+
     sage: maxima("laplace(diff(x(t),t,2),t,s)")
     -?%at('diff(x(t),t,1),t=0)+s^2*?%laplace(x(t),t,s)-x(0)*s
 
-It is difficult to read some of these without the 2d representation:
+It is difficult to read some of these without the 2d
+representation::
+
     sage: print maxima("laplace(diff(x(t),t,2),t,s)")
                          !
                 d        !         2
@@ -218,39 +290,47 @@ It is difficult to read some of these without the 2d representation:
                 dt       !
                          !t = 0
 
-Even better, use \code{view(maxima("laplace(diff(x(t),t,2),t,s)"))} to see
+Even better, use
+``view(maxima("laplace(diff(x(t),t,2),t,s)"))`` to see
 a typeset version.
-    
-\subsection{Continued Fractions}
 
-A continued fraction $a + 1/(b + 1/(c + \cdots))$ is
-represented in maxima by the list $[a, b, c, \ldots]$.
+Continued Fractions
+-------------------
+
+A continued fraction `a + 1/(b + 1/(c + \cdots))` is
+represented in maxima by the list `[a, b, c, \ldots]`.
+
+::
 
     sage: maxima("cf((1 + sqrt(5))/2)")
     [1,1,1,1,2]
     sage: maxima("cf ((1 + sqrt(341))/2)")
     [9,1,2,1,2,1,17,1,2,1,2,1,17,1,2,1,2,1,17,2]
-    
-\subsection{Special examples}
 
-In this section we illustrate calculations that would be awkward to do
-(as far as I know) in non-symbolic computer algebra systems like MAGMA
-or GAP.
+Special examples
+----------------
 
-We compute the gcd of $2x^{n+4} - x^{n+2}$ and $4x^{n+1} + 3x^n$
-for arbitrary $n$.
+In this section we illustrate calculations that would be awkward to
+do (as far as I know) in non-symbolic computer algebra systems like
+MAGMA or GAP.
+
+We compute the gcd of `2x^{n+4} - x^{n+2}` and
+`4x^{n+1} + 3x^n` for arbitrary `n`.
+
+::
 
     sage: f = maxima('2*x^(n+4) - x^(n+2)')
     sage: g = maxima('4*x^(n+1) + 3*x^n')
     sage: f.gcd(g)
     x^n
 
-You can plot 3d graphs (via gnuplot):
+You can plot 3d graphs (via gnuplot)::
 
     sage: maxima('plot3d(x^2-y^2, [x,-2,2], [y,-2,2], [grid,12,12])')  # not tested
     [displays a 3 dimensional graph]
 
-You can formally evaluate sums (note the \code{nusum} command):
+You can formally evaluate sums (note the ``nusum``
+command)::
 
     sage: S = maxima('nusum(exp(1+2*i/n),i,1,n)')
     sage: print S
@@ -260,57 +340,73 @@ You can formally evaluate sums (note the \code{nusum} command):
                       1/n         1/n           1/n         1/n
                    (%e    - 1) (%e    + 1)   (%e    - 1) (%e    + 1)
 
-We formally compute the limit as $n\to\infty$ of $2S/n$ as follows:
+We formally compute the limit as `n\to\infty` of
+`2S/n` as follows::
 
     sage: T = S*maxima('2/n')
     sage: T.tlimit('n','inf')
     %e^3-%e
 
-\subsection{Miscellaneous}
-Obtaining digits of $\pi$:
+Miscellaneous
+-------------
+
+Obtaining digits of `\pi`::
+
     sage: maxima.eval('fpprec : 100')
     '100'
     sage: maxima(pi).bfloat()
     3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068b0
 
-Defining functions in maxima:
+Defining functions in maxima::
+
     sage: maxima.eval('fun[a] := a^2')
     'fun[a]:=a^2'
     sage: maxima('fun[10]')
     100
 
-\subsection{Interactivity}
-Unfortunately maxima doesn't seem to have a non-interactive mode,
-which is needed for the \sage interface.  If any \sage call leads
-to maxima interactively answering questions, then the questions
-can't be answered and the maxima session may hang. 
-See the discussion at \url{http://www.ma.utexas.edu/pipermail/maxima/2005/011061.html} for some ideas about how to fix this problem.  An
-example that illustrates this problem is
-\code{maxima.eval('integrate (exp(a*x), x, 0, inf)')}.
+Interactivity
+-------------
 
-\subsection{Latex Output}
-To tex a maxima object do this:
+Unfortunately maxima doesn't seem to have a non-interactive mode,
+which is needed for the Sage interface. If any Sage call leads to
+maxima interactively answering questions, then the questions can't be
+answered and the maxima session may hang. See the discussion at
+http://www.ma.utexas.edu/pipermail/maxima/2005/011061.html for some
+ideas about how to fix this problem. An example that illustrates this
+problem is ``maxima.eval('integrate (exp(a*x), x, 0, inf)')``.
+
+Latex Output
+------------
+
+To tex a maxima object do this::
 
     sage: latex(maxima('sin(u) + sinh(v^2)'))
     \sinh v^2+\sin u
 
-Here's another example:
+Here's another example::
 
     sage: g = maxima('exp(3*%i*x)/(6*%i) + exp(%i*x)/(2*%i) + c')
     sage: latex(g)
     -{{i\,e^{3\,i\,x}}\over{6}}-{{i\,e^{i\,x}}\over{2}}+c
 
-\subsection{Long Input}
-The MAXIMA interface reads in even very long input (using files) in a
-robust manner, as long as you are creating a new object.
-\note{Using \code{maxima.eval} for long input
-is much less robust, and is not recommended.}
+Long Input
+----------
+
+The MAXIMA interface reads in even very long input (using files) in
+a robust manner, as long as you are creating a new object.
+
+.. note::
+
+   Using ``maxima.eval`` for long input is much less robust, and is
+   not recommended.
+
+::
 
     sage: t = '"%s"'%10^10000   # ten thousand character string.
     sage: a = maxima(t)
 
-TESTS:
-This working tests that a subtle bug has been fixed:
+TESTS: This working tests that a subtle bug has been fixed::
+
     sage: f = maxima.function('x','gamma(x)')
     sage: g = f(1/7)
     sage: g
@@ -319,8 +415,10 @@ This working tests that a subtle bug has been fixed:
     sage: maxima(sin(x))
     sin(x)
 
-This tests to make sure we handle the case where Maxima asks if an expression
-is positive or zero.
+This tests to make sure we handle the case where Maxima asks if an
+expression is positive or zero.
+
+::
 
     sage: var('Ax,Bx,By')
     (Ax, Bx, By)
@@ -331,12 +429,10 @@ is positive or zero.
     TypeError: Computation failed since Maxima requested additional constraints (try the command 'assume(By^2+Bx^2>0)' before integral or limit evaluation, for example):
     Is By^2+Bx^2  positive or zero?
 
-    
-A long complicated input expression:
+A long complicated input expression::
 
     sage: maxima._eval_line('((((((((((0) + ((1) / ((n0) ^ (0)))) + ((1) / ((n1) ^ (1)))) + ((1) / ((n2) ^ (2)))) + ((1) / ((n3) ^ (3)))) + ((1) / ((n4) ^ (4)))) + ((1) / ((n5) ^ (5)))) + ((1) / ((n6) ^ (6)))) + ((1) / ((n7) ^ (7)))) + ((1) / ((n8) ^ (8)))) + ((1) / ((n9) ^ (9)));')
     '1/n9^9+1/n8^8+1/n7^7+1/n6^6+1/n5^5+1/n4^4+1/n3^3+1/n2^2+1/n1+1'
-    
 """
 
 #*****************************************************************************
@@ -388,9 +484,10 @@ class Maxima(Expect):
     def __init__(self, script_subdirectory=None, logfile=None, server=None,
                  init_code = None):
         """
-        Create an instance of the Maxima interpreter.   
-
-        EXAMPLES:
+        Create an instance of the Maxima interpreter.
+        
+        EXAMPLES::
+        
             sage: maxima == loads(dumps(maxima))
             True
         """
@@ -429,7 +526,8 @@ class Maxima(Expect):
 
     def _function_class(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima._function_class()
             <class 'sage.interfaces.maxima.MaximaExpectFunction'>
         """
@@ -438,8 +536,9 @@ class Maxima(Expect):
     def _start(self):
         """
         Starts the Maxima interpreter.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: m = Maxima()
             sage: m.is_running()
             False
@@ -453,16 +552,17 @@ class Maxima(Expect):
 
     def __reduce__(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.__reduce__()
             (<function reduce_load_Maxima at 0x...>, ())
-
         """
         return reduce_load_Maxima, tuple([])
 
     def _quit_string(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima._quit_string()
             'quit();'
         """
@@ -474,7 +574,8 @@ class Maxima(Expect):
 
     def _crash_msg(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima._crash_msg()
             Maxima crashed -- automatically restarting.
         """
@@ -632,21 +733,22 @@ class Maxima(Expect):
     def _synchronize(self):
         """
         Synchronize pexpect interface.
-
-        This put a random integer (plus one!) into the output stream,
-        then waits for it, thus resynchronizing the stream.  If the
-        random integer doesn't appear within 1 second, maxima is sent
-        interrupt signals.
-
+        
+        This put a random integer (plus one!) into the output stream, then
+        waits for it, thus resynchronizing the stream. If the random
+        integer doesn't appear within 1 second, maxima is sent interrupt
+        signals.
+        
         This way, even if you somehow left maxima in a busy state
         computing, calling _synchronize gets everything fixed.
-
-        EXAMPLES:
-        This makes Maxima start a calculation:
+        
+        EXAMPLES: This makes Maxima start a calculation::
+        
             sage: maxima._sendstr('1/1'*500)
-
+        
         When you type this command, this synchronize command is implicitly
-        called, and the above running calculation is interrupted:
+        called, and the above running calculation is interrupted::
+        
             sage: maxima('2+2')
             4
         """
@@ -675,8 +777,9 @@ class Maxima(Expect):
         """
         Change Maxima's current working directory.
         
-        EXAMPLES:
-           sage: maxima.chdir('/')
+        EXAMPLES::
+        
+            sage: maxima.chdir('/')
         """
         self.lisp('(ext::cd "%s")'%dir)
 
@@ -686,10 +789,13 @@ class Maxima(Expect):
     def lisp(self, cmd):
         """
         Send a lisp command to maxima.
+        
+        .. note::
 
-        NOTE: The output of this command is very raw -- not pretty.
-
-        EXAMPLES:
+           The output of this command is very raw - not pretty.
+        
+        EXAMPLES::
+        
             sage: maxima.lisp("(+ 2 17)")   # random formated output
              :lisp (+ 2 17)
             19
@@ -704,18 +810,18 @@ class Maxima(Expect):
     ###########################################
     def _command_runner(self, command, s, redirect=True):
         """
-        Run \code{command} in a new Maxima session and return its output
-        as an \code{AsciiArtString}.
-
-        If redirect is set to False, then the output of the command is not
-        returned as a string.  Instead, it behaves like os.system.  This is used 
-        for interactive things like Maxima's demos.  See maxima.demo?
+        Run ``command`` in a new Maxima session and return its
+        output as an ``AsciiArtString``.
         
-        EXAMPLES:
+        If redirect is set to False, then the output of the command is not
+        returned as a string. Instead, it behaves like os.system. This is
+        used for interactive things like Maxima's demos. See maxima.demo?
+        
+        EXAMPLES::
+        
             sage: maxima._command_runner('describe', 'gcd')
             -- Function: gcd (<p_1>, <p_2>, <x_1>, ...)
             ...
-        
         """
         cmd = 'maxima --very-quiet -r "%s(%s);" '%(command, s)
         if sage.server.support.EMBEDDED_MODE:
@@ -732,7 +838,8 @@ class Maxima(Expect):
 
     def help(self, s):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.help('gcd')
             -- Function: gcd (<p_1>, <p_2>, <x_1>, ...)
             ...
@@ -741,7 +848,8 @@ class Maxima(Expect):
 
     def example(self, s):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.example('arrays')
             a[n]:=n*a[n-1]
                                             a  := n a
@@ -755,7 +863,6 @@ class Maxima(Expect):
             a[4]
                                                   24
                                                  done
-
         """
         return self._command_runner("example", s)
 
@@ -763,23 +870,23 @@ class Maxima(Expect):
 
     def demo(self, s):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.demo('array') # not tested
             batching /opt/sage/local/share/maxima/5.16.3/demo/array.dem
-
-            At the _ prompt, type ';' followed by enter to get next demo
-                                          subscrmap : true
-            _
-
+        
+        At the _ prompt, type ';' followed by enter to get next demo
+        subscrmap : true _
         """
         return self._command_runner("demo", s, redirect=False)
 
     def completions(self, s, verbose=True):
         """
         Return all commands that complete the command starting with the
-        string s.   This is like typing s[tab] in the Maxima interpreter.
-
-        EXAMPLES:
+        string s. This is like typing s[tab] in the Maxima interpreter.
+        
+        EXAMPLES::
+        
             sage: maxima.completions('gc', verbose=False)
             ['gc', 'gcd', 'gcdex', 'gcfactor', 'gcprint', 'gctime']
         """
@@ -792,14 +899,14 @@ class Maxima(Expect):
     def _commands(self, verbose=True):
         """
         Return list of all commands defined in Maxima.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima._commands(verbose=False)
             ['a',
              'abconvtest',
              ...
              'Z']
-
         """
         try:
             return self.__commands
@@ -810,13 +917,14 @@ class Maxima(Expect):
     def trait_names(self, verbose=True, use_disk_cache=True):
         """
         Return all Maxima commands, which is useful for tab completion.
-
-        EXAMPLES:
-           sage: t = maxima.trait_names(verbose=False)
-           sage: 'gcd' in t
-           True
-           sage: len(t)    # random output
-           1743
+        
+        EXAMPLES::
+        
+            sage: t = maxima.trait_names(verbose=False)
+            sage: 'gcd' in t
+            True
+            sage: len(t)    # random output
+            1743
         """
         try:
             return self.__trait_names
@@ -842,8 +950,9 @@ class Maxima(Expect):
     def _object_class(self):
         """
         Return the Python class of Maxima elements.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima._object_class()
             <class 'sage.interfaces.maxima.MaximaElement'>
         """
@@ -851,7 +960,8 @@ class Maxima(Expect):
 
     def _function_element_class(self):
         """      
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima._function_element_class()
             <class 'sage.interfaces.maxima.MaximaFunctionElement'>
         """
@@ -861,7 +971,8 @@ class Maxima(Expect):
         """
         Return the true symbol in Maxima.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima._true_symbol()
             'true'
             sage: maxima.eval('is(2 = 2)')
@@ -873,7 +984,8 @@ class Maxima(Expect):
         """
         Return the false symbol in Maxima.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima._false_symbol()
             'false'
             sage: maxima.eval('is(2 = 4)')
@@ -883,16 +995,23 @@ class Maxima(Expect):
 
     def function(self, args, defn, rep=None, latex=None):
         """
-        Return the Maxima function with given arguments
-        and definition.
-
-        INPUT:
-            args -- a string with variable names separated by commas
-            defn -- a string (or Maxima expression) that defines
-                    a function of the arguments in Maxima.
-            rep  -- an optional string; if given, this is how the function will print.
+        Return the Maxima function with given arguments and definition.
         
-        EXAMPLES:
+        INPUT:
+        
+        
+        -  ``args`` - a string with variable names separated by
+           commas
+        
+        -  ``defn`` - a string (or Maxima expression) that
+           defines a function of the arguments in Maxima.
+        
+        -  ``rep`` - an optional string; if given, this is how
+           the function will print.
+        
+        
+        EXAMPLES::
+        
             sage: f = maxima.function('x', 'sin(x)')
             sage: f(3.2)
             -.05837414342758009
@@ -901,14 +1020,17 @@ class Maxima(Expect):
             sin(2)-.9364566872907963
             sage: f
             sin(x)+cos(y)
-            
+        
+        ::
+        
             sage: g = f.integrate('z')
             sage: g
             (cos(y)+sin(x))*z
             sage: g(1,2,3)
             3*(cos(2)+sin(1))
-
-        The function definition can be a maxima object:
+        
+        The function definition can be a maxima object::
+        
             sage: an_expr = maxima('sin(x)*gamma(x)')
             sage: t = maxima.function('x', an_expr)
             sage: t
@@ -939,12 +1061,17 @@ class Maxima(Expect):
     def set(self, var, value):
         """
         Set the variable var to the given value.
-
+        
         INPUT:
-            var -- string
-            value -- string
-
-        EXAMPLES:
+        
+        
+        -  ``var`` - string
+        
+        -  ``value`` - string
+        
+        
+        EXAMPLES::
+        
             sage: maxima.set('x', '2')
             sage: maxima.get('x')
             '2'
@@ -964,12 +1091,12 @@ class Maxima(Expect):
     def get(self, var):
         """
         Get the string value of the variable var.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima.set('x', '2')
             sage: maxima.get('x')
             '2'
-
         """
         s = self._eval_line('%s;'%var)
         return s
@@ -977,8 +1104,9 @@ class Maxima(Expect):
     def clear(self, var):
         """
         Clear the variable named var.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima.set('x', '2')
             sage: maxima.get('x')
             '2'
@@ -993,11 +1121,12 @@ class Maxima(Expect):
         
     def console(self):
         r"""
-        Start the interactive Maxima console.  This is a completely separate maxima
-        session from this interface.    To interact with this session, you should
-        instead use \code{maxima.interact()}.
+        Start the interactive Maxima console. This is a completely separate
+        maxima session from this interface. To interact with this session,
+        you should instead use ``maxima.interact()``.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.console()             # not tested (since we can't)
             Maxima 5.13.0 http://maxima.sourceforge.net
             Using Lisp CLISP 2.41 (2006-10-13)
@@ -1006,13 +1135,15 @@ class Maxima(Expect):
             This is a development version of Maxima. The function bug_report()
             provides bug reporting information.
             (%i1)
-
-        sage: maxima.interact()     # this is not tested either
-          --> Switching to Maxima <-- 
-        maxima: 2+2
-        4
-        maxima: 
-          --> Exiting back to SAGE <-- 
+        
+        ::
+        
+            sage: maxima.interact()     # this is not tested either
+              --> Switching to Maxima <-- 
+            maxima: 2+2
+            4
+            maxima: 
+              --> Exiting back to Sage <--
         """
         maxima_console()
     
@@ -1020,7 +1151,8 @@ class Maxima(Expect):
         """
         Return the version of Maxima that Sage includes.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.version()
             '5.16.3'
         """
@@ -1069,43 +1201,64 @@ class Maxima(Expect):
     def plot2d(self, *args):
         r"""
         Plot a 2d graph using Maxima / gnuplot.
-
+        
         maxima.plot2d(f, '[var, min, max]', options)
-
+        
         INPUT:
-            f -- a string representing a function (such as f="sin(x)")
-            [var, xmin, xmax] 
-            options -- an optional string representing plot2d options in gnuplot format
-
-        EXAMPLES:
+        
+        
+        -  ``f`` - a string representing a function (such as
+           f="sin(x)") [var, xmin, xmax]
+        
+        -  ``options`` - an optional string representing plot2d
+           options in gnuplot format
+        
+        
+        EXAMPLES::
+        
             sage: maxima.plot2d('sin(x)','[x,-5,5]')   # not tested
             sage: opts = '[gnuplot_term, ps], [gnuplot_out_file, "sin-plot.eps"]'
             sage: maxima.plot2d('sin(x)','[x,-5,5]',opts)    # not tested
-
+        
         The eps file is saved in the current directory.
         """
         self('plot2d(%s)'%(','.join([str(x) for x in args])))
 
     def plot2d_parametric(self, r, var, trange, nticks=50, options=None):
         r"""
-        Plots r = [x(t), y(t)] for t = tmin...tmax using gnuplot with options
-
+        Plots r = [x(t), y(t)] for t = tmin...tmax using gnuplot with
+        options
+        
         INPUT:
-            r -- a string representing a function (such as r="[x(t),y(t)]")
-            var -- a string representing the variable (such as var = "t")
-            trange -- [tmin, tmax] are numbers with tmin<tmax
-            nticks -- int (default: 50)
-            options -- an optional string representing plot2d options in gnuplot format
-
-        EXAMPLES:
+        
+        
+        -  ``r`` - a string representing a function (such as
+           r="[x(t),y(t)]")
+        
+        -  ``var`` - a string representing the variable (such
+           as var = "t")
+        
+        -  ``trange`` - [tmin, tmax] are numbers with tmintmax
+        
+        -  ``nticks`` - int (default: 50)
+        
+        -  ``options`` - an optional string representing plot2d
+           options in gnuplot format
+        
+        
+        EXAMPLES::
+        
             sage: maxima.plot2d_parametric(["sin(t)","cos(t)"], "t",[-3.1,3.1])   # not tested
-
+        
+        ::
+        
             sage: opts = '[gnuplot_preamble, "set nokey"], [gnuplot_term, ps], [gnuplot_out_file, "circle-plot.eps"]'
             sage: maxima.plot2d_parametric(["sin(t)","cos(t)"], "t", [-3.1,3.1], options=opts)   # not tested
-            
+        
         The eps file is saved to the current working directory.
-
-        Here is another fun plot:
+        
+        Here is another fun plot::
+        
             sage: maxima.plot2d_parametric(["sin(5*t)","cos(11*t)"], "t", [0,2*pi()], nticks=400)    # not tested
         """
         tmin = trange[0]
@@ -1121,52 +1274,67 @@ class Maxima(Expect):
     def plot3d(self, *args):
         r"""
         Plot a 3d graph using Maxima / gnuplot.
-
-        maxima.plot3d(f, '[x, xmin, xmax]', '[y, ymin, ymax]', '[grid, nx, ny]', options)
-
+        
+        maxima.plot3d(f, '[x, xmin, xmax]', '[y, ymin, ymax]', '[grid, nx,
+        ny]', options)
+        
         INPUT:
-            f -- a string representing a function (such as f="sin(x)")
-            [var, min, max] 
-
-        EXAMPLES:
+        
+        
+        -  ``f`` - a string representing a function (such as
+           f="sin(x)") [var, min, max]
+        
+        
+        EXAMPLES::
+        
             sage: maxima.plot3d('1 + x^3 - y^2', '[x,-2,2]', '[y,-2,2]', '[grid,12,12]')    # not tested
             sage: maxima.plot3d('sin(x)*cos(y)', '[x,-2,2]', '[y,-2,2]', '[grid,30,30]')   # not tested
             sage: opts = '[gnuplot_term, ps], [gnuplot_out_file, "sin-plot.eps"]' 
             sage: maxima.plot3d('sin(x+y)', '[x,-5,5]', '[y,-1,1]', opts)    # not tested
-
+        
         The eps file is saved in the current working directory.
         """
         self('plot3d(%s)'%(','.join([str(x) for x in args])))
 
     def plot3d_parametric(self, r, vars, urange, vrange, options=None):
         r"""
-        Plot a 3d parametric graph with r=(x,y,z), x = x(u,v), y = y(u,v), z = z(u,v),
-        for u = umin...umax, v = vmin...vmax using gnuplot with options.
-
+        Plot a 3d parametric graph with r=(x,y,z), x = x(u,v), y = y(u,v),
+        z = z(u,v), for u = umin...umax, v = vmin...vmax using gnuplot with
+        options.
+        
         INPUT:
-            x, y, z -- a string representing a function (such as \code{x="u\^2+v\^2"}, ...)
-            vars is a list or two strings representing variables (such as vars = ["u","v"])
-            urange -- [umin, umax]
-            vrange -- [vmin, vmax] are lists of numbers with
-            umin < umax, vmin < vmax
-            options -- optional string representing plot2d options in gnuplot format
-
-        OUTPUT:
-            displays a plot on screen or saves to a file
-
-        EXAMPLES:
+        
+        
+        -  ``x, y, z`` - a string representing a function (such
+           as ``x="u2+v2"``, ...) vars is a list or two strings
+           representing variables (such as vars = ["u","v"])
+        
+        -  ``urange`` - [umin, umax]
+        
+        -  ``vrange`` - [vmin, vmax] are lists of numbers with
+           umin umax, vmin vmax
+        
+        -  ``options`` - optional string representing plot2d
+           options in gnuplot format
+        
+        
+        OUTPUT: displays a plot on screen or saves to a file
+        
+        EXAMPLES::
+        
             sage: maxima.plot3d_parametric(["v*sin(u)","v*cos(u)","v"], ["u","v"],[-3.2,3.2],[0,3])     # not tested
             sage: opts = '[gnuplot_term, ps], [gnuplot_out_file, "sin-cos-plot.eps"]'
             sage: maxima.plot3d_parametric(["v*sin(u)","v*cos(u)","v"], ["u","v"],[-3.2,3.2],[0,3],opts)      # not tested
-
+        
         The eps file is saved in the current working directory.
-
-        Here is a torus:
-
+        
+        Here is a torus::
+        
             sage: _ = maxima.eval("expr_1: cos(y)*(10.0+6*cos(x)); expr_2: sin(y)*(10.0+6*cos(x)); expr_3: -6*sin(x);")  # optional
             sage: maxima.plot3d_parametric(["expr_1","expr_2","expr_3"], ["x","y"],[0,6],[0,6])   # not tested
-
-        Here is a Mobius strip:
+        
+        Here is a Mobius strip::
+        
             sage: x = "cos(u)*(3 + v*cos(u/2))"
             sage: y = "sin(u)*(3 + v*cos(u/2))"
             sage: z = "v*sin(u/2)"
@@ -1186,16 +1354,23 @@ class Maxima(Expect):
 
     def de_solve(maxima, de, vars, ics=None):
         """
-        Solves a 1st or 2nd order ordinary differential equation (ODE)
-        in two variables, possibly with initial conditions.
-
+        Solves a 1st or 2nd order ordinary differential equation (ODE) in
+        two variables, possibly with initial conditions.
+        
         INPUT:
-            de -- a string representing the ODE
-            vars -- a list of strings representing the two variables.
-            ics -- a triple of numbers [a,b1,b2] representing
-                   y(a)=b1, y'(a)=b2
-                   
-        EXAMPLES:
+        
+        
+        -  ``de`` - a string representing the ODE
+        
+        -  ``vars`` - a list of strings representing the two
+           variables.
+        
+        -  ``ics`` - a triple of numbers [a,b1,b2] representing
+           y(a)=b1, y'(a)=b2
+        
+        
+        EXAMPLES::
+        
             sage: maxima.de_solve('diff(y,x,2) + 3*x = y', ['x','y'], [1,1,1])
             y=3*x-2*%e^(x-1)
             sage: maxima.de_solve('diff(y,x,2) + 3*x = y', ['x','y'])
@@ -1222,22 +1397,31 @@ class Maxima(Expect):
 
     def de_solve_laplace(self, de, vars, ics=None):
         """
-        Solves an ordinary differential equation (ODE) using Laplace transforms.
+        Solves an ordinary differential equation (ODE) using Laplace
+        transforms.
         
         INPUT:
-            de -- a string representing the ODE
-                  (e.g., de = "diff(f(x),x,2)=diff(f(x),x)+sin(x)")
-            vars -- a list of strings representing the variables
-                  (e.g., vars = ["x","f"])
-            ics -- a list of numbers representing initial conditions,
-                   with symbols allowed which are represented by strings
-                   (eg, f(0)=1, f'(0)=2 is ics = [0,1,2])
-
-        EXAMPLES:
+        
+        
+        -  ``de`` - a string representing the ODE (e.g., de =
+           "diff(f(x),x,2)=diff(f(x),x)+sin(x)")
+        
+        -  ``vars`` - a list of strings representing the
+           variables (e.g., vars = ["x","f"])
+        
+        -  ``ics`` - a list of numbers representing initial
+           conditions, with symbols allowed which are represented by strings
+           (eg, f(0)=1, f'(0)=2 is ics = [0,1,2])
+        
+        
+        EXAMPLES::
+        
             sage: maxima.clear('x'); maxima.clear('f')
             sage: maxima.de_solve_laplace("diff(f(x),x,2) = 2*diff(f(x),x)-f(x)", ["x","f"], [0,1,2])
             f(x)=x*%e^x+%e^x
-            
+        
+        ::
+        
             sage: maxima.clear('x'); maxima.clear('f')            
             sage: f = maxima.de_solve_laplace("diff(f(x),x,2) = 2*diff(f(x),x)-f(x)", ["x","f"])
             sage: f
@@ -1248,12 +1432,13 @@ class Maxima(Expect):
                         f(x) = x %e  (-- (f(x))!     ) - f(0) x %e  + f(0) %e
                                       dx       !
                                                !x = 0
+        
+        .. note::
 
-
-        \note{The second equation sets the values of $f(0)$ and
-        $f'(0)$ in maxima, so subsequent ODEs involving these
-        variables will have these initial conditions automatically
-        imposed.}
+           The second equation sets the values of `f(0)` and
+           `f'(0)` in Maxima, so subsequent ODEs involving these
+           variables will have these initial conditions automatically
+           imposed.
         """
         if not (ics is None):
             d = len(ics)
@@ -1267,12 +1452,12 @@ class Maxima(Expect):
         """
         Wraps maxima's linsolve.
         
-        INPUT:
-        eqns is a list of m strings, each rperesenting a linear question
-        in m <= n variables
-        vars is a list of n strings, each representing a variable
-
-        EXAMPLES:
+        INPUT: eqns is a list of m strings, each rperesenting a linear
+        question in m = n variables vars is a list of n strings, each
+        representing a variable
+        
+        EXAMPLES::
+        
             sage: eqns = ["x + z = y","2*a*x - y = 2*a^2","y - 2*z = 2"]    
             sage: vars = ["x","y","z"]                                      
             sage: maxima.solve_linear(eqns, vars)
@@ -1294,10 +1479,12 @@ class Maxima(Expect):
 
     def unit_quadratic_integer(self, n):
         r"""
-        Finds a unit of the ring of integers of the quadratic number
-        field $\Q(\sqrt{n})$, $n>1$, using the qunit maxima command.
-
-        EXAMPLES:
+        Finds a unit of the ring of integers of the quadratic number field
+        `\mathbb{Q}(\sqrt{n})`, `n>1`, using the qunit maxima
+        command.
+        
+        EXAMPLES::
+        
             sage: u = maxima.unit_quadratic_integer(101); u      
             a + 10
             sage: u.parent()                                       
@@ -1324,20 +1511,30 @@ class Maxima(Expect):
     def plot_list(self, ptsx, ptsy, options=None):
         r"""
         Plots a curve determined by a sequence of points.
-
+        
         INPUT:
-            ptsx -- [x1,...,xn], where the xi and yi are real,
-            ptsy -- [y1,...,yn]
-            options -- a string representing maxima plot2d options.
-
+        
+        
+        -  ``ptsx`` - [x1,...,xn], where the xi and yi are
+           real,
+        
+        -  ``ptsy`` - [y1,...,yn]
+        
+        -  ``options`` - a string representing maxima plot2d
+           options.
+        
+        
         The points are (x1,y1), (x2,y2), etc.
+        
+        This function requires maxima 5.9.2 or newer.
+        
+        .. note::
 
-        This function requires maxima 5.9.2 or newer. 
-
-        \note{More that 150 points can sometimes lead to the program
-        hanging.  Why?}
-
-        EXAMPLES:
+           More that 150 points can sometimes lead to the program
+           hanging. Why?
+        
+        EXAMPLES::
+        
             sage: zeta_ptsx = [ (pari(1/2 + i*I/10).zeta().real()).precision(1) for i in range (70,150)]  
             sage: zeta_ptsy = [ (pari(1/2 + i*I/10).zeta().imag()).precision(1) for i in range (70,150)]  
             sage: maxima.plot_list(zeta_ptsx, zeta_ptsy)         # not tested
@@ -1355,15 +1552,19 @@ class Maxima(Expect):
     def plot_multilist(self, pts_list, options=None):
         r"""
         Plots a list of list of points pts_list=[pts1,pts2,...,ptsn],
-        where each ptsi is of the form [[x1,y1],...,[xn,yn]]
-        x's must be integers and y's reals
-        options is a string representing maxima plot2d options.
-
+        where each ptsi is of the form [[x1,y1],...,[xn,yn]] x's must be
+        integers and y's reals options is a string representing maxima
+        plot2d options.
+        
         Requires maxima 5.9.2 at least.
-        \note{More that 150 points can sometimes lead to the
-        program hanging.}
 
-        EXAMPLES:
+        .. note::
+
+           More that 150 points can sometimes lead to the program
+           hanging.
+        
+        EXAMPLES::
+        
             sage: xx = [ i/10.0 for i in range (-10,10)]
             sage: yy = [ i/10.0 for i in range (-10,10)]
             sage: x0 = [ 0 for i in range (-10,10)]
@@ -1395,8 +1596,9 @@ class MaximaElement(ExpectElement):
     def __str__(self):
         """
         Printing an object explicitly gives ASCII art:
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: f = maxima('1/(x-1)^3'); f
             1/(x-1)^3
             sage: print f
@@ -1404,13 +1606,13 @@ class MaximaElement(ExpectElement):
                                                --------
                                                       3
                                                (x - 1)
-
         """
         return self.display2d(onscreen=False)
 
     def bool(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima(0).bool()
             False
             sage: maxima(1).bool()
@@ -1421,7 +1623,8 @@ class MaximaElement(ExpectElement):
 
     def __cmp__(self, other):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: a = maxima(1); b = maxima(2)
             sage: a == b
             False
@@ -1433,8 +1636,9 @@ class MaximaElement(ExpectElement):
             False
             sage: b > a
             True
-
-        We can also compare more complicated object such as functions:
+        
+        We can also compare more complicated object such as functions::
+        
             sage: f = maxima('sin(x)'); g = maxima('cos(x)')
             sage: -f == g.diff('x')
             True
@@ -1457,18 +1661,21 @@ class MaximaElement(ExpectElement):
 
     def _sage_(self):
         """
-        Attempt to make a native Sage object out of this maxima object.  This is useful
-        for automatic coercions in addition to other things.
-
-        EXAMPLES:
+        Attempt to make a native Sage object out of this maxima object.
+        This is useful for automatic coercions in addition to other
+        things.
+        
+        EXAMPLES::
+        
             sage: a = maxima('sqrt(2) + 2.5'); a
             sqrt(2)+2.5
             sage: b = a._sage_(); b
             sqrt(2) + 2.5
             sage: type(b)
             <class 'sage.calculus.calculus.SymbolicArithmetic'>
-
-        We illustrate an automatic coercion:
+        
+        We illustrate an automatic coercion::
+        
             sage: c = b + sqrt(3); c
             sqrt(3) + sqrt(2) + 2.5
             sage: type(c)
@@ -1484,7 +1691,8 @@ class MaximaElement(ExpectElement):
 
     def __complex__(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: complex(maxima('sqrt(-2)+1'))
             (1+1.4142135623730951j)
         """
@@ -1492,7 +1700,8 @@ class MaximaElement(ExpectElement):
 
     def _complex_mpfr_field_(self, C):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: CC(maxima('1+%i'))
              1.00000000000000 + 1.00000000000000*I
             sage: CC(maxima('2342.23482943872+234*%i'))
@@ -1510,7 +1719,8 @@ class MaximaElement(ExpectElement):
 
     def _mpfr_(self, R):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: RealField(100)(maxima('sqrt(2)+1'))
             2.4142135623730950488016887242
         """
@@ -1518,7 +1728,8 @@ class MaximaElement(ExpectElement):
 
     def _complex_double_(self, C):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: CDF(maxima('sqrt(2)+1'))
             2.41421356237
         """
@@ -1526,7 +1737,8 @@ class MaximaElement(ExpectElement):
 
     def _real_double_(self, R):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: RDF(maxima('sqrt(2)+1'))
             2.41421356237
         """
@@ -1535,8 +1747,9 @@ class MaximaElement(ExpectElement):
     def real(self):
         """
         Return the real part of this maxima element.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima('2 + (2/3)*%i').real()
             2
         """
@@ -1545,8 +1758,9 @@ class MaximaElement(ExpectElement):
     def imag(self):
         """
         Return the imaginary part of this maxima element.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima('2 + (2/3)*%i').imag()
             2/3
         """
@@ -1555,8 +1769,9 @@ class MaximaElement(ExpectElement):
     def numer(self):
         """
         Return numerical approximation to self as a Maxima object.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: a = maxima('sqrt(2)').numer(); a
             1.414213562373095
             sage: type(a)
@@ -1567,8 +1782,9 @@ class MaximaElement(ExpectElement):
     def str(self):
         """
         Return string representation of this maxima object.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima('sqrt(2) + 1/3').str()
             'sqrt(2)+1/3'
         """
@@ -1578,8 +1794,9 @@ class MaximaElement(ExpectElement):
     def __repr__(self):
         """
         Return print representation of this object.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima('sqrt(2) + 1/3').__repr__()
             'sqrt(2)+1/3'
         """
@@ -1594,7 +1811,8 @@ class MaximaElement(ExpectElement):
 
     def display2d(self, onscreen=True):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: F = maxima('x^5 - y^5').factor()  
             sage: F.display2d ()              
                                    4      3    2  2    3      4
@@ -1624,16 +1842,20 @@ class MaximaElement(ExpectElement):
 
     def diff(self, var='x', n=1):
         """
-        Return the n-th derivative of self.  
-
+        Return the n-th derivative of self.
+        
         INPUT:
-            var -- variable (default: 'x')
-            n -- integer (default: 1)
-
-        OUTPUT:
-            n-th derivative of self with respect to the variable var
-
-        EXAMPLES:
+        
+        
+        -  ``var`` - variable (default: 'x')
+        
+        -  ``n`` - integer (default: 1)
+        
+        
+        OUTPUT: n-th derivative of self with respect to the variable var
+        
+        EXAMPLES::
+        
             sage: f = maxima('x^2')                          
             sage: f.diff()                                   
             2*x
@@ -1643,7 +1865,9 @@ class MaximaElement(ExpectElement):
             2
             sage: maxima('sin(x^2)').diff('x',4)
             16*x^4*sin(x^2)-12*sin(x^2)-48*x^2*cos(x^2)
-
+        
+        ::
+        
             sage: f = maxima('x^2 + 17*y^2')                 
             sage: f.diff('x')
             34*y*'diff(y,x,1)+2*x
@@ -1658,37 +1882,60 @@ class MaximaElement(ExpectElement):
                   desired_relative_error='1e-8',
                   maximum_num_subintervals=200):
         r"""
-        Return a numerical approximation to the integral
-        of self from a to b.
-
+        Return a numerical approximation to the integral of self from a to
+        b.
+        
         INPUT:
-            var -- variable to integrate with respect to
-            a -- lower endpoint of integration
-            b -- upper endpoint of integration
-            desired_relative_error -- (default: '1e-8') the desired
-                 relative error
-            maximum_num_subintervals -- (default: 200) maxima number
-                 of subintervals
-
+        
+        
+        -  ``var`` - variable to integrate with respect to
+        
+        -  ``a`` - lower endpoint of integration
+        
+        -  ``b`` - upper endpoint of integration
+        
+        -  ``desired_relative_error`` - (default: '1e-8') the
+           desired relative error
+        
+        -  ``maximum_num_subintervals`` - (default: 200)
+           maxima number of subintervals
+        
+        
         OUTPUT:
-            -- approximation to the integral
-            -- estimated absolute error of the approximation
-            -- the number of integrand evaluations
-            -- an error code:
-                  0 -- no problems were encountered
-                  1 -- too many subintervals were done
-                  2 -- excessive roundoff error
-                  3 -- extremely bad integrand behavior
-                  4 -- failed to converge
-                  5 -- integral is probably divergent or slowly convergent
-                  6 -- the input is invalid
+        
+        
+        -  approximation to the integral
+        
+        -  estimated absolute error of the
+           approximation
+        
+        -  the number of integrand evaluations
+        
+        -  an error code:
+        
+            -  ``0`` - no problems were encountered
 
-        EXAMPLES:
+            -  ``1`` - too many subintervals were done
+
+            -  ``2`` - excessive roundoff error
+
+            -  ``3`` - extremely bad integrand behavior
+
+            -  ``4`` - failed to converge
+
+            -  ``5`` - integral is probably divergent or slowly convergent
+
+            -  ``6`` - the input is invalid
+        
+        
+        EXAMPLES::
+        
             sage: maxima('exp(-sqrt(x))').nintegral('x',0,1)
             (.5284822353142306, 4.163314137883845E-11, 231, 0)
-
-        Note that GP also does numerical integration, and can do
-        so to very high precision very quickly:
+        
+        Note that GP also does numerical integration, and can do so to very
+        high precision very quickly::
+        
             sage: gp('intnum(x=0,1,exp(-sqrt(x)))')            
             0.5284822353142307136179049194             # 32-bit
             0.52848223531423071361790491935415653021   # 64-bit
@@ -1704,16 +1951,22 @@ class MaximaElement(ExpectElement):
     def integral(self, var='x', min=None, max=None):
         r"""
         Return the integral of self with respect to the variable x.
-
+        
         INPUT:
-            var -- variable
-            min -- default: None
-            max -- default: None
-
-        Returns the definite integral if xmin is not None,
-        otherwise returns an indefinite integral.
-
-        EXAMPLES:
+        
+        
+        -  ``var`` - variable
+        
+        -  ``min`` - default: None
+        
+        -  ``max`` - default: None
+        
+        
+        Returns the definite integral if xmin is not None, otherwise
+        returns an indefinite integral.
+        
+        EXAMPLES::
+        
             sage: maxima('x^2+1').integral()                   
             x^3/3+x
             sage: maxima('x^2+ 1 + y^2').integral('y')         
@@ -1726,7 +1979,9 @@ class MaximaElement(ExpectElement):
             %pi/2
             sage: maxima('x/(x^2+1)').integral('x', -1, 1)     
             0
-
+        
+        ::
+        
             sage: f = maxima('exp(x^2)').integral('x',0,1); f   
             -sqrt(%pi)*%i*erf(%i)/2
             sage: f.numer()         # I wonder how to get a real number (~1.463)??
@@ -1746,7 +2001,8 @@ class MaximaElement(ExpectElement):
         """
         Return floating point version of this maxima element.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: float(maxima("3.14"))
             3.1400000000000001
             sage: float(maxima("1.7e+17"))
@@ -1762,8 +2018,9 @@ class MaximaElement(ExpectElement):
     def __len__(self):
         """
         Return the length of a list.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: v = maxima('create_list(x^i,i,0,5)')         
             sage: len(v)                                       
             6
@@ -1774,8 +2031,9 @@ class MaximaElement(ExpectElement):
     def dot(self, other):
         """
         Implements the notation self . other.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A = maxima('matrix ([a1],[a2])')
             sage: B = maxima('matrix ([b1, b2])')
             sage: A.dot(B)
@@ -1788,11 +2046,14 @@ class MaximaElement(ExpectElement):
     def __getitem__(self, n):
         r"""
         Return the n-th element of this list.
+        
+        .. note::
 
-        \note{Lists are 0-based when accessed via the \sage interface,
-        not 1-based as they are in the Maxima interpreter.}
-
-        EXAMPLES:
+           Lists are 0-based when accessed via the Sage interface, not
+           1-based as they are in the Maxima interpreter.
+        
+        EXAMPLES::
+        
             sage: v = maxima('create_list(i*x^i,i,0,5)'); v    
             [0,x,2*x^2,3*x^3,4*x^4,5*x^5]
             sage: v[3]                                         
@@ -1802,7 +2063,7 @@ class MaximaElement(ExpectElement):
             sage: v[10]                                          
             Traceback (most recent call last):
             ...
-            IndexError: n = (10) must be between 0 and 5          
+            IndexError: n = (10) must be between 0 and 5
         """
         n = int(n)
         if n < 0 or n >= len(self):
@@ -1812,7 +2073,8 @@ class MaximaElement(ExpectElement):
 
     def __iter__(self):
         """
-        EXAMPLE:
+        EXAMPLE::
+        
             sage: v = maxima('create_list(i*x^i,i,0,5)')
             sage: list(v)
             [0, x, 2*x^2, 3*x^3, 4*x^4, 5*x^5]
@@ -1823,8 +2085,9 @@ class MaximaElement(ExpectElement):
     def subst(self, val):
         """
         Substitute a value or several values into this Maxima object.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima('a^2 + 3*a + b').subst('b=2')
             a^2+3*a+2
             sage: maxima('a^2 + 3*a + b').subst('a=17')
@@ -1837,8 +2100,9 @@ class MaximaElement(ExpectElement):
     def comma(self, args):
         """
         Form the expression that would be written 'self, args' in Maxima.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: maxima('sqrt(2) + I').comma('numer')
             I+1.414213562373095
             sage: maxima('sqrt(2) + I*a').comma('a=5')
@@ -1851,11 +2115,12 @@ class MaximaElement(ExpectElement):
     def _latex_(self):
         """
         Return Latex representation of this Maxima object.
-
-        This calls the tex command in Maxima, then does a little `
+        
+        This calls the tex command in Maxima, then does a little
         post-processing to fix bugs in the resulting Maxima output.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima('sqrt(2) + 1/3 + asin(5)')._latex_()
             '\\sin^{-1}\\cdot5+\\sqrt{2}+{{1}\\over{3}}'
 
@@ -1894,8 +2159,9 @@ class MaximaElement(ExpectElement):
     def trait_names(self, verbose=False):
         """
         Return all Maxima commands, which is useful for tab completion.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: m = maxima(2)
             sage: 'gcd' in m.trait_names()
             True
@@ -1904,15 +2170,15 @@ class MaximaElement(ExpectElement):
 
     def _matrix_(self, R):
         r"""
-        If self is a Maxima matrix, return the corresponding \sage
-        matrix over the \sage ring $R$.
-
-        This may or may not work depending in how complicated the
-        entries of self are!  It only works if the entries of self
-        can be coerced as strings to produce meaningful elements
-        of $R$.
-
-        EXAMPLES:
+        If self is a Maxima matrix, return the corresponding Sage matrix
+        over the Sage ring `R`.
+        
+        This may or may not work depending in how complicated the entries
+        of self are! It only works if the entries of self can be coerced as
+        strings to produce meaningful elements of `R`.
+        
+        EXAMPLES::
+        
             sage: _ = maxima.eval("f[i,j] := i/j")              
             sage: A = maxima('genmatrix(f,4,4)'); A             
             matrix([1,1/2,1/3,1/4],[2,1,2/3,1/2],[3,3/2,1,3/4],[4,2,4/3,1])
@@ -1921,9 +2187,10 @@ class MaximaElement(ExpectElement):
             [  2   1 2/3 1/2]
             [  3 3/2   1 3/4]
             [  4   2 4/3   1]
-
-        You can also use the \code{matrix} command (which is defined
-        in \code{sage.misc.functional}):
+        
+        You can also use the ``matrix`` command (which is
+        defined in ``sage.misc.functional``)::
+        
             sage: matrix(QQ, A)
             [  1 1/2 1/3 1/4]
             [  2   1 2/3 1/2]
@@ -1947,8 +2214,9 @@ class MaximaElement(ExpectElement):
         """
         Return the partial fraction decomposition of self with respect to
         the variable var.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: f = maxima('1/((1+x)*(x-1))')            
             sage: f.partial_fraction_decomposition('x')    
             1/(2*(x-1))-1/(2*(x+1))
@@ -1963,13 +2231,15 @@ class MaximaElement(ExpectElement):
         r"""
         Note that right's parent should already be Maxima since this should
         be called after coercion has been performed.
-
-        If right is a \code{MaximaFunction}, then we convert
-        \code{self} to a \code{MaximaFunction} that takes no
-        arguments, and let the \code{MaximaFunction._operation} code
-        handle everything from there.
-
-        EXAMPLES:
+        
+        If right is a ``MaximaFunction``, then we convert
+        ``self`` to a ``MaximaFunction`` that takes
+        no arguments, and let the
+        ``MaximaFunction._operation`` code handle everything
+        from there.
+        
+        EXAMPLES::
+        
             sage: f = maxima.cos(x)
             sage: f._operation("+", f)
             2*cos(x)
@@ -1990,7 +2260,8 @@ class MaximaElement(ExpectElement):
 class MaximaFunctionElement(FunctionElement):
     def _sage_doc_(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: m = maxima(4)
             sage: m.gcd._sage_doc_()
             -- Function: gcd (<p_1>, <p_2>, <x_1>, ...)
@@ -2001,7 +2272,8 @@ class MaximaFunctionElement(FunctionElement):
 class MaximaExpectFunction(ExpectFunction):
     def _sage_doc_(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: maxima.gcd._sage_doc_()
             -- Function: gcd (<p_1>, <p_2>, <x_1>, ...)
             ...
@@ -2013,7 +2285,8 @@ class MaximaExpectFunction(ExpectFunction):
 class MaximaFunction(MaximaElement):
     def __init__(self, parent, name, defn, args, latex):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: f == loads(dumps(f))
             True
@@ -2025,18 +2298,19 @@ class MaximaFunction(MaximaElement):
 
     def __reduce__(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: f.__reduce__()
             (<function reduce_load_Maxima_function at 0x...>,
              (Maxima, 'sin(x+y)', 'x,y', None))
-
         """
         return reduce_load_Maxima_function, (self.parent(), self.__defn, self.__args, self.__latex)
         
     def __call__(self, *x):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: f(1,2)
             sin(3)
@@ -2050,7 +2324,8 @@ class MaximaFunction(MaximaElement):
 
     def __repr__(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: repr(f)
             'sin(x+y)'
@@ -2059,7 +2334,8 @@ class MaximaFunction(MaximaElement):
 
     def _latex_(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: latex(f)
             \mbox{\rm sin(x+y)}
@@ -2072,8 +2348,9 @@ class MaximaFunction(MaximaElement):
     def arguments(self, split=True):
         r"""
         Returns the arguments of this Maxima function.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: f.arguments()
             ['x', 'y']
@@ -2091,8 +2368,9 @@ class MaximaFunction(MaximaElement):
     def definition(self):
         """
         Returns the definition of this Maxima function as a string.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: f.definition()
             'sin(x+y)'
@@ -2102,10 +2380,11 @@ class MaximaFunction(MaximaElement):
     def integral(self, var):
         """
         Returns the integral of self with respect to the variable var.
-
+        
         Note that integrate is an alias of integral.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: x,y = var('x,y')
             sage: f = maxima.function('x','sin(x)')
             sage: f.integral(x)
@@ -2128,15 +2407,21 @@ class MaximaFunction(MaximaElement):
         r"""
         This is a utility function which factors out much of the
         commonality used in the arithmetic operations for
-        \code{MaximaFunctions}.
-
+        ``MaximaFunctions``.
+        
         INPUT:
-            operation -- A string representing the operation being performed.
-                         For example, '*', or '1/'.
-            f -- The other operand.  If f is \code{None}, than the
-                 operation is assumed to be unary rather than binary.
-
-        EXAMPLES:
+        
+        
+        -  ``operation`` - A string representing the operation
+           being performed. For example, '\*', or '1/'.
+        
+        -  ``f`` - The other operand. If f is
+           ``None``, than the operation is assumed to be unary
+           rather than binary.
+        
+        
+        EXAMPLES::
+        
             sage: f = maxima.function('x,y','sin(x+y)')
             sage: f._operation("+", f)
             2*sin(y+x)
@@ -2164,8 +2449,9 @@ class MaximaFunction(MaximaElement):
     def _add_(self, f):
         """
         MaximaFunction as left summand.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: x,y = var('x,y')
             sage: f = maxima.function('x','sin(x)')
             sage: g = maxima.function('x','-cos(x)')
@@ -2173,14 +2459,18 @@ class MaximaFunction(MaximaElement):
             sin(x)-cos(x)
             sage: f+3
             sin(x)+3
-
+        
+        ::
+        
             sage: (f+maxima.cos(x))(2)
             sin(2)+cos(2)
             sage: (f+maxima.cos(y)) # This is a function with only ONE argument!
             cos(y)+sin(x)  
             sage: (f+maxima.cos(y))(2)
             cos(y)+sin(2)
-
+        
+        ::
+        
             sage: f = maxima.function('x','sin(x)')
             sage: g = -maxima.cos(x)
             sage: g+f
@@ -2194,9 +2484,10 @@ class MaximaFunction(MaximaElement):
 
     def _sub_(self, f):
         r"""
-        \code{MaximaFunction} as minuend.
-
-        EXAMPLES:
+        ``MaximaFunction`` as minuend.
+        
+        EXAMPLES::
+        
             sage: x,y = var('x,y')
             sage: f = maxima.function('x','sin(x)')
             sage: g = -maxima.cos(x) # not a function
@@ -2208,7 +2499,9 @@ class MaximaFunction(MaximaElement):
             sin(x)-cos(y)
             sage: _(2)
             sin(2)-cos(y) 
-
+        
+        ::
+        
             sage: g-f
             -sin(x)-cos(x)
         """
@@ -2216,16 +2509,19 @@ class MaximaFunction(MaximaElement):
         
     def _mul_(self, f):
         r"""
-        \code{MaximaFunction} as left factor.
-
-        EXAMPLES:
+        ``MaximaFunction`` as left factor.
+        
+        EXAMPLES::
+        
             sage: f = maxima.function('x','sin(x)')
             sage: g = maxima('-cos(x)') # not a function!
             sage: f*g
             -cos(x)*sin(x)
             sage: _(2)
             -cos(2)*sin(2)
-
+        
+        ::
+        
             sage: f = maxima.function('x','sin(x)')
             sage: g = maxima('-cos(x)')
             sage: g*f
@@ -2239,16 +2535,19 @@ class MaximaFunction(MaximaElement):
 
     def _div_(self, f):
         r"""
-        \code{MaximaFunction} as dividend.
-
-        EXAMPLES:
+        ``MaximaFunction`` as dividend.
+        
+        EXAMPLES::
+        
             sage: f=maxima.function('x','sin(x)')
             sage: g=maxima('-cos(x)')
             sage: f/g
             -sin(x)/cos(x)
             sage: _(2)
             -sin(2)/cos(2)
-
+        
+        ::
+        
             sage: f=maxima.function('x','sin(x)')
             sage: g=maxima('-cos(x)')
             sage: g/f
@@ -2257,15 +2556,15 @@ class MaximaFunction(MaximaElement):
             -cos(2)/sin(2)
             sage: 2/f
             2/sin(x)
-
         """
         return self._operation("/", f)
 
     def __neg__(self):
         r"""
-        Additive inverse of a \code{MaximaFunction}.
-
-        EXAMPLES:
+        Additive inverse of a ``MaximaFunction``.
+        
+        EXAMPLES::
+        
             sage: f=maxima.function('x','sin(x)')
             sage: -f
             -sin(x)
@@ -2274,9 +2573,10 @@ class MaximaFunction(MaximaElement):
 
     def __inv__(self):
         r"""
-        Multiplicative inverse of a \code{MaximaFunction}.
-
-        EXAMPLES:
+        Multiplicative inverse of a ``MaximaFunction``.
+        
+        EXAMPLES::
+        
             sage: f = maxima.function('x','sin(x)')
             sage: ~f
             1/sin(x)
@@ -2285,14 +2585,17 @@ class MaximaFunction(MaximaElement):
 
     def __pow__(self,f):
         r"""
-        \code{MaximaFunction} raised to some power.
-
-        EXAMPLES:
+        ``MaximaFunction`` raised to some power.
+        
+        EXAMPLES::
+        
             sage: f=maxima.function('x','sin(x)')
             sage: g=maxima('-cos(x)')
             sage: f^g
             1/sin(x)^cos(x)
-
+        
+        ::
+        
             sage: f=maxima.function('x','sin(x)')
             sage: g=maxima('-cos(x)') # not a function
             sage: g^f
@@ -2305,7 +2608,8 @@ def is_MaximaElement(x):
     """
     Returns True if x is of type MaximaElement.
     
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: from sage.interfaces.maxima import is_MaximaElement
         sage: m = maxima(1)
         sage: is_MaximaElement(m)
@@ -2320,7 +2624,8 @@ maxima = Maxima(script_subdirectory=None)
 
 def reduce_load_Maxima():
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: from sage.interfaces.maxima import reduce_load_Maxima
         sage: reduce_load_Maxima()
         Maxima
@@ -2335,8 +2640,9 @@ import os
 def maxima_console():
     """
     Spawn a new Maxima command-line session.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: from sage.interfaces.maxima import maxima_console
         sage: maxima_console()                    # not tested
         Maxima 5.16.3 http://maxima.sourceforge.net
@@ -2346,7 +2652,8 @@ def maxima_console():
 
 def maxima_version():
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: from sage.interfaces.maxima import maxima_version
         sage: maxima_version()
         '5.16.3'
