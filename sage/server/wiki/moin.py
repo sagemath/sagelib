@@ -1,13 +1,13 @@
 r"""
 Wiki Interactive Web Page.
 
-\sage includes the Moin Moin Wiki interactive web page system standard.
-To start your own math-typesetting-aware wiki server immediately, just
-type \code{wiki()} at the command line.
+Sage includes the Moin Moin Wiki interactive web page system
+standard. To start your own math-typesetting-aware wiki server
+immediately, just type ``wiki()`` at the command line.
 
-The Moin Moin Wiki ``is an advanced, easy to use and extensible
-WikiEngine with a large community of users. Said in a few words, it is
-about collaboration on easily editable web pages.''
+The Moin Moin Wiki "is an advanced, easy to use and extensible
+WikiEngine with a large community of users. Said in a few words, it
+is about collaboration on easily editable web pages."
 """
 
 import os, socket, sys
@@ -42,12 +42,12 @@ def wiki(directory='sage_wiki',
          threads=10):
     r"""
     Create (if necessary) and start up a Moin Moin wiki.
-
-    The wiki will be served on the given port. 
-
+    
+    The wiki will be served on the given port.
+    
     The moin package contains a modified version of moin moin, which
-    comes with jsmath latex typesetting preconfigured; use dollar
-    signs to typeset.
+    comes with jsmath latex typesetting preconfigured; use dollar signs
+    to typeset.
     """
     if not os.path.exists(directory):
         wiki_create_instance(directory)
@@ -105,12 +105,12 @@ def wiki_simple_http(directory='sage_wiki',
          address='localhost'):
     r"""
     Create (if necessary) and start up a Moin Moin wiki.
-
-    The wiki will be served on the given port. 
-
+    
+    The wiki will be served on the given port.
+    
     The moin package contains a modified version of moin moin, which
-    comes with jsmath latex typesetting preconfigured; use dollar
-    signs to typeset.
+    comes with jsmath latex typesetting preconfigured; use dollar signs
+    to typeset.
     """
     sys.path.insert(0, os.path.abspath(directory))
     
