@@ -1,7 +1,8 @@
 """
 Rational point sets on a Jacobian
 
-EXAMPLES:
+EXAMPLES::
+
     sage: x = QQ['x'].0
     sage: f = x^5 + x + 1
     sage: C = HyperellipticCurve(f); C
@@ -48,16 +49,15 @@ class JacobianHomset_divisor_classes(SchemeHomset_generic):
     def __call__(self, P):
         r"""
         Returns a rational point P in the abstract Homset J(K), given:
-
-        0. A point P in J = Jac(C), returning P; 
-        1. A point P on the curve C such that J = Jac(C), where C is an
-           odd degree model, returning [P - oo];
-        2. A pair of points (P, Q) on the curve C such that J = Jac(C),
-           returning [P-Q];
-        2. A list of polynomials (a,b) such that $b^2 + h*b - f = 0 mod a$,
-           returning [(a(x),y-b(x))].
-
-        EXAMPLES:
+        
+        0. A point P in J = Jac(C), returning P; 1. A point P on the curve
+        C such that J = Jac(C), where C is an odd degree model, returning
+        [P - oo]; 2. A pair of points (P, Q) on the curve C such that J =
+        Jac(C), returning [P-Q]; 2. A list of polynomials (a,b) such that
+        `b^2 + h*b - f = 0 mod a`, returning [(a(x),y-b(x))].
+        
+        EXAMPLES::
+        
             sage: P.<x> = PolynomialRing(QQ)
             sage: f = x^5 - x + 1; h = x
             sage: C = HyperellipticCurve(f,h,'u,v')
@@ -108,7 +108,7 @@ class JacobianHomset_divisor_classes(SchemeHomset_generic):
 
     def value_ring(self):
         """
-        Returns S for a homset X(T) where T = Spec(S).  
+        Returns S for a homset X(T) where T = Spec(S).
         """
         T = self.domain()
         if spec.is_Spec(T):
