@@ -2,11 +2,14 @@
 Homomorphisms of abelian groups
 
 TODO:
-    * there must be a homspace first
-    * there should be hom and Hom methods in abelian group
+
+- there must be a homspace first
+
+- there should be hom and Hom methods in abelian group
 
 AUTHORS:
-    -- David Joyner (2006-03-03): initial version
+
+- David Joyner (2006-03-03): initial version
 """
 
 #*****************************************************************************
@@ -41,9 +44,8 @@ class AbelianGroupMap(Morphism):
 class AbelianGroupMorphism_id(AbelianGroupMap):
     """
     Return the identity homomorphism from X to itself.
-
+    
     EXAMPLES:
-
     """
     def __init__(self, X):
         AbelianGroupMorphism.__init__(self, X.Hom(X))
@@ -53,23 +55,28 @@ class AbelianGroupMorphism_id(AbelianGroupMap):
 
 class AbelianGroupMorphism:
     """
-    Some python code for wrapping GAP's GroupHomomorphismByImages 
-    function for abelian groups. Returns "fail" if 
-    gens does not generate self or if the map does not
-    extend to a group homomorphism, self --> other.
-
-    EXAMPLES:
+    Some python code for wrapping GAP's GroupHomomorphismByImages
+    function for abelian groups. Returns "fail" if gens does not
+    generate self or if the map does not extend to a group
+    homomorphism, self - other.
+    
+    EXAMPLES::
+    
         sage: G = AbelianGroup(3,[2,3,4],names="abc"); G
         Multiplicative Abelian Group isomorphic to C2 x C3 x C4
         sage: a,b,c = G.gens()
         sage: H = AbelianGroup(2,[2,3],names="xy"); H
         Multiplicative Abelian Group isomorphic to C2 x C3
         sage: x,y = H.gens()
-        
+    
+    ::
+    
         sage: from sage.groups.abelian_gps.abelian_group_morphism import AbelianGroupMorphism
         sage: phi = AbelianGroupMorphism(H,G,[x,y],[a,b])
+    
+    AUTHORS:
 
-    AUTHOR: David Joyner (2-2006)
+    - David Joyner (2006-02)
     """
 
 #    There is a homomorphism from H to G but not from G to H:
@@ -115,7 +122,8 @@ class AbelianGroupMorphism:
         """
         Only works for finite groups.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: G = AbelianGroup(3,[2,3,4],names="abc"); G
             Multiplicative Abelian Group isomorphic to C2 x C3 x C4
             sage: a,b,c = G.gens()
@@ -168,20 +176,21 @@ class AbelianGroupMorphism:
     def kernel(self):
         """
         Only works for finite groups.
-
-        TODO: not done yet; returns a gap object but should return a
-        SAGE group.
-
-        EXAMPLES:
-           sage: H = AbelianGroup(3,[2,3,4],names="abc"); H
-           Multiplicative Abelian Group isomorphic to C2 x C3 x C4
-           sage: a,b,c = H.gens()
-           sage: G = AbelianGroup(2,[2,3],names="xy"); G
-           Multiplicative Abelian Group isomorphic to C2 x C3
-           sage: x,y = G.gens()
-           sage: phi = AbelianGroupMorphism(G,H,[x,y],[a,b])
-           sage: phi.kernel()
-           'Group([  ])'
+        
+        TODO: not done yet; returns a gap object but should return a Sage
+        group.
+        
+        EXAMPLES::
+        
+            sage: H = AbelianGroup(3,[2,3,4],names="abc"); H
+            Multiplicative Abelian Group isomorphic to C2 x C3 x C4
+            sage: a,b,c = H.gens()
+            sage: G = AbelianGroup(2,[2,3],names="xy"); G
+            Multiplicative Abelian Group isomorphic to C2 x C3
+            sage: x,y = G.gens()
+            sage: phi = AbelianGroupMorphism(G,H,[x,y],[a,b])
+            sage: phi.kernel()
+            'Group([  ])'
         """
         cmd = self._gap_init_()
         gap.eval(cmd)
@@ -190,16 +199,17 @@ class AbelianGroupMorphism:
     def image(self, J):
         """
         Only works for finite groups.
-
-        J must be a subgroup of G. Computes the subgroup of
-        H which is the image of J.
-
-        EXAMPLES:
-           sage: G = AbelianGroup(2,[2,3],names="xy")
-           sage: x,y = G.gens()
-           sage: H = AbelianGroup(3,[2,3,4],names="abc")
-           sage: a,b,c = H.gens()
-           sage: phi = AbelianGroupMorphism(G,H,[x,y],[a,b])
+        
+        J must be a subgroup of G. Computes the subgroup of H which is the
+        image of J.
+        
+        EXAMPLES::
+        
+            sage: G = AbelianGroup(2,[2,3],names="xy")
+            sage: x,y = G.gens()
+            sage: H = AbelianGroup(3,[2,3,4],names="abc")
+            sage: a,b,c = H.gens()
+            sage: phi = AbelianGroupMorphism(G,H,[x,y],[a,b])
         """
         G = self.domain()
         gensJ = J.gens()
@@ -211,22 +221,20 @@ class AbelianGroupMorphism:
 
     def __call__( self, g ):
         """
-    	Some python code for wrapping GAP's Images 
-    	function but only for permutation groups. 
-    	Returns an error if g is not in G.
-
-    	EXAMPLES:
-
-            sage: H = AbelianGroup(3, [2,3,4], names="abc")
-            sage: a,b,c = H.gens()
-            sage: G = AbelianGroup(2, [2,3], names="xy")
-            sage: x,y = G.gens()
-            sage: phi = AbelianGroupMorphism(G,H,[x,y],[a,b])
-            sage: phi(y*x)
-            a*b
-            sage: phi(y^2)
-            b^2
-
+    	Some python code for wrapping GAP's Images function but only for
+    	permutation groups. Returns an error if g is not in G.
+    	
+    	EXAMPLES::
+    	
+    	    sage: H = AbelianGroup(3, [2,3,4], names="abc")
+    	    sage: a,b,c = H.gens()
+    	    sage: G = AbelianGroup(2, [2,3], names="xy")
+    	    sage: x,y = G.gens()
+    	    sage: phi = AbelianGroupMorphism(G,H,[x,y],[a,b])
+    	    sage: phi(y*x)
+    	    a*b
+    	    sage: phi(y^2)
+    	    b^2
     	"""
         G = g.parent()
         w = g.word_problem(self.domaingens)
