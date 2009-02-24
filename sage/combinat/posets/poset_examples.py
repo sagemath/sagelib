@@ -25,9 +25,10 @@ from sage.graphs.graph import DiGraph
 
 def BooleanLattice(n):
     """
-    Returns the Boolean lattice containing 2^n elements.
-
-    EXAMPLES:
+    Returns the Boolean lattice containing 2n elements.
+    
+    EXAMPLES::
+    
         sage: BooleanLattice(5)
         Finite lattice containing 32 elements
     """
@@ -37,8 +38,9 @@ def BooleanLattice(n):
 def ChainPoset(n):
     """
     Returns a chain (a totally ordered poset) containing n elements.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: C = ChainPoset(6); C
         Finite lattice containing 6 elements
         sage: C.linear_extension() 
@@ -56,8 +58,9 @@ def AntichainPoset(n):
     """
     Returns an antichain (a poset with no comparable elements)
     containing n elements.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: A = AntichainPoset(6); A
         Finite poset containing 6 elements
         sage: for i in range(5):
@@ -70,9 +73,10 @@ def AntichainPoset(n):
 
 def PentagonPoset():
     """
-    Return the ``pentagon''.
-
-    EXAMPLES:
+    Return the "pentagon".
+    
+    EXAMPLES::
+    
         sage: PentagonPoset()
         Finite lattice containing 5 elements
     """
@@ -83,8 +87,9 @@ def PentagonPoset():
 def DiamondPoset(n):
     """
     Returns the lattice of rank two containing n elements.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: DiamondPoset(7)
         Finite lattice containing 7 elements
     """
@@ -99,14 +104,15 @@ def DiamondPoset(n):
 def PosetOfIntegerCompositions(n):
     """
     Returns the poset of integer compositions on the integer n.
-
+    
     A composition of a positive integer n is a list of positive
     integers that some to n. The order is reverse refinement:
-    [p_1,p_2,...,p_l] < [q_1,q_2,...,q_m] if q consists of a 
-    integer composition of p_1, followed by an integer composition
-    of p_2, and so on.
-
-    EXAMPLES:
+    [p_1,p_2,...,p_l] [q_1,q_2,...,q_m] if q consists of a
+    integer composition of p_1, followed by an integer composition of
+    p_2, and so on.
+    
+    EXAMPLES::
+    
         sage: P = PosetOfIntegerCompositions(7); P
         Finite poset containing 64 elements
         sage: len(P.cover_relations())
@@ -119,13 +125,14 @@ def PosetOfIntegerCompositions(n):
 def PosetOfIntegerPartitions(n):
     """
     Returns the poset of integer partitions on the integer n.
-
+    
     A partition of a positive integer n is a non-increasing list of
-    positive integers that some to n. If p and q are integer
-    partitions of n, then p covers q if and only if q is obtained
-    from p by joining two parts of p (and sorting, if necessary).
-
-    EXAMPLES:
+    positive integers that some to n. If p and q are integer partitions
+    of n, then p covers q if and only if q is obtained from p by
+    joining two parts of p (and sorting, if necessary).
+    
+    EXAMPLES::
+    
         sage: P = PosetOfIntegerPartitions(7); P
         Finite poset containing 15 elements
         sage: len(P.cover_relations())
@@ -151,12 +158,13 @@ def PosetOfIntegerPartitions(n):
 
 def PosetOfRestrictedIntegerPartitions(n):
     """
-    Returns the poset of integer partitions on the integer n ordered
-    by restricted refinement. That is, if p and q are integer
-    partitions of n, then p covers q if and only if q is obtained from
-    p by joining two distinct parts of p (and sorting, if necessary).
-
-    EXAMPLES:
+    Returns the poset of integer partitions on the integer n ordered by
+    restricted refinement. That is, if p and q are integer partitions
+    of n, then p covers q if and only if q is obtained from p by
+    joining two distinct parts of p (and sorting, if necessary).
+    
+    EXAMPLES::
+    
         sage: P = PosetOfRestrictedIntegerPartitions(7); P
         Finite poset containing 15 elements
         sage: len(P.cover_relations())
@@ -183,10 +191,11 @@ def PosetOfRestrictedIntegerPartitions(n):
 
 def RandomPoset(n,p):
     """
-    Generate a random poset on n vertices according to a
-    probability distribution p.
-
-    EXAMPLES:
+    Generate a random poset on n vertices according to a probability
+    distribution p.
+    
+    EXAMPLES::
+    
         sage: RandomPoset(17,.15)
         Finite poset containing 17 elements
     """
@@ -204,8 +213,9 @@ def RandomPoset(n,p):
 def SymmetricGroupBruhatOrderPoset(n):
     """
     The poset of permutations with respect to Bruhat order.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: SymmetricGroupBruhatOrderPoset(4)
         Finite poset containing 24 elements
     """
@@ -216,18 +226,26 @@ def SymmetricGroupBruhatOrderPoset(n):
 def SymmetricGroupBruhatIntervalPoset(start, end):
     """
     The poset of permutations with respect to Bruhat order.
-
-    INPUT:
-        start -- list permutation
-        end -- list permutation (same n, of course)
     
-    NOTE:
-        Must have start <= end.
+    INPUT:
+    
+    
+    -  ``start`` - list permutation
+    
+    -  ``end`` - list permutation (same n, of course)
+    
+    
+    .. note::
 
-    EXAMPLES:
+       Must have start = end.
+    
+    EXAMPLES::
+    
         sage: from sage.combinat.posets.poset_examples import SymmetricGroupBruhatIntervalPoset
     
-    Any interval is rank symmetric if and only if it avoids these permutations:
+    Any interval is rank symmetric if and only if it avoids these
+    permutations::
+    
         sage: P1 = SymmetricGroupBruhatIntervalPoset([0,1,2,3], [2,3,0,1])
         sage: P2 = SymmetricGroupBruhatIntervalPoset([0,1,2,3], [3,1,2,0])
         sage: ranks1 = [P1.rank(v) for v in P1]
@@ -236,7 +254,6 @@ def SymmetricGroupBruhatIntervalPoset(start, end):
         [1, 3, 5, 4, 1]
         sage: [ranks2.count(i) for i in uniq(ranks2)]
         [1, 3, 5, 6, 4, 1]
-
     """
     start = Permutation(start)
     end = Permutation(end)
@@ -257,8 +274,9 @@ def SymmetricGroupBruhatIntervalPoset(start, end):
 def SymmetricGroupWeakOrderPoset(n,labels="permutations"):
     """
     The poset of permutations with respect to weak order.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: SymmetricGroupWeakOrderPoset(4)
         Finite poset containing 24 elements
     """

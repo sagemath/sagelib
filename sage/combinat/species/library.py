@@ -1,3 +1,6 @@
+"""
+Examples of Combinatorial Species
+"""
 #*****************************************************************************
 #       Copyright (C) 2008 Mike Hansen <mhansen@gmail.com>, 
 #
@@ -31,8 +34,9 @@ from sage.misc.cachefunc import cached_method, cached_function
 def SimpleGraphSpecies():
     """
     Returns the species of simple graphs.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: S = species.SimpleGraphSpecies()
         sage: S.generating_series().counts(10)
         [1, 1, 2, 8, 64, 1024, 32768, 2097152, 268435456, 68719476736]
@@ -44,18 +48,20 @@ def SimpleGraphSpecies():
          8/3*p[1, 1, 1, 1] + 4*p[2, 1, 1] + 2*p[2, 2] + 4/3*p[3, 1] + p[4]]
         sage: S.isotype_generating_series().coefficients(6)
         [1, 1, 2, 4, 11, 34]
-
-    TESTS:
+    
+    TESTS::
+    
         sage: seq = S.isotype_generating_series().counts(6)[1:]  #optional
         sage: number, name, sseq = sloane_find(seq)[0]                    #optional
         sage: print number, name                                          #optional
         88 Number of graphs on n unlabeled nodes.
-
+    
+    ::
+    
         sage: seq = S.generating_series().counts(10)[1:]  #optional
         sage: number, name, sseq = sloane_find(seq)[0]    #optional
         sage: print number, name                          #optional
         6125 2^{n(n-1)/2}.
-
     """
     E = SetSpecies()
     E2 = SetSpecies(size=2)
@@ -67,11 +73,12 @@ def SimpleGraphSpecies():
 @cached_function
 def BinaryTreeSpecies():
     """
-    Returns the species of binary trees on n leaves.  The species
-    of binary trees B is defined by B = X + B*B where X
-    is the singleton species.
-
-    EXAMPLES:
+    Returns the species of binary trees on n leaves. The species of
+    binary trees B is defined by B = X + B\*B where X is the singleton
+    species.
+    
+    EXAMPLES::
+    
         sage: B = species.BinaryTreeSpecies()
         sage: B.generating_series().counts(10)
         [0, 1, 2, 12, 120, 1680, 30240, 665280, 17297280, 518918400]
@@ -79,19 +86,21 @@ def BinaryTreeSpecies():
         [0, 1, 1, 2, 5, 14, 42, 132, 429, 1430]
         sage: B._check()
         True
-        
+    
+    ::
+    
         sage: B = species.BinaryTreeSpecies()
         sage: a = B.structures([1,2,3,4,5]).random_element(); a
         2*((5*3)*(4*1))
         sage: a.automorphism_group()
         Permutation Group with generators [()]
-
-    TESTS:
+    
+    TESTS::
+    
         sage: seq = B.isotype_generating_series().counts(10)[1:] #optional
         sage: number, name, sseq = sloane_find(seq)[0]                    #optional
         sage: print number, name                                          #optional
         108 Catalan numbers: C(n) = binomial(2n,n)/(n+1) = (2n)!/(n!(n+1)!). Also called Segner numbers.
-
     """
     B = CombinatorialSpecies()
     X = SingletonSpecies()
@@ -101,10 +110,11 @@ def BinaryTreeSpecies():
 @cached_function
 def BinaryForestSpecies():
     """
-    Returns the species of binary forests.  Binary forests are defined as sets
-    of binary trees.
-
-    EXAMPLES:
+    Returns the species of binary forests. Binary forests are defined
+    as sets of binary trees.
+    
+    EXAMPLES::
+    
         sage: F = species.BinaryForestSpecies()
         sage: F.generating_series().counts(10)
         [1, 1, 3, 19, 193, 2721, 49171, 1084483, 28245729, 848456353]
@@ -118,13 +128,13 @@ def BinaryForestSpecies():
          193/24*p[1, 1, 1, 1] + 3/4*p[2, 1, 1] + 5/8*p[2, 2] + 1/3*p[3, 1] + 1/4*p[4],
          907/40*p[1, 1, 1, 1, 1] + 19/12*p[2, 1, 1, 1] + 5/8*p[2, 2, 1] + 1/2*p[3, 1, 1] + 1/6*p[3, 2] + 1/4*p[4, 1] + 1/5*p[5],
          49171/720*p[1, 1, 1, 1, 1, 1] + 193/48*p[2, 1, 1, 1, 1] + 15/16*p[2, 2, 1, 1] + 61/48*p[2, 2, 2] + 19/18*p[3, 1, 1, 1] + 1/6*p[3, 2, 1] + 7/18*p[3, 3] + 3/8*p[4, 1, 1] + 1/8*p[4, 2] + 1/5*p[5, 1] + 1/6*p[6]]
-
-    TESTS:
+    
+    TESTS::
+    
         sage: seq = F.isotype_generating_series().counts(10)[1:] #optional
         sage: number, name, sseq = sloane_find(seq)[0]                    #optional
         sage: print number, name                                          #optional
         52854 Number of unordered forests on n nodes.
-
     """
     B = BinaryTreeSpecies()
     S = SetSpecies()

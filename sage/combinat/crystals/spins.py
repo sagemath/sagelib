@@ -2,23 +2,21 @@ r"""
 Spin Crystals
 
 These are the crystals associated with the three spin
-representations: the spin representations of odd
-orthogonal groups (or rather their double covers); and
-the + and - spin representations of the even orthogonal
-groups.
+representations: the spin representations of odd orthogonal groups
+(or rather their double covers); and the + and - spin
+representations of the even orthogonal groups.
 
-We follow Kashiwara and Nakashima (Journal of Algebra
-165, 1994) in representing the elements of the spin Crystal
-by sequences of signs +/-. Two other representations
-are available as attributes internal_repn and signature
-of the crystal element.
+We follow Kashiwara and Nakashima (Journal of Algebra 165, 1994) in
+representing the elements of the spin Crystal by sequences of signs
++/-. Two other representations are available as attributes
+internal_repn and signature of the crystal element.
 
-* A numerical internal representation, an integer N
-such that if N-1 is written in binary and the 1's are
-replaced by -, the 0's by +
+- A numerical internal representation, an integer N such that if N-1
+  is written in binary and the 1's are replaced by ``-``, the 0's by
+  ``+``
 
-* The signature, which is a list in which + is replaced
-by +1 and - by -1.
+- The signature, which is a list in which ``+`` is replaced by +1 and
+  ``-`` by -1.
 """
 
 #*****************************************************************************
@@ -52,17 +50,20 @@ from crystals import ClassicalCrystal, CrystalElement
 def CrystalOfSpins(ct):
     r"""
     Return the spin crystal of the given type B.
-
-    This is a combinatorial model for the crystal with
-    highest weight $Lambda_n$ (the n-th fundamental
-    weight). It has $2^n$ elements, here called Spins.
-    See also CrystalOfLetters, CrystalOfSpinsPlus
-    and CrystalOfSpinsMinus.
-
-    INPUT:
-        ['B',n] -- A CartanType of type B.
     
-    EXAMPLES:
+    This is a combinatorial model for the crystal with highest weight
+    `Lambda_n` (the n-th fundamental weight). It has
+    `2^n` elements, here called Spins. See also
+    CrystalOfLetters, CrystalOfSpinsPlus and CrystalOfSpinsMinus.
+    
+    INPUT:
+    
+    
+    -  ``['B',n]`` - A CartanType of type B.
+    
+    
+    EXAMPLES::
+    
         sage: C = CrystalOfSpins(['B',3])
         sage: C.list()
         [[1, 1, 1],
@@ -73,11 +74,14 @@ def CrystalOfSpins(ct):
          [-1, 1, -1],
          [-1, -1, 1],
          [-1, -1, -1]]
-
-         sage: [x.signature() for x in C]
-         ['+++', '++-', '+-+', '-++', '+--', '-+-', '--+', '---']
-
-    TESTS:
+    
+    ::
+    
+        sage: [x.signature() for x in C]
+        ['+++', '++-', '+-+', '-++', '+--', '-+-', '--+', '---']
+    
+    TESTS::
+    
         sage: len(TensorProductOfCrystals(C,C,generators=[[C.list()[0],C.list()[0]]]))
         35
     """
@@ -94,14 +98,18 @@ def CrystalOfSpins(ct):
 def CrystalOfSpinsPlus(ct):
     r"""
     Return the plus spin crystal of the given type D.
-
-    This is the crystal with highest weight $Lambda_n$
-    (the n-th fundamental weight).
-
+    
+    This is the crystal with highest weight `Lambda_n` (the
+    n-th fundamental weight).
+    
     INPUT:
-        ['D',n] -- A CartanType of type D.
-
-    EXAMPLES:
+    
+    
+    -  ``['D',n]`` - A CartanType of type D.
+    
+    
+    EXAMPLES::
+    
         sage: D = CrystalOfSpinsPlus(['D',4])
         sage: D.list()
         [[1, 1, 1, 1],
@@ -112,11 +120,14 @@ def CrystalOfSpinsPlus(ct):
          [-1, 1, -1, 1],
          [-1, -1, 1, 1],
          [-1, -1, -1, -1]]
-
+    
+    ::
+    
         sage: [x.signature() for x in D]
         ['++++', '++--', '+-+-', '-++-', '+--+', '-+-+', '--++', '----']
-
-    TESTS:
+    
+    TESTS::
+    
         sage: D.check()
         True
     """
@@ -129,14 +140,18 @@ def CrystalOfSpinsPlus(ct):
 def CrystalOfSpinsMinus(ct):
     r"""
     Return the minus spin crystal of the given type D.
-
-    This is the crystal with highest weight $Lambda_{n-1}$
+    
+    This is the crystal with highest weight `Lambda_{n-1}`
     (the (n-1)-st fundamental weight).
-
+    
     INPUT:
-        ['D',n] -- A CartanType of type D.
-
-    EXAMPLES:
+    
+    
+    -  ``['D',n]`` - A CartanType of type D.
+    
+    
+    EXAMPLES::
+    
         sage: E = CrystalOfSpinsMinus(['D',4])
         sage: E.list()
          [[1, 1, 1, -1],
@@ -149,8 +164,9 @@ def CrystalOfSpinsMinus(ct):
           [-1, -1, -1, 1]]
         sage: [x.signature() for x in E]
         ['+++-', '++-+', '+-++', '-+++', '+---', '-+--', '--+-', '---+']
-
-    TESTS:
+    
+    TESTS::
+    
         sage: len(TensorProductOfCrystals(E,E,generators=[[E[0],E[0]]]).list())
         35
         sage: D = CrystalOfSpinsPlus(['D',4])
@@ -166,7 +182,8 @@ def CrystalOfSpinsMinus(ct):
 class GenericCrystalOfSpins(ClassicalCrystal):
     def __init__(self, ct, element_class, case):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: E = CrystalOfSpinsMinus(['D',4])
             sage: E == loads(dumps(E))
             True
@@ -193,7 +210,8 @@ class GenericCrystalOfSpins(ClassicalCrystal):
 
     def __call__(self, value):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: C([1,1,1])
             [1, 1, 1]
@@ -206,8 +224,9 @@ class GenericCrystalOfSpins(ClassicalCrystal):
     def list(self):
         """
         Returns a list of the elements of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: CrystalOfSpins(['B',3]).list()
             [[1, 1, 1],
              [1, 1, -1],
@@ -224,7 +243,8 @@ class GenericCrystalOfSpins(ClassicalCrystal):
         """
         Returns the directed graph associated to self.
         
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: CrystalOfSpins(['B',3]).digraph()
             Digraph on 8 vertices
         """
@@ -232,14 +252,15 @@ class GenericCrystalOfSpins(ClassicalCrystal):
 
     def cmp_elements(self, x,y):
         r"""
-        Returns True if and only if there is a path
-        from x to y in the crystal graph.
+        Returns True if and only if there is a path from x to y in the
+        crystal graph.
         
-        Because the crystal graph is classical, it is a directed
-        acyclic graph which can be interpreted as a poset. This
-        function implements the comparison function of this poset.
-
-        EXAMPLES:
+        Because the crystal graph is classical, it is a directed acyclic
+        graph which can be interpreted as a poset. This function implements
+        the comparison function of this poset.
+        
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: x = C([1,1,1])
             sage: y = C([-1,-1,-1])
@@ -261,7 +282,8 @@ class GenericCrystalOfSpins(ClassicalCrystal):
 class Spin(Element):
     def __init__(self, parent, value):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: c = C([1,1,1])
             sage: c == loads(dumps(c))
@@ -273,8 +295,9 @@ class Spin(Element):
     def parent(self):
         """
         Returns the parent of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: C([1,1,1]).parent()
             The crystal of spins for type ['B', 3]
@@ -283,7 +306,8 @@ class Spin(Element):
 
     def __repr__(self):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: c = C([1,1,1])
             sage: c.__repr__()
@@ -293,7 +317,8 @@ class Spin(Element):
 
     def __eq__(self, other):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: D = CrystalOfSpins(['B',4])
             sage: a = C([1,1,1])
@@ -313,7 +338,8 @@ class Spin(Element):
 
     def __cmp__(self, other):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: c1 = C([1,1,1])
             sage: c2 = C([-1,-1,-1])
@@ -335,8 +361,9 @@ class Spin(Element):
     def signature(self):
         """
         Returns the signature of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: C([1,1,1]).signature()
             '+++'
@@ -351,16 +378,13 @@ class Spin(Element):
 class Spin_crystal_type_B_element(Spin, CrystalElement):
     r"""
     Type B spin representation crystal element
-
- 
-
- 
     """
     def e(self, i):
         r"""
-        Returns the action of $e_i$ on self.
-
-        EXAMPLES:
+        Returns the action of `e_i` on self.
+        
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: [[C[m].e(i) for i in range(1,4)] for m in range(8)]
             [[None, None, None],
@@ -390,9 +414,10 @@ class Spin_crystal_type_B_element(Spin, CrystalElement):
 
     def f(self, i):
         r"""
-        Returns the action of $f_i$ on self.
-
-        EXAMPLES:
+        Returns the action of `f_i` on self.
+        
+        EXAMPLES::
+        
             sage: C = CrystalOfSpins(['B',3])
             sage: [[C[m].f(i) for i in range(1,4)] for m in range(8)]
             [[None, None, [1, 1, -1]],
@@ -402,7 +427,7 @@ class Spin_crystal_type_B_element(Spin, CrystalElement):
              [[-1, 1, -1], None, None],
              [None, [-1, -1, 1], None],
              [None, None, [-1, -1, -1]],
-             [None, None, None]] 
+             [None, None, None]]
         """
         assert i in self.index_set()
         rank = self._parent.cartan_type.n
@@ -426,9 +451,10 @@ class Spin_crystal_type_D_element(Spin, CrystalElement):
     """
     def e(self, i):
         r"""
-        Returns the action of $e_i$ on self.
-
-        EXAMPLES:
+        Returns the action of `e_i` on self.
+        
+        EXAMPLES::
+        
             sage: D = CrystalOfSpinsPlus(['D',4])
             sage: [[D.list()[m].e(i) for i in range(1,4)] for m in range(8)]
             [[None, None, None],
@@ -439,7 +465,9 @@ class Spin_crystal_type_D_element(Spin, CrystalElement):
              [[1, -1, -1, 1], None, [-1, 1, 1, -1]],
              [None, [-1, 1, -1, 1], None],
              [None, None, None]]
-         
+        
+        ::
+        
             sage: E = CrystalOfSpinsMinus(['D',4])
             sage: [[E[m].e(i) for i in range(1,4)] for m in range(8)]
             [[None, None, None],
@@ -449,7 +477,7 @@ class Spin_crystal_type_D_element(Spin, CrystalElement):
              [None, None, None],
              [[1, -1, -1, -1], None, None],
              [None, [-1, 1, -1, -1], None],
-             [None, None, [-1, -1, 1, -1]]]        
+             [None, None, [-1, -1, 1, -1]]]
         """
         assert i in self.index_set()
         rank = self._parent.cartan_type.n
@@ -470,9 +498,10 @@ class Spin_crystal_type_D_element(Spin, CrystalElement):
 
     def f(self, i):
         r"""
-        Returns the action of $f_i$ on self.
-
-        EXAMPLES:
+        Returns the action of `f_i` on self.
+        
+        EXAMPLES::
+        
             sage: D = CrystalOfSpinsPlus(['D',4])
             sage: [[D.list()[m].f(i) for i in range(1,4)] for m in range(8)]
             [[None, None, None],
@@ -483,7 +512,8 @@ class Spin_crystal_type_D_element(Spin, CrystalElement):
              [None, [-1, -1, 1, 1], None],
              [None, None, None],
              [None, None, None]]
-
+        
+        ::
         
             sage: E = CrystalOfSpinsMinus(['D',4])
             sage: [[E[m].f(i) for i in range(1,4)] for m in range(8)]

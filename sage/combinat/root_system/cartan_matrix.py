@@ -22,8 +22,9 @@ from sage.rings.all import ZZ
 def cartan_matrix(t):
     """
     Returns the Cartan matrix corresponding to type t.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: cartan_matrix(['A', 4])
         [ 2 -1  0  0]
         [-1  2 -1  0]
@@ -77,9 +78,12 @@ def cartan_matrix(t):
         [-1  2 -1  0]
         [ 0 -2  2 -1]
         [ 0  0 -1  2]
-
-      This is different from MuPAD-Combinat, due to different node convention?
-
+    
+    This is different from MuPAD-Combinat, due to different node
+    convention?
+    
+    ::
+    
         sage: cartan_matrix(['G', 2])
         [ 2 -3]
         [-1  2]

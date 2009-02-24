@@ -34,17 +34,16 @@ Integer       = sage.rings.integer.Integer
 def Ribbon(r):
     """
     Returns a ribbon tableau object.
-
-    A ribbon is a skew tableau that does not contain a 2x2 box.
-    A ribbon is given by a list of the rows from top to bottom.
     
-
-    EXAMPLES:
+    A ribbon is a skew tableau that does not contain a 2x2 box. A
+    ribbon is given by a list of the rows from top to bottom.
+    
+    EXAMPLES::
+    
         sage: Ribbon([[2,3],[1,4,5]])
         [[2, 3], [1, 4, 5]]
         sage: Ribbon([[2,3],[1,4,5]]).to_skew_tableau()
         [[None, None, 2, 3], [1, 4, 5]]
-        
     """
     if isinstance(r, list):
         if len(r) == 0:
@@ -57,10 +56,11 @@ def Ribbon(r):
 class Ribbon_class(CombinatorialObject):
     def ribbon_shape(self):
         """
-        Returns the ribbon shape.  The ribbon shape is given
-        just by the number of boxes in each row.
-
-        EXAMPLES:
+        Returns the ribbon shape. The ribbon shape is given just by the
+        number of boxes in each row.
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).ribbon_shape()
             [2, 3]
         """
@@ -70,8 +70,9 @@ class Ribbon_class(CombinatorialObject):
     def height(self):
         """
         Returns the height of the ribbon.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).height()
             2
         """
@@ -80,8 +81,9 @@ class Ribbon_class(CombinatorialObject):
     def spin(self):
         """
         Returns the spin of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).spin()
             1/2
         """
@@ -90,8 +92,9 @@ class Ribbon_class(CombinatorialObject):
     def width(self):
         """
         Returns the width of the ribbon.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).width()
             4
         """
@@ -100,8 +103,9 @@ class Ribbon_class(CombinatorialObject):
     def size(self):
         """
         Returns the size ( number of boxes ) in the ribbon.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).size()
             5
         """
@@ -109,11 +113,12 @@ class Ribbon_class(CombinatorialObject):
 
     def is_standard(self):
         """
-        Returns True is the ribbon is standard and False otherwise.
-        ribbon are standard if they are filled with the numbers
-        1...size and they are increasing along both rows and columns.
-
-        EXAMPLES:
+        Returns True is the ribbon is standard and False otherwise. ribbon
+        are standard if they are filled with the numbers 1...size and they
+        are increasing along both rows and columns.
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).is_standard()
             True
             sage: Ribbon([[2,2],[1,4,5]]).is_standard()
@@ -126,10 +131,10 @@ class Ribbon_class(CombinatorialObject):
 
     def to_skew_tableau(self):
         """
-        Returns the skew tableau corresponding to the ribbon
-        tableau.
-
-        EXAMPLES:
+        Returns the skew tableau corresponding to the ribbon tableau.
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).to_skew_tableau()
             [[None, None, 2, 3], [1, 4, 5]]
         """
@@ -143,10 +148,10 @@ class Ribbon_class(CombinatorialObject):
 
     def to_permutation(self):
         """
-        Returns the permutation corresponding to the ribbon
-        tableau.
-
-        EXAMPLES:
+        Returns the permutation corresponding to the ribbon tableau.
+        
+        EXAMPLES::
+        
             sage: r = Ribbon([[1], [2,3], [4, 5, 6]])
             sage: r.to_permutation()
             [4, 5, 6, 2, 3, 1]
@@ -157,8 +162,9 @@ class Ribbon_class(CombinatorialObject):
         """
         Returns the skew partition corresponding to the shape of the
         ribbon.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[2,3],[1,4,5]]).shape()
             [[4, 3], [2]]
         """
@@ -167,8 +173,9 @@ class Ribbon_class(CombinatorialObject):
     def to_word_by_row(self):
         """
         Returns a word obtained from a row reading of the ribbon.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[1],[2,3]]).to_word_by_row()
             word: 231
             sage: Ribbon([[2, 4], [3], [1]]).to_word_by_row()
@@ -183,21 +190,22 @@ class Ribbon_class(CombinatorialObject):
     def to_word_by_column(self):
         """
         Returns the word obtained from a column reading of the ribbon
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[1],[2,3]]).to_word_by_column()
             word: 132
             sage: Ribbon([[2, 4], [3], [1]]).to_word_by_column()
             word: 4231
-
         """
         return self.to_skew_tableau().to_word_by_column()
 
     def to_word(self):
         """
         An alias for Ribbon.to_word_by_row().
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[1],[2,3]]).to_word_by_row()
             word: 231
             sage: Ribbon([[2, 4], [3], [1]]).to_word_by_row()
@@ -208,8 +216,9 @@ class Ribbon_class(CombinatorialObject):
     def evaluation(self):
         """
         Returns the evaluation of the word from ribbon.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: Ribbon([[1,2],[3,4]]).evaluation()
             [1, 1, 1, 1]
         """
@@ -220,10 +229,11 @@ class Ribbon_class(CombinatorialObject):
 
 def from_shape_and_word(shape, word):
     """
-    Returns the ribbon corresponding to the given
-    ribbon shape and word.
-
-    EXAMPLES:
+    Returns the ribbon corresponding to the given ribbon shape and
+    word.
+    
+    EXAMPLES::
+    
         sage: import sage.combinat.ribbon as ribbon
         sage: ribbon.from_shape_and_word([2,3],[1,2,3,4,5])
         [[1, 2], [3, 4, 5]]
@@ -237,10 +247,11 @@ def from_shape_and_word(shape, word):
 
 def StandardRibbons(shape):
     """
-    Returns the combinatorial class of standard ribbon
-    tableaux of shape shape.
-
-    EXAMPLES:
+    Returns the combinatorial class of standard ribbon tableaux of
+    shape shape.
+    
+    EXAMPLES::
+    
         sage: StandardRibbons([2,2])
         Standard ribbon tableaux of shape [2, 2]
         sage: StandardRibbons([2,2]).first()
@@ -257,14 +268,14 @@ def StandardRibbons(shape):
          [[1, 2], [3, 4]]]
         sage: StandardRibbons([3,2,2]).count()
         155
-
     """
     return StandardRibbons_shape(shape)
 
 class StandardRibbons_shape(CombinatorialClass):
     def __init__(self, shape):
         """
-        TESTS:
+        TESTS::
+        
             sage: S = StandardRibbons([2,2])
             sage: S == loads(dumps(S))
             True
@@ -273,7 +284,8 @@ class StandardRibbons_shape(CombinatorialClass):
 
     def __repr__(self):
         """
-        TESTS:
+        TESTS::
+        
             sage: repr(StandardRibbons([2,2]))
             'Standard ribbon tableaux of shape [2, 2]'
         """
@@ -282,10 +294,10 @@ class StandardRibbons_shape(CombinatorialClass):
 
     def first(self):
         """
-        Returns the first standard ribbon of
-        ribbon shape shape.
-
-        EXAMPLES:
+        Returns the first standard ribbon of ribbon shape shape.
+        
+        EXAMPLES::
+        
             sage: StandardRibbons([2,2]).first()
             [[2, 4], [1, 3]]
         """
@@ -293,10 +305,10 @@ class StandardRibbons_shape(CombinatorialClass):
 
     def last(self):
         """
-        Returns the first standard ribbon of
-        ribbon shape shape.
-
-        EXAMPLES:
+        Returns the first standard ribbon of ribbon shape shape.
+        
+        EXAMPLES::
+        
             sage: StandardRibbons([2,2]).last()
             [[1, 2], [3, 4]]
         """
@@ -305,17 +317,16 @@ class StandardRibbons_shape(CombinatorialClass):
 
     def iterator(self):
         """
-        An iterator for the standard ribbon of ribbon
-        shape shape.
-
-        EXAMPLES:
+        An iterator for the standard ribbon of ribbon shape shape.
+        
+        EXAMPLES::
+        
             sage: [t for t in StandardRibbons([2,2])]
             [[[2, 4], [1, 3]],
              [[2, 3], [1, 4]],
              [[1, 4], [2, 3]],
              [[1, 3], [2, 4]],
              [[1, 2], [3, 4]]]
-
         """
 
         for p in permutation.descents_composition_list(self.shape):
@@ -323,15 +334,15 @@ class StandardRibbons_shape(CombinatorialClass):
 
 def from_permutation(p):
     """
-    Returns a standard ribbon of size len(p) from a Permutation p.
-    The lengths of each row are given by the distance between the descents
+    Returns a standard ribbon of size len(p) from a Permutation p. The
+    lengths of each row are given by the distance between the descents
     of the permutation p.
     
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: import sage.combinat.ribbon as ribbon
         sage: [ribbon.from_permutation(p) for p in Permutations(3)]
         [[[1, 2, 3]], [[2], [1, 3]], [[1, 3], [2]], [[1], [2, 3]], [[1, 2], [3]], [[1], [2], [3]]]
-
     """
     if p == []:
         return Ribbon([])
