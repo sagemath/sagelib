@@ -2,9 +2,12 @@
 Homsets
 
 AUTHORS:
-    -- David Kohel and William Stein
-    -- David Joyner (2005-12-17): added examples
-    -- William Stein (2006-01-14): Changed from Homspace to Homset.
+
+- David Kohel and William Stein
+
+- David Joyner (2005-12-17): added examples
+
+- William Stein (2006-01-14): Changed from Homspace to Homset.
 """
 
 #*****************************************************************************
@@ -32,16 +35,22 @@ _cache = {}
 def Hom(X, Y, cat=None):
     """
     Create the space of homomorphisms from X to Y in the category cat.
-
+    
     INPUT:
-        X -- anything
-        Y -- anything
-        cat -- (optional) category in which the morphisms must be
-
-    OUTPUT:
-        a homset in cat
-
-    EXAMPLES:
+    
+    
+    -  ``X`` - anything
+    
+    -  ``Y`` - anything
+    
+    -  ``cat`` - (optional) category in which the morphisms
+       must be
+    
+    
+    OUTPUT: a homset in cat
+    
+    EXAMPLES::
+    
         sage: V = VectorSpace(QQ,3)
         sage: Hom(V, V)
         Set of Morphisms from Vector space of dimension 3 over Rational
@@ -158,9 +167,11 @@ def Hom(X, Y, cat=None):
 
 def hom(X, Y, f):
     """
-    Return Hom(X,Y)(f), where f is data that defines an element of Hom(X,Y).
-
-    EXAMPLES:
+    Return Hom(X,Y)(f), where f is data that defines an element of
+    Hom(X,Y).
+    
+    EXAMPLES::
+    
         sage: R, x = PolynomialRing(QQ,'x').objgen()
         sage: phi = hom(R, QQ, [2])
         sage: phi(x^2 + 3)
@@ -171,21 +182,27 @@ def hom(X, Y, f):
 def End(X, cat=None):
     r"""
     Create the set of endomorphisms of X in the category cat.
-
+    
     INPUT:
-        X -- anything
-        cat -- (optional) category in which to coerce X 
-
-    OUTPUT:
-        a set of endomorphisms in cat
-        
-    EXAMPLES:
+    
+    
+    -  ``X`` - anything
+    
+    -  ``cat`` - (optional) category in which to coerce X
+    
+    
+    OUTPUT: a set of endomorphisms in cat
+    
+    EXAMPLES::
+    
         sage: V = VectorSpace(QQ, 3)
         sage: End(V)
         Set of Morphisms from Vector space of dimension 3 over Rational
         Field to Vector space of dimension 3 over Rational Field in
         Category of vector spaces over Rational Field
-
+    
+    ::
+    
         sage: G = SymmetricGroup(3)
         sage: S = End(G); S
         Set of Morphisms from SymmetricGroup(3) to SymmetricGroup(3) in Category of groups
@@ -194,9 +211,12 @@ def End(X, cat=None):
         True
         sage: S.domain()
         Symmetric group of order 3! as a permutation group
-
-    Homsets are \emph{not} objects in their category.  They are
-    currently sets.
+    
+    Homsets are *not* objects in their category. They are currently
+    sets.
+    
+    ::
+    
         sage: S.category()
         Category of sets
         sage: S.domain().category()
@@ -206,9 +226,11 @@ def End(X, cat=None):
 
 def end(X, f):
     """
-    Return End(X)(f), where f is data that defines an element of End(X).
-
-    EXAMPLES:
+    Return End(X)(f), where f is data that defines an element of
+    End(X).
+    
+    EXAMPLES::
+    
         sage: R, x = PolynomialRing(QQ,'x').objgen()
         sage: phi = end(R, [x + 1])
         sage: phi
@@ -222,8 +244,9 @@ def end(X, f):
 class Homset(Set_generic):
     """
     The class for collections of morphisms in a category.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: H = Hom(QQ^2, QQ^3)
         sage: loads(H.dumps()) == H
         True
@@ -262,13 +285,14 @@ class Homset(Set_generic):
 
     def homset_category(self): 
         """ 
-        Return the category that this is a Hom in, i.e., this is 
-        typically the category of the domain or codomain object. 
- 
-        EXAMPLES: 
+        Return the category that this is a Hom in, i.e., this is typically
+        the category of the domain or codomain object.
+        
+        EXAMPLES::
+        
             sage: H = Hom(SymmetricGroup(4), SymmetricGroup(7)) 
             sage: H.homset_category() 
-            Category of groups             
+            Category of groups
         """ 
         return self.__category 
 
@@ -276,7 +300,8 @@ class Homset(Set_generic):
         """
         Construct a morphism in this homset from x if possible.
         
-        EXAMPLES: 
+        EXAMPLES::
+        
             sage: H = Hom(SymmetricGroup(4), SymmetricGroup(7))
             sage: phi = Hom(SymmetricGroup(5), SymmetricGroup(6)).natural_map()
             sage: phi
@@ -301,9 +326,10 @@ class Homset(Set_generic):
                       Call morphism:
                       From: SymmetricGroup(6)
                       To:   SymmetricGroup(7)
-                      
-        AUTHOR: 
-            -- Robert Bradshaw
+        
+        AUTHORS:
+
+        - Robert Bradshaw
         """
         if isinstance(x, morphism.Morphism):
             if x.parent() is self:
@@ -360,8 +386,8 @@ class Homset(Set_generic):
 
     def is_endomorphism_set(self):
         """
-        Return True if the domain and codomain of self are the
-        same object.
+        Return True if the domain and codomain of self are the same
+        object.
         """
         return self._domain is self._codomain
 
