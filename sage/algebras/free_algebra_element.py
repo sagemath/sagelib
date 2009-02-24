@@ -1,9 +1,12 @@
 """
 Free algebra elements
 
-AUTHOR: David Kohel, 2005-09
+AUTHORS:
 
-TESTS:
+- David Kohel (2005-09)
+
+TESTS::
+
     sage: R.<x,y> = FreeAlgebra(QQ,2)
     sage: x == loads(dumps(x))
     True
@@ -61,8 +64,9 @@ class FreeAlgebraElement(AlgebraElement):
     def _repr_(self):
         """
         Return string representation of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<x,y,z>=FreeAlgebra(ZZ,3)
             sage: repr(-x+3*y*z)
             '-x + 3*y*z'
@@ -80,8 +84,9 @@ class FreeAlgebraElement(AlgebraElement):
     def _latex_(self):
         r"""
         Return latex representation of self.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<x,y,z>=FreeAlgebra(ZZ,3)
             sage: latex(-x+3*y^20*z)
             \left(-1\right)x + 3y^{20}z
@@ -98,7 +103,8 @@ class FreeAlgebraElement(AlgebraElement):
 
     def __call__(self, *x, **kwds):
         """
-        EXAMPLES:
+        EXAMPLES::
+        
             sage: A.<x,y,z>=FreeAlgebra(ZZ,3)
             sage: (x+3*y).subs(x=1,y=2,z=14)
             7
@@ -111,9 +117,10 @@ class FreeAlgebraElement(AlgebraElement):
             Traceback (most recent call last):
             ...
             ValueError: must specify as many values as generators in parent
+        
+        AUTHORS:
 
-        AUTHOR:
-            -- Joel B. Mohler (2007.10.27)
+        - Joel B. Mohler (2007-10-27)
         """
         if len(kwds)>0 and len(x)>0:
             raise ValueError, "must not specify both a keyword and positional argument"
@@ -151,17 +158,19 @@ class FreeAlgebraElement(AlgebraElement):
     def __cmp__(left, right):
         """
         Compare two free algebra elements with the same parents.
-
-        The ordering is the one on the underlying sorted list of (monomial,coefficients) pairs.
-
-        EXAMPLES:
+        
+        The ordering is the one on the underlying sorted list of
+        (monomial,coefficients) pairs.
+        
+        EXAMPLES::
+        
             sage: R.<x,y> = FreeAlgebra(QQ,2)
             sage: x < y
             True
             sage: x * y < y * x
             True
             sage: y * x < x * y
-            False        
+            False
         """
         v = left.__monomial_coefficients.items()
         v.sort()
@@ -171,14 +180,14 @@ class FreeAlgebraElement(AlgebraElement):
 
     def _add_(self, y):
         """
-        Return sum of self and y (another free algebra element with
-        the same parents)
-
-        EXAMPLES:
+        Return sum of self and y (another free algebra element with the
+        same parents)
+        
+        EXAMPLES::
+        
             sage: R.<x,y> = FreeAlgebra(QQ,2)
             sage: x + y
             x + y
-
         """
         A = self.parent()
 ##         if isinstance(y, (int, long, Integer)):
@@ -210,8 +219,9 @@ class FreeAlgebraElement(AlgebraElement):
     def _neg_(self):
         """
         Return negation of self
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: R.<x,y> = FreeAlgebra(QQ,2)
             sage: -(x+y)
             -x - y
@@ -225,14 +235,14 @@ class FreeAlgebraElement(AlgebraElement):
 
     def _sub_(self, y):
         """
-        Return self minus y (another free algebra element with the
-        same parents)
-
-        EXAMPLES:
+        Return self minus y (another free algebra element with the same
+        parents)
+        
+        EXAMPLES::
+        
             sage: R.<x,y> = FreeAlgebra(QQ,2)
             sage: x - y
             x - y
-
         """
         A = self.parent()
 ##         if isinstance(y, (int, long, Integer)):
@@ -263,10 +273,11 @@ class FreeAlgebraElement(AlgebraElement):
 
     def _mul_(self, y):
         """
-        Return product of self and y (another free algebra element with
-        the same parents)
-
-        EXAMPLES:
+        Return product of self and y (another free algebra element with the
+        same parents)
+        
+        EXAMPLES::
+        
             sage: A.<x,y,z>=FreeAlgebra(ZZ,3)
             sage: (x+y+x*y)*(x+y+1)
             x + y + x^2 + 2*x*y + y*x + y^2 + x*y*x + x*y^2

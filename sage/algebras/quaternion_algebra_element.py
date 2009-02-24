@@ -39,8 +39,9 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
     def conjugate(self):
         """
         Return the conjugate of this element.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-5,-2)
             sage: x=3*i-j+2
             sage: x.conjugate()
@@ -52,12 +53,17 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
         r"""
         Return the reduced trace of this element.
         
-        \note{In a quaternion algebra $A$, every element $x$ is
-        quadratic over the center, thus $x^2 = \Tr(x)*x - \Nr(x)$, so
-        we solve for a linear relation $(1,-\Tr(x),\Nr(x))$ among
-        $[x^2, x, 1]$ for the reduced trace of $x$.}
+        .. note::
 
-        EXAMPLES:
+           In a quaternion algebra `A`, every element `x`
+           is quadratic over the center, thus `x^2 =
+           \mathrm{Tr}(x)*x - \mathrm{Nr}(x)`, so we solve for a
+           linear relation `(1,-\mathrm{Tr}(x),\mathrm{Nr}(x))`
+           among `[x^2, x, 1]` for the reduced trace of
+           `x`.
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-5,-2)
             sage: x=3*i-j+2
             sage: x.reduced_trace()
@@ -76,8 +82,9 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
     def reduced_norm(self):
         """
         Return the reduced norm of this element.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-5,-2)
             sage: x=3*i-j+2
             sage: x.reduced_norm()
@@ -88,10 +95,11 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
 
     def charpoly(self, var):
         """
-        Return the characteristic polynomial of this element in terms
-        of the given variable.
-
-        EXAMPLES:
+        Return the characteristic polynomial of this element in terms of
+        the given variable.
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-5,-2)
             sage: x=3*i-j+2
             sage: x.charpoly('t')
@@ -116,10 +124,11 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
     
     def minpoly(self, var):
         """
-        Return the minimal polynomial of this element in terms
-        of the given variable.
-
-        EXAMPLES:
+        Return the minimal polynomial of this element in terms of the given
+        variable.
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-5,-2)
             sage: x=3*i-j+2
             sage: x.minpoly('t')
@@ -139,8 +148,9 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
         """
         Return True if the element is an invertible element of the
         quaternion algebra.
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)
             sage: i.is_unit()
             True
@@ -162,10 +172,11 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
 
     def is_scalar(self):
         """
-        Return True is this element of a quaternion algebra is
-        a scalar (i.e. lies in the base field).
-
-        EXAMPLES:
+        Return True is this element of a quaternion algebra is a scalar
+        (i.e. lies in the base field).
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)
             sage: i.is_scalar()
             False
@@ -181,10 +192,11 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
 
     def is_pure(self):
         """
-        Return True is this element of a quaternion algebra is
-        "pure" (i.e. has no scalar component, or has reduced-trace zero).
-
-        EXAMPLES:
+        Return True is this element of a quaternion algebra is "pure" (i.e.
+        has no scalar component, or has reduced-trace zero).
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)
             sage: i.is_pure()
             True
@@ -201,11 +213,13 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
 
     def scalar_part(self):
         """
-        Return the part of the quaternion 'self' that lies in the base field/ring.
-        This is given by the reduced trace (note: we assume characteristic not 2).
-        We could cheat, using self.vector(), but we really don't know what basis
-        is in place.  Do we?
-        EXAMPLES:
+        Return the part of the quaternion 'self' that lies in the base
+        field/ring. This is given by the reduced trace (note: we assume
+        characteristic not 2). We could cheat, using self.vector(), but we
+        really don't know what basis is in place. Do we?
+
+        EXAMPLES::
+        
             sage: A.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)
             sage: i.scalar_part()
             0
@@ -217,9 +231,12 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
 
     def pure_part(self):
         """
-        Return the part of the quaternion 'self' that lies in the vector subspace
-        "<i,j,k>" (figuratively speaking).  We just strip off the scalar part...
-        EXAMPLES:
+        Return the part of the quaternion 'self' that lies in the vector
+        subspace "i,j,k" (figuratively speaking). We just strip off the
+        scalar part.
+
+        EXAMPLES::
+        
             sage: A.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)
             sage: x = A([1,-3/2,0,2])
             sage: x.pure_part()
@@ -230,16 +247,20 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
     def _div_(self, other):
         """
         Right division in the quaternion algebra
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-1,-1)
             sage: x=3*i-j+2
             sage: y=i-1
             sage: x/y
             1/2 - 5/2*i + 1/2*j - 1/2*k
-
-        Note that 1/x will raise an AttributeError.  The way to get
-        the inverse of x is
+        
+        Note that 1/x will raise an AttributeError. The way to get the
+        inverse of x is
+        
+        ::
+        
             sage: A(1)/x
             1/7 - 3/14*i + 1/14*j
         """
@@ -256,8 +277,9 @@ class QuaternionAlgebraElement(FreeAlgebraQuotientElement):
     def _backslash_(self, other):
         """
         Left division in the quaternion algebra
-
-        EXAMPLES:
+        
+        EXAMPLES::
+        
             sage: A.<i,j,k>=QuaternionAlgebra(QQ,-1,-1)
             sage: x=3*i-j+2
             sage: y=i-1
