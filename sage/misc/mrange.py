@@ -2,9 +2,12 @@
 Multidimensional enumeration
 
 AUTHORS:
-    -- Joel B. Mohler (2006-10-12)
-    -- William Stein (2006-07-19)
-    -- Jon Hanke
+
+- Joel B. Mohler (2006-10-12)
+
+- William Stein (2006-07-19)
+
+- Jon Hanke
 """
 
 ########################################################################
@@ -20,18 +23,20 @@ import misc
 def _xmrange_iter( iter_list, typ=list ):
     """
     This implements the logic for mrange_iter and xmrange_iter.
-
-    Note that with typ==list, we will be returning a new copy each 
-    iteration.  This makes it OK to modified the returned list.  This 
-    functionality is relied on in the polynomial iterators.  Here's 
-    a doc-test to prove this:
+    
+    Note that with typ==list, we will be returning a new copy each
+    iteration. This makes it OK to modified the returned list. This
+    functionality is relied on in the polynomial iterators. Here's a
+    doc-test to prove this::
+    
         sage: iter = sage.misc.mrange._xmrange_iter( [[1,2],[1,3]] )
         sage: l1 = iter.next()
         sage: l2 = iter.next()
         sage: l1 is l2
         False
-
-    However, if you would like to re-use the list object:
+    
+    However, if you would like to re-use the list object::
+    
         sage: iter = sage.misc.mrange._xmrange_iter( [[1,2],[1,3]], lambda x: x )
         sage: l1 = iter.next()
         sage: l2 = iter.next()
@@ -61,70 +66,87 @@ def _xmrange_iter( iter_list, typ=list ):
 
 def mrange_iter(iter_list, typ=list):
     """
-    Return the multirange list derived from the given list of iterators.
-
-    This is the list version of xmrange_iter.  Use xmrange_iter for the
-    iterator.
-
-    More precisely, return the iterator over all objects of type typ
-    of n-tuples of Python ints with entries between 0 and the integers
-    in the sizes list.  The iterator is empty if sizes is empty or
-    contains any non-positive integer.
-
+    Return the multirange list derived from the given list of
+    iterators.
+    
+    This is the list version of xmrange_iter. Use xmrange_iter for
+    the iterator.
+    
+    More precisely, return the iterator over all objects of type typ of
+    n-tuples of Python ints with entries between 0 and the integers in
+    the sizes list. The iterator is empty if sizes is empty or contains
+    any non-positive integer.
+    
     INPUT:
-        sizes -- a list of nonnegative integers
-        typ -- (default: list) a type or class; more generally,
-               something that can be called with a list as input.
-
-    OUTPUT:
-        a list
-
-    EXAMPLES:
+    
+    
+    -  ``sizes`` - a list of nonnegative integers
+    
+    -  ``typ`` - (default: list) a type or class; more
+       generally, something that can be called with a list as input.
+    
+    
+    OUTPUT: a list
+    
+    EXAMPLES::
+    
         sage: mrange_iter([range(3),[0,2]])
         [[0, 0], [0, 2], [1, 0], [1, 2], [2, 0], [2, 2]]
         sage: mrange_iter([['Monty','Flying'],['Python','Circus']], tuple)
         [('Monty', 'Python'), ('Monty', 'Circus'), ('Flying', 'Python'), ('Flying', 'Circus')]
         sage: mrange_iter([[2,3,5,7],[1,2]], sum)
         [3, 4, 4, 5, 6, 7, 8, 9]
-
-    Examples that illustrate empty multi-ranges. 
+    
+    Examples that illustrate empty multi-ranges.
+    
+    ::
+    
         sage: mrange_iter([])
         []
         sage: mrange_iter([range(5),xrange(3),xrange(-2)])
         []
         sage: mrange_iter([range(5),range(3),range(0)])
         []
-
+    
     AUTHORS:
-        -- Joel B. Mohler
+
+    - Joel B. Mohler
     """
     return list(_xmrange_iter(iter_list, typ))
 
 class xmrange_iter:
     """
-    Return the multirange iterate derived from the given iterators 
-    and type.
+    Return the multirange iterate derived from the given iterators and
+    type.
+    
+    .. note::
 
-    NOTE: This basically gives you the cartesian product of sets.
-
-    More precisely, return the iterator over all objects of type typ
-    of n-tuples of Python ints with entries between 0 and the integers
-    in the sizes list.  The iterator is empty if sizes is empty or
-    contains any non-positive integer.
-
+       This basically gives you the cartesian product of sets.
+    
+    More precisely, return the iterator over all objects of type typ of
+    n-tuples of Python ints with entries between 0 and the integers in
+    the sizes list. The iterator is empty if sizes is empty or contains
+    any non-positive integer.
+    
     Use mrange_iter for the non-iterator form.
-
+    
     INPUT:
-        list_iter -- a list of objects usable as iterators (possibly lists)
-        typ -- (default: list) a type or class; more generally,
-               something that can be called with a list as input.
-
-    OUTPUT:
-        a generator
-
-    EXAMPLES:
-    We create multi-range iterators, print them and also iterate
-    through a tuple version.
+    
+    
+    -  ``list_iter`` - a list of objects usable as
+       iterators (possibly lists)
+    
+    -  ``typ`` - (default: list) a type or class; more
+       generally, something that can be called with a list as input.
+    
+    
+    OUTPUT: a generator
+    
+    EXAMPLES: We create multi-range iterators, print them and also
+    iterate through a tuple version.
+    
+    ::
+    
         sage: z = xmrange_iter([xrange(3),xrange(2)]);z
         xmrange_iter([xrange(3), xrange(2)])
         sage: z = xmrange_iter([range(3),range(2)], tuple);z
@@ -137,31 +159,43 @@ class xmrange_iter:
         (1, 1)
         (2, 0)
         (2, 1)
-
+    
     We illustrate a few more iterations.
+    
+    ::
+    
         sage: list(xmrange_iter([range(3),range(2)]))
         [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1]]
         sage: list(xmrange_iter([range(3),range(2)], tuple))
         [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
-
-    Here we compute the sum of each element of the multi-range iterator:
+    
+    Here we compute the sum of each element of the multi-range
+    iterator::
+    
         sage: list(xmrange_iter([range(3),range(2)], sum))
         [0, 1, 1, 2, 2, 3]
-
-    Next we compute the product:
+    
+    Next we compute the product::
+    
         sage: list(xmrange_iter([range(3),range(2)], prod))
         [0, 0, 0, 1, 0, 2]
-        
-    Examples that illustrate empty multi-ranges. 
+    
+    Examples that illustrate empty multi-ranges.
+    
+    ::
+    
         sage: list(xmrange_iter([]))
         []
         sage: list(xmrange_iter([xrange(5),xrange(3),xrange(-2)]))
         []
         sage: list(xmrange_iter([xrange(5),xrange(3),xrange(0)]))
         []
-
+    
     We use a multi-range iterator to iterate through the cartesian
     product of sets.
+    
+    ::
+    
         sage: X = ['red', 'apple', 389]
         sage: Y = ['orange', 'horse']
         sage: for i,j in xmrange_iter([X, Y], tuple):
@@ -172,9 +206,10 @@ class xmrange_iter:
         ('apple', 'horse')
         (389, 'orange')
         (389, 'horse')
-
+    
     AUTHORS:
-        -- Joel B. Mohler
+
+    - Joel B. Mohler
     """
     def __init__(self, iter_list, typ=list):
         self.iter_list = iter_list
@@ -219,42 +254,50 @@ def _xmrange(sizes, typ=list):
 def mrange(sizes, typ=list):
     """
     Return the multirange list with given sizes and type.
-
-    This is the list version of xmrange.  Use xmrange for the
-    iterator.
     
-    More precisely, return the iterator over all objects of type typ
-    of n-tuples of Python ints with entries between 0 and the integers
-    in the sizes list.  The iterator is empty if sizes is empty or
-    contains any non-positive integer.
-
+    This is the list version of xmrange. Use xmrange for the iterator.
+    
+    More precisely, return the iterator over all objects of type typ of
+    n-tuples of Python ints with entries between 0 and the integers in
+    the sizes list. The iterator is empty if sizes is empty or contains
+    any non-positive integer.
+    
     INPUT:
-        sizes -- a list of nonnegative integers
-        typ -- (default: list) a type or class; more generally,
-               something that can be called with a list as input.
-
-    OUTPUT:
-        a list
-
-    EXAMPLES:
+    
+    
+    -  ``sizes`` - a list of nonnegative integers
+    
+    -  ``typ`` - (default: list) a type or class; more
+       generally, something that can be called with a list as input.
+    
+    
+    OUTPUT: a list
+    
+    EXAMPLES::
+    
         sage: mrange([3,2])
         [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1]]
         sage: mrange([3,2], tuple)
         [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
         sage: mrange([3,2], sum)
         [0, 1, 1, 2, 2, 3]
-
-    Examples that illustrate empty multi-ranges. 
+    
+    Examples that illustrate empty multi-ranges.
+    
+    ::
+    
         sage: mrange([])
         []
         sage: mrange([5,3,-2])
         []
         sage: mrange([5,3,0])
         []        
-               
+    
     AUTHORS:
-        -- Jon Hanke
-        -- William Stein
+
+    - Jon Hanke
+
+    - William Stein
     """
     return list(_xmrange(sizes, typ))
 
@@ -263,24 +306,29 @@ class xmrange:
     """
     Return the multirange iterate with given sizes and type.
     
-    More precisely, return the iterator over all objects of type typ
-    of n-tuples of Python ints with entries between 0 and the integers
-    in the sizes list.  The iterator is empty if sizes is empty or
-    contains any non-positive integer.
-
+    More precisely, return the iterator over all objects of type typ of
+    n-tuples of Python ints with entries between 0 and the integers in
+    the sizes list. The iterator is empty if sizes is empty or contains
+    any non-positive integer.
+    
     Use mrange for the non-iterator form.
-
+    
     INPUT:
-        sizes -- a list of nonnegative integers
-        typ -- (default: list) a type or class; more generally,
-               something that can be called with a list as input.
-
-    OUTPUT:
-        a generator
-
-    EXAMPLES:
-    We create multi-range iterators, print them and also iterate
-    through a tuple version.
+    
+    
+    -  ``sizes`` - a list of nonnegative integers
+    
+    -  ``typ`` - (default: list) a type or class; more
+       generally, something that can be called with a list as input.
+    
+    
+    OUTPUT: a generator
+    
+    EXAMPLES: We create multi-range iterators, print them and also
+    iterate through a tuple version.
+    
+    ::
+    
         sage: z = xmrange([3,2]);z
         xmrange([3, 2])
         sage: z = xmrange([3,2], tuple);z
@@ -293,31 +341,43 @@ class xmrange:
         (1, 1)
         (2, 0)
         (2, 1)
-
+    
     We illustrate a few more iterations.
+    
+    ::
+    
         sage: list(xmrange([3,2]))
         [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1]]
         sage: list(xmrange([3,2], tuple))
         [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
-
-    Here we compute the sum of each element of the multi-range iterator:
+    
+    Here we compute the sum of each element of the multi-range
+    iterator::
+    
         sage: list(xmrange([3,2], sum))
         [0, 1, 1, 2, 2, 3]
-
-    Next we compute the product:
+    
+    Next we compute the product::
+    
         sage: list(xmrange([3,2], prod))
         [0, 0, 0, 1, 0, 2]
-        
-    Examples that illustrate empty multi-ranges. 
+    
+    Examples that illustrate empty multi-ranges.
+    
+    ::
+    
         sage: list(xmrange([]))
         []
         sage: list(xmrange([5,3,-2]))
         []
         sage: list(xmrange([5,3,0]))
         []
-
+    
     We use a multi-range iterator to iterate through the cartesian
     product of sets.
+    
+    ::
+    
         sage: X = ['red', 'apple', 389]
         sage: Y = ['orange', 'horse']
         sage: for i,j in xmrange([len(X), len(Y)]):
@@ -328,10 +388,12 @@ class xmrange:
         ('apple', 'horse')
         (389, 'orange')
         (389, 'horse')
-               
+    
     AUTHORS:
-        -- Jon Hanke
-        -- William Stein
+
+    - Jon Hanke
+
+    - William Stein
     """
     def __init__(self, sizes, typ=list):
         self.sizes = [int(x) for x in sizes]
@@ -361,12 +423,16 @@ def cartesian_product_iterator(X):
     Iterate over the Cartesian product.
     
     INPUT:
-        X -- list or tuple of lists
-    OUTPUT:
-        iterator over the cartesian product of the elements of X
-
-    EXAMPLES:
+    
+    
+    -  ``X`` - list or tuple of lists
+    
+    
+    OUTPUT: iterator over the cartesian product of the elements of X
+    
+    EXAMPLES::
+    
         sage: list(cartesian_product_iterator([[1,2], ['a','b']]))
-        [(1, 'a'), (1, 'b'), (2, 'a'), (2, 'b')]    
+        [(1, 'a'), (1, 'b'), (2, 'a'), (2, 'b')]
     """
     return xmrange_iter(X, tuple)

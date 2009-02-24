@@ -1,11 +1,14 @@
 """
 Functional notation
 
-These are function so that you can write foo(x) instead of x.foo() in
-certain common cases.
+These are function so that you can write foo(x) instead of x.foo()
+in certain common cases.
 
-AUTHORS: Initial version -- William Stein
-         More Examples -- David Joyner, 2005-12-20
+AUTHORS: 
+
+- William Stein: Initial version
+
+- David Joyner (2005-12-20): More Examples
 """
 
 #*****************************************************************************
@@ -47,15 +50,16 @@ import __builtin__
 ##############################################################################
 def additive_order(x):
     """
-    Return the additive order of $x$.
+    Return the additive order of `x`.
     """
     return x.additive_order()
 
 def arg(x):
     """
-    Return the argument of a complex number $x$.
-
-    EXAMPLES:
+    Return the argument of a complex number `x`.
+    
+    EXAMPLES::
+    
         sage: z = CC(1,2)
         sage: theta = arg(z)
         sage: cos(theta)*abs(z)   
@@ -69,8 +73,9 @@ def arg(x):
 def base_ring(x):
     """
     Return the base ring over which x is defined.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: R = PolynomialRing(GF(7), 'x')
         sage: base_ring(R)
         Finite Field of size 7
@@ -86,8 +91,9 @@ def base_field(x):
 def basis(x):
     """
     Return the fixed basis of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: V = VectorSpace(QQ,3)
         sage: S = V.subspace([[1,2,0],[2,2,-1]])
         sage: basis(S)
@@ -101,8 +107,9 @@ def basis(x):
 def category(x):
     """
     Return the category of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: V = VectorSpace(QQ,3)
         sage: category(V)
         Category of vector spaces over Rational Field
@@ -122,21 +129,24 @@ def ceil(x):
 def characteristic_polynomial(x, var='x'):
     """
     Return the characteristic polynomial of x in the given variable.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: M = MatrixSpace(QQ,3,3)
         sage: A = M([1,2,3,4,5,6,7,8,9])
         sage: charpoly(A)
         x^3 - 15*x^2 - 18*x
         sage: charpoly(A, 't')
         t^3 - 15*t^2 - 18*t
-
+    
+    ::
+    
         sage: k.<alpha> = GF(7^10); k
         Finite Field in alpha of size 7^10
         sage: alpha.charpoly('T')
         T^10 + T^6 + T^5 + 4*T^4 + T^3 + 2*T^2 + 3*T + 3
         sage: characteristic_polynomial(alpha, 'T')
-        T^10 + T^6 + T^5 + 4*T^4 + T^3 + 2*T^2 + 3*T + 3        
+        T^10 + T^6 + T^5 + 4*T^4 + T^3 + 2*T^2 + 3*T + 3
     """
     try:
         return x.charpoly(var)
@@ -156,7 +166,6 @@ def coerce(P, x):
 def acos(x):
     """
     Return the arc cosine of x.
-
     """
     try: return x.acos()
     except AttributeError: return RDF(x).acos()
@@ -164,7 +173,6 @@ def acos(x):
 def asin(x):
     """
     Return the arc sine of x.
-
     """
     try: return x.asin()
     except AttributeError: return RDF(x).asin()
@@ -172,7 +180,6 @@ def asin(x):
 def atan(x):
     """
     Return the arc tangent of x.
-
     """
     try: return x.atan()
     except AttributeError: return RDF(x).atan()
@@ -185,7 +192,8 @@ def atan(x):
 
 def cyclotomic_polynomial(n, var='x'):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: cyclotomic_polynomial(3)
         x^2 + x + 1
         sage: cyclotomic_polynomial(4)
@@ -208,8 +216,9 @@ def decomposition(x):
 def denominator(x):
     """
     Return the denominator of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: denominator(17/11111)
         11111
         sage: R.<x> = PolynomialRing(QQ)
@@ -225,8 +234,9 @@ def denominator(x):
 def det(x):
     """
     Return the determinant of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: M = MatrixSpace(QQ,3,3)
         sage: A = M([1,2,3,4,5,6,7,8,9])
         sage: det(A)
@@ -237,8 +247,9 @@ def det(x):
 def dimension(x):
     """
     Return the dimension of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: V = VectorSpace(QQ,3)
         sage: S = V.subspace([[1,2,0],[2,2,-1]])
         sage: dimension(S)
@@ -250,7 +261,8 @@ dim = dimension
 
 def discriminant(x):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: R.<x> = PolynomialRing(QQ)
         sage: S = R.quotient(x^29 - 17*x - 1, 'alpha')
         sage: K = S.number_field()
@@ -271,15 +283,19 @@ disc = discriminant
 
 def eta(x):
     r"""
-    Return the value of the eta function at $x$, which must
-    be in the upper half plane.
-
-    The $\eta$ function is
-        $$
-           \eta(z) = e^{\pi i z / 12} \prod_{n=1}^{\infty}(1-e^{2\pi inz})
-        $$
-
-    EXAMPLES:
+    Return the value of the eta function at `x`, which must be
+    in the upper half plane.
+    
+    The `\eta` function is
+    
+    .. math::
+    
+                    \eta(z) = e^{\pi i z / 12} \prod_{n=1}^{\infty}(1-e^{2\pi inz})         
+    
+    
+    
+    EXAMPLES::
+    
         sage: eta(1+I)
         0.742048775837 + 0.19883137023*I
     """
@@ -296,8 +312,9 @@ def exp(x):
 def factor(x, *args, **kwds):
     """
     Return the prime factorization of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: factor(factorial(10))
         2^8 * 3^4 * 5^2 * 7
         sage: n = next_prime(10^6); n
@@ -313,10 +330,10 @@ factorisation = factor
 
 def fcp(x, var='x'):
     """
-    Return the factorization of the characteristic polynomial
-    of x.
-
-    EXAMPLES:
+    Return the factorization of the characteristic polynomial of x.
+    
+    EXAMPLES::
+    
         sage: M = MatrixSpace(QQ,3,3)
         sage: A = M([1,2,3,4,5,6,7,8,9])
         sage: fcp(A, 'x')
@@ -346,8 +363,9 @@ def gens(x):
 def hecke_operator(x,n):
     """
     Return the n-th Hecke operator T_n acting on x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: M = ModularSymbols(1,12)
         sage: hecke_operator(M,5)
         Hecke operator T_5 on Modular Symbols space of dimension 3 for Gamma_0(1) of weight 12 with sign 0 over Rational Field
@@ -360,7 +378,8 @@ def image(x):
     """
     Return the image of x.
     
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: M = MatrixSpace(QQ,3,3)
         sage: A = M([1,2,3,4,5,6,7,8,9])
         sage: image(A)
@@ -381,8 +400,9 @@ def imag(x):
 def imaginary(x):
     """
     Return the imaginary part of a complex number.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: z = 1+2*I
         sage: imaginary(z)
         2
@@ -394,25 +414,24 @@ def imaginary(x):
 def integral(x, *args, **kwds):
     """
     Return an indefinite integral of an object x.
-
-    First call x.integrate() and if that fails make an
-    object and integrate it using maxima, maple, etc, as
-    specified by algorithm.
-
-    EXAMPLES:
+    
+    First call x.integrate() and if that fails make an object and
+    integrate it using maxima, maple, etc, as specified by algorithm.
+    
+    EXAMPLES::
+    
         sage: f = cyclotomic_polynomial(10)
         sage: integral(f)
         1/5*x^5 - 1/4*x^4 + 1/3*x^3 - 1/2*x^2 + x
         sage: integral(sin(x),x)
         -cos(x)
-
         sage: y = var('y')
         sage: integral(sin(x),y)
         sin(x)*y
         sage: integral(sin(x), x, 0, pi/2)
         1
         sage: sin(x).integral(x, 0,pi/2)
-        1        
+        1
     """
     if hasattr(x, 'integral'):
         return x.integral(*args, **kwds)
@@ -425,9 +444,10 @@ def integral_closure(x):
 
 def interval(a, b):
     r"""
-    Integers between a and b \emph{inclusive} (a and b integers).
-
-    EXAMPLES:
+    Integers between a and b *inclusive* (a and b integers).
+    
+    EXAMPLES::
+    
         sage: I = interval(1,3)
         sage: 2 in I
         True
@@ -440,13 +460,14 @@ def interval(a, b):
 
 def xinterval(a, b):
     r"""
-    Iterator over the integers between a and b, \emph{inclusive}.
+    Iterator over the integers between a and b, *inclusive*.
     """
     return xrange(a, b+1)
 
 def is_commutative(x):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: R = PolynomialRing(QQ, 'x')
         sage: is_commutative(R)
         True
@@ -456,8 +477,9 @@ def is_commutative(x):
 def is_even(x):
     """
     Return whether or not an integer x is even, e.g., divisible by 2.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: is_even(-1)
         False
         sage: is_even(4)
@@ -473,7 +495,8 @@ def is_integrally_closed(x):
 
 def is_field(x):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: R = PolynomialRing(QQ, 'x')
         sage: F = FractionField(R)
         sage: is_field(F)
@@ -486,10 +509,11 @@ def is_noetherian(x):
     
 def is_odd(x):
     """
-    Return whether or not x is odd.  This is by definition the
+    Return whether or not x is odd. This is by definition the
     complement of is_even.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: is_odd(-2)
         False
         sage: is_odd(-3)
@@ -517,8 +541,9 @@ def is_odd(x):
 def kernel(x):
     """
     Return the left kernel of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: M = MatrixSpace(QQ,3,2)
         sage: A = M([1,2,3,4,5,6])
         sage: kernel(A)
@@ -551,18 +576,23 @@ def krull_dimension(x):
 
 def lift(x):
     """
-    Lift an object of a quotient ring $R/I$ to $R$.
+    Lift an object of a quotient ring `R/I` to `R`.
     
-    EXAMPLES:
-    We lift an integer modulo $3$.
+    EXAMPLES: We lift an integer modulo `3`.
+    
+    ::
+    
         sage: Mod(2,3).lift()
         2
-
+    
     We lift an element of a quotient polynomial ring.
+    
+    ::
+    
         sage: R.<x> = QQ['x']
         sage: S.<xmod> = R.quo(x^2 + 1)
         sage: lift(xmod-7)
-        x - 7        
+        x - 7
     """
     try:
         return x.lift()
@@ -571,20 +601,24 @@ def lift(x):
 
 def log(x,b=None):
     r"""
-    Return the log of x to the base b.  The default base is e.
-
+    Return the log of x to the base b. The default base is e.
+    
     INPUT:
-        x -- number
-        b -- base (default: None, which means natural log)
-        
-    OUTPUT:
-        number
+    
+    
+    -  ``x`` - number
+    
+    -  ``b`` - base (default: None, which means natural
+       log)
+    
+    
+    OUTPUT: number
+    
+    .. note::
 
-    \note{In Magma, the order of arguments is reversed from in
-    \sage, i.e., the base is given first.  We use the opposite
-    ordering, so the base can be viewed as an optional second
-    argument.}
-
+       In Magma, the order of arguments is reversed from in Sage,
+       i.e., the base is given first. We use the opposite ordering, so
+       the base can be viewed as an optional second argument.
     """
     if b is None:
         if hasattr(x, 'log'):
@@ -598,8 +632,9 @@ def log(x,b=None):
 def minimal_polynomial(x, var='x'):
     """
     Return the minimal polynomial of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: a = matrix(ZZ, 2, [1..4])
         sage: minpoly(a)
         x^2 - 5*x - 2
@@ -620,8 +655,8 @@ minpoly = minimal_polynomial
 
 def multiplicative_order(x):
     r"""
-    Return the multiplicative order of self, if self is a unit, or raise
-    \code{ArithmeticError} otherwise.
+    Return the multiplicative order of self, if self is a unit, or
+    raise ``ArithmeticError`` otherwise.
     """
     return x.multiplicative_order()
 
@@ -640,8 +675,9 @@ def ngens(x):
 def norm(x):
     """
     Return the norm of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: z = 1+2*I
         sage: norm(z)
         5
@@ -655,8 +691,9 @@ def norm(x):
 def numerator(x):
     """
     Return the numerator of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: R.<x> = PolynomialRing(QQ)
         sage: F = FractionField(R)
         sage: r = (x+1)/(x-1)
@@ -673,20 +710,30 @@ def numerical_approx(x, prec=None, digits=None):
     """
     Return a numerical approximation of x with at least prec bits of
     precision.
+    
+    .. note::
 
-    NOTE: Both upper case N and lower case n are aliases
-    for numerical_approx.
-
+       Both upper case N and lower case n are aliases for
+       :func:`numerical_approx`.
+    
     INPUT:
-        x -- an object that has a numerical_approx method, or can
-             be coerced into a real or complex field
-        prec (optional) -- an integer (bits of precision)
-        digits (optional) -- an integer (digits of precision)
-
-    If neither the prec or digits are specified, the default
-    is 53 bits of precision.
-
-    EXAMPLES:
+    
+    
+    -  ``x`` - an object that has a numerical_approx
+       method, or can be coerced into a real or complex field
+    
+    -  ``prec (optional)`` - an integer (bits of
+       precision)
+    
+    -  ``digits (optional)`` - an integer (digits of
+       precision)
+    
+    
+    If neither the prec or digits are specified, the default is 53 bits
+    of precision.
+    
+    EXAMPLES::
+    
         sage: numerical_approx(pi, 10)
         3.1
         sage: numerical_approx(pi, digits=10)
@@ -705,8 +752,9 @@ def numerical_approx(x, prec=None, digits=None):
         True
         sage: type(a) == type(b)
         True
-
-    You can also usually use method notation:
+    
+    You can also usually use method notation::
+    
         sage: (pi^2 + e).n()
         12.5878862295484
     """
@@ -730,7 +778,8 @@ N = numerical_approx
 
 def objgens(x):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: R, x = objgens(PolynomialRing(QQ,3, 'x'))
         sage: R
         Multivariate Polynomial Ring in x0, x1, x2 over Rational Field
@@ -741,7 +790,8 @@ def objgens(x):
 
 def objgen(x):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: R, x = objgen(FractionField(QQ['x']))
         sage: R
         Fraction Field of Univariate Polynomial Ring in x over Rational Field
@@ -753,8 +803,9 @@ def objgen(x):
 def one(R):
     """
     Return the one element of the ring R.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: R.<x> = PolynomialRing(QQ)
         sage: one(R)*x == x
         True
@@ -765,10 +816,11 @@ def one(R):
 
 def order(x):
     """
-    Return the order of x.  If x is a ring or module element, this is
+    Return the order of x. If x is a ring or module element, this is
     the additive order of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: C = CyclicPermutationGroup(10)
         sage: order(C)
         10
@@ -782,14 +834,15 @@ def rank(x):
     """
     Return the rank of x.
     
-    EXAMPLES:
-    We compute the rank of a matrix:
+    EXAMPLES: We compute the rank of a matrix::
+    
         sage: M = MatrixSpace(QQ,3,3)
         sage: A = M([1,2,3,4,5,6,7,8,9])
         sage: rank(A)
         2
-
-    We compute the rank of an elliptic curve:
+    
+    We compute the rank of an elliptic curve::
+    
         sage: E = EllipticCurve([0,0,1,-1,0])
         sage: rank(E)
         1
@@ -799,8 +852,9 @@ def rank(x):
 def real(x):
     """
     Return the real part of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: z = 1+2*I
         sage: real(z)
         1
@@ -839,12 +893,13 @@ def regulator(x):
 
 def round(x, ndigits=0):
     """
-    round(number[, ndigits]) -> double-precision real number
+    round(number[, ndigits]) - double-precision real number
     
     Round a number to a given precision in decimal digits (default 0
-    digits).  This always returns a real double field element.
-
-    EXAMPLES:
+    digits). This always returns a real double field element.
+    
+    EXAMPLES::
+    
         sage: round(sqrt(2),2)
         1.41
         sage: round(sqrt(2),5)
@@ -854,24 +909,26 @@ def round(x, ndigits=0):
         sage: b = 5.4999999999999999
         sage: round(b)
         5.0
-        
+    
     Since we use floating-point with a limited range, some roundings can't
-    be performed:
+    be performed::
+    
         sage: round(sqrt(Integer('1'*500)))
         Traceback (most recent call last):
         ...
         OverflowError: cannot convert float infinity to long
+    
+    IMPLEMENTATION: If ndigits is specified, it calls Python's builtin
+    round function, and converts the result to a real double field
+    element. Otherwise, it tries the argument's .round() method, and if
+    that fails, it falls back to the builtin round function.
+    
+    .. note::
 
-
-    IMPLEMENTATION: If ndigits is specified, it calls Python's builtin round function,
-    and converts the result to a real double field element. Otherwise, it tries the
-    argument's .round() method, and if that fails, it falls back to the builtin round
-    function.
-
-    NOTE: This is currently slower than the builtin round function,
-    since it does more work -- i.e., allocating an RDF element and
-    initializing it.  To access the builtin version do
-    \code{import __builtin__; __builtin__.round}.
+       This is currently slower than the builtin round function, since
+       it does more work - i.e., allocating an RDF element and
+       initializing it. To access the builtin version do
+       ``import __builtin__; __builtin__.round``.
     """
     try:
         if ndigits:
@@ -889,8 +946,8 @@ def round(x, ndigits=0):
 
 def quotient(x, y, *args, **kwds):
     """
-    Return the quotient object x/y, e.g., a quotient of numbers or of
-    a polynomial ring x by the ideal generated by y, etc.
+    Return the quotient object x/y, e.g., a quotient of numbers or of a
+    polynomial ring x by the ideal generated by y, etc.
     """
     try:
         return x.quotient(y, *args, **kwds)
@@ -902,21 +959,30 @@ quo = quotient
 def show(x, *args, **kwds):
     """
     Show a graphics object x.
-
+    
     OPTIONAL INPUT:
-        filename -- (default: None) string
-
+    
+    
+    -  ``filename`` - (default: None) string
+    
+    
     SOME OF THESE MAY APPLY:
-        dpi -- dots per inch
-        figsize -- [width, height] (same for square aspect)
-        axes -- (default: True)
-        fontsize -- positive integer
-        frame -- (default: False) draw a MATLAB-like frame around the image
 
-    EXAMPLES:
+    - ``dpi`` - dots per inch
+
+    - ``figsize``- [width, height] (same for square aspect)
+
+    - ``axes`` - (default: True)
+
+    - ``fontsize`` - positive integer
+
+    - ``frame`` - (default: False) draw a MATLAB-like frame around the
+      image
+    
+    EXAMPLES::
+    
         sage: show(graphs(3))
         sage: show(list(graphs(3)))
-
     """
     if not isinstance(x, (sage.interfaces.expect.Expect, sage.interfaces.expect.ExpectElement)):
         try:
@@ -951,8 +1017,9 @@ def _do_show(x):
 def sqrt(x):
     """
     Return a square root of x.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: sqrt(10.1)
         3.17804971641414
         sage: sqrt(9)
@@ -967,10 +1034,10 @@ def sqrt(x):
 
 def isqrt(x):
     """
-    Return an integer square root, i.e., the floor of a
-    square root.
-
-    EXAMPLES:
+    Return an integer square root, i.e., the floor of a square root.
+    
+    EXAMPLES::
+    
         sage: isqrt(10)
         3
         sage: isqrt(10r)
@@ -985,23 +1052,29 @@ def isqrt(x):
 
 def squarefree_part(x):
     """
-    Return the square free part of $x$, i.e., a divisor $z$ such that $x = z y^2$,
-    for a perfect square $y^2$.
-
-    EXAMPLES:
+    Return the square free part of `x`, i.e., a divisor
+    `z` such that `x = z y^2`, for a perfect square
+    `y^2`.
+    
+    EXAMPLES::
+    
         sage: squarefree_part(100)
         1
         sage: squarefree_part(12)
         3
         sage: squarefree_part(10)
         10
-        
+    
+    ::
+    
         sage: x = QQ['x'].0
         sage: S = squarefree_part(-9*x*(x-6)^7*(x-3)^2); S
         -9*x^2 + 54*x
         sage: S.factor()
         (-9) * (x - 6) * x
-
+    
+    ::
+    
         sage: f = (x^3 + x + 1)^3*(x-1); f
         x^10 - x^9 + 3*x^8 + 3*x^5 - 2*x^4 - x^3 - 2*x - 1
         sage: g = squarefree_part(f); g
@@ -1037,7 +1110,8 @@ def squarefree_part(x):
     
 def transpose(x):
     """
-    EXAMPLES:
+    EXAMPLES::
+    
         sage: M = MatrixSpace(QQ,3,3)
         sage: A = M([1,2,3,4,5,6,7,8,9])
         sage: transpose(A)
@@ -1060,8 +1134,9 @@ def transpose(x):
 def zero(R):
     """
     Return the zero element of the ring R.
-
-    EXAMPLES:
+    
+    EXAMPLES::
+    
         sage: R.<x> = PolynomialRing(QQ)
         sage: zero(R) in R
         True
@@ -1078,8 +1153,9 @@ def zero(R):
 def parent(x):
     """
     Return x.parent() if defined, or type(x) if not.
-
-    EXAMPLE:
+    
+    EXAMPLE::
+    
         sage: Z = parent(int(5))
         sage: Z(17)
         17
