@@ -604,7 +604,10 @@ cdef class Expression(CommutativeRingElement):
             3*(x + y)/z
             sage: (-x+z)*(3*x-3*z)
             -3*(x - z)^2
-             
+
+            # check if comparison of constant terms in pynac add objects work
+            sage: (y-1)*(y-2)
+            (y - 2)*(y - 1)
 
         """
         cdef GEx x
