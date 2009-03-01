@@ -86,6 +86,15 @@ numpy_include_dirs = [SAGE_ROOT+'/local/lib/python2.5/site-packages/numpy/core/i
 #############################################################
 
 ext_modules = [
+    
+    ################################
+    ##
+    ## sage.algebras
+    ##
+    ################################
+
+    Extension('sage.algebras.quaternion_algebra_element',
+               sources = ['sage/algebras/quaternion_algebra_element.pyx']),
 
     ################################
     ## 
