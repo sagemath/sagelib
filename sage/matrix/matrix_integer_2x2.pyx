@@ -50,21 +50,25 @@ cdef class Matrix_integer_2x2(matrix_dense.Matrix_dense):
         
         if entries is None:
             entries = 0
-           
+
         if not isinstance(entries, list):
             try:
                 x = ZZ(entries)
                 is_list = 0
             except TypeError:
-                try:
-                    entries = list(entries)
+                if hasattr(entries, "list"):
+                    entries = entries.list()
                     is_list = 1
-                except TypeError:
-                    raise TypeError, "entries must be coercible to a list or the basering"
+                else:
+                    try:
+                        entries = list(entries)
+                        is_list = 1
+                    except TypeError:
+                        raise TypeError, "entries must be coercible to a list or the basering"
                     
         else:
             is_list = 1
-        
+
         if is_list:
         
             if len(entries) != self._nrows * self._ncols:
@@ -119,6 +123,9 @@ cdef class Matrix_integer_2x2(matrix_dense.Matrix_dense):
         return self._richcmp(right, op)
     def __hash__(self):
         return self._hash()
+
+    def __iter__(self):
+        return iter(self.list())
         
     cdef Matrix_integer_2x2 _new_c(self):
         cdef Matrix_integer_2x2 x
