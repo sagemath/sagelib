@@ -2406,9 +2406,9 @@ def binomial(x,m):
     
     .. math::
     
-                x (x-1) \cdots (x-m+1) / m!     
-    
-    
+                x (x-1) \cdots (x-m+1) / m!
+
+
     which is defined for `m \in \mathbb{Z}` and any
     `x`. We extend this definition to include cases when
     `x-m` is an integer but `m` is not by
@@ -2418,12 +2418,10 @@ def binomial(x,m):
     If `m<0` return `0`.
     
     INPUT:
-    
-    
-    -  ``x,m`` - numbers or symbolic expressions Either m
+        
+    -  ``x,m`` - numbers or symbolic expressions. Either m
        or x-m must be an integer.
-    
-    
+        
     OUTPUT: number or symbolic expression (if input is symbolic)
     
     EXAMPLES::
@@ -2438,6 +2436,8 @@ def binomial(x,m):
         0
         sage: binomial(20,10)
         184756
+        sage: binomial(-2, 5)
+        -6
         sage: binomial(RealField()('2.5'), 2)
         1.87500000000000
         sage: n=var('n'); binomial(n,2)
@@ -2463,7 +2463,7 @@ def binomial(x,m):
                 pass
             raise TypeError, 'Either m or x-m must be an integer'
     if isinstance(x, (int, long, integer.Integer)):
-        if m < 0 or m > x:
+        if x >= 0 and (m < 0 or m > x):
             return ZZ(0)
         
         if m > sys.maxint:
