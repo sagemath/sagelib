@@ -113,6 +113,9 @@ class ExtendedRationalField_class(_uniq0, RationalField):
         ParentWithGens.__init__(self, self)
         self._assign_names(('x'),normalize=False) # ???
         self._populate_coercion_lists_(coerce_list=[Q_to_ExtendedQ(self)])
+
+    def __reduce__(self):
+        return ExtendedRationalField_class, tuple([])
     
     def _repr_(self):
         """
