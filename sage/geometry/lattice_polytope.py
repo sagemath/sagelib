@@ -527,9 +527,9 @@ class LatticePolytopeClass(SageObject):
         r"""
         Compute and cache boundary and interior lattice points of
         ``face``.
-        
+
         TESTS::
-        
+
             sage: c = lattice_polytope.octahedron(3).polar()
             sage: f = c.facets()[0]
             sage: v = f.__dict__.pop("_interior_points", None)
@@ -545,22 +545,34 @@ class LatticePolytopeClass(SageObject):
             [0, 1, 2, 3, 11, 15, 21, 25]
             sage: f.points()
             [0, 1, 2, 3, 11, 15, 18, 21, 25]
-        """
-        face._interior_points = Sequence([], int, check=False)
-        face._boundary_points = Sequence(face.points()[:face.nvertices()], int,
-                                                                    check=False)
-        non_vertices = face.points()[face.nvertices():]
-        distances = self.distances()
 
-        other_facets = [i for i in range(self.nfacets())
-                                     if not i in face._facets]
-        for p in non_vertices:
-            face._interior_points.append(p)
-            for f in other_facets:
-                if distances[f, p] == 0:
-                    face._interior_points.pop()
-                    face._boundary_points.append(p)
-                    break
+        Vertices don't have boundary::
+
+            sage: f = c.faces(dim=0)[0]
+            sage: c._face_split_points(f)
+            sage: len(f._interior_points)
+            1
+            sage: len(f._boundary_points)
+            0
+        """
+        if face.npoints() == 1: # Vertex
+            face._interior_points = face.points()
+            face._boundary_points = Sequence([], int, check=False)
+        else:
+            face._interior_points = Sequence([], int, check=False)
+            face._boundary_points = Sequence(face.points()[:face.nvertices()], int,
+                                                                    check=False)
+            non_vertices = face.points()[face.nvertices():]
+            distances = self.distances()
+            other_facets = [i for i in range(self.nfacets())
+                                         if not i in face._facets]
+            for p in non_vertices:
+                face._interior_points.append(p)
+                for f in other_facets:
+                    if distances[f, p] == 0:
+                        face._interior_points.pop()
+                        face._boundary_points.append(p)
+                        break
         face._interior_points.set_immutable()
         face._boundary_points.set_immutable()
 
