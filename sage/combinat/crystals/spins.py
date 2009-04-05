@@ -81,8 +81,8 @@ def CrystalOfSpins(ct):
         ['+++', '++-', '+-+', '-++', '+--', '-+-', '--+', '---']
     
     TESTS::
-    
-        sage: len(TensorProductOfCrystals(C,C,generators=[[C.list()[0],C.list()[0]]]))
+
+        sage: TensorProductOfCrystals(C,C,generators=[[C.list()[0],C.list()[0]]]).cardinality()
         35
     """
     ct = CartanType(ct)
