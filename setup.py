@@ -590,7 +590,9 @@ code = setup(name = 'sage',
                      'sage.groups.matrix_gps',
                      'sage.groups.perm_gps',
                      'sage.groups.perm_gps.partn_ref',
-                     
+
+                     'sage.homology',
+
                      'sage.interfaces',
 
                      'sage.lfunctions',
