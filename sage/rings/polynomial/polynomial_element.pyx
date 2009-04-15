@@ -4914,7 +4914,7 @@ cdef class Polynomial_generic_dense(Polynomial):
             self.__coeffs = x
         if check:
             self.__normalize()
-            
+        
     cdef Polynomial_generic_dense _new_c(self, list coeffs):
         cdef Polynomial_generic_dense f = <Polynomial_generic_dense>PY_NEW_SAME_TYPE(self)
         f._parent = self._parent
