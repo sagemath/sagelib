@@ -783,18 +783,18 @@ cdef class Rational(sage.structure.element.FieldElement):
     def is_perfect_power(self, expected_value=False):
         r""" 
         Returns ``True`` if self is a perfect power.  
-	         
+                 
         INPUT:  
             
         - ``expected_value`` - (bool) whether or not this rational is expected  
            be a perfect power. This does not affect the
            correctness of the output, only the runtime.
-	                               
+                                       
         If expected_value is False (default) it will check the
         smallest of the numerator and denominator is a perfect power
         as a first step, which is often faster than checking if the
         quotient is a perfect power.
-	 
+         
         EXAMPLES::
 
             sage: (4/9).is_perfect_power()  
@@ -2430,8 +2430,8 @@ cdef class Rational(sage.structure.element.FieldElement):
         if self.is_one():
             return integer.Integer(1)
         elif mpz_cmpabs(mpq_numref(self.value),mpq_denref(self.value))==0:
-	    # if the numerator and the denominator are equal in absolute value, 
-	    # then the rational number is -1
+            # if the numerator and the denominator are equal in absolute value, 
+            # then the rational number is -1
             return integer.Integer(2)
         else:
             return sage.rings.infinity.infinity    
@@ -2472,8 +2472,8 @@ cdef class Rational(sage.structure.element.FieldElement):
         r"""
         Determine if the rational number is S-integral.
 
-	x is S-integral if x.valuation(p)>=0 for all p not in S, i.e.,
-	the denominator of x is divisible only by the primes in `S`.    
+        x is S-integral if x.valuation(p)>=0 for all p not in S, i.e.,
+        the denominator of x is divisible only by the primes in `S`.    
         
         INPUT:
         
@@ -2502,9 +2502,9 @@ cdef class Rational(sage.structure.element.FieldElement):
         r"""
         Determine if the rational number is an S-unit.
 
-	x is an S-unit if x.valuation(p)==0 for all p not in S, i.e.,
-	the numerator and denominator of x are divisible only by the
-	primes in `S`.
+        x is an S-unit if x.valuation(p)==0 for all p not in S, i.e.,
+        the numerator and denominator of x are divisible only by the
+        primes in `S`.
         
         INPUT:
         

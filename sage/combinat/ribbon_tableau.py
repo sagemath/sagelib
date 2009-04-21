@@ -579,7 +579,7 @@ def cospin_polynomial(part, weight, length):
 ##     // Generic function for driving into the graph of partitions coding all ribbons
 ##     // tableaux of a given shape and weight
 ##     //////////////////////////////////////////////////////////////////////////////////////////
-						  
+
 ##     //This function construct the graph of the set of k-ribbon tableaux
 ##     //of a given skew shape and a given weight.
 ##     //The first argument is always a skew partition.

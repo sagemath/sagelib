@@ -1046,7 +1046,7 @@ class EllipticCurvePoint_field(AdditiveGroupElement): # SchemeMorphism_abelian_v
 
         - David Hansen (2009-01-25)
 
-        """	
+        """
         t = self.curve().base_field().one_element()
         V = self
         S = 2*V

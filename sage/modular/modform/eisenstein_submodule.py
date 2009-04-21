@@ -250,7 +250,7 @@ class EisensteinSubmodule_params(EisensteinSubmodule):
             ]
 
             sage: M = ModularForms(19,3).eisenstein_subspace()
-            sage: M.eisenstein_series()	    
+            sage: M.eisenstein_series()
             [
             ]
         """
@@ -394,7 +394,7 @@ class EisensteinSubmodule_eps(EisensteinSubmodule_params):
     """
     # TODO
     #def _compute_q_expansion_basis(self, prec):
-	#B = EisensteinSubmodule_params._compute_q_expansion_basis(self, prec)
+        #B = EisensteinSubmodule_params._compute_q_expansion_basis(self, prec)
         #raise NotImplementedError, "must restrict scalars down correctly."
 
 

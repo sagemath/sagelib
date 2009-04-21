@@ -2374,7 +2374,7 @@ class GraphicsArray(SageObject):
         self._rows = len(array)
         if self._rows > 0:
             if not isinstance(array[0], (list, tuple)):
-                array = [array]	
+                array = [array]
                 self._rows = 1
             self._cols = len(array[0])
         else:

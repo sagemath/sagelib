@@ -1234,7 +1234,7 @@ cdef class QuaternionAlgebraElement_rational_field(QuaternionAlgebraElement_abst
         """
         #return 2*self[0]
         
-        mpz_mul_si(U1, self.x, 2)	
+        mpz_mul_si(U1, self.x, 2)
         cdef Rational result = PY_NEW(Rational)
         mpq_set_num(result.value, U1)
         mpq_set_den(result.value, self.d)

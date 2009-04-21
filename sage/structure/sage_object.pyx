@@ -498,7 +498,7 @@ def load(filename, compress=True, verbose=True):
         globals()['fortran'](filename)
         return 
     else:
-        tmpfile_flag = False	
+        tmpfile_flag = False
         filename = process(filename)
 
     ## Load file by absolute filename
@@ -510,7 +510,7 @@ def load(filename, compress=True, verbose=True):
 
     ## Delete the tempfile, if it exists
     if tmpfile_flag == True:
-        os.unlink(filename)		
+        os.unlink(filename)
 
     return X
 

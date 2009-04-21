@@ -123,7 +123,7 @@ cdef class DiscreteWaveletTransform(gsl_array.GSLDoubleArray):
         if self.wavelet != NULL:
             gsl_wavelet_free(self.wavelet)
             gsl_wavelet_workspace_free(self.workspace)
-	
+
     def forward_transform(self):
         gsl_wavelet_transform_forward(self.wavelet,self.data,self.stride,self.n,self.workspace)
 

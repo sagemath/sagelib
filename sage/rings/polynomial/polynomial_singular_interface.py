@@ -237,14 +237,14 @@ class PolynomialRing_singular_repr:
                 self.__minpoly = singular.eval('minpoly')[1:-1]
         
             self.__singular = r
-	
-	elif sage.rings.fraction_field.is_FractionField(self.base_ring()) and (self.base_ring().base_ring() is ZZ or self.base_ring().base_ring().is_prime_field()):
-	    if self.base_ring().ngens()==1:
-	      gens = str(self.base_ring().gen())
-	    else:
+
+        elif sage.rings.fraction_field.is_FractionField(self.base_ring()) and (self.base_ring().base_ring() is ZZ or self.base_ring().base_ring().is_prime_field()):
+            if self.base_ring().ngens()==1:
+              gens = str(self.base_ring().gen())
+            else:
               gens = str(self.base_ring().gens())
             self.__singular = singular.ring( "(%s,%s)"%(self.base_ring().characteristic(),gens), _vars, order=order, check=False)
-	    
+            
         else:    
             raise TypeError, "no conversion to a Singular ring defined"
 
@@ -281,7 +281,7 @@ def can_convert_to_singular(R):
              or is_RealDoubleField(base_ring)
              or is_ComplexDoubleField(base_ring)
              or number_field.all.is_NumberField(base_ring)
-	     or ( sage.rings.fraction_field.is_FractionField(base_ring) and ( base_ring.base_ring().is_prime_field() or base_ring.base_ring() is ZZ ) )
+             or ( sage.rings.fraction_field.is_FractionField(base_ring) and ( base_ring.base_ring().is_prime_field() or base_ring.base_ring() is ZZ ) )
              or base_ring is ZZ )
 
 
@@ -401,20 +401,20 @@ def lcm_func(self, right, have_ring=False):
         sage: f = (a^2+a)*x^2*y + (a^4+a^3+a)*y + a^5
         sage: f.lcm(x^4)
         (a^2 + a)*x^6*y + (a^3 + a - 1)*x^4*y + (-a)*x^4
-	
+        
     TESTS:
         sage: R.<X>=QQ[]
         sage: a=R(1)
-	sage: b=X
-	sage: lcm(b,a)
-	X
-	sage: lcm(a,b)
-	X
+        sage: b=X
+        sage: lcm(b,a)
+        X
+        sage: lcm(a,b)
+        X
     """
     # Singular doesn't like constant polynomials as the first argument
     # and nonconstant as the second
     if self.is_constant() and not right.is_constant():
-	self, right = right, self
+        self, right = right, self
     lcm = self._singular_(have_ring=have_ring).lcm(right._singular_(have_ring=have_ring))
     return lcm.sage_poly(self.parent())
 

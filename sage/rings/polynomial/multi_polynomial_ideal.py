@@ -928,7 +928,7 @@ class MPolynomialIdeal_singular_repr:
         ALGORITHM: Uses Singular, unless the characteristic is too large.
 
         .. note::
-	
+
            Requires computation of a Groebner basis, which can be a
            very expensive operation.
         """

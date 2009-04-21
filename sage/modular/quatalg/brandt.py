@@ -74,8 +74,8 @@ following action
 
 .. math:
 
-	T_n[I]=\sum_{\phi} [J]
-	
+        T_n[I]=\sum_{\phi} [J]
+        
 where '(n,pM)=1' and the sum is over cyclic '\mathcal{O}'-module
 homomorphisms '\phi :I\rightarrow J ' of degree 'n' up to isomorphism
 of 'J'. Equivalently one can sum over the inclusions of the submodules
@@ -103,7 +103,7 @@ defined as
 
 .. math:
 
-	\theta_L(q)=\sum_{x \in L} q^{\frac{N(x)}{N(L)}}
+        \theta_L(q)=\sum_{x \in L} q^{\frac{N(x)}{N(L)}}
 
 L.theta_series(T,q) returns a power series representing '\theta_L(q)'
 up to a precision of '\mathcal{O}(q^{T+1})'.

@@ -190,31 +190,31 @@ class PiecewisePolynomial:
             self.length(),self.list())
  
     def _latex_(self):
-	r"""
-	EXAMPLES::
-	
-	    sage: f1(x) = 1
-	    sage: f2(x) = 1 - x
-	    sage: f = Piecewise([[(0,1),f1],[(1,2),f2]])
-	    sage: latex(f)
-	    \begin{cases}
-	    x \ {\mapsto}\ 1 &\text{on $(0, 1)$}\cr
-	    x \ {\mapsto}\ 1 - x &\text{on $(1, 2)$}\cr
-	    \end{cases}
-	
-	::
-	
-	    sage: f(x) = sin(x*pi/2)
-	    sage: g(x) = 1-(x-1)^2
-	    sage: h(x) = -x
-	    sage: P = Piecewise([[(0,1), f], [(1,3),g], [(3,5), h]])
-	    sage: latex(P)
-	    \begin{cases}
-	    x \ {\mapsto}\ \sin \left( \frac{{\pi x}}{2} \right) &\text{on $(0, 1)$}\cr
-	    x \ {\mapsto}\ 1 - {\left( x - 1 \right)}^{2}  &\text{on $(1, 3)$}\cr
-	    x \ {\mapsto}\ -x &\text{on  $(3, 5)$}\cr
-	    \end{cases}
-	"""
+        r"""
+        EXAMPLES::
+        
+            sage: f1(x) = 1
+            sage: f2(x) = 1 - x
+            sage: f = Piecewise([[(0,1),f1],[(1,2),f2]])
+            sage: latex(f)
+            \begin{cases}
+            x \ {\mapsto}\ 1 &\text{on $(0, 1)$}\cr
+            x \ {\mapsto}\ 1 - x &\text{on $(1, 2)$}\cr
+            \end{cases}
+        
+        ::
+        
+            sage: f(x) = sin(x*pi/2)
+            sage: g(x) = 1-(x-1)^2
+            sage: h(x) = -x
+            sage: P = Piecewise([[(0,1), f], [(1,3),g], [(3,5), h]])
+            sage: latex(P)
+            \begin{cases}
+            x \ {\mapsto}\ \sin \left( \frac{{\pi x}}{2} \right) &\text{on $(0, 1)$}\cr
+            x \ {\mapsto}\ 1 - {\left( x - 1 \right)}^{2}  &\text{on $(1, 3)$}\cr
+            x \ {\mapsto}\ -x &\text{on  $(3, 5)$}\cr
+            \end{cases}
+        """
         from sage.misc.latex import latex
         tex = ['\\begin{cases}\n']
         for (left, right), f in self.list():
@@ -1136,7 +1136,7 @@ class PiecewisePolynomial:
             -3*sin(2*x)/pi + 3*sin(x)/pi - 3*cos(x)/pi - 1/4
         """
         return self._fourier_series_helper(N, L, lambda n: F[n])
-	
+        
     def plot_fourier_series_partial_sum(self,N,L,xmin,xmax, **kwds):
         r"""
         Plots the partial sum
@@ -1228,7 +1228,7 @@ class PiecewisePolynomial:
         """     
         from sage.plot.all import plot
         return plot(self.fourier_series_partial_sum_hann(N,L), xmin, xmax, **kwds)
-	
+        
     def plot_fourier_series_partial_sum_filtered(self,N,L,F,xmin,xmax, **kwds):
         r"""
         Plots the partial sum
@@ -1260,7 +1260,7 @@ class PiecewisePolynomial:
         """
         from sage.plot.all import plot
         return plot(self.fourier_series_partial_sum_filtered(N,L,F), xmin, xmax, **kwds)
-		
+                
     def fourier_series_value(self,x,L):
         r"""
         Returns the value of the Fourier series coefficient of self at
@@ -1498,58 +1498,58 @@ class PiecewisePolynomial:
    
     def __add__(self,other):
         """
-	Returns the piecewise defined function which is the sum of self and
-	other. Does not require both domains be the same.
-	
-	EXAMPLES::
-	
-	    sage: x = PolynomialRing(QQ,'x').gen()
-	    sage: f1 = x^0
+        Returns the piecewise defined function which is the sum of self and
+        other. Does not require both domains be the same.
+        
+        EXAMPLES::
+        
+            sage: x = PolynomialRing(QQ,'x').gen()
+            sage: f1 = x^0
             sage: f2 = 1-x
             sage: f3 = 2*x
             sage: f4 = 10-x
             sage: f = Piecewise([[(0,1),f1],[(1,2),f2],[(2,3),f3],[(3,10),f4]])
-	    sage: g1 = x-2
+            sage: g1 = x-2
             sage: g2 = x-5
             sage: g = Piecewise([[(0,5),g1],[(5,10),g2]])
-	    sage: h = f+g
-	    sage: h
+            sage: h = f+g
+            sage: h
             Piecewise defined function with 5 parts, [[(0, 1), x - 1], [(1, 2), -1], [(2, 3), 3*x - 2], [(3, 5), 8], [(5, 10), 5]]
-	
-	Note that in this case the functions must be defined using
-	polynomial expressions *not* using the lambda notation.
-	"""
+        
+        Note that in this case the functions must be defined using
+        polynomial expressions *not* using the lambda notation.
+        """
         F, G, intervals = self._make_compatible(other)
         fcn = []
         for a,b in intervals:
-            fcn.append([(a,b), F.which_function(b)+G.which_function(b)])	
+            fcn.append([(a,b), F.which_function(b)+G.which_function(b)])        
         return Piecewise(fcn)
-	
+        
     def __mul__(self,other):
         r"""
-	Returns the piecewise defined function which is the product of one
-	piecewise function (self) with another one (other).
-	
-	EXAMPLES::
-	
-	    sage: x = PolynomialRing(QQ,'x').gen()
-	    sage: f1 = x^0
+        Returns the piecewise defined function which is the product of one
+        piecewise function (self) with another one (other).
+        
+        EXAMPLES::
+        
+            sage: x = PolynomialRing(QQ,'x').gen()
+            sage: f1 = x^0
             sage: f2 = 1-x
             sage: f3 = 2*x
             sage: f4 = 10-x
             sage: f = Piecewise([[(0,1),f1],[(1,2),f2],[(2,3),f3],[(3,10),f4]])
-	    sage: g1 = x-2
+            sage: g1 = x-2
             sage: g2 = x-5
             sage: g = Piecewise([[(0,5),g1],[(5,10),g2]])
-	    sage: h = f*g
-	    sage: h
-	    Piecewise defined function with 5 parts, [[(0, 1), x - 2], [(1, 2), -x^2 + 3*x - 2], [(2, 3), 2*x^2 - 4*x], [(3, 5), -x^2 + 12*x - 20], [(5, 10), -x^2 + 15*x - 50]]
+            sage: h = f*g
+            sage: h
+            Piecewise defined function with 5 parts, [[(0, 1), x - 2], [(1, 2), -x^2 + 3*x - 2], [(2, 3), 2*x^2 - 4*x], [(3, 5), -x^2 + 12*x - 20], [(5, 10), -x^2 + 15*x - 50]]
             sage: g*(11/2)
             Piecewise defined function with 2 parts, [[(0, 5), 11/2*x - 11], [(5, 10), 11/2*x - 55/2]]
             
-	Note that in this method the functions must be defined using
-	polynomial expressions *not* using the lambda notation.
-	"""
+        Note that in this method the functions must be defined using
+        polynomial expressions *not* using the lambda notation.
+        """
         ## needed for scalar multiplication
         if isinstance(other,Rational) or isinstance(other,Integer):
             return Piecewise([[(a,b), other*f] for (a,b),f in self.list()])
@@ -1557,7 +1557,7 @@ class PiecewisePolynomial:
             F, G, intervals = self._make_compatible(other)
             fcn = []
             for a,b in intervals:
-                fcn.append([(a,b),F.which_function(b)*G.which_function(b)])	
+                fcn.append([(a,b),F.which_function(b)*G.which_function(b)])     
             return Piecewise(fcn)
 
     __rmul__ = __mul__
