@@ -555,7 +555,7 @@ class FreeModule_generic(module.Module):
         self.__is_sparse = sparse
         self._gram_matrix = None
         self.element_class()
-        
+
     def construction(self):
         """
         The construction functor and base ring for self.
