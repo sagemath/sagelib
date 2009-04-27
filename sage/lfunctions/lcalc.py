@@ -250,9 +250,9 @@ class LCalc(SageObject):
 
     def twist_values(self, s, dmin, dmax, L=''):
         r"""
-        Return values of `L(s, \chi_d)` for each quadratic
-        character `\chi_d` for
-        `d_{\min} \leq d \leq d_{\max}`.
+        Return values of `L(s, \chi_k)` for each quadratic
+        character `\chi_k` whose discriminant `d` satisfies
+        `d_{\min} \leq d \leq d_{\max}`. 
         
         INPUT:
         
@@ -300,8 +300,8 @@ class LCalc(SageObject):
     def twist_zeros(self, n, dmin, dmax, L=''):
         r"""
         Return first `n` real parts of nontrivial zeros for each
-        quadratic character `\chi_d` for
-        `d_{\min} \leq d \leq d_{\max}`.
+        quadratic character `\chi_k` whose discriminant `d` satisfies
+        `d_{\min} \leq d \leq d_{\max}`. 
         
         INPUT:
         
