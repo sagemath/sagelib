@@ -1478,6 +1478,8 @@ def render_worksheet_list(args, pub, username):
                                                     
     if pub and (not username or username == tuple([])):
         username = 'pub'
+    
+    accounts = notebook.get_accounts()
             
     return template('worksheet_listing.html', **locals()) 
 
