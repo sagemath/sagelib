@@ -458,7 +458,7 @@ cdef class MPolynomialRing_generic(sage.rings.ring.CommutativeRing):
             d -- degree
 
         EXAMPLE:
-	sage: P.<x,y> = PolynomialRing(QQ)
+        sage: P.<x,y> = PolynomialRing(QQ)
         sage: P._to_monomial(0,10,2)
         (0, 0, 0, 0, 0, 0, 0, 0, 0, 2)
         sage: P._to_monomial(8,10,2)
@@ -568,7 +568,7 @@ cdef class MPolynomialRing_generic(sage.rings.ring.CommutativeRing):
             sage: P.<x,y,z> = PolynomialRing(QQ)
             sage: P.random_element(2, 5)
             -6/5*x^2 + 2/3*z^2 - 1
-	    
+            
             sage: P.random_element(2, 5, choose_degree=True)
             -1/4*x*y - 1/5*x*z - 1/14*y*z - z^2
 
@@ -594,7 +594,7 @@ cdef class MPolynomialRing_generic(sage.rings.ring.CommutativeRing):
 
             sage: P.random_element(0, 1)
             -1
-	    
+            
             sage: P.random_element(2, 0)
             0
 

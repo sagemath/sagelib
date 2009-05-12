@@ -1410,7 +1410,7 @@ cdef class CommutativeRingElement(RingElement):
 
         When little is implemented about a given ring, then mod may
         return simply return `f`.  For example, reduction is not
-        implemented for `\mathbb{Z}[x]` yet. (TODO!)
+        implemented for `\ZZ[x]` yet. (TODO!)
         
             sage: R.<x> = PolynomialRing(ZZ)
             sage: f = x^3 + x + 1
@@ -2555,11 +2555,11 @@ cdef class FiniteFieldElement(FieldElement):
         """
         Return the `(p^k)^{th}` power of self, where `p` is the
         characteristic of the field.
-	
+
         INPUT:
 
         - ``k`` - integer (default: 1, must fit in C int type)
-	    
+
         Note that if `k` is negative, then this computes the appropriate root.
         
         EXAMPLES::
@@ -2589,7 +2589,7 @@ cdef class FiniteFieldElement(FieldElement):
         """
         Return the `(p^k)^{th}` root of self, where `p` is the characteristic
         of the field.
-	
+
         INPUT:
 
         - ``k`` - integer (default: 1, must fit in C int type)

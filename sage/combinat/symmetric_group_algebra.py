@@ -314,7 +314,7 @@ def epsilon_ik(itab, ktab, star=0):
     if star:
         it = it.restrict(it.size() - star)
         kt = kt.restrict(kt.size() - star)
-		
+
     if it.shape() != kt.shape():
         raise ValueError, "the two tableaux must be of the same shape"
 
@@ -406,7 +406,7 @@ def kappa(alpha):
         n = alpha.size()
     except AttributeError:
         n = sum(alpha)
-    return factorial(n)/StandardTableaux(alpha).count()
+    return factorial(n)/StandardTableaux(alpha).cardinality()
 
 
 e_cache = {}
@@ -525,7 +525,7 @@ def seminormal_test(n):
             if value != 0:
                 print value
                 raise ValueError, "3.2.12.2 - %s"%tab
-			
+
             for tab2 in StandardTableaux(part):
                 #3.2.8 1
                 if e_ik(tab, tab2) - e(tab)*pi_ik(tab, tab2)*e(tab2)*(1/kappa(part)) != 0:

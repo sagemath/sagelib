@@ -1,5 +1,5 @@
 r"""
-Dense matrices over `\mathbb{Z}/n\mathbb{Z}` for `n` small.
+Dense matrices over `\ZZ/n\ZZ` for `n` small.
 
 AUTHORS:
 
@@ -8,7 +8,7 @@ AUTHORS:
 - Robert Bradshaw
 
 This is a compiled implementation of dense matrices over
-`\mathbb{Z}/n\mathbb{Z}` for `n` small.
+`\ZZ/n\ZZ` for `n` small.
 
 EXAMPLES::
 
@@ -1576,7 +1576,7 @@ cdef class Matrix_modn_dense(matrix_dense.Matrix_dense):
             self.cache('det', d2)
             return d2
         else:
-            return matrix_dense.Matrix_dense.determinant(self)	
+            return matrix_dense.Matrix_dense.determinant(self)
 
     def randomize(self, density=1):
         """

@@ -148,7 +148,7 @@ from sage.modules.vector_integer_dense cimport Vector_integer_dense
 from sage.modules.vector_real_double_dense cimport Vector_real_double_dense
 from sage.rings.integer cimport Integer
 from sage.rings.real_mpfr cimport RealNumber
-
+ 
 cimport numpy
 
 # TODO: Just for the fabs function below

@@ -307,7 +307,7 @@ def lfsr_connection_polynomial(s):
       IEEE Trans. Inform. Theory, vol. IT-15, pp. 122-127, Jan. 19 69.
     """
     # Initialization:
-    FF = s[0].base_ring()	
+    FF = s[0].base_ring()
     R = PolynomialRing(FF, "x")
     x = R.gen()
     C = R(1); B = R(1); m = 1; b = FF(1); L = 0; N = 0

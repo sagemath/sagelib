@@ -69,7 +69,7 @@ class Disk(GraphicPrimitive):
         deg1 = self.rad1*(360.0/(2.0*pi)) #convert radians to degrees 
         deg2 = self.rad2*(360.0/(2.0*pi))
         p = patches.Wedge((float(self.x), float(self.y)), float(self.r), float(deg1),
-                            float(deg2))	
+                            float(deg2))
         p.set_linewidth(float(options['thickness']))
         p.set_fill(options['fill'])
         p.set_alpha(options['alpha'])
