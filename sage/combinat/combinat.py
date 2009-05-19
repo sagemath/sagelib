@@ -1,6 +1,6 @@
 r"""
 Combinatorial Functions.
-
+ 
 AUTHORS:
 
 - David Joyner (2006-07): initial implementation.
@@ -232,32 +232,6 @@ from sage.misc.misc import prod
 from sage.structure.sage_object import SageObject
 from sage.misc.misc import deprecation
 ######### combinatorial sequences
-
-def hadamard_matrix(n):
-    """
-    Returns an n x n Hadamard matrix of order `n`, if
-    possible.
-    
-    If the construction of this matrix is not implemented in GUAVA or
-    there is no such matrix, raises a NotImplementedError.
-    
-    EXAMPLES::
-    
-        sage: hadamard_matrix(4)
-        [ 1  1  1  1]
-        [ 1 -1  1 -1]
-        [ 1  1 -1 -1]
-        [ 1 -1 -1  1]
-        sage: hadamard_matrix(6)
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Hadamard matrix of order 6 does not exist or is not implemented yet.
-    """
-    try:
-        ans = gap("HadamardMat(%s)"%ZZ(n))
-        return ans._matrix_(ZZ)
-    except:
-        raise NotImplementedError, "Hadamard matrix of order %s does not exist or is not implemented yet."%n
 
 def bell_number(n):
     r"""
