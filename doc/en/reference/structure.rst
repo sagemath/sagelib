@@ -9,6 +9,7 @@ Basic Structures
    sage/structure/formal_sum
    sage/structure/factorization
    sage/structure/element
+   sage/structure/unique_representation
    sage/structure/mutability
    sage/structure/sequence
 
