@@ -137,7 +137,25 @@ cdef class MPolynomial(CommutativeRingElement):
             return Integer(repr(self))
         else:
             raise TypeError
-            
+
+    def _symbolic_(self, R):
+        """
+        EXAMPLES::
+
+            sage: R.<x,y> = QQ[]
+            sage: f = x^3 + y
+            sage: g = f._symbolic_(SR); g
+            x^3 + y
+            sage: g(x=2,y=2)
+            10
+
+            sage: g = SR(f)
+            sage: g(x=2,y=2)
+            10
+        """
+        d = dict([(repr(g), R.var(g)) for g in self.parent().gens()])
+        return self.subs(**d)
+
     def _polynomial_(self, R):
         var = R.variable_name()
         if var in self._parent.variable_names():
@@ -375,6 +393,12 @@ cdef class MPolynomial(CommutativeRingElement):
             z^5 + x*w*k*z + w^5 + 17*x*w^3 + x^3 + 3*x*w + 5
             sage: f.polynomial(k)
             x*w*z*k + w^5 + z^5 + 17*x*w^3 + x^3 + 3*x*w + 5
+            sage: R.<x,y>=GF(5)[]
+            sage: f=x^2+x+y
+            sage: f.polynomial(x)
+            x^2 + x + y
+            sage: f.polynomial(y)
+            y + x^2 + x
         """
         cdef int ind
         R = self.parent()
@@ -961,5 +985,8 @@ cdef class MPolynomial(CommutativeRingElement):
 cdef remove_from_tuple(e, int ind):
     w = list(e)
     del w[ind]
-    return tuple(w)
+    if len(w) == 1:
+        return w[0]
+    else:
+        return tuple(w)
 

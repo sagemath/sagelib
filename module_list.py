@@ -247,8 +247,8 @@ ext_modules = [
                          'sage/graphs/planarity/platformTime.h',
                          'sage/graphs/planarity/stack.h']),
 
-    Extension('sage.graphs.base.sparse_graph',
-              sources = ['sage/graphs/base/sparse_graph.pyx']),
+    Extension('sage.graphs.trees',
+              sources = ['sage/graphs/trees.pyx']),
 
         ################################
         ##
@@ -258,6 +258,9 @@ ext_modules = [
 
     Extension('sage.graphs.base.c_graph',
               sources = ['sage/graphs/base/c_graph.pyx']),
+
+    Extension('sage.graphs.base.sparse_graph',
+              sources = ['sage/graphs/base/sparse_graph.pyx']),
 
     Extension('sage.graphs.base.dense_graph',
               sources = ['sage/graphs/base/dense_graph.pyx']),
@@ -294,6 +297,9 @@ ext_modules = [
 
     Extension('sage.groups.perm_gps.partn_ref.refinement_matrices',
               sources = ['sage/groups/perm_gps/partn_ref/refinement_matrices.pyx']),
+
+    Extension('sage.groups.perm_gps.partn_ref.refinement_lists',
+              sources = ['sage/groups/perm_gps/partn_ref/refinement_lists.pyx']),
 
     ################################
     ## 
@@ -365,7 +371,8 @@ ext_modules = [
               sources = ['sage/libs/fplll/fplll.pyx'],
               libraries = ['gmp', 'mpfr', 'stdc++', 'fplll'],
               language="c++",
-              include_dirs = [SAGE_ROOT +'/local/include/fplll']),
+              include_dirs = [SAGE_ROOT +'/local/include/fplll'],
+              depends = [SAGE_ROOT + "/local/include/fplll/fplll.h"]),
 
     Extension('sage.libs.linbox.linbox',
               sources = ['sage/libs/linbox/linbox.pyx'],
@@ -394,8 +401,7 @@ ext_modules = [
     
     Extension('sage.libs.singular.singular',
               sources = ['sage/libs/singular/singular.pyx'],
-              libraries = ['m', 'readline', 'singular', 'singfac',
-                           'singcf', 'omalloc', 'givaro', 'gmpxx', 'gmp'],
+              libraries = ['m', 'readline', 'singular', 'givaro', 'gmpxx', 'gmp'],
               language="c++",
               include_dirs = [SAGE_ROOT +'/local/include/singular'],
               depends = [SAGE_ROOT + "/local/include/libsingular.h"]),
@@ -403,7 +409,8 @@ ext_modules = [
     Extension('sage.libs.symmetrica.symmetrica',
               sources = ["sage/libs/symmetrica/%s"%s for s in ["symmetrica.pyx"]],
               include_dirs = ['/usr/include/malloc/'],
-              libraries = ["symmetrica"]),
+              libraries = ["symmetrica"],
+              depends = [SAGE_ROOT + "/local/include/symmetrica/def.h"]),
 
         ###################################
         ##
@@ -625,8 +632,7 @@ ext_modules = [
 
     Extension('sage.matrix.matrix_mpolynomial_dense',
               sources = ['sage/matrix/matrix_mpolynomial_dense.pyx'],
-              libraries = ['m', 'readline', 'singular', 'singcf', 'singfac',
-                           'omalloc', 'givaro', 'gmpxx', 'gmp'],
+              libraries = ['m', 'readline', 'singular', 'givaro', 'gmpxx', 'gmp'],
               language="c++",
               include_dirs = [SAGE_ROOT +'/local/include/singular'],
               depends = [SAGE_ROOT + "/local/include/libsingular.h"]),
@@ -815,6 +821,11 @@ ext_modules = [
     
     Extension('sage.plot.plot3d.base',
               sources = ['sage/plot/plot3d/base.pyx']),
+    
+    Extension('sage.plot.plot3d.implicit_surface',
+              sources = ['sage/plot/plot3d/implicit_surface.pyx'],
+              libraries = ['gsl'],
+              include_dirs = numpy_include_dirs),
     
     Extension('sage.plot.plot3d.index_face_set',
               sources = ['sage/plot/plot3d/index_face_set.pyx']),
@@ -1059,9 +1070,6 @@ ext_modules = [
               libraries = ["csage", "ntl", "gmp", "gmpxx", "m", "stdc++"],
               language='c++'),
 
-    Extension('sage.rings.padics.rigid_functions',
-              sources = ['sage/rings/padics/rigid_functions.pyx']),
-              
         ################################
         ##
         ## sage.rings.polynomial
@@ -1079,14 +1087,14 @@ ext_modules = [
 
     Extension('sage.rings.polynomial.multi_polynomial_ideal_libsingular',
               sources = ['sage/rings/polynomial/multi_polynomial_ideal_libsingular.pyx'],
-              libraries = ['m', 'readline', 'singular', 'singcf', 'singfac', 'omalloc', 'givaro', 'gmpxx', 'gmp'],
+              libraries = ['m', 'readline', 'singular', 'givaro', 'gmpxx', 'gmp'],
               language="c++",
               include_dirs = [SAGE_ROOT +'/local/include/singular'],
               depends = [SAGE_ROOT + "/local/include/libsingular.h"]),
 
     Extension('sage.rings.polynomial.multi_polynomial_libsingular',
               sources = ['sage/rings/polynomial/multi_polynomial_libsingular.pyx'],
-              libraries = ['m', 'readline', 'singular', 'singcf', 'singfac', 'omalloc', 'givaro', 'gmpxx', 'gmp'],
+              libraries = ['m', 'readline', 'singular', 'givaro', 'gmpxx', 'gmp'],
               language="c++",
               include_dirs = [SAGE_ROOT +'/local/include/singular'],
               depends = [SAGE_ROOT + "/local/include/libsingular.h"]),
@@ -1151,6 +1159,9 @@ ext_modules = [
               sources = ['sage/rings/polynomial/real_roots.pyx'],
               libraries=['mpfr', 'qd'],
               include_dirs = numpy_include_dirs),
+
+    Extension('sage.rings.polynomial.symmetric_reduction',
+              sources = ['sage/rings/polynomial/symmetric_reduction.pyx']),
 
     ################################
     ## 
@@ -1245,9 +1256,8 @@ ext_modules = [
     ## sage.symbolic
     ##
     ################################
-
-    Extension('sage.symbolic.constants',
-              sources = ['sage/symbolic/constants.pyx'],
+    Extension('sage.symbolic.constants_c',
+              sources = ['sage/symbolic/constants_c.pyx'],
               language = 'c++',
               libraries = ["pynac"]),
 
@@ -1261,6 +1271,11 @@ ext_modules = [
               language = 'c++',
               libraries = ["pynac"]),
 
+    Extension('sage.symbolic.power_helper',
+              sources = ['sage/symbolic/power_helper.pyx'],
+              language = 'c++',
+              libraries = ["pynac"]),
+    
     Extension('sage.symbolic.pynac',
               sources = ['sage/symbolic/pynac.pyx'],
               language = 'c++',

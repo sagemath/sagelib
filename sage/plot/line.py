@@ -279,8 +279,9 @@ def line2d(points, **options):
         sage: line(L, rgbcolor=(1/4,1,1/8))
  
     A green lemniscate of Bernoulli:
- 
-        sage: v = [(1/cos(-pi/2+pi*i/100), tan(-pi/2+pi*i/100)) for i in range(201)]
+
+        sage: cosines = [cos(-pi/2+pi*i/100) for i in range(201)]
+        sage: v = [(1/c, tan(-pi/2+pi*i/100)) for i,c in enumerate(cosines) if c != 0]
         sage: L = [(a/(a^2+b^2), b/(a^2+b^2)) for a,b in v]
         sage: line(L, rgbcolor=(1/4,3/4,1/8))
  

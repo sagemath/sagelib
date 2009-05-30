@@ -37,6 +37,7 @@ graphplot_options = {'pos': 'The position dictionary of vertices',
                     'dist': 'The distance between multiedges.',
                     'max_dist': 'The max distance range to allow multiedges.',
                     'heights': 'Dictionary specifying height (y positions) for vertices.',
+                    'talk': 'Whether to display the vertices in talk mode (larger and white)',
                     'tree_root': 'A vertex designation for drawing trees.',
                     'tree_orientation': 'The direction of tree branches-- "up" or "down".',
                     'save_pos': 'Whether or not to save the computed position for the graph.',
@@ -50,7 +51,7 @@ class GraphPlot(SageObject):
         as some functions to set parameters for vertices and edges.  This constructor
         assumes default options are set.  Defaults are shown in the example below.
         
-        EXAMPLE:
+        EXAMPLE::
             sage: from sage.graphs.graph_plot import GraphPlot
             sage: options = {
             ...     'vertex_size':200, 
@@ -71,6 +72,11 @@ class GraphPlot(SageObject):
             ...     'loop_size':.075}
             sage: g = Graph({0:[1,2], 2:[3], 4:[0,1]})
             sage: GP = GraphPlot(g, options)
+
+        TESTS::
+
+            sage: g = graphs.CompleteGraph(2); g.show()
+
         """
         self._plot_components = {}
         self._nodelist = graph.vertices()
@@ -211,17 +217,16 @@ class GraphPlot(SageObject):
             ymin = min(ys)
             ymax = max(ys)
         
-        if xmax == xmin:
+        if xmax - xmin < 0.00000001:
             xmax += 1
             xmin -= 1
             
-        if ymax == ymin:
+        if ymax - ymin < 0.00000001:
             ymax += 1
             ymin -= 1
             
         dx = xmax - xmin
         dy = ymax - ymin
-        
         # Check each vertex position is in pos, add position 
         # randomly within the plot range if none is defined         
         for v in self._nodelist:
@@ -231,6 +236,10 @@ class GraphPlot(SageObject):
         # Save positions to graph if requested in options
         if 'save_pos' in self._options and self._options['save_pos']:
             self._graph.set_pos(self._pos)
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
 
     def set_vertices(self, **vertex_options):
         """
@@ -435,8 +444,7 @@ class GraphPlot(SageObject):
             dist = self._options['dist']*2
             loop_size = self._options['loop_size']
             max_dist = self._options['max_dist']
-            from sage.calculus.calculus import SymbolicVariable
-            from sage.calculus.calculus import sqrt as Sqrt
+            from sage.functions.all import sqrt
             for (a,b) in tmp:
                 if a == b:
                     # Loops 
@@ -635,6 +643,7 @@ class GraphPlot(SageObject):
             ('partition', 'A partition of the vertex set.  (Draws each cell of vertices in a different color).'), 
             ('pos', 'The position dictionary of vertices'), 
             ('save_pos', 'Whether or not to save the computed position for the graph.'), 
+            ('talk', 'Whether to display the vertices in talk mode (larger and white)'),
             ('tree_orientation', 'The direction of tree branches-- "up" or "down".'), 
             ('tree_root', 'A vertex designation for drawing trees.'), 
             ('vertex_colors', 'Dictionary of vertex coloring.'), 
@@ -755,6 +764,7 @@ class GraphPlot(SageObject):
             else:
                 for item in comp:
                     G += item
+        G.set_axes_range(self.xmin, self.xmax, self.ymin, self.ymax)
         if self._options['graph_border']:
             xmin = G.xmin()
             xmax = G.xmax()

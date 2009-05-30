@@ -10,7 +10,7 @@ from sage.rings.rational cimport Rational
 cdef class pAdicGenericElement(LocalGenericElement):
     cdef int _cmp_c_impl(left, Element right) except -2
     cdef long valuation_c(self)
-    cdef val_unit_c(self)
+    cpdef val_unit(self)
 
     cdef int _set_from_Integer(self, Integer x, absprec, relprec) except -1
     cdef int _set_from_mpz(self, mpz_t x) except -1
@@ -38,3 +38,5 @@ cdef class pAdicGenericElement(LocalGenericElement):
     cdef bint _set_prec_abs(self, long absprec) except -1
     cdef bint _set_prec_rel(self, long relprec) except -1
     cdef bint _set_prec_both(self, long absprec, long relprec) except -1
+
+    cpdef abs(self, prec=*)

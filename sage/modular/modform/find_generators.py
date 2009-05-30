@@ -12,13 +12,9 @@ AUTHORS:
 import random
 
 from sage.rings.all             import Integer, QQ, infinity
-from sage.misc.mrange           import cartesian_product_iterator
 from sage.misc.misc             import prod, verbose
 from sage.modular.congroup import Gamma0
 from constructor                import ModularForms
-from sage.matrix.constructor    import Matrix
-from sage.rings.polynomial.all  import PolynomialRing
-from string                     import lowercase
 from sage.structure.sage_object import SageObject
 
 def span_of_series(v, prec=None, basis=False):
@@ -29,21 +25,22 @@ def span_of_series(v, prec=None, basis=False):
     the list (as determined by a prec method).
 
     INPUT:
-        v    -- a list of power series 
-        prec -- optional; if given then the series do not have to be
-                of finite precision, and will be considered to have
-                precision prec.
-        basis -- (default: False) if True the input is assumed to
-                determine linearly independent vectors, and
-                the resulting free module has that as basis.
-        
 
+    - v -- a list of power series 
+    - prec -- optional; if given then the series do not have to be of finite
+      precision, and will be considered to have precision prec.
+    - basis -- (default: False) if True the input is assumed to determine
+      linearly independent vectors, and the resulting free module has that as
+      basis.
+        
     OUTPUT:
-          A free module of rank prec over the base ring of the forms
-          (actually, of the first form in the list).  If the list is
-          empty, the free module is over QQ.
+
+    A free module of rank prec over the base ring of the forms
+    (actually, of the first form in the list).  If the list is
+    empty, the free module is over QQ.
 
     EXAMPLES:
+
     An example involving modular forms::
 
         sage: from sage.modular.modform.find_generators import span_of_series
@@ -58,7 +55,7 @@ def span_of_series(v, prec=None, basis=False):
         [ 1  0 12 12 12]
         [ 0  1 -2 -1  2]
 
-    Next we make sure the vector give a basis::
+    Next we make sure the vectors give a basis::
 
         sage: span_of_series(v,basis=True)
         Vector space of degree 5 and dimension 2 over Rational Field
@@ -130,13 +127,15 @@ def multiply_forms_to_weight(forms, weight, stop_dim=None):
     together the given forms. 
 
     INPUT:
-        forms -- list of pairs (k, f) with k an integer and f a power series
-        weight -- an integer
-        stop_dim -- integer (optional): if set to an integer and we find that
-                    the series so far span a space of at least this dimension,
-                    then stop multiplying more forms together.
 
-    EXAMPLES:
+    - forms -- list of pairs (k, f) with k an integer and f a power series
+    - weight -- an integer
+    - stop_dim -- integer (optional): if set to an integer and we find that the
+      series so far span a space of at least this dimension, then stop
+      multiplying more forms together.
+
+    EXAMPLES::
+
         sage: import sage.modular.modform.find_generators as f
         sage: forms = [(4, 240*eisenstein_series_qexp(4,5)), (6,504*eisenstein_series_qexp(6,5))]
         sage: f.multiply_forms_to_weight(forms, 12)
@@ -197,10 +196,10 @@ def basis_for_modform_space(gens, group, weight):
 
 def modform_generators(group, maxweight=20, prec=None, start_gens=[], start_weight=2):
     r"""
-    Find modular forms in `M_k(group)` for `k\leq ` maxweight (with all `k`
-    having the same parity, such that these forms generate -- as an algebra --
-    all forms on group of weight up to maxweight, where all forms are computed
-    as `q`-expansions to precision prec.
+    Find modular forms in `M_k(group)` for `k \leq maxweight`, such that these
+    forms generate -- as an algebra -- all forms on group of weight up to
+    maxweight, where all forms are computed as `q`-expansions to precision
+    prec.
 
     INPUT:
 
@@ -214,8 +213,9 @@ def modform_generators(group, maxweight=20, prec=None, start_gens=[], start_weig
     - ``start_weight`` -- an integer (default: 2)
 
     OUTPUT:
-        a list of pairs (k, f), where f is the q-expansion
-        of a modular form of weight k.
+
+    a list of pairs (k, f), where f is the q-expansion of a modular form of
+    weight k.
 
     EXAMPLES::
 
@@ -312,7 +312,6 @@ class ModularFormsRing(SageObject):
 
     EXAMPLES::
 
-        sage: from sage.modular.modform.find_generators import ModularFormsRing
         sage: ModularFormsRing(Gamma1(13))
         Ring of modular forms for Congruence Subgroup Gamma1(13) of weights 0 and at least 2
         sage: m = ModularFormsRing(4); m
@@ -360,7 +359,6 @@ class ModularFormsRing(SageObject):
 
         EXAMPLE::
             
-            sage: from sage.modular.modform.find_generators import ModularFormsRing
             sage: ModularFormsRing(3) == 3
             False
             sage: ModularFormsRing(Gamma0(3)) == ModularFormsRing(Gamma0(7))

@@ -677,6 +677,24 @@ class SupersingularModule(hecke.HeckeModule_free_module):
         return "Module of supersingular points on X_0(%s)/F_%s over %s"%(
             self.__level, self.__prime, self.base_ring())
 
+    def __cmp__(self, other):
+        r"""
+        Compare self to other.
+
+        EXAMPLES::
+
+            sage: SupersingularModule(37) == ModularForms(37, 2)
+            False
+            sage: SupersingularModule(37) == SupersingularModule(37, base_ring=Qp(7))
+            False
+            sage: SupersingularModule(37) == SupersingularModule(37)
+            True
+        """
+        if not isinstance(other, SupersingularModule):
+            return cmp(type(self), type(other))
+        else:
+            return cmp( (self.__level, self.__prime, self.base_ring()), (other.__level, other.__prime, other.base_ring()))
+
     def dimension(self):
         r"""
         Return the dimension of the space of modular forms of weight 2

@@ -390,27 +390,6 @@ def image(x):
     """
     return x.image()
 
-def imag(x):
-    """
-    Return the imaginary part of x.
-    """
-    try: return x.imag()
-    except AttributeError: return CDF(x).imag()
-
-def imaginary(x):
-    """
-    Return the imaginary part of a complex number.
-    
-    EXAMPLES::
-    
-        sage: z = 1+2*I
-        sage: imaginary(z)
-        2
-        sage: imag(z)
-        2
-    """
-    return imag(x)
-
 def integral(x, *args, **kwds):
     """
     Return an indefinite integral of an object x.
@@ -427,7 +406,7 @@ def integral(x, *args, **kwds):
         -cos(x)
         sage: y = var('y')
         sage: integral(sin(x),y)
-        sin(x)*y
+        y*sin(x)
         sage: integral(sin(x), x, 0, pi/2)
         1
         sage: sin(x).integral(x, 0,pi/2)
@@ -436,9 +415,11 @@ def integral(x, *args, **kwds):
     if hasattr(x, 'integral'):
         return x.integral(*args, **kwds)
     else:
-        from sage.calculus.calculus import SR
+        from sage.symbolic.ring import SR
         return SR(x).integral(*args, **kwds)
-        
+
+integrate = integral
+
 def integral_closure(x):
     return x.integral_closure()
 
@@ -757,6 +738,18 @@ def numerical_approx(x, prec=None, digits=None):
     
         sage: (pi^2 + e).n()
         12.5878862295484
+
+    TESTS::
+        
+        sage: numerical_approx(I)
+        1.00000000000000*I
+        sage: x = QQ['x'].gen()
+        sage: F.<k> = NumberField(x^2+2, embedding=sqrt(CC(2))*CC.0)
+        sage: numerical_approx(k)
+        1.41421356237309*I
+
+        sage: type(numerical_approx(CC(1/2)))
+        <type 'sage.rings.complex_number.ComplexNumber'>
     """
     if prec is None:
         if digits is None:
@@ -768,10 +761,12 @@ def numerical_approx(x, prec=None, digits=None):
     except AttributeError:
         from sage.rings.complex_double import is_ComplexDoubleElement
         from sage.rings.complex_number import is_ComplexNumber
-        if is_ComplexNumber(x) or is_ComplexDoubleElement(x):
-            return sage.rings.complex_field.ComplexField(prec)(x)
-        else:
-            return sage.rings.real_mpfr.RealField_constructor(prec)(x)
+        if not (is_ComplexNumber(x) or is_ComplexDoubleElement(x)):
+            try:
+                return sage.rings.real_mpfr.RealField_constructor(prec)(x)
+            except TypeError:
+                pass
+        return sage.rings.complex_field.ComplexField(prec)(x)
 
 n = numerical_approx
 N = numerical_approx
@@ -849,42 +844,6 @@ def rank(x):
     """
     return x.rank()
 
-def real(x):
-    """
-    Return the real part of x.
-    
-    EXAMPLES::
-    
-        sage: z = 1+2*I
-        sage: real(z)
-        1
-        sage: real(5/3)
-        5/3
-        sage: a = 2.5
-        sage: real(a)
-        2.50000000000000
-        sage: type(real(a))
-        <type 'sage.rings.real_mpfr.RealLiteral'>
-    """
-
-    #Try to all the .real() method
-    try:
-        return x.real()
-    except AttributeError:
-        pass
-
-    #Try to coerce x into RDF.  If that
-    #succeeds, then we can just return x
-    try:
-        rdf_x = RDF(x)
-        return x
-    except TypeError:
-        pass
-
-    #Finall try to coerce x into CDF and call
-    #the .real() method.
-    return CDF(x).real()
-
 def regulator(x):
     """
     Return the regulator of x.
@@ -913,10 +872,8 @@ def round(x, ndigits=0):
     Since we use floating-point with a limited range, some roundings can't
     be performed::
     
-        sage: round(sqrt(Integer('1'*500)))
-        Traceback (most recent call last):
-        ...
-        OverflowError: cannot convert float infinity to long
+        sage: round(sqrt(Integer('1'*1000)))
+        +infinity
     
     IMPLEMENTATION: If ndigits is specified, it calls Python's builtin
     round function, and converts the result to a real double field
@@ -1046,8 +1003,8 @@ def isqrt(x):
     try:
         return x.isqrt()
     except AttributeError:
-        import sage.calculus.calculus
-        n = sage.rings.integer.Integer(sage.calculus.calculus.floor(x))
+        from sage.functions.all import floor
+        n = sage.rings.integer.Integer(floor(x))
         return n.isqrt()
 
 def squarefree_part(x):

@@ -1,36 +1,9 @@
-from equations import (is_SymbolicEquation,
-                       forget, assume, assumptions,
-                       solve, solve_mod)
-
-from calculus import (SymbolicExpressionRing,
-                      is_SymbolicExpressionRing,
-                      is_SymbolicExpression,
-                      is_SymbolicVariable,
-                      CallableSymbolicExpressionRing,
-                      is_CallableSymbolicExpressionRing,
-                      is_CallableSymbolicExpression,
-                      SR,
-                      sin, cos, sec, csc, cot, tan, log, erf, sqrt,
-                      tanh, sinh, cosh, coth, sech, csch, ln,
-                      asin, acos, atan,
-                      asinh, acosh, atanh, acoth, asech, acsch, 
-                      acot, acsc, asec,
-                      arcsin, arccos, arctan, 
-                      arcsinh, arccosh, arctanh, arccoth, arcsech, arccsch,
-                      arccot, arccsc, arcsec,
-                      ceil, floor, gamma, factorial,
-                      polylog, dilog,
-                      abs_symbolic, exp,
-                      is_SymbolicExpression,
-                      is_SymbolicExpressionRing)
-
 from calculus import maxima as maxima_calculus
-
+from calculus import (laplace, inverse_laplace,
+                      limit, lim, clear_functions)
 
 from functional import (diff, derivative,
-                        laplace, inverse_laplace,
                         expand,
-                        integrate, limit, lim,
                         taylor, simplify)
 
 from functions import (wronskian,jacobian)
@@ -46,32 +19,49 @@ def symbolic_expression(x):
     Create a symbolic expression from x.
 
     INPUT:
-        x -- an object
-    OUTPUT:
-        a symbolic expression.
 
-    EXAMPLES:
+    - ``x`` - an object
+
+    OUTPUT:
+
+    - a symbolic expression.
+
+    EXAMPLES::
+    
         sage: a = symbolic_expression(3/2); a
         3/2
         sage: type(a)
-        <class 'sage.calculus.calculus.SymbolicConstant'>
+        <type 'sage.symbolic.expression.Expression'>
         sage: R.<x> = QQ[]; type(x)
         <class 'sage.rings.polynomial.polynomial_element_generic.Polynomial_rational_dense'>
         sage: a = symbolic_expression(2*x^2 + 3); a
         2*x^2 + 3
         sage: type(a)
-        <class 'sage.calculus.calculus.SymbolicPolynomial'>
-        sage: from sage.calculus.calculus import is_SymbolicExpression
-        sage: is_SymbolicExpression(a)
+        <type 'sage.symbolic.expression.Expression'>
+        sage: from sage.symbolic.expression import is_Expression
+        sage: is_Expression(a)
         True
         sage: a in SR
         True
         sage: a.parent()
         Symbolic Ring
+
+    Note that equations exist in the symbolic ring::
+
+        sage: E = EllipticCurve('15a'); E
+        Elliptic Curve defined by y^2 + x*y + y = x^3 + x^2 - 10*x - 10 over Rational Field
+        sage: symbolic_expression(E)
+        x*y + y^2 + y == x^3 + x^2 - 10*x - 10
+        sage: symbolic_expression(E) in SR
+        True 
     """
     from sage.symbolic.expression import Expression
+    from sage.symbolic.ring import SR
     if isinstance(x, Expression):
         return x
-    return SR(x)
+    elif hasattr(x, '_symbolic_'):
+        return x._symbolic_(SR)
+    else:
+        return SR(x)
 
 import desolvers

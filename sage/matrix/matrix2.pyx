@@ -1603,7 +1603,7 @@ cdef class Matrix(matrix1.Matrix):
         r"""
         Return the (left) kernel of this matrix, as a vector space. This is
         the space of vectors x such that x\*self=0. Use
-        self.right_kernel() for the right kernel.
+        self.right_kernel() for the right kernel, while
         self.left_kernel() is equivalent to self.kernel().
         
         INPUT: all additional arguments to the kernel function are passed
@@ -1611,25 +1611,13 @@ cdef class Matrix(matrix1.Matrix):
         
         By convention if self has 0 rows, the kernel is of dimension 0,
         whereas the kernel is whole domain if self has 0 columns.
-
-        ALGORITHM:
-        
-        Elementary row operations don't change the kernel, since they
-        are just right multiplication by an invertible matrix, so we
-        instead compute kernel of the column echelon form.  More
-        precisely, there is a basis vector of the kernel that
-        corresponds to each non-pivot row.  That vector has a 1 at the
-        non-pivot row, 0's at all other non-pivot rows, and for each
-        pivot row, the negative of the entry at the non-pivot row in
-        the column with that pivot element.
         
         .. note::
 
-           Since we view matrices as acting on the right, but have
-           functions for reduced *row* echelon forms, we instead
-           compute the reduced row echelon form of the transpose of
-           this matrix, which is the reduced column echelon form.
-        
+           For information on algorithms used, see the documentation of :meth:`right_kernel`
+           in this class, or versions of right and left kernels in derived classes which 
+           override the ones here.
+
         EXAMPLES:
         
         A kernel of dimension one over `\QQ`::
@@ -1728,76 +1716,41 @@ cdef class Matrix(matrix1.Matrix):
             Basis matrix:
             0 x 500 dense matrix over Rational Field
         """
-        K = self.fetch('left_kernel')
-        if not K is None:
-            return K
-        R = self._base_ring
+        return self.left_kernel(*args, **kwds)
 
-        if self._nrows == 0:    # from a degree-0 space
-            V = sage.modules.free_module.VectorSpace(R, self._nrows)
-            Z = V.zero_subspace()
-            self.cache('left_kernel', Z)
-            return Z
-
-        elif self._ncols == 0:  # to a degree-0 space
-            Z = sage.modules.free_module.VectorSpace(R, self._nrows)
-            self.cache('left_kernel', Z)
-            return Z
-
-        if is_IntegerRing(R):
-            Z = self.kernel(*args, **kwds)
-            self.cache('left_kernel', Z)
-            return Z
-
-        if is_NumberField(R):
-            A = self._pari_().mattranspose()
-            B = A.matker()
-            n = self._nrows
-            V = sage.modules.free_module.VectorSpace(R, n)
-            basis = [V([R(x) for x in b]) for b in B]
-            Z = V.subspace(basis)
-            self.cache('left_kernel', Z)
-            return Z
-
-        E = self.transpose().echelon_form(*args, **kwds)
-        pivots = E.pivots()
-        pivots_set = set(pivots)
-        basis = []
-        V = R ** self.nrows()
-        ONE = R(1)
-        for i in xrange(self._nrows):
-            if not (i in pivots_set):
-                v = V(0)
-                v[i] = ONE
-                for r in range(len(pivots)):
-                    v[pivots[r]] = -E[r,i]
-                basis.append(v)
-        W = V.submodule(basis)
-        if W.dimension() != len(basis):
-            raise RuntimeError, "bug in kernel function in matrix2.pyx -- basis got from echelon form not a basis."
-        self.cache('left_kernel', W)
-        return W
 
     def right_kernel(self, *args, **kwds):
         r"""
         Return the right kernel of this matrix, as a vector space. This is
-        the space of vectors x such that self\*x=0.
-        
+        the space of vectors x such that self\*x=0.  A left kernel can be found 
+        with self.left_kernel() or just self.kernel().
+            
         INPUT: all additional arguments to the kernel function are passed
         directly onto the echelon call.
         
         By convention if self has 0 columns, the kernel is of dimension 0,
         whereas the kernel is whole domain if self has 0 rows.
         
+        ALGORITHM:
+        
+        Elementary row operations do not change the right kernel, since they
+        are left multiplication by an invertible matrix, so we
+        instead compute the kernel of the row echelon form.  More
+        precisely, there is a basis vector of the kernel that
+        corresponds to each non-pivot column.  That vector has a 1 at the
+        non-pivot column, 0's at all other non-pivot columnss, and for each
+        pivot column, the negative of the entry at the non-pivot column in
+        the row with that pivot element.
+        
         .. note::
 
-           For information on algorithms used, see the documentation of :meth:`kernel`
-           in this class, or versions of kernel() in derived classes which override the
-           one here.
-
+           Preference is given to left kernels in that the generic method 
+           name :meth:`kernel` returns a left kernel.  However most computations
+           of kernels are implemented as right kernels.
+        
         EXAMPLES:
         
-        A right kernel of dimension one over `\QQ`::
+        A right kernel of dimension one over `\mathbb{Q}`::
         
             sage: A = MatrixSpace(QQ, 3)(range(9))
             sage: A.right_kernel()
@@ -1876,15 +1829,57 @@ cdef class Matrix(matrix1.Matrix):
         if not K is None:
             return K
 
-        K = self.transpose().kernel(*args, **kwds)
-        self.cache('right_kernel', K)
-        return K
+        R = self._base_ring
 
+        if self._ncols == 0:    # from a degree-0 space
+            V = sage.modules.free_module.VectorSpace(R, self._ncols)
+            Z = V.zero_subspace()
+            self.cache('right_kernel', Z)
+            return Z
+        elif self._nrows == 0:  # to a degree-0 space
+            Z = sage.modules.free_module.VectorSpace(R, self._ncols)
+            self.cache('right_kernel', Z)
+            return Z
+
+        if is_IntegerRing(R):
+            Z = self.right_kernel(*args, **kwds)
+            self.cache('right_kernel', Z)
+            return Z
+
+        if is_NumberField(R):
+            A = self._pari_()
+            B = A.matker()
+            n = self._ncols
+            V = sage.modules.free_module.VectorSpace(R, n)
+            basis = [V([R(x) for x in b]) for b in B]
+            Z = V.subspace(basis)
+            self.cache('right_kernel', Z)
+            return Z
+
+        E = self.echelon_form(*args, **kwds)
+        pivots = E.pivots()
+        pivots_set = set(pivots)
+        basis = []
+        V = R ** self.ncols()
+        ONE = R(1)
+        for i in xrange(self._ncols):
+            if not (i in pivots_set):
+                v = V(0)
+                v[i] = ONE
+                for r in range(len(pivots)):
+                    v[pivots[r]] = -E[r,i]
+                basis.append(v)
+        W = V.submodule(basis)
+        if W.dimension() != len(basis):
+            raise RuntimeError, "bug in right_kernel function in matrix2.pyx -- basis from echelon form is not a basis."
+        self.cache('right_kernel', W)
+        return W
         
     def left_kernel(self, *args, **kwds):
         r"""
         Return the left kernel of this matrix, as a vector space.
-        This is the space of vectors x such that x*self=0.
+        This is the space of vectors x such that x*self=0.  This is
+        identical to self.kernel().  For a right kernel, use self.right_kernel().
 
         INPUT:
         
@@ -1896,9 +1891,9 @@ cdef class Matrix(matrix1.Matrix):
 
         .. note::
         
-           For information on algorithms used, see the documentation of kernel()
-           in this class, or versions of kernel() in derived classes which override the
-           one here.}
+           For information on algorithms used, see the documentation of right_kernel()
+           in this class, or versions of right and left kernels in derived classes which 
+           override the ones here.
 
         EXAMPLES:
 
@@ -1983,7 +1978,7 @@ cdef class Matrix(matrix1.Matrix):
         if not K is None:
             return K
 
-        K = self.kernel(*args, **kwds)
+        K = self.transpose().right_kernel(*args, **kwds)
         self.cache('left_kernel', K)
         return K
 
@@ -4848,6 +4843,187 @@ cdef class Matrix(matrix1.Matrix):
         import sage.matrix.symplectic_basis
         return sage.matrix.symplectic_basis.symplectic_basis_over_field(self)
 
+    def cholesky_decomposition(self):
+        r"""
+        Return the Cholesky decomposition of ``self``.
+
+        INPUT:
+
+        The input matrix must be:
+
+        - real, symmetric, and positive definite; or
+
+        - imaginary, Hermitian, and positive definite.
+
+        If not, a ``ValueError`` exception will be raised.
+
+        OUTPUT:
+
+        A lower triangular matrix `L` such that `L L^t` equals ``self``.
+
+        ALGORITHM:
+
+        Calls the method ``_cholesky_decomposition_``, which by
+        default uses a standard recursion.
+
+        .. warning:: 
+
+            This implementation uses a standard recursion that is not known to
+            be numerically stable.
+
+        .. warning:: 
+
+            It is potentially expensive to ensure that the input is
+            positive definite.  Therefore this is not checked and it
+            is possible that the output matrix is *not* a valid
+            Cholesky decomposition of ``self``.  An example of this is
+            given in the tests below.
+
+        EXAMPLES:
+
+        Here is an example over the real double field; internally, this uses scipy::
+
+            sage: r = matrix(RDF, 5, 5, [ 0,0,0,0,1, 1,1,1,1,1, 16,8,4,2,1, 81,27,9,3,1, 256,64,16,4,1 ])
+            sage: m = r * r.transpose(); m
+            [    1.0     1.0     1.0     1.0     1.0]
+            [    1.0     5.0    31.0   121.0   341.0]
+            [    1.0    31.0   341.0  1555.0  4681.0]
+            [    1.0   121.0  1555.0  7381.0 22621.0]
+            [    1.0   341.0  4681.0 22621.0 69905.0]
+            sage: L = m.cholesky_decomposition(); L
+            [          1.0           0.0           0.0           0.0           0.0]
+            [          1.0           2.0           0.0           0.0           0.0]
+            [          1.0          15.0 10.7238052948           0.0           0.0]
+            [          1.0          60.0 60.9858144589 7.79297342371           0.0]
+            [          1.0         170.0 198.623524155 39.3665667796 1.72309958068]
+            sage: L.parent()
+            Full MatrixSpace of 5 by 5 dense matrices over Real Double Field
+            sage: L*L.transpose()
+            [ 1.0     1.0     1.0     1.0     1.0]
+            [ 1.0     5.0    31.0   121.0   341.0]
+            [ 1.0    31.0   341.0  1555.0  4681.0]
+            [ 1.0   121.0  1555.0  7381.0 22621.0]
+            [ 1.0   341.0  4681.0 22621.0 69905.0]
+            sage: ( L*L.transpose() - m ).norm(1) < 2^-30
+            True
+
+        Here is an example over a higher precision real field::
+
+            sage: r = matrix(RealField(100), 5, 5, [ 0,0,0,0,1, 1,1,1,1,1, 16,8,4,2,1, 81,27,9,3,1, 256,64,16,4,1 ])
+            sage: m = r * r.transpose()
+            sage: L = m.cholesky_decomposition()
+            sage: L.parent()
+            Full MatrixSpace of 5 by 5 dense matrices over Real Field with 100 bits of precision
+            sage: ( L*L.transpose() - m ).norm(1) < 2^-50
+            True
+
+        Here is a Hermitian example::
+
+            sage: r = matrix(CDF, 2, 2, [ 1, -2*I, 2*I, 6 ]); r
+            [   1.0 -2.0*I]
+            [ 2.0*I    6.0]
+            sage: r.eigenvalues()
+            [0.298437881284, 6.70156211872]
+            sage: ( r - r.conjugate().transpose() ).norm(1) < 1e-30
+            True
+            sage: L = r.cholesky_decomposition(); L
+            [          1.0             0]
+            [        2.0*I 1.41421356237]
+            sage: ( r - L*L.conjugate().transpose() ).norm(1) < 1e-30
+            True
+            sage: L.parent()
+            Full MatrixSpace of 2 by 2 dense matrices over Complex Double Field
+
+        TESTS:
+
+        The following examples are not positive definite::
+
+            sage: m = -identity_matrix(3).change_ring(RDF)
+            sage: m.cholesky_decomposition()
+            Traceback (most recent call last):
+            ...
+            ValueError: The input matrix was not symmetric and positive definite
+
+            sage: m = -identity_matrix(2).change_ring(RealField(100))
+            sage: m.cholesky_decomposition()
+            Traceback (most recent call last):
+            ...
+            ValueError: The input matrix was not symmetric and positive definite
+
+        Here is a large example over a higher precision complex field::
+
+            sage: r = MatrixSpace(ComplexField(100), 6, 6).random_element()
+            sage: m = r * r.conjugate().transpose()
+            sage: m.change_ring(CDF) # for display purposes
+            [                      2.5891918451    1.58308081508 - 0.93917354232*I    0.4508660242 - 0.898986215453*I  -0.125366701515 - 1.32575360944*I  -0.161174433016 - 1.92791089094*I -0.852634739628 + 0.592301526741*I]
+            [   1.58308081508 + 0.93917354232*I                      3.39096359127  -0.823614467666 - 0.70698381556*I   0.964188058124 - 1.80624774667*I   0.884237835922 - 1.12339941545*I   -1.14625014365 + 0.64233624728*I]
+            [   0.4508660242 + 0.898986215453*I  -0.823614467666 + 0.70698381556*I                      4.94253304499  -1.61505575668 - 0.539043412246*I    1.16580777654 - 2.24511228411*I    1.22264068801 + 1.21537124374*I]
+            [ -0.125366701515 + 1.32575360944*I   0.964188058124 + 1.80624774667*I  -1.61505575668 + 0.539043412246*I                      3.73381314119   0.30433428398 + 0.852908810051*I  -3.03684690541 - 0.437547321546*I]
+            [ -0.161174433016 + 1.92791089094*I   0.884237835922 + 1.12339941545*I    1.16580777654 + 2.24511228411*I   0.30433428398 - 0.852908810051*I                      4.24526168246 -1.03348617777 - 0.0868365809834*I]
+            [-0.852634739628 - 0.592301526741*I   -1.14625014365 - 0.64233624728*I    1.22264068801 - 1.21537124374*I  -3.03684690541 + 0.437547321546*I -1.03348617777 + 0.0868365809834*I                      3.95129528414]
+            sage: eigs = m.change_ring(CDF).eigenvalues() # again for display purposes
+            sage: all(imag(e) < 1e-15 for e in eigs)
+            True
+            sage: [real(e) for e in eigs]
+            [10.463115298, 7.42365754809, 3.36964641458, 1.25904669699, 0.00689184179485, 0.330700789655]
+
+            sage: ( m - m.conjugate().transpose() ).norm(1) < 1e-50
+            True
+            sage: L = m.cholesky_decomposition(); L.change_ring(CDF)
+            [                      1.60909659284                                   0                                   0                                   0                                   0                                   0]
+            [   0.98383205963 + 0.583665111527*I                       1.44304300258                                   0                                   0                                   0                                   0]
+            [  0.280198234342 + 0.558690024857*I  -0.987753204014 + 0.222355529831*I                       1.87797472744                                   0                                   0                                   0]
+            [-0.0779112342122 + 0.823911762252*I   0.388034921026 + 0.658457765816*I  -0.967353506777 + 0.533197825056*I                       1.11566210466                                   0                                   0]
+            [  -0.100164548065 + 1.19813247975*I  0.196442380181 - 0.0788779556296*I   0.391945946049 + 0.968705709652*I  -0.763918835279 + 0.415837754312*I                      0.952045463612                                   0]
+            [ -0.529884124682 - 0.368095693804*I  -0.284183173327 - 0.408488713349*I      0.738503847 - 0.998388403822*I   -1.02976885437 - 0.563208016935*I  -0.521713761022 - 0.245786008887*I                      0.187109707194]
+            sage: ( m - L*L.conjugate().transpose() ).norm(1) < 1e-20
+            True
+            sage: L.parent()
+            Full MatrixSpace of 6 by 6 dense matrices over Complex Field with 100 bits of precision
+
+        Here is an example that returns an incorrect answer, because the input is *not* positive definite::
+
+            sage: r = matrix(CDF, 2, 2, [ 1, -2*I, 2*I, 0 ]); r
+            [   1.0 -2.0*I]
+            [ 2.0*I      0]
+            sage: r.eigenvalues()
+            [2.56155281281, -1.56155281281]
+            sage: ( r - r.conjugate().transpose() ).norm(1) < 1e-30
+            True
+            sage: L = r.cholesky_decomposition(); L
+            [  1.0     0]
+            [2.0*I 2.0*I]
+            sage: L*L.conjugate().transpose()
+            [   1.0 -2.0*I]
+            [ 2.0*I    8.0]
+        """
+        assert self._nrows == self._ncols, "Can only Cholesky decompose square matrices"
+        if self._nrows == 0:
+            return self.copy()
+        return self._cholesky_decomposition_()
+
+    def _cholesky_decomposition_(self):
+        r"""
+        Return the Cholesky decomposition of ``self``; see ``cholesky_decomposition``.
+
+        This generic implementation uses a standard recursion.
+        """
+        A = self.copy()
+        L = A.parent()(0)
+        n = self.nrows()
+        for k in range(0, n-1 + 1):
+            try:
+                L[k, k] = A[k, k].sqrt()
+            except TypeError:
+                raise ValueError, "The input matrix was not symmetric and positive definite"
+
+            for s in range(k+1, n):
+                L[s, k] = A[s, k] / L[k, k]
+            for j in range(k+1, n):
+                for i in range(j, n):
+                    A[i, j] -= L[i, k]*L[j, k].conjugate()
+        return L
+
     def hadamard_bound(self):
         r"""
         Return an int n such that the absolute value of the determinant of
@@ -5130,9 +5306,9 @@ cdef class Matrix(matrix1.Matrix):
         
             sage: d = matrix([[3, 0],[0,sqrt(2)]]) ;
             sage: b = matrix([[1, -1], [2, 2]]) ; e = b * d * b.inverse();e
-            [    1/sqrt(2) + 3/2 3/4 - 1/(2*sqrt(2))]
-            [        3 - sqrt(2)     1/sqrt(2) + 3/2]
-        
+            [ 1/2*sqrt(2) + 3/2 -1/4*sqrt(2) + 3/4]
+            [      -sqrt(2) + 3  1/2*sqrt(2) + 3/2]
+
         ::
         
             sage: e.numerical_approx(53)
@@ -5235,12 +5411,12 @@ cdef class Matrix(matrix1.Matrix):
             sage: v = vector([1,x,x^2])
             sage: v.derivative(x)
             (0, 1, 2*x)
-            sage: type(v.derivative()) == type(v)
+            sage: type(v.derivative(x)) == type(v)
             True
             sage: v = vector([1,x,x^2], sparse=True)
             sage: v.derivative(x)
             (0, 1, 2*x)
-            sage: type(v.derivative()) == type(v)
+            sage: type(v.derivative(x)) == type(v)
             True
             sage: v.derivative(x,x)
             (0, 0, 2)
@@ -5268,25 +5444,25 @@ cdef class Matrix(matrix1.Matrix):
         
             sage: a=matrix([[1,2],[3,4]])
             sage: a.exp()
-            [-e^(5/2 - sqrt(33)/2)*((sqrt(33) - 11)*e^sqrt(33) - sqrt(33) - 11)/22          e^(5/2 - sqrt(33)/2)*(2*sqrt(33)*e^sqrt(33) - 2*sqrt(33))/33]
-            [             e^(5/2 - sqrt(33)/2)*(sqrt(33)*e^sqrt(33) - sqrt(33))/11  e^(5/2 - sqrt(33)/2)*((sqrt(33) + 11)*e^sqrt(33) - sqrt(33) + 11)/22]
+            [-1/22*((sqrt(33) - 11)*e^sqrt(33) - sqrt(33) - 11)*e^(-1/2*sqrt(33) + 5/2)              2/33*(sqrt(33)*e^sqrt(33) - sqrt(33))*e^(-1/2*sqrt(33) + 5/2)]
+            [             1/11*(sqrt(33)*e^sqrt(33) - sqrt(33))*e^(-1/2*sqrt(33) + 5/2)  1/22*((sqrt(33) + 11)*e^sqrt(33) - sqrt(33) + 11)*e^(-1/2*sqrt(33) + 5/2)]
             sage: type(a.exp())
             <type 'sage.matrix.matrix_symbolic_dense.Matrix_symbolic_dense'>
 
             sage: a=matrix([[1/2,2/3],[3/4,4/5]])
             sage: a.exp()
-            [-e^(13/20 - sqrt(209)/20)*((3*sqrt(209) - 209)*e^(sqrt(209)/10) - 3*sqrt(209) - 209)/418              e^(13/20 - sqrt(209)/20)*(20*sqrt(209)*e^(sqrt(209)/10) - 20*sqrt(209))/627]
-            [             e^(13/20 - sqrt(209)/20)*(15*sqrt(209)*e^(sqrt(209)/10) - 15*sqrt(209))/418  e^(13/20 - sqrt(209)/20)*((3*sqrt(209) + 209)*e^(sqrt(209)/10) - 3*sqrt(209) + 209)/418]
+            [-1/418*((3*sqrt(209) - 209)*e^(1/10*sqrt(209)) - 3*sqrt(209) - 209)*e^(-1/20*sqrt(209) + 13/20)                   20/627*(sqrt(209)*e^(1/10*sqrt(209)) - sqrt(209))*e^(-1/20*sqrt(209) + 13/20)]
+            [                  15/418*(sqrt(209)*e^(1/10*sqrt(209)) - sqrt(209))*e^(-1/20*sqrt(209) + 13/20)  1/418*((3*sqrt(209) + 209)*e^(1/10*sqrt(209)) - 3*sqrt(209) + 209)*e^(-1/20*sqrt(209) + 13/20)]
 
             sage: a=matrix(RR,[[1,pi.n()],[1e2,1e-2]])
             sage: a.exp()
-            [ e^(101/200 - sqrt(382784569869489)/1103400)*((297*sqrt(382784569869489) + 208148216351)*e^(sqrt(382784569869489)/551700) - 297*sqrt(382784569869489) + 208148216351)/416296432702                      e^(101/200 - sqrt(382784569869489)/1103400)*(5199650*sqrt(382784569869489)*e^(sqrt(382784569869489)/551700) - 5199650*sqrt(382784569869489))/1148353709608467]
-            [                             e^(101/200 - sqrt(382784569869489)/1103400)*(30000*sqrt(382784569869489)*e^(sqrt(382784569869489)/551700) - 30000*sqrt(382784569869489))/208148216351 -e^(101/200 - sqrt(382784569869489)/1103400)*((297*sqrt(382784569869489) - 208148216351)*e^(sqrt(382784569869489)/551700) - 297*sqrt(382784569869489) - 208148216351)/416296432702]
+            [ 1/416296432702*((297*sqrt(382784569869489) + 208148216351)*e^(1/551700*sqrt(382784569869489)) - 297*sqrt(382784569869489) + 208148216351)*e^(-1/1103400*sqrt(382784569869489) + 101/200)                                5199650/1148353709608467*(sqrt(382784569869489)*e^(1/551700*sqrt(382784569869489)) - sqrt(382784569869489))*e^(-1/1103400*sqrt(382784569869489) + 101/200)]
+            [                                     30000/208148216351*(sqrt(382784569869489)*e^(1/551700*sqrt(382784569869489)) - sqrt(382784569869489))*e^(-1/1103400*sqrt(382784569869489) + 101/200) -1/416296432702*((297*sqrt(382784569869489) - 208148216351)*e^(1/551700*sqrt(382784569869489)) - 297*sqrt(382784569869489) - 208148216351)*e^(-1/1103400*sqrt(382784569869489) + 101/200)]
             sage: a.change_ring(RDF).exp()
             [42748127.3153 7368259.24416]
             [234538976.138 40426191.4516]
         """
-        from sage.calculus.calculus import SR
+        from sage.symbolic.ring import SR
         return self.change_ring(SR).exp()
 
     def elementary_divisors(self):

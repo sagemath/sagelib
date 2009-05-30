@@ -885,8 +885,10 @@ class InfinityRing_class(_uniq, Ring):
                 return FiniteNumber(self, -1)
             elif x > 0:
                 return FiniteNumber(self, 1)
-            else:
+            elif x == 0:
                 return FiniteNumber(self, 0)
+            else:
+                raise TypeError
         else:
             raise TypeError
         

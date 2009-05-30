@@ -1,5 +1,5 @@
 """
-Submodule of a Hecke module.
+Submodules of Hecke modules
 """
 
 #*****************************************************************************
@@ -31,6 +31,16 @@ import ambient_module
 from sage.rings.polynomial.polynomial_ring import polygen
 
 def is_HeckeSubmodule(x):
+    r"""
+    Return True if x is of type HeckeSubmodule.
+
+    EXAMPLES::
+
+        sage: sage.modular.hecke.submodule.is_HeckeSubmodule(ModularForms(1, 12))
+        False
+        sage: sage.modular.hecke.submodule.is_HeckeSubmodule(CuspForms(1, 12))
+        True
+    """
     return isinstance(x, HeckeSubmodule)
 
 class HeckeSubmodule(module.HeckeModule_free_module):
@@ -38,6 +48,36 @@ class HeckeSubmodule(module.HeckeModule_free_module):
     Submodule of a Hecke module.
     """
     def __init__(self, ambient, submodule, dual_free_module=None, check=True):
+        r"""
+        Initialise a submodule of an ambient Hecke module.
+
+        INPUT:
+
+        - ``ambient`` - an ambient Hecke module
+
+        - ``submodule`` - a free module over the base ring which is a submodule
+          of the free module attached to the ambient Hecke module. This should
+          be invariant under all Hecke operators.
+
+        - ``dual_free_module`` - the submodule of the dual of the ambient
+          module corresponding to this submodule (or None).
+
+        - ``check`` - whether or not to explicitly check that the submodule is
+          Hecke equivariant.
+
+        EXAMPLES::
+
+            sage: CuspForms(1,60) # indirect doctest
+            Cuspidal subspace of dimension 5 of Modular Forms space of dimension 6 for Modular Group SL(2,Z) of weight 60 over Rational Field
+
+            sage: M = ModularForms(4,10)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.submodule(M.basis()[:3]).free_module())
+            sage: S
+            Rank 3 submodule of a Hecke module of level 4
+
+            sage: S == loads(dumps(S))
+            True
+        """
         if not isinstance(ambient, ambient_module.AmbientHeckeModule):
             raise TypeError, "ambient must be an ambient Hecke module"
         if not sage.modules.all.is_FreeModule(submodule):
@@ -62,10 +102,32 @@ class HeckeSubmodule(module.HeckeModule_free_module):
             
 
     def _repr_(self):
+        r"""
+        String representation of self.
+
+        EXAMPLES::
+
+            sage: M = ModularForms(4,10)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.submodule(M.basis()[:3]).free_module())
+            sage: S._repr_()
+            'Rank 3 submodule of a Hecke module of level 4'
+        """
         return "Rank %s submodule of a Hecke module of level %s"%(
                       self.rank(), self.level())
 
     def __add__(self, other):
+        r"""
+        Sum of self and other (as submodules of a common ambient
+        module).
+
+        EXAMPLES::
+
+            sage: M = ModularForms(4,10)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.submodule(M.basis()[:3]).free_module())
+            sage: E = sage.modular.hecke.submodule.HeckeSubmodule(M, M.submodule(M.basis()[3:]).free_module())
+            sage: S + E # indirect doctest
+            Modular Forms subspace of dimension 6 of Modular Forms space of dimension 6 for Congruence Subgroup Gamma0(4) of weight 10 over Rational Field
+        """
         if not isinstance(other, module.HeckeModule_free_module):
             raise TypeError, "other (=%s) must be a Hecke module."%other
         if self.ambient() != other.ambient():
@@ -101,51 +163,122 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         return z
 
     def __cmp__(self, other):
-        if not isinstance(other, module.HeckeModule_free_module) or self.ambient() != other.ambient():
-            return -1
-        return cmp(self.free_module(), other.free_module())
+        """
+        Compare self to other. Returns 0 if self is the same as
+        other, and -1 otherwise.
+
+        EXAMPLES::
+            sage: M = ModularSymbols(12,6)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: T = sage.modular.hecke.submodule.HeckeSubmodule(M, M.new_submodule().free_module())
+            sage: S
+            Rank 14 submodule of a Hecke module of level 12
+            sage: T
+            Rank 0 submodule of a Hecke module of level 12
+            sage: S.__cmp__(T)
+            1
+            sage: T.__cmp__(S)
+            -1
+            sage: S.__cmp__(S)
+            0
+        """
+        if not isinstance(other, module.HeckeModule_free_module):
+            return cmp(type(self), type(other))
+        c = cmp(self.ambient(), other.ambient())
+        if c: 
+            return c
+        else:
+            return cmp(self.free_module(), other.free_module())
 
     ################################
     # Semi-Private functions
     ################################
     def _compute_dual_hecke_matrix(self, n):
+        """
+        Compute the matrix for the nth Hecke operator acting on
+        the dual of self.
+
+        EXAMPLES::
+
+            sage: M = ModularForms(4,10)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.submodule(M.basis()[:3]).free_module())
+            sage: S._compute_dual_hecke_matrix(3)
+            [    0     0     1]
+            [    0  -156     0]
+            [35568     0    72]
+            sage: CuspForms(4,10).dual_hecke_matrix(3)
+            [    0     0     1]
+            [    0  -156     0]
+            [35568     0    72]
+        """
         A = self.ambient_hecke_module().dual_hecke_matrix(n)
         check =  arith.gcd(self.level(), n) != 1
         return A.restrict(self.dual_free_module(), check=check)
 
     def _compute_hecke_matrix(self, n):
+        r"""
+        Compute the matrix of the nth Hecke operator acting on this space, by
+        calling the corresponding function for the ambient space and
+        restricting. If n is not coprime to the level, we check that the
+        restriction is well-defined.
+
+        EXAMPLES::
+        
+            sage: R.<q> = QQ[[]]
+            sage: M = ModularForms(2, 12)
+            sage: f = M(q^2 - 24*q^4 + O(q^6))
+            sage: A = M.submodule(M.free_module().span([f.element()]),check=False)
+            sage: sage.modular.hecke.submodule.HeckeSubmodule._compute_hecke_matrix(A, 3)
+            [252]
+            sage: sage.modular.hecke.submodule.HeckeSubmodule._compute_hecke_matrix(A, 4)
+            Traceback (most recent call last):
+            ...
+            ArithmeticError: subspace is not invariant under matrix
+        """
         A = self.ambient_hecke_module().hecke_matrix(n)
         check = arith.gcd(self.level(), n) != 1
         return A.restrict(self.free_module(), check=check)
 
     def _compute_atkin_lehner_matrix(self, d):
+        """
+        Compute the Atkin-Lehner matrix corresponding to the
+        divisor d of the level of self.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(4,10)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S
+            Rank 6 submodule of a Hecke module of level 4
+            sage: S._compute_atkin_lehner_matrix(1)
+            [1 0 0 0 0 0]
+            [0 1 0 0 0 0]
+            [0 0 1 0 0 0]
+            [0 0 0 1 0 0]
+            [0 0 0 0 1 0]
+            [0 0 0 0 0 1]
+        """
         A = self.ambient_hecke_module()._compute_atkin_lehner_matrix(d)
         return A.restrict(self.free_module(), check=True)
 
     def _set_dual_free_module(self, V):
+        """
+        Set the dual free module of self to V. Here V must be a vector
+        space of the same dimension as self, embedded in a space of
+        the same dimension as the ambient space of self.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(4,10)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S._set_dual_free_module(M.cuspidal_submodule().dual_free_module())
+            sage: S._set_dual_free_module(S)
+        """
         if V.degree() != self.ambient_hecke_module().rank():
             raise ArithmeticError, "The degree of V must equal the rank of the ambient space."
         if V.rank() != self.rank():
             raise ArithmeticError, "The rank of V must equal the rank of self."
         self.__dual_free_module = V
-
-    def _set_dual_free_module_from_nonembedded_module(self, V):
-        """
-        INPUT:
-        
-        
-        -  ``V`` - submodule of ambient free module of the same
-           rank as the rank of self.
-        
-        
-        OUTPUT: Hecke submodule of self
-        """
-        M_V = V.matrix()
-        E   = self.dual_free_module()
-        M_E = E.matrix()
-        A   = M_Vdual * M_E
-        self.__dual_free_module = A.row_space()
-
 
 
     ################################
@@ -153,9 +286,25 @@ class HeckeSubmodule(module.HeckeModule_free_module):
     ################################
 
     def ambient_hecke_module(self):
+        r"""
+        Return the ambient Hecke module of which this is a submodule.
+
+        EXAMPLES::
+
+            sage: CuspForms(2, 12).ambient_hecke_module()
+            Modular Forms space of dimension 4 for Congruence Subgroup Gamma0(2) of weight 12 over Rational Field
+        """
         return self.__ambient
 
     def ambient(self):
+        r"""
+        Synonym for ambient_hecke_module.
+
+        EXAMPLES::
+
+            sage: CuspForms(2, 12).ambient()
+            Modular Forms space of dimension 4 for Congruence Subgroup Gamma0(2) of weight 12 over Rational Field
+        """
         return self.__ambient
 
     def complement(self, bound=None):
@@ -188,7 +337,8 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         else:
             anemic = True
 
-        # TODO: optimize in some cases by computing image of complementary factor instead of kernel...?
+        # TODO: optimize in some cases by computing image of
+        # complementary factor instead of kernel...?
         misc.verbose("computing")
         N = self.level()
         A = self.ambient_hecke_module()
@@ -482,10 +632,14 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         M = self.ambient_hecke_module().submodule(V,check=False)
         
         ## if sign is nonzero, the intersection will be, too
-        if self.sign():
-            M._set_sign(self.sign())
-        elif other.sign():
-            M._set_sign(other.sign())
+        ## this only makes sense for modular symbols spaces (and hence shouldn't really be in this file)
+        try:
+            if self.sign():
+                M._set_sign(self.sign())
+            elif other.sign():
+                M._set_sign(other.sign())
+        except AttributeError:
+            pass
             
         return M
 
@@ -508,8 +662,15 @@ class HeckeSubmodule(module.HeckeModule_free_module):
 
     def is_new(self, p=None):
         """
-        Returns True if this Hecke module is p-new. If p is None, returns
-        True if it is new.
+        Returns True if this Hecke module is p-new. If p is None,
+        returns True if it is new.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(1,16)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S.is_new()
+            True
         """
         try:
             return self.__is_new[p]
@@ -523,8 +684,18 @@ class HeckeSubmodule(module.HeckeModule_free_module):
 
     def is_old(self, p=None):
         """
-        Returns True if this Hecke module is p-old. If p is None, returns
-        True if it is old.
+        Returns True if this Hecke module is p-old. If p is None,
+        returns True if it is old.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(50,2)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.old_submodule().free_module())
+            sage: S.is_old()
+            True
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.new_submodule().free_module())
+            sage: S.is_old()
+            False
         """
         try:
             return self.__is_old[p]
@@ -539,6 +710,16 @@ class HeckeSubmodule(module.HeckeModule_free_module):
     def is_submodule(self, V):
         """
         Returns True if and only if self is a submodule of V.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(30,4)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S.is_submodule(M)
+            True
+            sage: SS = sage.modular.hecke.submodule.HeckeSubmodule(M, M.old_submodule().free_module())
+            sage: S.is_submodule(SS)
+            False
         """
         if not isinstance(V, module.HeckeModule_free_module):
             return False
@@ -549,6 +730,15 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         """
         Return the linear combination of the basis of self given by the
         entries of v.
+
+        EXAMPLES::
+
+            sage: M = ModularForms(Gamma0(2),12)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S.basis()
+            (q + 252*q^3 - 2048*q^4 + 4830*q^5 + O(q^6), q^2 - 24*q^4 + O(q^6))
+            sage: S.linear_combination_of_basis([3,10])
+            3*q + 10*q^2 + 756*q^3 - 6384*q^4 + 14490*q^5 + O(q^6)
         """
         x = self.free_module().linear_combination_of_basis(v)
         return self.__ambient(x)
@@ -557,6 +747,17 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         """
         Return the new or p-new submodule of this space of modular
         symbols.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(20,4)
+            sage: M.new_submodule()
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 18 for Gamma_0(20) of weight 4 with sign 0 over Rational Field
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S
+            Rank 12 submodule of a Hecke module of level 20
+            sage: S.new_submodule()
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 18 for Gamma_0(20) of weight 4 with sign 0 over Rational Field
         """
         try:
             if self.__is_new[p]:
@@ -585,6 +786,19 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         return ns
 
     def nonembedded_free_module(self):
+        """
+        Return the free module corresponding to self as an abstract
+        free module, i.e. not as an embedded vector space.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(12,6)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S
+            Rank 14 submodule of a Hecke module of level 12
+            sage: S.nonembedded_free_module()
+            Vector space of dimension 14 over Rational Field
+        """
         return self.free_module().nonembedded_free_module()
 
     def old_submodule(self, p=None):
@@ -631,22 +845,40 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         return os
 
     def rank(self):
-        return self.__submodule.rank()
+        r"""
+        Return the rank of self as a free module over the base ring.
 
-    def dimension(self):
-        return self.rank()
+        EXAMPLE::
+
+            sage: ModularSymbols(6, 4).cuspidal_subspace().rank()
+            2
+            sage: ModularSymbols(6, 4).cuspidal_subspace().dimension()
+            2
+        """
+        return self.__submodule.rank()
 
     def submodule(self, M, Mdual=None, check=True):
         """
-        Construct a submodule of self from the embedded free module M.
+        Construct a submodule of self from the free module M, which
+        must be a subspace of self.
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(18,4)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: S[0]
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 18 for Gamma_0(18) of weight 4 with sign 0 over Rational Field
+            sage: S.submodule(S[0].free_module())
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 18 for Gamma_0(18) of weight 4 with sign 0 over Rational Field
         """
+        if not sage.modules.all.is_FreeModule(M):
+            V = self.ambient_module().free_module()
+            if isinstance(M, (list,tuple)):
+                M = V.span([V(x.element()) for x in M])
+            else:
+                M = V.span(M)
+
         if check:
-            if not sage.modules.all.is_FreeModule(M):
-                V = self.ambient_module().free_module()
-                if isinstance(M, (list,tuple)):
-                    M = V.span([V(x.element()) for x in M])
-                else:
-                    M = V.span(M)
             if not M.is_submodule(self.free_module()):
                 raise TypeError, "M (=%s) must be a submodule of the free module (=%s) associated to this module."%(M, self.free_module())
         
@@ -654,6 +886,10 @@ class HeckeSubmodule(module.HeckeModule_free_module):
     
     def submodule_from_nonembedded_module(self, V, Vdual=None, check=True):
         """
+        Construct a submodule of self from V. Here V should be a
+        subspace of a vector space whose dimension is the same as that
+        of self.
+
         INPUT:
         
         
@@ -665,6 +901,14 @@ class HeckeSubmodule(module.HeckeModule_free_module):
         
         
         OUTPUT: Hecke submodule of self
+
+        EXAMPLES::
+
+            sage: M = ModularSymbols(37,2)
+            sage: S = sage.modular.hecke.submodule.HeckeSubmodule(M, M.cuspidal_submodule().free_module())
+            sage: V = (QQ**4).subspace([[1,-1,0,1/2],[0,0,1,-1/2]])
+            sage: S.submodule_from_nonembedded_module(V)
+            Modular Symbols subspace of dimension 2 of Modular Symbols space of dimension 5 for Gamma_0(37) of weight 2 with sign 0 over Rational Field
         """
         E = self.free_module()
         M_V = V.matrix()

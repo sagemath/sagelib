@@ -41,11 +41,20 @@ B. \code{compare_structures}:
     
     Signature:
     
-    \code{int compare_structures(int *gamma_1, int *gamma_2, object S)}
+    \code{int compare_structures(int *gamma_1, int *gamma_2, object S1, object S2)}
     
     This function must implement a total ordering on the set of objects of fixed
-    order. Return -1 if \code{gamma_1(S) < gamma_2(S)}, 0 if
-    \code{gamma_1(S) == gamma_2(S)}, 1 if \code{gamma_1(S) > gamma_2(S)}.
+    order. Return:
+        -1 if \code{gamma_1^{-1}(S1) < gamma_2^{-1}(S2)},
+        0 if \code{gamma_1^{-1}(S1) == gamma_2^{-1}(S2)},
+        1 if \code{gamma_1^{-1}(S1) > gamma_2^{-1}(S2)}.
+    
+    Important note:
+    
+    The permutations are thought of as being input in inverse form, and this can
+    lead to subtle bugs. One is encouraged to consult existing implementations
+    to make sure the right thing is being done: this is so that you can avoid
+    *actually* needing to compute the inverse.
 
 C. \code{all_children_are_equivalent}:
     
@@ -230,17 +239,17 @@ cdef int *double_coset(object S1, object S2, int **partition1, int *ordering2,
         except MemoryError:
             succeeded = 0
             for j from 0 <= j < i:
-                bitset_clear(fixed_points_of_generators[j])
-                bitset_clear(minimal_cell_reps_of_generators[j])
+                bitset_free(fixed_points_of_generators[j])
+                bitset_free(minimal_cell_reps_of_generators[j])
             break
         try:
             bitset_init(minimal_cell_reps_of_generators[i], n)
         except MemoryError:
             succeeded = 0
             for j from 0 <= j < i:
-                bitset_clear(fixed_points_of_generators[j])
-                bitset_clear(minimal_cell_reps_of_generators[j])
-            bitset_clear(fixed_points_of_generators[i])
+                bitset_free(fixed_points_of_generators[j])
+                bitset_free(minimal_cell_reps_of_generators[j])
+            bitset_free(fixed_points_of_generators[i])
             break
     if succeeded:
         for i from 0 <= i < n:
@@ -249,10 +258,10 @@ cdef int *double_coset(object S1, object S2, int **partition1, int *ordering2,
             except MemoryError:
                 succeeded = 0
                 for j from 0 <= j < i:
-                    bitset_clear(vertices_to_split[j])
+                    bitset_free(vertices_to_split[j])
                 for j from 0 <= j < len_of_fp_and_mcr:
-                    bitset_clear(fixed_points_of_generators[j])
-                    bitset_clear(minimal_cell_reps_of_generators[j])
+                    bitset_free(fixed_points_of_generators[j])
+                    bitset_free(minimal_cell_reps_of_generators[j])
                 break
     if succeeded:
         try:
@@ -260,10 +269,10 @@ cdef int *double_coset(object S1, object S2, int **partition1, int *ordering2,
         except MemoryError:
             succeeded = 0
             for j from 0 <= j < n:
-                bitset_clear(vertices_to_split[j])
+                bitset_free(vertices_to_split[j])
             for j from 0 <= j < len_of_fp_and_mcr:
-                bitset_clear(fixed_points_of_generators[j])
-                bitset_clear(minimal_cell_reps_of_generators[j])
+                bitset_free(fixed_points_of_generators[j])
+                bitset_free(minimal_cell_reps_of_generators[j])
     if not succeeded:
         sage_free(indicators)
         sage_free(fixed_points_of_generators)
@@ -540,7 +549,7 @@ cdef int *double_coset(object S1, object S2, int **partition1, int *ordering2,
         if not possible:
             possible = 1
             i = current_ps.depth
-            current_ps.depth = min(first_kids_are_same-1, current_kids_are_same-1)
+            current_ps.depth = current_kids_are_same-1
             if i == current_kids_are_same:
                 continue # main loop
             if index_in_fp_and_mcr < len_of_fp_and_mcr - 1:
@@ -569,11 +578,11 @@ cdef int *double_coset(object S1, object S2, int **partition1, int *ordering2,
     
     # Deallocate:
     for i from 0 <= i < len_of_fp_and_mcr:
-        bitset_clear(fixed_points_of_generators[i])
-        bitset_clear(minimal_cell_reps_of_generators[i])
+        bitset_free(fixed_points_of_generators[i])
+        bitset_free(minimal_cell_reps_of_generators[i])
     for i from 0 <= i < n:
-        bitset_clear(vertices_to_split[i])
-    bitset_clear(vertices_have_been_reduced)
+        bitset_free(vertices_to_split[i])
+    bitset_free(vertices_have_been_reduced)
     sage_free(indicators)
     sage_free(fixed_points_of_generators)
     sage_free(minimal_cell_reps_of_generators)

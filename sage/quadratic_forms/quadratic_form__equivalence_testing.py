@@ -4,7 +4,6 @@ from sage.rings.arith import hilbert_symbol, prime_divisors, is_prime, valuation
 from sage.rings.integer_ring import ZZ
 
 from quadratic_form import is_QuadraticForm
-from extras import hilbert_symbol_rational
 from quadratic_form__genus import CS_genus_symbol_list
 
 
@@ -366,10 +365,10 @@ def has_equivalent_Jordan_decomposition_at_prime(self, other, p):
             self_chain_det_list.append(self_chain_det_list[j-1] * self_jordan[j][1].Gram_det() * (scale_list[j]**dim_list[j]))
             other_chain_det_list.append(other_chain_det_list[j-1] * other_jordan[j][1].Gram_det() * (scale_list[j]**dim_list[j]))
             self_hasse_chain_list.append(self_hasse_chain_list[j-1] \
-                                         * hilbert_symbol_rational(self_chain_det_list[j-1], self_jordan[j][1].Gram_det(), 2) \
+                                         * hilbert_symbol(self_chain_det_list[j-1], self_jordan[j][1].Gram_det(), 2) \
                                          * self_jordan[j][1].hasse_invariant__OMeara(2))
             other_hasse_chain_list.append(other_hasse_chain_list[j-1] \
-                                          * hilbert_symbol_rational(other_chain_det_list[j-1], other_jordan[j][1].Gram_det(), 2) \
+                                          * hilbert_symbol(other_chain_det_list[j-1], other_jordan[j][1].Gram_det(), 2) \
                                           * other_jordan[j][1].hasse_invariant__OMeara(2))
 
 
@@ -403,10 +402,8 @@ def has_equivalent_Jordan_decomposition_at_prime(self, other, p):
             
             ## Check O'Meara's conditon (ii) when appropriate
             if norm_list[i+1] % (4 * norm_list[i]) == 0:
-                # 1st try # if self_hasse_chain_list[i] * other_hasse_chain_list[i] * hilbert_symbol(-self_chain_det_list[i], norm_list[i] * other_chain_det_list[i], 2) != 1:
-                ##  Corrected ## if self_hasse_chain_list[i] * other_hasse_chain_list[i] * hilbert_symbol(-self_chain_det_list[i], norm_list[i], 2) != 1:
-                if self_hasse_chain_list[i] * hilbert_symbol_rational(norm_list[i] * other_chain_det_list[i], -self_chain_det_list[i], 2) \
-                       != other_hasse_chain_list[i] * hilbert_symbol_rational(norm_list[i], -other_chain_det_list[i], 2):      ## Nipp conditions
+                if self_hasse_chain_list[i] * hilbert_symbol(norm_list[i] * other_chain_det_list[i], -self_chain_det_list[i], 2) \
+                       != other_hasse_chain_list[i] * hilbert_symbol(norm_list[i], -other_chain_det_list[i], 2):      ## Nipp conditions
                     #print "Failed when i =", i, " in condition 2."
                     return False
 

@@ -451,8 +451,8 @@ cdef class Polynomial(CommutativeAlgebraElement):
         ::
         
             sage: f(x=sqrt(2))
-            y*(y + sqrt(2)) + sqrt(2)
-        
+            (y + sqrt(2))*y + sqrt(2)
+
         ::
         
             sage: R.<t> = PowerSeriesRing(QQ, 't'); S.<x> = R[]
@@ -596,6 +596,23 @@ cdef class Polynomial(CommutativeAlgebraElement):
             t^3 + 30*t^2 + 300*t + 1000
             sage: list(f._fast_float_())
             ['load 0', 'push 30.0', 'add', 'load 0', 'mul', 'push 300.0', 'add', 'load 0', 'mul', 'push 1000.0', 'add']
+
+        TESTS::
+
+            sage: f = t + 2 - t
+            sage: ff = f._fast_float_()
+            sage: ff(3)
+            2.0
+            sage: list(f._fast_float_())
+            ['push 2.0']
+
+            sage: f = t - t
+            sage: ff = f._fast_float_()
+            sage: ff(3)
+            0.0
+            sage: list(f._fast_float_())
+            ['push 0.0']
+
         """
         from sage.ext.fast_eval import fast_float_arg, fast_float_constant
         var = (<ParentWithGens>self._parent)._names[0]
@@ -608,6 +625,8 @@ cdef class Polynomial(CommutativeAlgebraElement):
         cdef int i, d = self.degree()
         expr = x
         coeff = self[d]
+        if d <= 0:
+            return fast_float_constant(coeff)
         if coeff != 1:
             expr *= fast_float_constant(coeff)
         for i from d > i >= 0:
@@ -632,6 +651,15 @@ cdef class Polynomial(CommutativeAlgebraElement):
             -t^6 - 12*t^5 + 1/2*t^4 - 1/95*t^3 - 1/2*t^2 - 4
             sage: v._fast_callable_(etb)
             add(mul(mul(add(mul(add(mul(add(mul(add(mul(v_0, -1), -12), v_0), 1/2), v_0), -1/95), v_0), -1/2), v_0), v_0), -4)
+
+        TESTS::
+
+            sage: R(2)._fast_callable_(etb)
+            2
+            sage: R(0)._fast_callable_(etb)
+            0
+            sage: fast_callable(R(2))(3)
+            2
         """
         x = etb.var(self.variable_name())
         expr = x
@@ -645,6 +673,8 @@ cdef class Polynomial(CommutativeAlgebraElement):
         else:
             # There may be variables in our coefficients...
             coeff_maker = etb.make
+        if d <= 0:
+            return coeff_maker(coeff)
         if coeff != 1:
             expr *= coeff_maker(coeff)
         for i from d > i >= 0:
@@ -832,6 +862,33 @@ cdef class Polynomial(CommutativeAlgebraElement):
         if self.degree() > 0:
             raise TypeError, "not a constant polynomial"
         return sage.rings.rational.Rational(self[0])
+
+    def _symbolic_(self, R):
+        """
+        EXAMPLES::
+
+            sage: R.<x> = QQ[]
+            sage: f = x^3 + x
+            sage: g = f._symbolic_(SR); g
+            (x^2 + 1)*x
+            sage: g(x=2)
+            10
+
+            sage: g = SR(f)
+            sage: g(x=2)
+            10
+
+        The polynomial does not have to be over a field of
+        characteristic 0::
+
+            sage: R.<w> = GF(7)[]
+            sage: f = SR(2*w^3 + 1); f
+            2*w^3 + 1
+            sage: f.variables()
+            (w,)
+        """
+        d = dict([(repr(g), R.var(g)) for g in self.parent().gens()])
+        return self.subs(**d)
 
     def __invert__(self):
         """
@@ -3796,7 +3853,7 @@ cdef class Polynomial(CommutativeAlgebraElement):
         
             sage: X = var('X')
             sage: f = expand((X-1)*(X-I)^3*(X^2 - sqrt(2))); f
-            X^6 - 3*I*X^5 - X^5 + 3*I*X^4 - sqrt(2)*X^4 - 3*X^4 + 3*sqrt(2)*I*X^3 + I*X^3 + sqrt(2)*X^3 + 3*X^3 - 3*sqrt(2)*I*X^2 - I*X^2 + 3*sqrt(2)*X^2 - sqrt(2)*I*X - 3*sqrt(2)*X + sqrt(2)*I
+            -sqrt(2)*X^4 + I*sqrt(2) + X^6 - (3*I - 1)*X^5 + (3*I - 3)*X^4 + (3*I + 1)*sqrt(2)*X^3 + (I + 3)*X^3 - (3*I + 3)*sqrt(2)*X^2 - I*X^2 - (I - 3)*sqrt(2)*X
             sage: print f.roots()
             [(I, 3), (-2^(1/4), 1), (2^(1/4), 1), (1, 1)]
         

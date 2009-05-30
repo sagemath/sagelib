@@ -592,7 +592,7 @@ class Maxima(Expect):
             Is  a  positive or negative?
             sage: assume(a>0)
             sage: integrate(1/(x^3 *(a+b*x)^(1/3)),x)
-            2*b^2*arctan((2*(b*x + a)^(1/3) + a^(1/3))/(sqrt(3)*a^(1/3)))/(3*sqrt(3)*a^(7/3)) - b^2*log((b*x + a)^(2/3) + a^(1/3)*(b*x + a)^(1/3) + a^(2/3))/(9*a^(7/3)) + 2*b^2*log((b*x + a)^(1/3) - a^(1/3))/(9*a^(7/3)) + (4*b^2*(b*x + a)^(5/3) - 7*a*b^2*(b*x + a)^(2/3))/(6*a^2*(b*x + a)^2 - 12*a^3*(b*x + a) + 6*a^4)
+            2/9*sqrt(3)*b^2*arctan(1/3*(2*(b*x + a)^(1/3) + a^(1/3))*sqrt(3)/a^(1/3))/a^(7/3) + 2/9*b^2*log((b*x + a)^(1/3) - a^(1/3))/a^(7/3) - 1/9*b^2*log((b*x + a)^(2/3) + (b*x + a)^(1/3)*a^(1/3) + a^(2/3))/a^(7/3) + 1/6*(4*(b*x + a)^(5/3)*b^2 - 7*(b*x + a)^(2/3)*a*b^2)/((b*x + a)^2*a^2 - 2*(b*x + a)*a^3 + a^4)
             sage: var('x, n')
             (x, n)
             sage: integral(x^n,x)
@@ -627,8 +627,7 @@ class Maxima(Expect):
                 v = v[j:]
                 k = v.find(' ',4)
                 msg = "Computation failed since Maxima requested additional constraints (try the command 'assume(" + v[4:k] +">0)' before integral or limit evaluation, for example):\n" + v + self._ask[i-1]
-                self._sendstr(chr(3))
-                self._sendstr(chr(3))
+                self._sendline(";")
                 self._expect_expr()
                 raise ValueError, msg
         except KeyboardInterrupt, msg:
@@ -756,7 +755,10 @@ class Maxima(Expect):
         if self._expect is None: return
         r = randrange(2147483647)
         s = marker + str(r+1)
-        cmd = '''sconcat("%s",(%s+1));\n'''%(marker,r)
+
+        # The 0; *is* necessary... it comes up in certain rare cases 
+        # that are revealed by extensive testing.  Don't delete it. -- william stein
+        cmd = '''0;sconcat("%s",(%s+1));\n'''%(marker,r)
         self._sendstr(cmd)
         try:
             self._expect_expr(timeout=0.5)
@@ -887,7 +889,7 @@ class Maxima(Expect):
         
         EXAMPLES::
         
-            sage: maxima.completions('gc', verbose=False)
+            sage: sorted(maxima.completions('gc', verbose=False))
             ['gc', 'gcd', 'gcdex', 'gcfactor', 'gcprint', 'gctime']
         """
         if verbose:
@@ -902,11 +904,11 @@ class Maxima(Expect):
         
         EXAMPLES::
         
-            sage: maxima._commands(verbose=False)
-            ['a',
-             'abconvtest',
+            sage: sorted(maxima._commands(verbose=False))
+            ['Alpha',
+             'Beta',
              ...
-             'Z']
+             'zunderflow']
         """
         try:
             return self.__commands
@@ -993,6 +995,17 @@ class Maxima(Expect):
         """
         return 'false'
 
+    def _equality_symbol(self):
+        """
+        Returns the equality symbol in Maxima.
+
+        EXAMPLES::
+
+             sage: maxima._equality_symbol()
+             '='
+        """
+        return '='
+
     def function(self, args, defn, rep=None, latex=None):
         """
         Return the Maxima function with given arguments and definition.
@@ -1072,8 +1085,8 @@ class Maxima(Expect):
         
         EXAMPLES::
         
-            sage: maxima.set('x', '2')
-            sage: maxima.get('x')
+            sage: maxima.set('xxxxx', '2')
+            sage: maxima.get('xxxxx')
             '2'
         """
         if not isinstance(value, str):
@@ -1088,36 +1101,36 @@ class Maxima(Expect):
             #out = self._before()
             #self._error_check(cmd, out)
 
+    def clear(self, var):
+        """
+        Clear the variable named var.
+
+        EXAMPLES::
+
+            sage: maxima.set('xxxxx', '2')
+            sage: maxima.get('xxxxx')
+            '2'
+            sage: maxima.clear('xxxxx')
+            sage: maxima.get('xxxxx')
+            'xxxxx'
+        """
+        try:
+            self._expect.send('kill(%s)$'%var)
+        except (TypeError, AttributeError):
+             pass
+
     def get(self, var):
         """
         Get the string value of the variable var.
         
         EXAMPLES::
         
-            sage: maxima.set('x', '2')
-            sage: maxima.get('x')
+            sage: maxima.set('xxxxx', '2')
+            sage: maxima.get('xxxxx')
             '2'
         """
         s = self._eval_line('%s;'%var)
         return s
-        
-    def clear(self, var):
-        """
-        Clear the variable named var.
-        
-        EXAMPLES::
-        
-            sage: maxima.set('x', '2')
-            sage: maxima.get('x')
-            '2'
-            sage: maxima.clear('x')
-            sage: maxima.get('x')
-            'x'
-        """
-        try:
-            self._expect.send('kill(%s)$'%var)
-        except (TypeError, AttributeError):
-            pass
         
     def console(self):
         r"""
@@ -1672,18 +1685,18 @@ class MaximaElement(ExpectElement):
             sage: b = a._sage_(); b
             sqrt(2) + 2.5
             sage: type(b)
-            <class 'sage.calculus.calculus.SymbolicArithmetic'>
+            <type 'sage.symbolic.expression.Expression'>
         
         We illustrate an automatic coercion::
         
             sage: c = b + sqrt(3); c
-            sqrt(3) + sqrt(2) + 2.5
+            sqrt(2) + sqrt(3) + 2.5
             sage: type(c)
-            <class 'sage.calculus.calculus.SymbolicArithmetic'>
+            <type 'sage.symbolic.expression.Expression'>
             sage: d = sqrt(3) + b; d
-            sqrt(3) + sqrt(2) + 2.5
+            sqrt(2) + sqrt(3) + 2.5
             sage: type(d)
-            <class 'sage.calculus.calculus.SymbolicArithmetic'>
+            <type 'sage.symbolic.expression.Expression'>            
         """
         from sage.calculus.calculus import symbolic_expression_from_maxima_string
         #return symbolic_expression_from_maxima_string(self.name(), maxima=self.parent())
@@ -1713,7 +1726,7 @@ class MaximaElement(ExpectElement):
             sage: ComplexField(200)(maxima('sqrt(-2)'))
             1.4142135623730950488016887242096980785696718753769480731767*I
             sage: N(sqrt(-2), 200)
-            1.4142135623730950488016887242096980785696718753769480731767*I
+            8.0751148893563733350506651837615871941533119425962889089783e-62 + 1.4142135623730950488016887242096980785696718753769480731767*I
         """
         return C(self._sage_())
 
@@ -1821,18 +1834,12 @@ class MaximaElement(ExpectElement):
         self._check_valid()
         P = self.parent()
         with gc_disabled():
-            s = P._eval_line('display2d : true; %s'%self.name(), reformat=False)
-            P._eval_line('display2d : false;', reformat=False)
+            P._eval_line('display2d : true$')
+            s = P._eval_line('disp(%s)$'%self.name(), reformat=False)
+            P._eval_line('display2d: false$')
+            
+        s = s.strip('\r\n')
 
-        r = P._output_prompt_re
-
-        m = r.search(s)
-        s = s[m.start():]
-        i = s.find('\n')
-        s = s[i+1 + len(P._display_prompt):]
-        m = r.search(s)
-        if not m is None:
-            s = s[:m.start()] + ' '*(m.end() - m.start()) + s[m.end():].rstrip()
         # if ever want to dedent, see
         # http://mail.python.org/pipermail/python-list/2006-December/420033.html
         if onscreen:
@@ -1931,7 +1938,7 @@ class MaximaElement(ExpectElement):
         EXAMPLES::
         
             sage: maxima('exp(-sqrt(x))').nintegral('x',0,1)
-            (.5284822353142306, 4.163314137883845E-11, 231, 0)
+            (.5284822353142306, 4.163314137883845e-11, 231, 0)
         
         Note that GP also does numerical integration, and can do so to very
         high precision very quickly::
@@ -2126,7 +2133,8 @@ class MaximaElement(ExpectElement):
 
             sage: y,d = var('y,d')
             sage: latex(maxima(derivative(ceil(x*y*d), d,x,x,y)))
-            {{{\it \partial}^4}\over{{\it \partial}\,d\,{\it \partial}\,x^2\,  {\it \partial}\,y}}\,\left \lceil d\,x\,y \right \rceil
+            d^3\,\left({{{\it \partial}^4}\over{{\it \partial}\,d^4}}\,  {\it ceil}\left(d , x , y\right)\right)\,x^2\,y^3+5\,d^2\,\left({{  {\it \partial}^3}\over{{\it \partial}\,d^3}}\,{\it ceil}\left(d , x   , y\right)\right)\,x\,y^2+4\,d\,\left({{{\it \partial}^2}\over{  {\it \partial}\,d^2}}\,{\it ceil}\left(d , x , y\right)\right)\,y
+
 
             sage: latex(maxima(d/(d-2)))
             {{d}\over{d-2}}
@@ -2620,7 +2628,8 @@ def is_MaximaElement(x):
     return isinstance(x, MaximaElement)
 
 # An instance
-maxima = Maxima(script_subdirectory=None)
+maxima = Maxima(init_code = ['display2d:false; domain: complex; keepfloat: true'],
+                script_subdirectory=None)
 
 def reduce_load_Maxima():
     """

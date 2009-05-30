@@ -72,6 +72,9 @@ get_sigs()
 from sage.rings.all      import *
 from sage.matrix.all     import *
 
+# This must come before Calculus -- it initializes the Pynac library.
+import sage.symbolic.pynac
+
 pmem_malloc()
 
 from sage.modules.all    import *
@@ -87,13 +90,21 @@ from sage.categories.all import *
 from sage.sets.all       import *
 from sage.probability.all import *
 from sage.interfaces.all import *
-from sage.functions.all  import *
 
-import sage.symbolic.pynac   # This must come before Calculus -- it initializes the Pynac library.
+from sage.symbolic.all   import *
+
+from sage.functions.all  import *
 from sage.calculus.all   import *
+
 from sage.server.all     import *
-from sage.dsage.all      import *
 import sage.tests.all as tests
+
+try:
+    import dsage.dsage
+    from dsage.all      import *
+except ImportError:
+    pass
+
 
 from sage.crypto.all     import *
 import sage.crypto.mq as mq

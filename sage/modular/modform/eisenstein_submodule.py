@@ -1,14 +1,12 @@
 """
 The Eisenstein Subspace
-
-EXAMPLES:
-   
 """
 
 from sage.structure.all import Sequence
 from sage.misc.all import verbose
 import sage.rings.all as rings
 from sage.categories.all import Objects
+from sage.matrix.all import Matrix
 
 from sage.rings.number_field.number_field_element import NumberFieldElement as NumberFieldElement
 
@@ -72,10 +70,9 @@ class EisensteinSubmodule(submodule.ModularFormsSubmodule):
 
         .. warning::
 
-           If sign != 0, then the space of modular symbols will, in
-           general, only correspond to a \emph{subspace} of this space
-           of modular forms.  This can be the case for both sign +1 or
-           -1.
+           If sign != 0, then the space of modular symbols will, in general,
+           only correspond to a *subspace* of this space of modular forms.
+           This can be the case for both sign +1 or -1.
         
         EXAMPLES::
         
@@ -157,7 +154,26 @@ class EisensteinSubmodule_params(EisensteinSubmodule):
                 P = eis_series.compute_eisenstein_params(char, self.weight())
             self.__parameters = P
             return P
-        
+       
+    def new_submodule(self, p=None):
+        r"""
+        Return the new submodule of self.
+
+        EXAMPLE::
+
+            sage: e = EisensteinForms(Gamma0(225), 2).new_submodule(); e
+            Modular Forms subspace of dimension 3 of Modular Forms space of dimension 42 for Congruence Subgroup Gamma0(225) of weight 2 over Rational Field
+            sage: e.basis()
+            [
+            q + O(q^6),
+            q^2 + O(q^6),
+            q^4 + O(q^6)
+            ]
+        """
+            
+        if p is not None: raise NotImplementedError
+        return self.submodule([self(x) for x in self._compute_q_expansion_basis(self.sturm_bound(), new=True)], check=False)
+
     def _parameters_character(self):
         """
         Return the character defining self.
@@ -266,7 +282,22 @@ class EisensteinSubmodule_params(EisensteinSubmodule):
             self.__eisenstein_series = E
             return E
 
-    def _compute_q_expansion_basis(self, prec=None):
+    def new_eisenstein_series(self):
+        r"""
+        Return a list of the Eisenstein series in this space that are new.
+        
+        EXAMPLE::
+            
+            sage: E = EisensteinForms(25, 4)
+            sage: E.new_eisenstein_series()
+            [q + 7*zeta4*q^2 - 26*zeta4*q^3 - 57*q^4 + O(q^6),
+             q - 9*q^2 - 28*q^3 + 73*q^4 + O(q^6),
+             q - 7*zeta4*q^2 + 26*zeta4*q^3 - 57*q^4 + O(q^6)]
+         """
+
+        return [x for x in self.eisenstein_series() if x.new_level() == self.level()]
+
+    def _compute_q_expansion_basis(self, prec=None, new=False):
         """
         Compute a q-expansion basis for self to precision prec.
 
@@ -288,7 +319,10 @@ class EisensteinSubmodule_params(EisensteinSubmodule):
         else:
             prec = rings.Integer(prec)
         
-        E = self.eisenstein_series()
+        if new:
+            E = self.new_eisenstein_series()
+        else:
+            E = self.eisenstein_series()
         K = self.base_ring()
         V = K**prec
         G = []
@@ -308,14 +342,17 @@ class EisensteinSubmodule_params(EisensteinSubmodule):
         W = V.submodule(G, check=False)
         R = self._q_expansion_ring()
         X = [R(f.list(), prec) for f in W.basis()]
-        return X + [R(0,prec)]*(self.dimension() - len(X))
+        if not new:
+            return X + [R(0,prec)]*(self.dimension() - len(X))
+        else:
+            return X
 
     def _q_expansion(self, element, prec):
         """
-        Compute a q-expansion for a given element of self,
-        expressed as a vector of coefficients for the basis
-        vectors of self, viewing self as a subspace of the
-        corresponding space of modular forms.
+        Compute a q-expansion for a given element of self, expressed
+        as a vector of coefficients for the basis vectors of self,
+        viewing self as a subspace of the corresponding space of
+        modular forms.
 
         EXAMPLES::
         
@@ -334,13 +371,13 @@ class EisensteinSubmodule_params(EisensteinSubmodule):
 
 
 class EisensteinSubmodule_g0_Q(EisensteinSubmodule_params):
-    """
-    Space of Eisenstein forms for Gamma0(N).
+    r"""
+    Space of Eisenstein forms for `\Gamma_0(N)`.
     """
 
 class EisensteinSubmodule_g1_Q(EisensteinSubmodule_params):
-    """
-    Space of Eisenstein forms for Gamma1(N).
+    r"""
+    Space of Eisenstein forms for `\Gamma_1(N)`.
     """
     def _parameters_character(self):
         """
@@ -355,6 +392,91 @@ class EisensteinSubmodule_g1_Q(EisensteinSubmodule_params):
         """
         return self.level()
     
+    def _compute_hecke_matrix(self, n, bound=None):
+        r"""
+        Calculate the matrix of the Hecke operator `T_n` acting on this
+        space, via modular symbols.
+
+        INPUT:
+
+        - n: a positive integer
+
+        - bound: an integer such that any element of this space with
+          coefficients a_1, ..., a_b all zero must be the zero
+          element. If this turns out not to be true, the code will
+          increase the bound and try again. Setting bound = None is
+          equivalent to setting bound = self.dimension().
+
+        OUTPUT:
+
+        - a matrix (over `\QQ`)
+
+        ALGORITHM:
+            
+            This uses the usual pairing between modular symbols and
+            modular forms, but in a slightly non-standard way. As for
+            cusp forms, we can find a basis for this space made up of
+            forms with q-expansions `c_m(f) = a_{i,j}(T_m)`, where
+            `T_m` denotes the matrix of the Hecke operator on the
+            corresponding modular symbols space. Then `c_m(T_n f) =
+            a_{i,j}(T_n* T_m)`. But we can't find the constant terms
+            by this method, so an extra step is required.
+
+        EXAMPLE::
+
+            sage: EisensteinForms(Gamma1(6), 3).hecke_matrix(3) # indirect doctest
+            [ 1  0 72  0]
+            [ 0  0 36 -9]
+            [ 0  0  9  0]
+            [ 0  1 -4 10]
+        """
+        # crucial to take sign 0 here
+        symbs = self.modular_symbols(sign=0)
+        T = symbs.hecke_matrix(n)
+        d = symbs.rank()
+
+        if bound is None:
+            bound = self.dimension()
+        r = bound + 1
+        A = self.base_ring()
+        X = A**r
+        Y = X.zero_submodule()
+        basis = []
+        basis_images = []
+
+        # we repeatedly use these matrices below, so we store them
+        # once as lists to save time.
+        hecke_matrix_ls = [ symbs.hecke_matrix(m).list() for m in range(1,r+1) ]
+        hecke_image_ls = [ (T*symbs.hecke_matrix(m)).list() for m in range(1,r+1) ]
+
+        # compute the q-expansions of some cusp forms and their
+        # images under T_n
+        for i in xrange(d**2):
+            v = X([ hecke_matrix_ls[m][i] for m in xrange(r) ])
+            Ynew = Y.span(Y.basis() + [v])
+            if Ynew.rank() > Y.rank():
+                basis.append(v)
+                basis_images.append(X([ hecke_image_ls[m][i] for m in xrange(r) ]))
+                Y = Ynew
+                if len(basis) == d:
+                    break
+        else:
+            # if we didn't find a sufficient number of modular forms
+            # this way, we simply increase the bound and try again.
+            return self._compute_hecke_matrix(n, bound + 5)
+        
+        # now we compute the matrix for T_n
+        bigmat = Matrix(basis).augment(Matrix(basis_images))
+        bigmat.echelonize()
+        pivs = bigmat.pivots()
+        wrong_mat = bigmat.matrix_from_rows_and_columns(range(d), [ r+x for x in pivs ])
+
+        # this is the matrix in a basis such that projections onto
+        # q-expansion coefficients 1...r are echelon, but we want
+        # coeffs 0..r echelon (modular symbols don't see the constant
+        # term)
+        change_mat = Matrix(A, d, [self.basis()[i][j+1] for i in xrange(d) for j in pivs])
+        return change_mat * wrong_mat * ~change_mat
 
 class EisensteinSubmodule_eps(EisensteinSubmodule_params):
     """

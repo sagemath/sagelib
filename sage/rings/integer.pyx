@@ -960,6 +960,29 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         """
         return int(mpz_sizeinbase(self.value, 2))
 
+    def trailing_zero_bits(self):
+        """
+        Return the number of trailing zero bits in self, i.e.
+        the exponent of the largest power of 2 dividing self.
+
+        EXAMPLES::
+
+            sage: 11.trailing_zero_bits()
+            0
+            sage: (-11).trailing_zero_bits()
+            0
+            sage: (11<<5).trailing_zero_bits()
+            5
+            sage: (-11<<5).trailing_zero_bits()
+            5
+            sage: 0.trailing_zero_bits()
+            0
+
+        """
+        if mpz_sgn(self.value) == 0:
+            return int(0)
+        return int(mpz_scan1(self.value, 0))
+
     cdef _digits_naive(self,Integer base,digits):
         """
         This function should have identical semantics to the
@@ -1439,11 +1462,11 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         
             sage: x,y,z = var('x,y,z')
             sage: 2^(x+y+z)
-            2^(z + y + x)
+            2^(x + y + z)
             sage: 2^(1/2)
             sqrt(2)
             sage: 2^(-1/2)
-            1/sqrt(2)
+            1/2*sqrt(2)
         
         TESTS::
         
@@ -1474,10 +1497,13 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             nn = PyNumber_Index(n)
         except TypeError:
             try:
-                s = parent_c(n)(self)
-                return s**n
-            except AttributeError:
-                raise TypeError, "exponent (=%s) must be an integer.\nCoerce your numbers to real or complex numbers first."%n
+                nn = Integer(n)
+            except TypeError:
+                try:
+                    s = parent_c(n)(self)
+                    return s**n
+                except AttributeError:
+                    raise TypeError, "exponent (=%s) must be an integer.\nCoerce your numbers to real or complex numbers first."%n
 
         except OverflowError:
             if mpz_cmp_si(_self.value, 1) == 0:
@@ -1501,8 +1527,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             return ~x
         else:
             return x
-        
-                
+
+
     def nth_root(self, int n, bint truncate_mode=0):
         r"""
         Returns the (possibly truncated) n'th root of self.
@@ -1804,12 +1830,12 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             return RealField(prec)(self).log(m)
         if type(m)==Integer and type(self)==Integer and m**(self.exact_log(m))==self:
             return self.exact_log(m)
-        from sage.calculus.calculus import SymbolicComposition
-        from sage.calculus.calculus import SR
-        from sage.calculus.calculus import function_log
+        
+        from sage.symbolic.all import SR
+        from sage.functions.log import function_log
         if m is None:
-            return SymbolicComposition(function_log,SR(self))
-        return SymbolicComposition(function_log,SR(self))/SymbolicComposition(function_log,SR(m))
+            return function_log(self, hold=True)
+        return function_log(self, hold=True)/function_log(m, hold=True)
 
     def exp(self, prec=None):
         r"""
@@ -1844,8 +1870,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: y.exp(prec=53) # default RealField precision
             +infinity
         """
-        from sage.calculus.calculus import exp
-        return exp(self,prec)
+        from sage.functions.all import exp
+        return exp(self, prec)
 
     def prime_to_m_part(self, m):
         """
@@ -3727,7 +3753,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         P = sage.libs.pari.gen.pari
         return P.new_gen_from_mpz_t(self.value)
 
-    def _interface_init_(self):
+    def _interface_init_(self, I=None):
         """
         Return canonical string to coerce this integer to any other math
         software, i.e., just the string representation of this integer in
@@ -3808,6 +3834,36 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
                 return -sib.name('ZZ')(sib.int(-self))
             else:
                 return sib.name('ZZ')(sib.int(self))
+
+    def sqrtrem(self):
+        r"""
+        Return (s, r) where s is the integer square root of self and
+        r is the remainder such that `\text{self} = s^2 + r`.
+        Raises ``ValueError`` if self is negative.
+
+        EXAMPLES::
+
+            sage: 25.sqrtrem()
+            (5, 0)
+            sage: 27.sqrtrem()
+            (5, 2)
+            sage: 0.sqrtrem()
+            (0, 0)
+
+        ::
+        
+            sage: Integer(-102).sqrtrem()
+            Traceback (most recent call last):
+            ...
+            ValueError: square root of negative integer not defined.
+
+        """
+        if mpz_sgn(self.value) < 0:
+            raise ValueError, "square root of negative integer not defined."
+        cdef Integer s = PY_NEW(Integer)
+        cdef Integer r  = PY_NEW(Integer)
+        mpz_sqrtrem(s.value, r.value, self.value)
+        return s, r
 
     def isqrt(self):
         r"""
@@ -3909,7 +3965,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: Integer(0).sqrt(all=True)
             [0]
             sage: type(Integer(5).sqrt())
-            <class 'sage.calculus.calculus.SymbolicComposition'>
+            <type 'sage.symbolic.expression.Expression'>
             sage: type(Integer(5).sqrt(prec=53))
             <type 'sage.rings.real_mpfr.RealNumber'>
             sage: type(Integer(-5).sqrt(prec=53))
@@ -3921,7 +3977,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         if mpz_sgn(self.value) < 0:
             if not extend:
                 raise ValueError, "square root of negative number not an integer"
-            from sage.calculus.calculus import sqrt
+            from sage.functions.all import sqrt
             return sqrt._do_sqrt(self, prec=prec, all=all)
 
         cdef int non_square
@@ -3937,11 +3993,11 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         if non_square:
             if not extend:
                 raise ValueError, "square root of %s not an integer"%self
-            from sage.calculus.calculus import sqrt
+            from sage.functions.all import sqrt
             return sqrt._do_sqrt(self, prec=prec, all=all)
 
         if prec:
-            from sage.calculus.calculus import sqrt
+            from sage.functions.all import sqrt
             return sqrt._do_sqrt(self, prec=prec, all=all)
 
         if all:
@@ -4767,8 +4823,8 @@ cdef void fast_tp_dealloc(PyObject* o):
     
         # Here we free any extra memory used by the mpz_t by
         # setting it to a single limb. 
-        if (<__mpz_struct *>( <char *>o + mpz_t_offset))._mp_alloc > 1:
-            _mpz_realloc(<mpz_t *>( <char *>o + mpz_t_offset), 1)
+        if (<__mpz_struct *>( <char *>o + mpz_t_offset))._mp_alloc > 10:
+            _mpz_realloc(<mpz_t *>( <char *>o + mpz_t_offset), 10)
             
         # It's cheap to zero out an integer, so do it here. 
         (<__mpz_struct *>( <char *>o + mpz_t_offset))._mp_size = 0

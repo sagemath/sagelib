@@ -120,7 +120,6 @@ from class_group import ClassGroup
 #import order
 
 from sage.structure.element import is_Element
-from sage.categories.map import is_Map
 from sage.structure.sequence import Sequence
 
 import sage.structure.parent_gens
@@ -2529,7 +2528,8 @@ class NumberField_generic(number_field_base.NumberField):
             [Number Field in c0 with defining polynomial x^3 - 2,
              Number Field in c1 with defining polynomial x^6 - 40*x^3 + 1372]
 
-            Let's get the maps as well:
+        Let's get the maps as well::
+
             sage: Q1.<a> = NumberField(x^2 + 2, 'b').extension(x^2 + 3, 'c').absolute_field()
             sage: Q2.<b> = NumberField(x^2 + 3, 'a').extension(x^2 + 5, 'c').absolute_field()
             sage: Q1.composite_fields(Q2)
@@ -2555,7 +2555,7 @@ class NumberField_generic(number_field_base.NumberField):
             sage: Q2_into_F(b) + k*Q1_into_F(a) == F.gen()
             True
 
-            Let's check something about the "other" composite field:
+        Let's check something about the "other" composite field::
 
             sage: F, Q1_into_F, Q2_into_F, k = Q1.composite_fields(Q2, both_maps=True)[1]
             sage: Q1_into_F.domain() is Q1
@@ -3632,6 +3632,9 @@ class NumberField_generic(number_field_base.NumberField):
             +Infinity
         """
         return infinity.infinity
+
+    def absolute_polynomial_ntl(self):
+        return self.polynomial_ntl()
 
     def polynomial_ntl(self):
         """
@@ -5082,14 +5085,14 @@ class NumberField_absolute(NumberField_generic):
               Defn: a |--> -a
             ]
 
-            Here's a larger example, that would take some time if we found
-            roots instead of using PARI's specialized machinery:
+        Here's a larger example, that would take some time if we found
+        roots instead of using PARI's specialized machinery::
 
             sage: K = NumberField(x^6 - x^4 - 2*x^2 + 1, 'a')
             sage: len(K.automorphisms())
             2
 
-            `L` is the Galois closure of `K`:
+        `L` is the Galois closure of `K`::
 
             sage: L = NumberField(x^24 - 84*x^22 + 2814*x^20 - 15880*x^18 - 409563*x^16 - 8543892*x^14 + 25518202*x^12 + 32831026956*x^10 - 672691027218*x^8 - 4985379093428*x^6 + 320854419319140*x^4 + 817662865724712*x^2 + 513191437605441, 'a')
             sage: len(L.automorphisms())
@@ -5401,29 +5404,24 @@ class NumberField_absolute(NumberField_generic):
         return a relative number field `K` isomorphic to self that is relative
         over the absolute field `\QQ(\alpha)` or the domain of `alpha`, along
         with isomorphisms from `K` to self and from self to `K`.
-        
+
         INPUT:
         
-        
-        -  ``alpha`` - an element of self  or an embedding of a subfield into self
-        
-        -  ``names`` - 2-tuple of names of generator for output
-           field K and the subfield QQ(alpha) names[0] generators K and
-           names[1] QQ(alpha).
-        
+        - ``alpha`` - an element of self  or an embedding of a subfield into
+          self
+        - ``names`` - 2-tuple of names of generator for output field K and the
+          subfield QQ(alpha) names[0] generators K and names[1] QQ(alpha).
         
         OUTPUT:
-        
-        
-        -  ``K`` - relative number field
-        
-        
-        Also, ``K.structure()`` returns from_K and to_K,
-        where from_K is an isomorphism from K to self and to_K is an
-        isomorphism from self to K.
-        
+
+        K -- relative number field
+
+        Also, \code{K.structure()} returns from_K and to_K, where
+        from_K is an isomorphism from K to self and to_K is an isomorphism
+        from self to K.
+
         EXAMPLES::
-        
+
             sage: K.<a> = NumberField(x^10 - 2)
             sage: L.<c,d> = K.relativize(a^4 + a^2 + 2); L
             Number Field in c with defining polynomial x^2 - 1/5*d^4 + 8/5*d^3 - 23/5*d^2 + 7*d - 18/5 over its base field
@@ -5441,8 +5439,8 @@ class NumberField_absolute(NumberField_generic):
             sage: from_L(to_L(a^4 + a^2 + 2))
             a^4 + a^2 + 2
 
-            The following demonstrates distinct embeddings of a subfield into
-            a larger field:
+        The following demonstrates distinct embeddings of a subfield into a
+        larger field::
 
             sage: K.<a> = NumberField(x^4 + 2*x^2 + 2)
             sage: K0 = K.subfields(2)[0][0]; K0
@@ -5461,8 +5459,8 @@ class NumberField_absolute(NumberField_generic):
             sage: L2.base_field() is K0
             True
 
-            Here we see that with the different embeddings, the relative norms
-            are different:
+        Here we see that with the different embeddings, the relative norms are
+        different::
 
             sage: a0 = K0.gen()
             sage: L1_into_K, K_into_L1 = L1.structure()
@@ -5485,7 +5483,8 @@ class NumberField_absolute(NumberField_generic):
             False
 
         TESTS:
-            We can relativize over the whole field:
+
+        We can relativize over the whole field::
 
             sage: K.<a> = NumberField(x^4 + 2*x^2 + 2)
             sage: K.relativize(K.gen(), 'a')
@@ -5493,7 +5492,7 @@ class NumberField_absolute(NumberField_generic):
             sage: K.relativize(2*K.gen(), 'a')
             Number Field in a0 with defining polynomial x - 1/2*a1 over its base field
 
-            We can relativize over the prime field:
+        We can relativize over the prime field::
 
             sage: L = K.relativize(K(1), 'a'); L
             Number Field in a0 with defining polynomial x^4 + 2*x^2 + 2 over its base field
@@ -5501,57 +5500,127 @@ class NumberField_absolute(NumberField_generic):
             Number Field in a1 with defining polynomial x - 1
             sage: L.base_field().base_field()
             Rational Field
-
+ 
             sage: L = K.relativize(K(2), 'a'); L
             Number Field in a0 with defining polynomial x^4 + 2*x^2 + 2 over its base field
             sage: L.base_field()
             Number Field in a1 with defining polynomial x - 2
             sage: L.base_field().base_field()
             Rational Field
+
+        We can relativize over a relative field::
+
+            sage: K.<z> = CyclotomicField(16)
+            sage: L, L_into_K, _ = K.subfields(4)[0]; L
+            Number Field in z0 with defining polynomial x^4 + 16
+            sage: F, F_into_L, _ = L.subfields(2)[0]; F
+            Number Field in z00 with defining polynomial x^2 + 64
+
+            sage: L_over_F = L.relativize(F_into_L, 'c'); L_over_F
+            Number Field in c0 with defining polynomial x^2 - 1/2*z00 over its base field
+            sage: L_over_F_into_L, _ = L_over_F.structure()
+
+            sage: K_over_rel = K.relativize(L_into_K * L_over_F_into_L, 'a'); K_over_rel
+            Number Field in a0 with defining polynomial x^2 - 1/2*c0 over its base field
+            sage: K_over_rel.base_field() is L_over_F
+            True
+            sage: K_over_rel.structure()
+            (Relative number field morphism:
+              From: Number Field in a0 with defining polynomial x^2 - 1/2*c0 over its base field
+              To:   Cyclotomic Field of order 16 and degree 8
+              Defn: a0 |--> z
+                    c0 |--> 2*z^2
+                    z00 |--> 8*z^4, Ring morphism:
+              From: Cyclotomic Field of order 16 and degree 8
+              To:   Number Field in a0 with defining polynomial x^2 - 1/2*c0 over its base field
+              Defn: z |--> a0)
+
+        We can relativize over a really large field.  This requires great care
+        to not factor or do any operation that would trigger a pari nfinit()
+        internally::
+
+            sage: K.<a> = CyclotomicField(3^3*2^3)
+            sage: R = K.relativize(a^(3^2), 't'); R
+            Number Field in t0 with defining polynomial x^9 - t1 over its base field
+            sage: R.structure()
+            (Relative number field morphism:
+              From: Number Field in t0 with defining polynomial x^9 - t1 over its base field
+              To:   Cyclotomic Field of order 216 and degree 72
+              Defn: t0 |--> a
+                    t1 |--> a^9,
+             Ring morphism:
+              From: Cyclotomic Field of order 216 and degree 72
+              To:   Number Field in t0 with defining polynomial x^9 - t1 over its base field
+              Defn: a |--> t0)
         """
         # step 1: construct the abstract field generated by alpha.w
         # step 2: make a relative extension of it.
         # step 3: construct isomorphisms
+        from sage.all import vector, matrix
 
         names = sage.structure.parent_gens.normalize_names(2, names)
 
+        from sage.categories.map import is_Map
         if is_Map(alpha):
             # alpha better be a morphism with codomain self
             if alpha.codomain() != self:
                 raise ValueError, "Co-domain of morphism must be self"
             L = alpha.domain()
             alpha = alpha(L.gen()) # relativize over phi's domain
-            f = alpha.minpoly()
+            f = L.defining_polynomial() # = alpha.minpoly()
         else:
             # alpha must be an element coercible to self
             alpha = self(alpha)
             f = alpha.minpoly()
             L = NumberField(f, names[1])
 
-        g = self.defining_polynomial()
-        h = L['x'](g)
-        F = h.factor()
-        
-        for f, e in F:
-            if L.absolute_degree() * f.degree() == self.absolute_degree():
-                M = L.extension(f, names[0])
-                beta = M(L.gen())
-                try:
-                    to_M = self.hom([M.gen(0)], M, check=True)  # be paranoid
-                except TypeError:
-                    continue
-                if to_M(alpha) == beta:
-                    # Bingo.
-                    # We have now constructed a relative
-                    # number field M, and an isomorphism
-                    # self --> M that sends alpha to
-                    # the generator of the intermediate field.
-                    from_M = M.hom([self.gen()], self, check=True)
-                    M._set_structure(from_M, to_M)  # don't have to
-                                                    # worry about caching since relative number fields aren't cached.
-                    return M
-                
-        assert False, "bug in relativize"
+        # now we do some linear algebra to find the minpoly of self.gen() over L
+        L_into_self = L.hom([alpha])
+
+        extdeg = self.absolute_degree() // L.absolute_degree() # [ L : self ]
+        a = self.gen()
+
+        # we will find a linear relation between small powers of a over L
+        basis = [ a**i * b for i in range(extdeg) for b in map(L_into_self, L.power_basis()) ]
+        basis.append(a**extdeg) # this one makes the basis no longer a basis
+        mat = matrix([ b.vector() for b in basis ])
+        soln_space = mat.left_kernel(mat.row_space()(0))
+        # the solution space is one dimensional and the last entry is non-zero
+        # because a satisfies no smaller linear relation
+        assert soln_space.dimension() == 1
+        (reln, ) = soln_space.basis()
+        assert reln[-1] != 0
+        reln = reln * ~reln[-1]
+
+        # now we need to get those coeffs in L
+        coeff_mat = matrix(extdeg, f.degree(), list(reln)[:-1]) # easy way to divide into the correct lengths
+        coeffs_in_L = [ r*vector(L.power_basis()) for r in coeff_mat.rows() ]
+        # f is the minimal polynomial of a over L
+        f = L['x'](coeffs_in_L + [1])
+        # sanity check...
+        mp_in_self = self['x'](map(L_into_self, f.coeffs()))
+        assert mp_in_self(a) == 0
+
+        M = L.extension(f, names[0])
+        beta = M(L.gen())
+        to_M = self.hom([M.gen(0)], M, check=True)  # be paranoid
+        assert to_M(alpha) == beta
+        # Bingo.
+        # We have now constructed a relative
+        # number field M, and an isomorphism
+        # self --> M that sends alpha to
+        # the generator of the intermediate field.
+
+        # this strange step avoids computing an embedding of the base_field L
+        # into self, a computation which triggers a pari nfinit().  Without
+        # this, the relativize done over a huge field above is not feasible.
+        base_hom = L.hom([alpha], self)
+        from_M = M.Hom(self)([self.gen()], base_hom=base_hom, check=True)
+
+        # at some point in the future, we will worry about caching since relative
+        # number fields should be cached but aren't -- yet
+        M._set_structure(from_M, to_M)
+        return M
 
     # Synonyms so that terminology appropriate to relative number fields
     # can be applied to an absolute number field:
@@ -6778,6 +6847,18 @@ class NumberField_quadratic(NumberField_absolute):
         # crash Sage: see #5316).  Overwrite them with correct values.
         self._zero_element = self(0)
         self._one_element =  self(1)
+
+        emb = self.coerce_embedding()
+        if emb is None:
+            self._standard_embedding = True
+        else:
+            rootD = number_field_element_quadratic.NumberFieldElement_quadratic(self, (QQ(0),QQ(1)))
+            if D > 0:
+                from sage.rings.real_double import RDF
+                self._standard_embedding = RDF.has_coerce_map_from(self) and RDF(rootD) > 0
+            else:
+                from sage.rings.complex_double import CDF
+                self._standard_embedding = CDF.has_coerce_map_from(self) and CDF(rootD).imag() > 0
 
     def _coerce_map_from_(self, K):
         """

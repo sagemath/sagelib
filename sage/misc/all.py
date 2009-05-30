@@ -105,9 +105,7 @@ from functional import (additive_order,
                         hecke_operator,
                         ideal,
                         image,
-                        imag,
-                        imaginary,
-                        integral,
+                        integral, integrate,
                         integral_closure,
                         interval,
                         xinterval,
@@ -132,7 +130,6 @@ from functional import (additive_order,
                         one,
                         order,
                         rank,
-                        real,
                         regulator,
                         round,
                         quotient,
@@ -153,7 +150,7 @@ from latex import latex, view, pretty_print, pretty_print_default
 
 from trace import trace
 
-from cachefunc import CachedFunction, cached_function, cached_method
+from cachefunc import CachedFunction, cached_function, cached_method, cached_in_parent_method
 
 from lazy_attribute import lazy_attribute
 

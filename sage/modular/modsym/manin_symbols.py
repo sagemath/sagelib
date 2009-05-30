@@ -135,8 +135,8 @@ class ManinSymbolList(SageObject):
             False
         """
         if not isinstance(right, ManinSymbolList):
-            return -1
-        return cmp([self._weight, self._list], [right._weight, right._list])
+            return cmp(type(self), type(right))
+        return cmp((self._weight, self._list), (right._weight, right._list))
 
     def __getitem__(self, n):
         """
@@ -1818,7 +1818,8 @@ class ManinSymbol(SageObject):
             sage: m = ManinSymbolList_gamma0(5,8)
             sage: s = ManinSymbol(m,(2,2,3))
             sage: s.modular_symbol_rep()
-            144*X^6*{1/3,1/2} - 384*X^5*Y*{1/3,1/2} + 424*X^4*Y^2*{1/3,1/2} - 248*X^3*Y^3*{1/3,1/2} + 81*X^2*Y^4*{1/3,1/2} - 14*X*Y^5*{1/3,1/2} + Y^6*{1/3,1/2}
+             144*X^6*{1/3, 1/2} - 384*X^5*Y*{1/3, 1/2} + 424*X^4*Y^2*{1/3, 1/2} - 248*X^3*Y^3*{1/3, 1/2} + 81*X^2*Y^4*{1/3, 1/2} - 14*X*Y^5*{1/3, 1/2} + Y^6*{1/3, 1/2}
+
             
         """
         # TODO: It would likely be much better to do this slightly more directly

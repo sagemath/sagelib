@@ -61,8 +61,17 @@ B. \code{compare_structures}:
     \code{int compare_structures(int *gamma_1, int *gamma_2, object S1, object S2)}
     
     This function must implement a total ordering on the set of objects of fixed
-    order. Return -1 if \code{gamma_1(S1) < gamma_2(S2)}, 0 if
-    \code{gamma_1(S1) == gamma_2(S2)}, 1 if \code{gamma_1(S1) > gamma_2(S2)}.
+    order. Return:
+        -1 if \code{gamma_1^{-1}(S1) < gamma_2^{-1}(S2)},
+        0 if \code{gamma_1^{-1}(S1) == gamma_2^{-1}(S2)},
+        1 if \code{gamma_1^{-1}(S1) > gamma_2^{-1}(S2)}.
+    
+    Important note:
+    
+    The permutations are thought of as being input in inverse form, and this can
+    lead to subtle bugs. One is encouraged to consult existing implementations
+    to make sure the right thing is being done: this is so that you can avoid
+    *actually* needing to compute the inverse.
 
 C. \code{all_children_are_equivalent}:
     
@@ -338,17 +347,17 @@ cdef aut_gp_and_can_lab_return *get_aut_gp_and_can_lab(object S, int **partition
         except MemoryError:
             succeeded = 0
             for j from 0 <= j < i:
-                bitset_clear(fixed_points_of_generators[j])
-                bitset_clear(minimal_cell_reps_of_generators[j])
+                bitset_free(fixed_points_of_generators[j])
+                bitset_free(minimal_cell_reps_of_generators[j])
             break
         try:
             bitset_init(minimal_cell_reps_of_generators[i], n)
         except MemoryError:
             succeeded = 0
             for j from 0 <= j < i:
-                bitset_clear(fixed_points_of_generators[j])
-                bitset_clear(minimal_cell_reps_of_generators[j])
-            bitset_clear(fixed_points_of_generators[i])
+                bitset_free(fixed_points_of_generators[j])
+                bitset_free(minimal_cell_reps_of_generators[j])
+            bitset_free(fixed_points_of_generators[i])
             break
     if succeeded:
         for i from 0 <= i < n:
@@ -357,10 +366,10 @@ cdef aut_gp_and_can_lab_return *get_aut_gp_and_can_lab(object S, int **partition
             except MemoryError:
                 succeeded = 0
                 for j from 0 <= j < i:
-                    bitset_clear(vertices_to_split[j])
+                    bitset_free(vertices_to_split[j])
                 for j from 0 <= j < len_of_fp_and_mcr:
-                    bitset_clear(fixed_points_of_generators[j])
-                    bitset_clear(minimal_cell_reps_of_generators[j])
+                    bitset_free(fixed_points_of_generators[j])
+                    bitset_free(minimal_cell_reps_of_generators[j])
                 break
     if succeeded:
         try:
@@ -368,10 +377,10 @@ cdef aut_gp_and_can_lab_return *get_aut_gp_and_can_lab(object S, int **partition
         except MemoryError:
             succeeded = 0
             for j from 0 <= j < n:
-                bitset_clear(vertices_to_split[j])
+                bitset_free(vertices_to_split[j])
             for j from 0 <= j < len_of_fp_and_mcr:
-                bitset_clear(fixed_points_of_generators[j])
-                bitset_clear(minimal_cell_reps_of_generators[j])
+                bitset_free(fixed_points_of_generators[j])
+                bitset_free(minimal_cell_reps_of_generators[j])
     if not succeeded:
         sage_free(output.generators)
         if base:
@@ -689,11 +698,11 @@ cdef aut_gp_and_can_lab_return *get_aut_gp_and_can_lab(object S, int **partition
     
     # Deallocate:
     for i from 0 <= i < len_of_fp_and_mcr:
-        bitset_clear(fixed_points_of_generators[i])
-        bitset_clear(minimal_cell_reps_of_generators[i])
+        bitset_free(fixed_points_of_generators[i])
+        bitset_free(minimal_cell_reps_of_generators[i])
     for i from 0 <= i < n:
-        bitset_clear(vertices_to_split[i])
-    bitset_clear(vertices_have_been_reduced)
+        bitset_free(vertices_to_split[i])
+    bitset_free(vertices_have_been_reduced)
     sage_free(current_indicators)
     sage_free(first_indicators)
     if canonical_label:

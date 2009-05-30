@@ -51,6 +51,7 @@ import sage.libs.pari.all
 
 cimport integer
 import integer
+from integer cimport Integer
 
 from sage.libs.pari.gen cimport gen as pari_gen, PariInstance
 
@@ -64,6 +65,7 @@ from sage.categories.map cimport Map
 import sage.structure.factorization
 
 import sage.rings.real_mpfr
+import sage.rings.real_double
 
 cimport sage.rings.fast_arith
 import  sage.rings.fast_arith
@@ -142,7 +144,131 @@ cdef set_zero_one_elements():
     the_rational_ring._one_element = Rational(1)
 
 set_zero_one_elements()
+
+cpdef Integer integer_rational_power(Integer a, Rational b):
+    """
+    Compute `a^b` as an integer, if it is integral, or return None.
+    The positive real root is taken for even denominators. 
+
+    INPUT::
+
+        a -- an Integer
+        b -- a positive Rational
     
+    OUTPUT::
+    
+        `a^b` as an Integer or None
+
+    EXAMPLES::
+
+        sage: from sage.rings.rational import integer_rational_power
+        sage: integer_rational_power(49, 1/2)
+        7
+        sage: integer_rational_power(27, 1/3)
+        3
+        sage: integer_rational_power(-27, 1/3) is None
+        True
+        sage: integer_rational_power(-27, 2/3) is None
+        True
+        sage: integer_rational_power(512, 7/9)
+        128
+
+        sage: integer_rational_power(27, 1/4) is None
+        True
+        sage: integer_rational_power(-16, 1/4) is None
+        True
+
+        sage: integer_rational_power(0, 7/9)
+        0
+        sage: integer_rational_power(1, 7/9)
+        1
+        sage: integer_rational_power(-1, 7/9) is None
+        True
+        sage: integer_rational_power(-1, 8/9) is None
+        True
+        sage: integer_rational_power(-1, 9/8) is None
+        True
+    """
+    cdef Integer z = <Integer>PY_NEW(Integer)
+    if mpz_sgn(mpq_numref(b.value)) < 0:
+        raise ValueError, "Only positive exponents supported."
+    cdef int sgn = mpz_sgn(a.value)
+    cdef bint exact
+    if sgn == 0:
+        pass # z is 0
+    elif sgn < 0:
+        return None
+    elif mpz_cmp_ui(a.value, 1) == 0:
+        mpz_set_ui(z.value, 1)
+    else:
+        if (not mpz_fits_ulong_p(mpq_numref(b.value)) 
+            or not mpz_fits_ulong_p(mpq_denref(b.value))):
+            # too big to take roots/powers
+            return None
+        elif mpz_cmp_ui(mpq_denref(b.value), 2) == 0:
+            if mpz_perfect_square_p(a.value):
+                mpz_sqrt(z.value, a.value)
+            else:
+                return None
+        else:
+            exact = mpz_root(z.value, a.value, mpz_get_ui(mpq_denref(b.value)))
+            if not exact:
+                return None
+        mpz_pow_ui(z.value, z.value, mpz_get_ui(mpq_numref(b.value)))
+    return z
+
+cpdef rational_power_parts(a, b, factor_limit=10**5):
+    """
+    Compute rationals or integers `c` and `d` such that `a^b = c*d^b` 
+    with `d` small. This is used for simplifying radicals. 
+
+    INPUT::
+
+        a -- a Rational or Integer
+        b -- a Rational
+        factor_limit -- the limit used in factoring a
+    
+    EXAMPLES::
+
+        sage: from sage.rings.rational import rational_power_parts
+        sage: rational_power_parts(27, 1/2)
+        (3, 3)
+        sage: rational_power_parts(-128, 3/4)
+        (8, -8)
+        sage: rational_power_parts(-4, 1/2)
+        (2, -1)
+        sage: rational_power_parts(-4, 1/3)
+        (1, -4)
+        sage: rational_power_parts(9/1000, 1/2)
+        (3/10, 1/10)
+    """
+    if b < 0:
+        b = -b
+        a = ~a
+    if isinstance(a, Rational):
+        c1, d1 = rational_power_parts(a.numerator(), b)
+        c2, d2 = rational_power_parts(a.denominator(), b)
+        return c1/c2, d1/d2
+    elif not isinstance(a, Integer):
+        a = Integer(a)
+    c = integer_rational_power(a, b)
+    if c is not None:
+        return c, 1
+    numer, denom = b.numerator(), b.denominator()
+    if a < factor_limit*factor_limit:
+        f = a.factor()
+    else:
+        f = a._factor_trial_division(factor_limit)
+    c = 1
+    d = 1
+    for p, e in f:
+        c *= p**((e // denom)*numer)
+        d *= p**(e % denom)
+    if a < 0 and numer & 1:
+        d = -d
+    return c, d
+
+
 cdef class Rational(sage.structure.element.FieldElement):
     """
     A Rational number.
@@ -172,6 +298,10 @@ cdef class Rational(sage.structure.element.FieldElement):
         5/2
         sage: Rational(AA(209735/343 - 17910/49*golden_ratio).nth_root(3) + 3*golden_ratio)
         53/7
+        sage: QQ(float(1.5))
+        3/2
+        sage: QQ(RDF(1.2))
+        6/5
     
     Conversion from PARI::
     
@@ -361,6 +491,9 @@ cdef class Rational(sage.structure.element.FieldElement):
         elif hasattr(x, 'rational_reconstruction'):
             temp_rational = x.rational_reconstruction()
             mpq_set(self.value, temp_rational.value)
+        
+        elif isinstance(x, (float, sage.rings.real_double.RealDoubleElement)):
+            self.__set_value(sage.rings.real_mpfr.RealNumber(sage.rings.real_mpfr.RR, x), base)
         
         else:
             
@@ -969,6 +1102,53 @@ cdef class Rational(sage.structure.element.FieldElement):
                    2*(mpz_sizeinbase(mpq_denref(self.value), 2)+2))
         return self.sqrt(prec=prec, all=all)
 
+    def is_padic_square(self, p):
+        """
+        Determines whether this rational number is a square in Q_p (or in
+        R when p = infinity).
+        
+        INPUT:
+                
+        -  ``p`` - a prime number, or infinity
+        
+        EXAMPLES: 
+            sage: QQ(2).is_padic_square(7)
+            True
+            sage: QQ(98).is_padic_square(7)
+            True
+            sage: QQ(2).is_padic_square(5)
+            False
+
+        TESTS:
+            sage: QQ(5/7).is_padic_square(int(2))
+            False
+        """
+        ## Special case when self is zero
+        if self.is_zero():
+            return True
+
+        ## Deal with p = infinity (i.e. the real numbers)
+        import sage.rings.infinity
+        if p == sage.rings.infinity.infinity:
+            return (self > 0)
+
+        ## Check that p is prime
+        p = ZZ(p)
+        if not p.is_prime():
+            raise ValueError, 'p must be "infinity" or a positive prime number.'
+
+        ## Deal with finite primes
+        e, m = self.val_unit(p)
+
+        if e % 2 == 1:
+            return False
+ 
+        if p == 2:
+            return ((m % 8) == 1)
+
+        from sage.rings.arith import kronecker_symbol
+        return (kronecker_symbol(m, p) == 1)
+
     def val_unit(self, p):
         r"""
         Returns a pair: the p-adic valuation of self, and the p-adic unit
@@ -1110,16 +1290,16 @@ cdef class Rational(sage.structure.element.FieldElement):
             [10, -10]
             sage: x = 81/5
             sage: x.sqrt()
-            9/sqrt(5)
+            9*sqrt(1/5)
             sage: x = -81/3
             sage: x.sqrt()
-            3*sqrt(3)*I
+            3*sqrt(-3)
         
         ::
         
             sage: n = 2/3
             sage: n.sqrt()
-            sqrt(2)/sqrt(3)
+            sqrt(2/3)
             sage: n.sqrt(prec=10)
             0.82
             sage: n.sqrt(prec=100)
@@ -1133,7 +1313,7 @@ cdef class Rational(sage.structure.element.FieldElement):
             ...
             ValueError: square root of 2/3 not a rational number
             sage: sqrt(-2/3, all=True)
-            [sqrt(2)*I/sqrt(3), -sqrt(2)*I/sqrt(3)]
+            [sqrt(-2/3), -sqrt(-2/3)]
             sage: sqrt(-2/3, prec=53)
             0.816496580927726*I
             sage: sqrt(-2/3, prec=53, all=True)
@@ -1149,7 +1329,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         if mpq_sgn(self.value) < 0:
             if not extend:
                 raise ValueError, "square root of negative number not rational"
-            from sage.calculus.calculus import sqrt
+            from sage.functions.all import sqrt
             return sqrt._do_sqrt(self, prec=prec, all=all)
 
         cdef Rational z = <Rational> PY_NEW(Rational)            
@@ -1171,11 +1351,11 @@ cdef class Rational(sage.structure.element.FieldElement):
         if non_square:
             if not extend:
                 raise ValueError, "square root of %s not a rational number"%self
-            from sage.calculus.calculus import sqrt
+            from sage.functions.all import sqrt
             return sqrt._do_sqrt(self, prec=prec, all=all)
 
         if prec:
-            from sage.calculus.calculus import sqrt
+            from sage.functions.all import sqrt
             return sqrt._do_sqrt(self, prec=prec, all=all)
 
         if all:
@@ -1571,16 +1751,16 @@ cdef class Rational(sage.structure.element.FieldElement):
         We raise to some interesting powers::
         
             sage: (2/3)^I
-            2^I/3^I
+            (2/3)^I
             sage: (2/3)^sqrt(2)
-            2^sqrt(2)/3^sqrt(2)
+            (2/3)^sqrt(2)
             sage: x,y,z,n = var('x,y,z,n')
             sage: (2/3)^(x^n + y^n + z^n)
-            3^(-z^n - y^n - x^n)*2^(z^n + y^n + x^n)
+            (2/3)^(x^n + y^n + z^n)
             sage: (-7/11)^(tan(x)+exp(x))
-            11^(-tan(x) - e^x)*(-7)^(tan(x) + e^x)
+            (-7/11)^(e^x + tan(x))
             sage: (2/3)^(3/4)
-            2^(3/4)/3^(3/4)
+            (2/3)^(3/4)
             sage: (-1/3)^0
             1
             sage: a = (0/1)^(0/1); a
@@ -1618,6 +1798,17 @@ cdef class Rational(sage.structure.element.FieldElement):
             8
             sage: type(a)
             <type 'sage.rings.rational.Rational'>
+
+        If the result is rational, it is returned as a rational::
+            
+            sage: (4/9)^(1/2)
+            2/3
+            sage: parent((4/9)^(1/2))
+            Rational Field
+            sage: (-27/125)^(1/3)
+            3/5*(-1)^(1/3)
+            sage: (-27/125)^(1/2)
+            3/5*sqrt(-3/5)
         """
         if dummy is not None:
             raise ValueError, "__pow__ dummy variable not used"
@@ -1625,7 +1816,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         if not PY_TYPE_CHECK(self, Rational):
             # If the base is not a rational, e.g., it is an int, complex, float, user-defined type, etc.
             try:
-                self_coerced = Rational(self)
+                self_coerced = n.parent().coerce(self)
             except TypeError:
                 n_coerced = type(self)(n)
                 if n != n_coerced:
@@ -1642,10 +1833,21 @@ cdef class Rational(sage.structure.element.FieldElement):
             nn = PyNumber_Index(n)
         except TypeError:
             if PY_TYPE_CHECK(n, Rational):
+                # Perhaps it can be done exactly
+                c, d = rational_power_parts(self, n)
+                if d == 1:
+                    # It was an exact power
+                    return c
+                elif d == -1 and n.denominator() == 2:
+                    from sage.symbolic.all import I
+                    return c * I.pyobject() ** (n.numerator() % 4)
+                elif c != 1:
+                    return c * d**n
                 # this is the only sensible answer that avoids rounding and
                 # an infinite recursion.
-                from sage.calculus.calculus import SR
-                return SR(self)**SR(n)
+                from sage.symbolic.power_helper import try_symbolic_power
+                return try_symbolic_power(self, n)
+
             if PY_TYPE_CHECK(n, Element):
                 return (<Element>n)._parent(self)**n
             try:
@@ -2155,9 +2357,9 @@ cdef class Rational(sage.structure.element.FieldElement):
             sage: gamma(1/2)
             sqrt(pi)
             sage: gamma(7/2)
-            15*sqrt(pi)/8
+            15/8*sqrt(pi)
             sage: gamma(-3/2)
-            4*sqrt(pi)/3
+            4/3*sqrt(pi)
             sage: gamma(6/1)
             120
             sage: gamma(1/3)
@@ -2176,8 +2378,8 @@ cdef class Rational(sage.structure.element.FieldElement):
             elif mpz_cmp_ui(mpq_denref(self.value), 2) == 0:
                 numer = self.numer()
                 rat_part = Rational((numer-2).multifactorial(2)) >> ((numer-1)//2)
-                from sage.functions.constants import pi
-                from sage.calculus.calculus import sqrt
+                from sage.symbolic.constants import pi
+                from sage.functions.all import sqrt
                 return sqrt(pi) * rat_part
             else:
                 prec = 53
@@ -2666,7 +2868,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         cdef PariInstance P = sage.libs.pari.gen.pari
         return P.new_gen_from_mpq_t(self.value)
 
-    def _interface_init_(self):
+    def _interface_init_(self, I=None):
         """
         Return representation of this rational suitable for coercing into
         almost any computer algebra system.

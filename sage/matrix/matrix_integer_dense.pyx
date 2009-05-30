@@ -2142,7 +2142,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             sage: A.kernel_matrix()
             [-1  2 -1]
         
-        Note that the basis matrix returned above is not in Hermite form.
+        Note that the basis matrix returned above is not in Hermite/echelon form.
         
         ::
         
@@ -2188,17 +2188,69 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             sage: D.ncols()
             2
         """
-        if self._nrows == 0:    # from a 0 space
-            return self.new_matrix(0, self.nrows())
-        elif self._ncols == 0:  # to a 0 space
-            # n x n identity matrix with n = self.nrows()
+        return self.transpose()._right_kernel_matrix(algorithm=algorithm, LLL=LLL, proof=proof)
+
+
+    def _right_kernel_matrix(self, algorithm='padic', LLL=False, proof=None):
+        """
+        The options are exactly like self.right_kernel(...), but returns a matrix
+        A whose rows form a basis for the right kernel, i.e., so that
+        self\*transpose(A) = 0.
+        
+        This is mainly useful internally to avoid all overhead associated with
+        creating a free module.
+        
+        EXAMPLES::
+        
+            sage: A = matrix(ZZ, 3, 3, [1..9])
+            sage: A._right_kernel_matrix()
+            [-1  2 -1]
+        
+        Note that the basis matrix returned above is not in Hermite/echelon form.
+        
+        ::
+        
+            sage: A.right_kernel()
+            Free module of degree 3 and rank 1 over Integer Ring
+            Echelon basis matrix:
+            [ 1 -2  1]
+        
+        We compute another kernel::
+        
+            sage: A = matrix(ZZ, 2, 4, [2, 1, -18, -1, -1, 1, -1, -5])
+            sage: K = A._right_kernel_matrix(); K
+            [-17 -20  -3   0]
+            [  7   3   1  -1]
+        
+        K is a basis for the right kernel::
+        
+            sage: A*K.transpose()
+            [0 0]
+            [0 0]
+        
+        We illustrate the LLL flag::
+        
+            sage: L = A._right_kernel_matrix(LLL=True); L
+            [  7   3   1  -1]
+            [  4 -11   0  -3]
+            sage: K.hermite_form()
+            [ 1 64  3 12]
+            [ 0 89  4 17]
+            sage: L.hermite_form()
+            [ 1 64  3 12]
+            [ 0 89  4 17]
+        """
+        if self._ncols == 0:    # from a 0 space
+            return self.new_matrix(0, self.ncols())
+        elif self._nrows == 0:  # to a 0 space
+            # return identity matrix of size n = self.ncols()
             import constructor
-            return constructor.identity_matrix(self.nrows())
+            return constructor.identity_matrix(self.ncols())
 
         proof = get_proof_flag(proof, "linear_algebra")
 
         if algorithm == 'pari':
-            return self._kernel_gens_using_pari()
+            return self._kernel_matrix_using_pari()
         else:
             A = self._kernel_matrix_using_padic_algorithm(proof)
             if LLL:
@@ -2206,11 +2258,11 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             else:
                 return A
             
-    def kernel(self, algorithm='padic', LLL=False, proof=None, echelonize=True):
+    def right_kernel(self, algorithm='padic', LLL=False, proof=None, echelonize=True):
         r"""
-        Return the left kernel of this matrix, as a module over the
-        integers. This is the saturated ZZ-module spanned by all the row
-        vectors v such that v\*self = 0.
+        Return the right kernel of this matrix, as a module over the
+        integers. This is the saturated ZZ-module spanned by all the column
+        vectors v such that self\*v = 0.
         
         INPUT:
         
@@ -2225,30 +2277,30 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
            if False, impacts how determinants are computed.
         
         
-        By convention if self has 0 rows, the kernel is of dimension 0,
-        whereas the kernel is the whole domain if self has 0 columns.
+        By convention if self has 0 columnss, the right kernel is of dimension 0,
+        whereas the right kernel is the whole domain if self has 0 rows.
         
         EXAMPLES::
         
-            sage: M = MatrixSpace(ZZ,4,2)(range(8))
-            sage: M.kernel()
+            sage: M = MatrixSpace(ZZ,2,4)(range(8))
+            sage: M.right_kernel()
             Free module of degree 4 and rank 2 over Integer Ring
             Echelon basis matrix:
             [ 1  0 -3  2]
             [ 0  1 -2  1]
         """
-        if self._nrows == 0:    # from a 0 space
-            M = sage.modules.free_module.FreeModule(ZZ, self._nrows)
+        if self._ncols == 0:    # from a 0 space
+            M = sage.modules.free_module.FreeModule(ZZ, self._ncols)
             return M.zero_submodule()
-        elif self._ncols == 0:  # to a 0 space
-            return sage.modules.free_module.FreeModule(ZZ, self._nrows)
+        elif self._nrows == 0:  # to a 0 space
+            return sage.modules.free_module.FreeModule(ZZ, self._ncols)
 
-        X = self.kernel_matrix(algorithm=algorithm, LLL=LLL, proof=proof)
+        X = self._right_kernel_matrix(algorithm=algorithm, LLL=LLL, proof=proof)
         if not LLL and echelonize:
             X = X.hermite_form(proof=proof)
         X = X.rows()
 
-        M = sage.modules.free_module.FreeModule(ZZ, self.nrows())
+        M = sage.modules.free_module.FreeModule(ZZ, self.ncols())
         if LLL:
             return M.span_of_basis(X, check=False)
         else:
@@ -2259,22 +2311,50 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         Compute a list of independent generators that span the right kernel
         of self.
         
-        ALGORITHM: Use IML to compute the kernel over QQ, clear
+        ALGORITHM: Use IML to compute the right kernel over QQ, clear
         denominators, then saturate.
         """
-        return self.transpose()._rational_kernel_iml().transpose().saturation(proof=proof)
+        return self._rational_kernel_iml().transpose().saturation(proof=proof)
 
 
-    def _kernel_gens_using_pari(self):
-        """
+    def _kernel_matrix_using_pari(self):
+        r"""
         Compute an LLL reduced list of independent generators that span the
-        kernel of self.
-        
+        right kernel of self.
+
+        EXAMPLES:
+
+        A matrix of generators for a simple matrix of rank 2::
+
+            sage: M = MatrixSpace(ZZ,2,4)(range(8))
+            sage: M
+            [0 1 2 3]
+            [4 5 6 7]
+            sage: M._kernel_matrix_using_pari()
+            [ 1 -1 -1  1]
+            [ 0 -1  2 -1]
+
+        Testing matrices with no rows or no columns::
+
+            sage: N = MatrixSpace(ZZ,0,4)()
+            sage: N
+            []
+            sage: N._kernel_matrix_using_pari()
+            [1 0 0 0]
+            [0 1 0 0]
+            [0 0 1 0]
+            [0 0 0 1]
+            sage: P=MatrixSpace(ZZ,4,0)()
+            sage: P
+            []
+            sage: P._kernel_matrix_using_pari()
+            []
+
         ALGORITHM: Call pari's matkerint function.
         """
-        A = self._pari_().mattranspose().matkerint().mattranspose().python()
+        A = self._pari_().matkerint().mattranspose().python()
         if A.nrows() == 0:
-            return A.new_matrix(nrows = 0, ncols = self._nrows)
+            return A.new_matrix(nrows = 0, ncols = self._ncols)
         else:
             return A
 
@@ -3134,17 +3214,17 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         Next we try the Linbox det. Note that we must have proof=False.
         
         ::
-        
-            sage: A = matrix(ZZ,4,[1,2,5,3,4,1,6,7,8,10,3,2,14,5,6,8])
+
+            sage: A = matrix(ZZ,5,[1,2,3,4,5,4,6,3,2,1,7,9,7,5,2,1,4,6,7,8,3,2,4,6,7])
             sage: A.determinant(algorithm='linbox')
             Traceback (most recent call last):
             ...
             RuntimeError: you must pass the proof=False option to the determinant command to use Linbox's det algorithm
             sage: A.determinant(algorithm='linbox',proof=False)
-            -843
+            -21
             sage: A._clear_cache()
             sage: A.determinant()
-            -843
+            -21
         
         A bigger example::
         
@@ -3164,6 +3244,8 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         if n <= 3:
             # use generic special cased code.
             return matrix_dense.Matrix_dense.determinant(self)
+        elif n == 4:
+            return self._det_4x4_unsafe()
 
         if algorithm == 'default':
             if n <= 50 and self.height().ndigits() <= 100:
@@ -3199,6 +3281,23 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         d = linbox.det()
         _sig_off
         return Integer(d)
+
+    cdef _det_4x4_unsafe(self):
+        """
+        Compute the determinant of this matrix using a special
+        formulation for 4x4 matrices.
+
+        TESTS::
+
+            sage: A = matrix(ZZ,4,[1,2,3,4,4,3,2,1,0,5,0,1,9,1,2,3])
+            sage: A.determinant()     # indirect doctest
+            270
+        """
+        cdef Integer d = ZZ(0)
+        _sig_on
+        four_dim_det(d.value,self._entries)
+        _sig_off
+        return d
 
     def _det_ntl(self):
         """
@@ -4723,6 +4822,8 @@ def _lift_crt(Matrix_integer_dense M, residues, moduli=None):
     cdef Py_ssize_t nr, nc
     
     n = len(residues)
+    if n == 0:   # special case: obviously residues[0] wouldn't make sense here.
+        return M
     nr = residues[0].nrows()
     nc = residues[0].ncols()
 
@@ -4813,3 +4914,120 @@ def tune_multiplication(k, nmin=10, nmax=200, bitmin=2,bitmax=64):
                 print 'multimod'
                 
 
+##############################################################
+# Some people really really really want to make sure their
+# 4x4 determinant is really really really fast.
+##############################################################
+
+cdef void four_dim_det(mpz_t r,mpz_t *x):
+    """
+    Internal function used in computing determinants of 4x4 matrices. 
+    
+    TESTS::
+    
+        sage: A = matrix(ZZ,4,[1,0,3,0,4,3,2,1,0,5,0,0,9,1,2,3])
+        sage: A.determinant()     # indirect doctest
+        25
+    """
+    cdef mpz_t a,b
+    mpz_init(a)
+    mpz_init(b)
+
+    mpz_mul(a,x[3], x[6] ); mpz_submul(a,x[2], x[7] )
+    mpz_mul(b,x[9], x[12]); mpz_submul(b,x[8], x[13])
+    mpz_mul(r,a,b)
+    mpz_mul(a,x[1], x[7] ); mpz_submul(a,x[3], x[5] )
+    mpz_mul(b,x[10],x[12]); mpz_submul(b,x[8], x[14])
+    mpz_addmul(r,a,b)
+    mpz_mul(a,x[2], x[5] ); mpz_submul(a,x[1], x[6] )
+    mpz_mul(b,x[11],x[12]); mpz_submul(b,x[8], x[15])
+    mpz_addmul(r,a,b)
+    mpz_mul(a,x[3], x[4] ); mpz_submul(a,x[0], x[7] )
+    mpz_mul(b,x[10],x[13]); mpz_submul(b,x[9], x[14])
+    mpz_addmul(r,a,b)
+    mpz_mul(a,x[0], x[6] ); mpz_submul(a,x[2], x[4] )
+    mpz_mul(b,x[11],x[13]); mpz_submul(b,x[9], x[15])
+    mpz_addmul(r,a,b)
+    mpz_mul(a,x[1], x[4] ); mpz_submul(a,x[0], x[5] )
+    mpz_mul(b,x[11],x[14]); mpz_submul(b,x[10],x[15])
+    mpz_addmul(r,a,b)
+
+    mpz_clear(a)
+    mpz_clear(b)
+
+#The above was generated by the following Sage code:
+#def idx(x):
+#    return [i for i in range(16) if x[i]]
+#
+#def Det4Maker():
+#    Q = PolynomialRing(QQ,['x%s'%ZZ(i).str(16) for i in range(16)])
+#    M = Matrix(Q,4,4,Q.gens())
+#    D = M.det()
+#    Dm = [(m.exponents()[0],D[m]) for m in D.monomials()]
+#    Dm.sort(reverse=True)
+#    MM = [[Dm[i],Dm[i+1]] for i in range(0,len(Dm),2)]
+#
+#    S = []
+#    for j,((t,s),(r,o)) in enumerate(MM):
+#        a,b,c,d = [ZZ(i).str(16) for i in range(16) if t[i]]
+#        e,f,g,h = [ZZ(i).str(16) for i in range(16) if r[i]]
+#        S.append((c+d+g+h,j))
+#    S.sort(lambda x,y: cmp(x[0],y[0]))
+#    MM = [MM[s[1]] for s in S]
+#    MMM = [[MM[i],MM[i+1]] for i in range(0,len(MM),2)]
+#
+#    N = 0
+#    Cstrux = ""
+#    Pstrux = ""
+#    for ((t1,s1),(t2,s2)),((t3,s3),(t4,s4)) in MMM:
+#        a,b,c,d = idx(t1)
+#        e,f = idx(t2)[2:]
+#        h,i = idx(t3)[:2]
+#
+#        if s1 == 1:
+#            a,b,h,i = h,i,a,b
+#
+#        Pstrux+= 'a = x[%s]*x[%s]; '%(a,b)
+#        Cstrux+= 'mpz_mul(a,x[%s],x[%s]); '%(a,b)
+#    
+#        Pstrux+= 'a-=x[%s]*x[%s]; '%(h,i)
+#        Cstrux+= 'mpz_submul(a,x[%s],x[%s])\n'%(h,i)
+#    
+#        if s4*s1 == 1:
+#            c,d,e,f = e,f,c,d
+#
+#        Pstrux+= 'b = x[%s]*x[%s]; '%(c,d)
+#        Cstrux+= 'mpz_mul(b,x[%s],x[%s]); '%(c,d)
+#    
+#        Pstrux+= 'b-=x[%s]*x[%s]; '%(e,f)
+#        Cstrux+= 'mpz_submul(b,x[%s],x[%s])\n'%(e,f)
+#
+#
+#        if N:
+#            Pstrux+= 'r+= a*b\n'
+#            Cstrux+= 'mpz_addmul(r,a,b)\n'
+#        else:
+#            Pstrux+= 'r = a*b\n'
+#            Cstrux+= 'mpz_mul(r,a,b)\n'
+#            N = 1
+#    return Cstrux,Pstrux
+#
+#print Det4Maker()[0]
+
+#Note, one can prove correctness of the above by setting
+#    sage: Q = PolynomialRing(QQ,['x%s'%ZZ(i).str(16) for i in range(16)])
+#    sage: M = Matrix(Q,4,4,Q.gens())
+#    sage: D = M.det()
+#    sage: x = Q.gens()
+#and then evaluating the contents of Det4Maker()[1]...
+#    sage: a = x[3]*x[6]; a-=x[2]*x[7]; b = x[9]*x[12]; b-=x[8]*x[13]; r = a*b
+#    sage: a = x[1]*x[7]; a-=x[3]*x[5]; b = x[10]*x[12]; b-=x[8]*x[14]; r+= a*b
+#    sage: a = x[2]*x[5]; a-=x[1]*x[6]; b = x[11]*x[12]; b-=x[8]*x[15]; r+= a*b
+#    sage: a = x[3]*x[4]; a-=x[0]*x[7]; b = x[10]*x[13]; b-=x[9]*x[14]; r+= a*b
+#    sage: a = x[0]*x[6]; a-=x[2]*x[4]; b = x[11]*x[13]; b-=x[9]*x[15]; r+= a*b
+#    sage: a = x[1]*x[4]; a-=x[0]*x[5]; b = x[11]*x[14]; b-=x[10]*x[15]; r+= a*b
+#and comparing results:
+#    sage: r-D
+#    0
+#bingo!
+    

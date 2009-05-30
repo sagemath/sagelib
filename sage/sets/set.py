@@ -477,6 +477,15 @@ class Set_object(Set_generic):
     def __xor__(self, X):
         """
         Returns the symmetric difference of self and X.
+
+        EXAMPLES::
+
+            sage: X = Set([1,2,3,4])
+            sage: Y = Set([1,2])
+            sage: X.symmetric_difference(Y)
+            {3, 4}
+            sage: X.__xor__(Y)
+            {3, 4}
         """
         return self.symmetric_difference(X)
 
@@ -593,13 +602,47 @@ class Set_object_enumerated(Set_object):
 
 
     def __iter__(self):
+        r"""
+        Iterating through the elements of ``self``.
+
+        EXAMPLES::
+
+            sage: S = EnumeratedSet(GF(19))
+            sage: I = iter(S)
+            sage: I.next()
+            0
+            sage: I.next()
+            1
+            sage: I.next()
+            2
+            sage: I.next()
+            3
+        """
         for x in self.set():
             yield x
 
     def _latex_(self):
+        r"""
+        Return the LaTeX representation of ``self``.
+
+        EXAMPLES::
+
+            sage: S = EnumeratedSet(GF(2))
+            sage: latex(S)
+            \left\{0, 1\right\}
+        """
         return '\\left\\{' + ', '.join([latex(x) for x in self.set()])  + '\\right\\}'
 
     def _repr_(self):
+        r"""
+        Return the string representation of ``self``.
+
+        EXAMPLES::
+
+            sage: S = EnumeratedSet(GF(2))
+            sage: S
+            {0, 1}
+        """
         s = repr(self.set())
         return "{" + s[5:-2] + "}"
 
@@ -1004,29 +1047,21 @@ class Set_object_intersection(Set_object):
 
         EXAMPLES::
         
-            sage: X = Set(QQ).intersection(Set(RealField()))
+            sage: X = Set(QQ).intersection(Set(RR))
             sage: 5 in X
             True
             sage: ComplexField().0 in X
             False
 
-            Floating-point numbers are rational.
+        Any specific floating-point number in Sage is to finite precision, hence it is rational::
 
             sage: RR(sqrt(2)) in X
             True
 
         Real constants are not rational::
         
-        
             sage: pi in X
             False
-
-        pi is considered to be in RR, since it is a symbolic constant and can be cast into RR.
-
-        ::
-        
-            sage: pi in RR
-            True
         """
         return x in self.__X and x in self.__Y
 

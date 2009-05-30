@@ -1045,6 +1045,13 @@ class GenericGraph(SageObject):
             [ 0  1 -1  0]
             [-1 -1  3 -1]
             [-1  0 -1  2]
+
+	A weighted directed graph with loops::
+
+	    sage: G = DiGraph({1:{1:2,2:3}, 2:{1:4}}, weighted=True)
+            sage: G.laplacian_matrix()
+	    [ 3 -3]
+	    [-4  4]
         """
         from sage.matrix.constructor import matrix
         from sage.rings.integer_ring import IntegerRing
@@ -1069,7 +1076,7 @@ class GenericGraph(SageObject):
             row_sums = dict((i, S[i,0]) for i in range(M.nrows()))
                 
         for i in range(M.nrows()):
-            A[i,i] = row_sums.get(i, 0)
+            A[i,i] += row_sums.get(i, 0)
         return A
 
     laplacian_matrix = kirchhoff_matrix
@@ -2040,7 +2047,7 @@ class GenericGraph(SageObject):
                     self._embedding = G._embedding
             return planar
 
-    def is_circular_planar(self, ordered=True, kuratowski=False, set_embedding=False, set_pos=False):
+    def is_circular_planar(self, ordered=True, on_embedding=None, kuratowski=False, set_embedding=False, set_pos=False):
         """
         A graph (with nonempty boundary) is circular planar if it has a
         planar embedding in which all boundary vertices can be drawn in
@@ -2137,10 +2144,20 @@ class GenericGraph(SageObject):
             sage: K23.set_boundary([0,2,1,3]) # Diff Order!
             sage: K23.is_circular_planar(set_embedding=True)
             True
+
+        For graphs without a boundary, circular planar is the same as planar::
+        
+            sage: g = graphs.KrackhardtKiteGraph()
+            sage: g.is_circular_planar()
+            True
+
         """
+        boundary = self.get_boundary()
+        if not boundary: 
+            return self.is_planar(on_embedding, kuratowski, set_embedding, set_pos)
+        
         from sage.graphs.planarity import is_planar
         graph = self.to_undirected()
-        boundary = self.get_boundary()
         if hasattr(graph, '_embedding'):
             del(graph._embedding)
 
@@ -6262,26 +6279,7 @@ class GenericGraph(SageObject):
         
             sage: from sage.graphs.graph_plot import graphplot_options
             sage: list(sorted(graphplot_options.iteritems()))
-            [('color_by_label', 'Whether or not to color the edges by their label values.'), 
-            ('dist', 'The distance between multiedges.'), 
-            ('edge_colors', 'Dictionary of edge coloring.'), 
-            ('edge_labels', 'Whether or not to draw edge labels.'), 
-            ('edge_style', 'The linestyle of the edges-- one of "solid", "dashed", "dotted", dashdot".'), 
-            ('graph_border', 'Whether or not to draw a frame around the graph.'), 
-            ('heights', 'Dictionary specifying height (y positions) for vertices.'), 
-            ('iterations', 'The number of times to execute the spring layout algorithm.'), 
-            ('layout', 'A specified layout style-- one of "spring", "circular", "tree".'), 
-            ('loop_size', 'The radius of the smallest loop.'), 
-            ('max_dist', 'The max distance range to allow multiedges.'), 
-            ('partition', 'A partition of the vertex set.  (Draws each cell of vertices in a different color).'), 
-            ('pos', 'The position dictionary of vertices'), 
-            ('save_pos', 'Whether or not to save the computed position for the graph.'), 
-            ('tree_orientation', 'The direction of tree branches-- "up" or "down".'), 
-            ('tree_root', 'A vertex designation for drawing trees.'), 
-            ('vertex_colors', 'Dictionary of vertex coloring.'), 
-            ('vertex_labels', 'Whether or not to draw vertex labels.'), 
-            ('vertex_shape', 'The shape to draw the vertices, Currently unavailable for Multi-edged DiGraphs.'),
-            ('vertex_size', 'The size to draw the vertices.')]
+            [...]
 
             sage: from math import sin, cos, pi
             sage: P = graphs.PetersenGraph()
@@ -8358,7 +8356,7 @@ class Graph(GenericGraph):
         elif format == 'dict_of_dicts':
             if not all(isinstance(data[u], dict) for u in data):
                 raise ValueError("Input dict must be a consistent format.")
-            verts = data.keys()
+            verts = set(data.keys())
             if loops is None or loops is False:
                 for u in data:
                     if u in data[u]:
@@ -8370,7 +8368,7 @@ class Graph(GenericGraph):
             if weighted is None: weighted = False
             for u in data:
                 for v in data[u]:
-                    if v not in verts: verts.append(v)
+                    if v not in verts: verts.add(v)
                     if hash(u) > hash(v):
                         if v in data and u in data[v]:
                             if data[u][v] != data[v][u]:
@@ -8385,7 +8383,7 @@ class Graph(GenericGraph):
         elif format == 'dict_of_lists':
             if not all(isinstance(data[u], list) for u in data):
                 raise ValueError("Input dict must be a consistent format.")
-            verts = data.keys()
+            verts = set(data.keys())
             if loops is None or loops is False:
                 for u in data:
                     if u in data[u]:
@@ -8396,7 +8394,7 @@ class Graph(GenericGraph):
                 if loops is None: loops = False
             if weighted is None: weighted = False
             for u in data:
-                verts += [v for v in data[u] if v not in verts]
+                verts=verts.union([v for v in data[u] if v not in verts])
                 if len(uniq(data[u])) != len(data[u]):
                     if multiedges is False:
                         raise ValueError("Non-multigraph input dict has multiple edges (%s,%s)"%(u, choice([v for v in data[u] if data[u].count(v) > 1])))
@@ -8856,8 +8854,44 @@ class Graph(GenericGraph):
             sage: G.chromatic_number()
             3
         """
-        from sage.graphs.graph_coloring import chromatic_number
-        return chromatic_number(self)
+        f = self.chromatic_polynomial()
+        i = 0
+        while f(i) == 0:
+            i += 1
+        return i
+
+    def coloring(self, hex_colors=False):
+        """
+        Returns the first (optimal) coloring found.
+        
+        INPUT::
+        
+            hex_colors -- if True, return a dict which can
+                          easily be used for plotting
+        
+        EXAMPLES::
+        
+            sage: G = Graph("Fooba")
+
+            sage: P = G.coloring(); P
+            [[1, 2, 3], [0, 5, 6], [4]]
+            sage: G.plot(partition=P)
+
+            sage: H = G.coloring(hex_colors=True)
+            sage: for c in sorted(H.keys()):
+            ...    print c, H[c]
+            #0000ff [4]
+            #00ff00 [1, 2, 3]
+            #ff0000 [0, 5, 6]
+            sage: G.plot(vertex_colors=H)
+
+        """
+        from sage.graphs.graph_coloring import all_graph_colorings
+        for C in all_graph_colorings(self, self.chromatic_number()):
+            if hex_colors:
+                return C
+            else:
+                return C.values()
 
     ### Centrality
     
@@ -9856,7 +9890,7 @@ class DiGraph(GenericGraph):
         elif format == 'dict_of_dicts':
             if not all(isinstance(data[u], dict) for u in data):
                 raise ValueError("Input dict must be a consistent format.")
-            verts = data.keys()
+            verts = set(data.keys())
             if loops is None or loops is False:
                 for u in data:
                     if u in data[u]:
@@ -9868,7 +9902,7 @@ class DiGraph(GenericGraph):
             if weighted is None: weighted = False
             for u in data:
                 for v in data[u]:
-                    if v not in verts: verts.append(v)
+                    if v not in verts: verts.add(v)
                     if multiedges is not False and not isinstance(data[u][v], list):
                         if multiedges is None: multiedges = False
                         if multiedges:
@@ -9878,7 +9912,7 @@ class DiGraph(GenericGraph):
         elif format == 'dict_of_lists':
             if not all(isinstance(data[u], list) for u in data):
                 raise ValueError("Input dict must be a consistent format.")
-            verts = data.keys()
+            verts = set(data.keys())
             if loops is None or loops is False:
                 for u in data:
                     if u in data[u]:
@@ -9889,7 +9923,7 @@ class DiGraph(GenericGraph):
                 if loops is None: loops = False
             if weighted is None: weighted = False
             for u in data:
-                verts += [v for v in data[u] if v not in verts]
+                verts = verts.union([v for v in data[u] if v not in verts])
                 if len(uniq(data[u])) != len(data[u]):
                     if multiedges is False:
                         raise ValueError("Non-multidigraph input dict has multiple edges (%s,%s)"%(u, choice([v for v in data[u] if data[u].count(v) > 1])))

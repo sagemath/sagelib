@@ -33,13 +33,14 @@ AlgebraicNumber = None
 AlgebraicReal = None
 AA = None
 QQbar = None
+SR = None
 CDF = CLF = RLF = None
 def late_import():
     global NumberFieldElement_quadratic
     global AlgebraicNumber_base
     global AlgebraicNumber
     global AlgebraicReal
-    global AA, QQbar
+    global AA, QQbar, SR
     global CLF, RLF, CDF
     if NumberFieldElement_quadratic is None:
         import sage.rings.number_field.number_field_element_quadratic as nfeq
@@ -50,6 +51,8 @@ def late_import():
         AlgebraicReal = sage.rings.qqbar.AlgebraicReal
         AA = sage.rings.qqbar.AA
         QQbar = sage.rings.qqbar.QQbar
+        import sage.symbolic.ring
+        SR = sage.symbolic.ring.SR
         from real_lazy import CLF, RLF
         from complex_double import CDF
 
