@@ -18,7 +18,7 @@ reciprocal_trig_functions = {'sec': cos, 'csc': sin, 'cot': tan, 'sech': cosh, '
 from other import ( ceil, floor, gamma, factorial,
                     abs_symbolic, erf, sqrt,
                     real_part, real,
-                    imag_part, imag, imaginary)
+                    imag_part, imag, imaginary, conjugate)
 
 from log import (exp, log, ln, polylog, dilog)
 
@@ -37,7 +37,7 @@ from special import (bessel_I, bessel_J, bessel_K, bessel_Y,
                      inverse_jacobi,
                      lngamma, exp_int, error_fcn, elliptic_e,
                      elliptic_f, elliptic_ec, elliptic_eu,
-                     elliptic_kc, elliptic_pi,
+                     elliptic_kc, elliptic_pi, elliptic_j,
                      airy_ai, airy_bi)
                         
 from orthogonal_polys import (chebyshev_T,

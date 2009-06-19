@@ -7,55 +7,65 @@ rendering is done using the matplotlib Python library.
 The following graphics primitives are supported:
 
 
--  arrow - an arrow from a min point to a max point.
+-  :func:`arrow() <sage.plot.arrow.arrow>` - an arrow from a min point to a max point.
 
--  circle - a circle with given radius
+-  :func:`circle() <sage.plot.circle.circle>` - a circle with given radius
 
--  disk - a filled disk (i.e. a sector or wedge of a circle)
+-  :func:`disk() <sage.plot.disk.disk>` - a filled disk (i.e. a sector or wedge of a circle)
 
--  line - a line determined by a sequence of points (this need not
+-  :func:`line() <sage.plot.line.line>` - a line determined by a sequence of points (this need not
    be straight!)
 
--  point - a point
+-  :func:`point() <sage.plot.point.point>` - a point
 
--  text - some text
+-  :func:`text() <sage.plot.text.text>` - some text
 
--  polygon - a filled polygon
+-  :func:`polygon() <sage.plot.polygon.polygon>` - a filled polygon
 
 
 The following plotting functions are supported:
 
 
--  plot - plot of a function or other Sage object (e.g., elliptic
+-  :func:`plot` - plot of a function or other Sage object (e.g., elliptic
    curve).
 
--  parametric_plot
+-  :func:`parametric_plot`
 
--  polar_plot
+-  :func:`implicit_plot`
 
--  list_plot
+-  :func:`polar_plot`
 
--  bar_chart
+-  :func:`region_plot`
 
--  contour_plot
+-  :func:`list_plot`
 
--  plot_vector_field
+-  :func:`scatter_plot`
 
--  matrix_plot
+-  :func:`bar_chart`
 
--  graphics_array
+-  :func:`contour_plot`
+
+-  :func:`density_plot`
+
+-  :func:`plot_vector_field`
+
+-  :func:`plot_slope_field`
+
+-  :func:`matrix_plot`
+
+-  :func:`complex_plot`
+
+-  :func:`graphics_array`
 
 
 The following miscellaneous Graphics functions are included:
 
 
--  Graphics
+-  :func:`Graphics`
 
--  is_Graphics
+-  :func:`is_Graphics`
 
--  rgbcolor
-
--  hue
+-  :func:`hue`
 
 
 Type ``?`` after each primitive in Sage for help and examples.
@@ -1660,6 +1670,11 @@ def plot(funcs, *args, **kwds):
     floats, or has a plot method that returns a
     ``GraphicPrimitive`` object.
     
+    There are many other specialized 2D plot commands available
+    in Sage, such as ``plot_slope_field``, as well as various 
+    graphics primitives like Arrow; type ``sage.plot.plot?`` for 
+    a current list.
+
     Type ``plot.options`` for a dictionary of the default
     options for plots. You can change this to change the defaults for
     all future plots. Use ``plot.reset()`` to reset to the
@@ -1778,9 +1793,9 @@ def plot(funcs, *args, **kwds):
         32
         sage: P          # render
     
-    We plot with randomize=False, which makes the initial sample points
+    We plot with ``randomize=False``, which makes the initial sample points
     evenly spaced (hence always the same). Adaptive plotting might
-    insert other points, however, unless adaptive_recursion=0.
+    insert other points, however, unless ``adaptive_recursion=0``.
     
     ::
     
@@ -1825,11 +1840,11 @@ def plot(funcs, *args, **kwds):
     You have the function (in blue) and its approximation (in green)
     passing through the points A and B. The algorithm finds the
     midpoint C of AB and computes the distance between C and D. If that
-    distance exceeds the adaptive_tolerance threshold (*relative* to
+    distance exceeds the ``adaptive_tolerance`` threshold (*relative* to
     the size of the initial plot subintervals), the point D is
     added to the curve.  If D is added to the curve, then the
     algorithm is applied recursively to the points A and D, and D and
-    B. It is repeated adaptive_recursion times (5, by default).
+    B. It is repeated ``adaptive_recursion`` times (5, by default).
     
     The actual sample points are slightly randomized, so the above
     plots may look slightly different each time you draw them.
@@ -1849,8 +1864,8 @@ def plot(funcs, *args, **kwds):
         sage: E = EllipticCurve([0,-1])
         sage: plot(E, (1, 4), rgbcolor=hue(0.6))
     
-    We can change the line style to one of '--' (dashed), '-.' (dash
-    dot), '-' (solid), 'steps', ':' (dotted)::
+    We can change the line style to one of ``'--'`` (two hyphens, yielding
+    dashed), ``'-.'`` (dash dot), ``'-'`` (solid), ``'steps'``, ``':'`` (dotted)::
     
         sage: plot(sin(x), 0, 10, linestyle='-.')
     
@@ -1876,9 +1891,11 @@ def plot(funcs, *args, **kwds):
         sage: plot(lambda x : RR(x).nth_root(3), (x,-1, 1))
 
     We can detect the poles of a function::
+
         sage: plot(gamma, (-3, 4), detect_poles = True).show(ymin = -5, ymax = 5)
 
     We draw the Gamma-Function with its poles highlighted::
+
         sage: plot(gamma, (-3, 4), detect_poles = 'show').show(ymin = -5, ymax = 5)
 
     The basic options for filling a plot::

@@ -4048,7 +4048,7 @@ cdef class Polynomial(CommutativeAlgebraElement):
             sage: p.roots(ring=RR, algorithm='numpy')
             Traceback (most recent call last):
             ...
-            ValueError: array must not contain infs or NaNs
+            LinAlgError: Array must not contain infs or NaNs
             sage: p.roots(ring=RR, algorithm='pari')
             [(-3.50746621104340e451, 1)]
             sage: p.roots(ring=AA)
@@ -4057,7 +4057,7 @@ cdef class Polynomial(CommutativeAlgebraElement):
             [(-3.5074662110434039?e451, 1)]
             sage: p = bigc*x + 1
             sage: p.roots(ring=RR)
-            [(0.000000000000000, 1)]
+            [(-0.000000000000000, 1)]
             sage: p.roots(ring=AA)
             [(-2.8510609648967059?e-452, 1)]
             sage: p.roots(ring=QQbar)

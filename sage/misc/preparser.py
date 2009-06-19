@@ -54,6 +54,8 @@ A hex literal:
     'Integer(0x2e3)'
     sage: 0xA
     10
+    sage: 0xe
+    14
 
 Raw and hex works correctly:
     sage: type(0xa1)
@@ -415,6 +417,9 @@ def parse_ellipsis(code, preparse_step=True):
         '(ellipsis_range(1,2,Ellipsis,n))'
         sage: parse_ellipsis("for i in (f(x) .. L[10]):")
         'for i in (ellipsis_iter(f(x) ,Ellipsis, L[10])):'
+
+        sage: [1.0..2.0]
+        [1.00000000000000, 2.00000000000000]
     """
     ix = code.find('..')
     while ix != -1:

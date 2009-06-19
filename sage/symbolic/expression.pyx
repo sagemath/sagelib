@@ -110,6 +110,15 @@ Test if matrices work #5546 ::
     sage: v*M
     (x^2 + y*z, 2*x*y)
 
+Test if comparison bugs from #6256 are fixed::
+
+    sage: t = exp(sqrt(x)); u = 1/t
+    sage: t*u
+    1
+    sage: t + u
+    e^sqrt(x) + e^(-sqrt(x))
+    sage: t
+    e^sqrt(x)
 """
 
 include "../ext/interrupt.pxi"
@@ -501,7 +510,7 @@ cdef class Expression(CommutativeRingElement):
             sage: latex((2^(x^y)))
             2^{x^{y}}
             sage: latex(abs(x))
-            \left| x \right|
+            {\left| x \right|}
             sage: latex((x*y).conjugate())
             \bar{x} \bar{y}
 
@@ -534,15 +543,6 @@ cdef class Expression(CommutativeRingElement):
             sage: latex(SR(a+1)^x)
             \left(a + 1\right)^{x}
         """
-        o = self.operator()
-        if hasattr(o, '_latex_composition'):
-            return o._latex_composition(* self.operands())
-        if is_a_relational(self._gobj):
-            from sage.misc.latex import latex
-            return "%s %s %s" %(latex(self.lhs()),
-                                latex._relation_symbols()[self.operator()],
-                                latex(self.rhs()))
-
         return self._parent._latex_element_(self)
 
     def _mathml_(self):
@@ -3083,16 +3083,7 @@ cdef class Expression(CommutativeRingElement):
 
             # if operator is a special function defined by us
             # find the python equivalent and return it
-            res = None
-            if serial < get_ginac_serial():
-                from sage.symbolic.function import get_sfunction_map
-                res = get_sfunction_map()[serial]
-                if res is None:
-                    pass
-                    #raise NotImplementedError, "Sage equivalent of this special function is not implemented."
-
-            if res is None:
-                res = get_sfunction_from_serial(serial)
+            res = get_sfunction_from_serial(serial)
             if res is None:
                 raise RuntimeError, "cannot find SFunction in table"
 
