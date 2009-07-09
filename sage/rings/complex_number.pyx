@@ -91,6 +91,9 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
         sage: loads(b.dumps()) == b
         True
     """
+    
+    # Enable when __complex__ is used by NumPy rather than expecting a float.    
+    # __array_interface__ = {'typestr': '=c16'}
 
     cdef ComplexNumber _new(self):
         """
