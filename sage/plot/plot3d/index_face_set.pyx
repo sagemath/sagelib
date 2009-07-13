@@ -185,7 +185,7 @@ cdef class IndexFaceSet(PrimitiveObject):
 
     def __init__(self, faces, point_list=None, enclosed=False, **kwds):
         PrimitiveObject.__init__(self, **kwds)
-        
+
         self.enclosed = enclosed
         
         if point_list is None:
