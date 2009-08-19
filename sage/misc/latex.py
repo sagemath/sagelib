@@ -1,13 +1,13 @@
 """
 LaTeX printing support
 
-In order to support latex formating, an object should define a
+In order to support latex formatting, an object should define a
 special method ``_latex_(self)`` that returns a string.
 """
 
 #*****************************************************************************
 #
-#   SAGE: System for Algebra and Geometry Experimentation    
+#   Sage: System for Algebra and Geometry Experimentation    
 #
 #       Copyright (C) 2005 William Stein <wstein@gmail.com>
 #
@@ -307,8 +307,8 @@ class _Latex_prefs_object(SageObject):
 _Latex_prefs = _Latex_prefs_object()
 
 ##############################################################
-# The Latex class is used to make slides and latex output in
-# the SAGE Notebook
+# The Latex class is used to make slides and LaTeX output in
+# the Sage Notebook
 #########################################
 
 def latex_extra_preamble():
@@ -335,11 +335,11 @@ def latex_extra_preamble():
 def _run_latex_(filename, debug=False, density=150,
                        pdflatex=None, png=False, do_in_background=False):
     """
-    This runs LaTeX on the tex file "filename.tex".  It produces files
+    This runs LaTeX on the TeX file "filename.tex".  It produces files
     "filename.dvi" (or "filename.pdf"` if ``pdflatex`` is ``True``)
     and if ``png`` is True, "filename.png".  If ``png`` is True and
     dvipng can't convert the dvi file to png (because of postscript
-    specials or other issues), then dvips is called, and the ps file
+    specials or other issues), then dvips is called, and the PS file
     is converted to a png file.
     
     INPUT:
@@ -364,7 +364,7 @@ def _run_latex_(filename, debug=False, density=150,
     OUTPUT: string, which could be a string starting with 'Error' (if
     there was a problem), or it could be 'pdf' or 'dvi'.  If
     ``pdflatex`` is False, then a dvi file is created, but if there
-    appear to be problems with it (because of ps special commands, for
+    appear to be problems with it (because of PS special commands, for
     example), then a pdf file is created instead.  The function
     returns 'dvi' or 'pdf' to indicate which type of file is created.
     (Detecting problems requires that dvipng be installed; if it is
@@ -1354,7 +1354,7 @@ class JSMath:
 
 def jsmath(x, mode='display'):
     r"""
-    Attempt to nicely render an arbitrary SAGE object with jsMath typesetting.
+    Attempt to nicely render an arbitrary Sage object with jsMath typesetting.
     Tries to call ._latex_() on x. If that fails, it will render a string
     representation of x.
 
@@ -1370,7 +1370,7 @@ def jsmath(x, mode='display'):
         mode -- 'display' for displaymath or 'inline' for inline math
 
     OUTPUT:
-        A string of html that contains the LaTeX represntation of x. In the
+        A string of html that contains the LaTeX representation of x. In the
         notebook this gets embedded into the cell.
 
     EXAMPLES::
@@ -1409,7 +1409,7 @@ def jsmath(x, mode='display'):
         x = str(x)
     return html(delimiter + x + delimiter)
 
-def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, **kwds):
+def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, viewer = None, tightpage = None, **kwds):
     r"""nodetex
     Compute a latex representation of each object in objects, compile,
     and display typeset. If used from the command line, this requires
@@ -1432,16 +1432,22 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     
     -  ``pdflatex`` - bool (default: False): use pdflatex.
     
+    -  ``viewer`` -- string or None (default: None): specify a viewer to
+       use; currently the only options are None and 'pdf'.
+    
+    -  ``tightpage`` - bool (default: False): use the LaTeX package
+       'preview' with the 'tightpage' option.
+    
     OUTPUT: Display typeset objects.
     
     This function behaves differently depending on whether in notebook
     mode or not.
-    
-    If not in notebook mode, this opens up a window displaying a dvi
-    (or pdf) file, displaying the following: the title string is
-    printed, centered, at the top. Beneath that, each object in ``objects``
-    is typeset on its own line, with the string ``sep`` inserted between
-    these lines.
+
+    If not in notebook mode, the output is displayed in a separate
+    viewer displaying a dvi (or pdf) file, with the following: the
+    title string is printed, centered, at the top. Beneath that, each
+    object in ``objects`` is typeset on its own line, with the string
+    ``sep`` inserted between these lines.
 
     The value of ``sep`` is inserted between each element of the list
     ``objects``; you can, for example, add vertical space between
@@ -1449,19 +1455,39 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     adds a horizontal line between objects, and ``sep='\\newpage'``
     inserts a page break between objects.
 
-    If ``pdflatex`` is True, then this produces a pdf file.
+    If ``pdflatex`` is ``True``, then this produces a pdf file.
     Otherwise, it produces a dvi file, and if the program dvipng is
     installed, it checks the dvi file by trying to convert it to a png
     file.  If this conversion fails, the dvi file probably contains
     some postscript special commands or it has other issues which
     might make displaying it a problem; in this case, the file is
     converted to a pdf file, which is then displayed.
-    
-    If in notebook mode, this usually uses jsMath -- see the next
-    paragraph for the exception -- to display the output in the
-    notebook. Only the first argument, ``objects``, is relevant; the
-    others are ignored. If ``objects`` is a list, each object is
-    printed on its own line.
+
+    Setting ``viewer`` to ``'pdf'`` forces the use of a separate
+    viewer, even in notebook mode. This also sets ``pdflatex`` to
+    ``True``.
+
+    Setting the option ``tightpage`` to ``True`` tells LaTeX to use
+    the package 'preview' with the 'tightpage' option. Then, each
+    object is typeset in its own page, and that page is cropped to
+    exactly the size of the object. This is typically useful for very
+    large pictures (like graphs) generated with tikz. This only works
+    when using a separate viewer. Note that the object are currently
+    typeset in plain math mode rather than displaymath, because the
+    latter imposes a limit on the width of the picture. Technically,
+    ``tightpage`` adds ::
+
+      \\usepackage[tightpage,active]{preview}
+      \\PreviewEnvironment{page}
+
+    to the LaTeX preamble, and replaces the ``\\[`` and ``\\]`` around
+    each object by ``\\begin{page}$`` and ``$\\end{page}``.
+
+    If in notebook mode with ``viewer`` equal to ``None``, this
+    usually uses jsMath -- see the next paragraph for the exception --
+    to display the output in the notebook. Only the first argument,
+    ``objects``, is relevant; the others are ignored. If ``objects``
+    is a list, each object is printed on its own line.
 
     In the notebook, this *does* *not* use jsMath if the LaTeX code
     for ``objects`` contains a string in
@@ -1478,9 +1504,14 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     if isinstance(objects, LatexExpr):
         s = str(objects)
     else:
-        s = _latex_file_(objects, title=title, sep=sep, tiny=tiny, debug=debug)
+        if tightpage == True:
+            latex_options = {'extra_preamble':'\\usepackage[tightpage,active]{preview}\\PreviewEnvironment{page}',
+                             'math_left':'\\begin{page}$', 'math_right':'$\\end{page}'}
+        else:
+            latex_options = {}
+        s = _latex_file_(objects, title=title, sep=sep, tiny=tiny, debug=debug, **latex_options)
     # notebook
-    if EMBEDDED_MODE:
+    if EMBEDDED_MODE and viewer is None:
         jsMath_okay = True
         for t in latex.jsmath_avoid_list():
             if s.find(t) != -1:
@@ -1498,6 +1529,8 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
             print '<html><img src="%s"></html>'%png_link  # put comma at end of line?
         return
     # command line
+    if viewer == "pdf":
+        pdflatex = True
     if pdflatex is None:
         pdflatex = _Latex_prefs._option["pdflatex"]
     tmp = tmp_dir('sage_viewer')
@@ -1848,7 +1881,7 @@ def latex_variable_name(x, is_fname=False):
     3. If the variable name contains an '_' we start the subscript at
        the underscore. Note that #3 trumps rule #2.
 
-    4. If a component of the variable is a greek letter, escape it
+    4. If a component of the variable is a Greek letter, escape it
        properly.
 
     5. Recurse nicely with subscripts.

@@ -807,13 +807,13 @@ cdef class pAdicCappedAbsoluteElement(pAdicBaseGenericElement):
                 mpz_mod(ans.value, ans.value, self.prime_pow.pow_mpz_t_tmp(ans.absprec)[0])
             return ans
 
-    def copy(pAdicCappedAbsoluteElement self):
+    def __copy__(pAdicCappedAbsoluteElement self):
         """
         Returns a copy of ``self``.
 
         EXAMPLES::
 
-            sage: a = ZpCA(5,6)(17); b = a.copy()
+            sage: a = ZpCA(5,6)(17); b = copy(a)
             sage: a == b
             True
             sage: a is b
@@ -1003,7 +1003,7 @@ cdef class pAdicCappedAbsoluteElement(pAdicBaseGenericElement):
 
         OUTPUT:
         
-        - ``list`` -- the list of coeficients of ``self``
+        - ``list`` -- the list of coefficients of ``self``
 
         NOTES:
         
@@ -1189,7 +1189,7 @@ cdef class pAdicCappedAbsoluteElement(pAdicBaseGenericElement):
             
         OUTPUT:
         
-        - ``list`` -- the list of coeficients of ``self``
+        - ``list`` -- the list of coefficients of ``self``
 
         EXAMPLES::
         

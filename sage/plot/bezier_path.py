@@ -1,3 +1,6 @@
+r"""
+Bezier Paths
+"""
 #*****************************************************************************
 #       Copyright (C) 2006 Alex Clemesha <clemesha@gmail.com>,
 #                          William Stein <wstein@gmail.com>,
@@ -15,19 +18,20 @@
 #
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
-from sage.plot.primitive import GraphicPrimitive
+from sage.plot.primitive import GraphicPrimitive_xydata
 from sage.plot.misc import options, rename_keyword
 from sage.plot.colors import to_mpl_color
 
-class BezierPath(GraphicPrimitive):
+class BezierPath(GraphicPrimitive_xydata):
     """
     Path of Bezier Curves graphics primitive.
     """
     def __init__(self, path, options):
         """
-        Returns a graphics primitive of a path of bezier curves.
+        Returns a graphics primitive of a path of Bezier curves.
         
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.plot.bezier_path import BezierPath
             sage: BezierPath([[(0,0),(.5,.5),(1,0)],[(.5,1),(0,0)]],{'linestyle':'dashed'})
             Bezier path from (0, 0) to (0, 0)
@@ -41,30 +45,82 @@ class BezierPath(GraphicPrimitive):
             codes += (len(curve))*[len(curve)+1]
         self.codes = codes
         self.vertices = np.array(vertices, np.float)
-        GraphicPrimitive.__init__(self, options)
+        GraphicPrimitive_xydata.__init__(self, options)
         
     def _allowed_options(self):
         """
         Returns a dict of allowed options for bezier_path.
         
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.plot.bezier_path import BezierPath
             sage: list(sorted(BezierPath([[[-1,2], [14,2.3], [17,4]]], {})._allowed_options().iteritems()))
             [('alpha', 'How transparent the line is.'),
              ('fill', 'Whether or not to fill the polygon.'),
              ('linestyle',
               "The style of the line, which is one of 'dashed', 'dotted', 'solid', 'dashdot'."),
-             ('rgbcolor', 'The color as an rgb tuple.'),
+             ('rgbcolor', 'The color as an RGB tuple.'),
              ('thickness', 'How thick the border of the polygon is.'),
              ('zorder', 'The layer level in which to draw')]
         """
         return {'alpha':'How transparent the line is.',
                 'fill': 'Whether or not to fill the polygon.',
                 'thickness':'How thick the border of the polygon is.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'zorder':'The layer level in which to draw',
-                                'linestyle':"The style of the line, which is one of 'dashed', 'dotted', 'solid', 'dashdot'."}
-                
+                'linestyle':"The style of the line, which is one of 'dashed', 'dotted', 'solid', 'dashdot'."}
+    
+    def _plot3d_options(self, options=None):
+        """
+        Updates BezierPath options to those allowed by 3d implementation.
+        
+        EXAMPLES::
+        
+            sage: from sage.plot.bezier_path import BezierPath
+            sage: B = BezierPath([[(0,0),(.5,.5),(1,0)],[(.5,1),(0,0)]],{'linestyle':'dashed'})
+            sage: B._plot3d_options()
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: Invalid 3d line style: dashed
+            sage: B = BezierPath([[(0,0),(.5,.5),(1,0)],[(.5,1),(0,0)]],{'fill':False, 'thickness':2})
+            sage: B._plot3d_options()
+            {'thickness': 2}
+        """
+        if options == None:
+            options = dict(self.options())
+        options_3d = {}
+        if 'thickness' in options:
+            options_3d['thickness'] = options['thickness']
+            del options['thickness']
+        if 'fill' in options:
+            if options['fill']:
+                raise NotImplementedError, "Invalid 3d fill style.  Must set fill to False."
+            del options['fill']
+        if 'linestyle' in options:
+            if options['linestyle'] != 'solid':
+                raise NotImplementedError, "Invalid 3d line style: %s" % options['linestyle']
+            del options['linestyle']
+        options_3d.update(GraphicPrimitive_xydata._plot3d_options(self, options))
+        return options_3d
+
+    def plot3d(self, **kwds):
+        """
+        Returns a 3d plot (Jmol) of the bezier path.  Since a BezierPath primitive contains
+        only x,y coordinates, the path will be drawn in the z=0 plane.  To create a bezier path
+        with nonzero z coordinates in the path and control points, use the constructor bezier3d
+        instead of bezier_path.
+        
+        EXAMPLES::
+
+            sage: b = bezier_path([[(0,0),(0,1),(1,0)]])
+            sage: b.plot3d()
+            sage: bezier3d([[(0,0,0),(1,0,0),(0,1,0),(0,1,1)]])
+        """
+        from sage.plot.plot3d.shapes2 import bezier3d
+        options = self._plot3d_options()
+        options.update(kwds)
+        return bezier3d([[(x,y,0) for x,y in self.path[i]] for i in range(len(self.path))], **options)
+                                        
     def _repr_(self):
         return "Bezier path from %s to %s"%(self.path[0][0],self.path[-1][-1])
         
@@ -103,7 +159,8 @@ class BezierPath(GraphicPrimitive):
         """
         Returns a dictionary with the bounding box data.
         
-        EXAMPLES:
+        EXAMPLES::
+
             sage: b = bezier_path([[(0,0),(.5,.5),(1,0)],[(.5,1),(0,0)]])
             sage: d = b.get_minmax_data()
             sage: d['xmin']
@@ -133,7 +190,7 @@ def bezier_path(path, **options):
     
     path = [[p1, c1, c2, p2], [c3, c4, p3], [c5, p4], [p5], ...]
     
-    In the case of no control points, a striaght line will be drawn
+    In the case of no control points, a straight line will be drawn
     between the two endpoints.  If one control point is supplied, then 
     the curve at each of the endpoints will be tangent to the line from
     that endpoint to the control point.  Similarly, in the case of two 
@@ -149,27 +206,35 @@ def bezier_path(path, **options):
     straight line.
     
     INPUT:
-        path -- a list of lists of tuples (see above)
-        alpha -- default: 1
-        fill -- default: False
-        thickness -- default: 1
-        linestyle -- default: 'solid'
-        rbgcolor -- default: (0,0,0)
-        zorder -- the layer in which to draw
+
+    - ``path`` -- a list of lists of tuples (see above)
+    - ``alpha`` -- default: 1
+    - ``fill`` -- default: False
+    - thickness -- default: 1
+    - ``linestyle`` -- default: 'solid'
+    - ``rbgcolor`` -- default: (0,0,0)
+    - ``zorder`` -- the layer in which to draw
         
-    EXAMPLES:
+    EXAMPLES::
+
         sage: path = [[(0,0),(.5,.1),(.75,3),(1,0)],[(.5,1),(.5,0)],[(.2,.5)]]
         sage: b = bezier_path(path, linestyle='dashed', rgbcolor='green')
         sage: b
 
-    To construct a simple curve, create a list containing a single list:
+    To construct a simple curve, create a list containing a single list::
         
         sage: path = [[(0,0),(.5,1),(1,0)]]
         sage: curve = bezier_path(path, linestyle='dashed', rgbcolor='green')
         sage: curve
+
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: bezier_path([[(0,1),(.5,0),(1,1)]], fontsize=50)
+        sage: bezier_path([[(0,1),(.5,0),(1,1)]]).show(fontsize=50) # These are equivalent
     """
     from sage.plot.plot import Graphics
     g = Graphics()
+    g._set_extra_kwds(g._extract_kwds_for_show(options))
     g.add_primitive(BezierPath(path, options))
     return g
     

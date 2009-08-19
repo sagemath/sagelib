@@ -1,5 +1,5 @@
 r"""
-Dense vectors using a numpy backend.  This serves as a base class for
+Dense vectors using a NumPy backend.  This serves as a base class for
 dense vectors over Real Double Field and Complex Double Field
 
 EXAMPLES:
@@ -28,7 +28,7 @@ AUTHORS:
 """
 
 ###############################################################################
-#   SAGE: System for Algebra and Geometry Experimentation    
+#   Sage: System for Algebra and Geometry Experimentation    
 #       Copyright (C) 2006 William Stein <wstein@gmail.com>
 #  Distributed under the terms of the GNU General Public License (GPL)
 #                  http://www.gnu.org/licenses/
@@ -42,12 +42,12 @@ from sage.structure.element cimport Element, ModuleElement, RingElement, Vector
 from sage.rings.complex_double import CDF
 from sage.rings.complex_double cimport ComplexDoubleElement, new_ComplexDoubleElement
 
-cimport sage.ext.numpy as cnumpy
+cimport numpy as cnumpy
 
 numpy = None
 scipy = None
 
-# This is for the Numpy C API to work        
+# This is for the NumPy C API to work        
 cnumpy.import_array()
 
 cdef class Vector_double_dense(free_module_element.FreeModuleElement):
@@ -105,7 +105,7 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
         
         EXAMPLE:
         In this example, we throw away the current array and make a
-        new unitialized array representing the data for the class.
+        new uninitialized array representing the data for the class.
             sage: a=vector(RDF, range(9))
             sage: a.__create_vector__()
         """
@@ -133,12 +133,13 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
 
         EXAMPLE:
             sage: a = vector(RDF, range(9))
-            sage: a == a.copy()
+            sage: a == copy(a)
             True
         """
         if self._degree == 0:
             return self
-        return self._new(self._vector_numpy.copy())
+        from copy import copy
+        return self._new(copy(self._vector_numpy))
 
     def __init__(self, parent, entries, coerce = True, copy = True):
         """
@@ -275,7 +276,7 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
 
         # We call the self._python_dtype function on the value since
         # numpy does not know how to deal with complex numbers other
-        # than the builtin complex number type.
+        # than the built-in complex number type.
         cdef int status
         status = cnumpy.PyArray_SETITEM(self._vector_numpy,
                         cnumpy.PyArray_GETPTR1(self._vector_numpy, i), 
@@ -302,7 +303,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
             (0.0, 2.0, 4.0)
         """
         if self._degree == 0:
-            return self.copy()
+            from copy import copy
+            return copy(self)
         
         cdef Vector_double_dense _right, _left
         _right = right
@@ -320,7 +322,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
             True
         """
         if self._degree == 0:
-            return self.copy()
+            from copy import copy
+            return copy(self)
 
         cdef Vector_double_dense _right, _left
         _right = right
@@ -342,7 +345,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
         if not right.parent() == self.parent():
             right = self.parent().ambient_module()(right)
         if self._degree == 0:
-            return self.copy()
+            from copy import copy
+            return copy(self)
 
         cdef Vector_double_dense _right, _left
         _right = right
@@ -366,7 +370,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
             right = self.parent().ambient_module()(right)
             
         if self._degree == 0:
-            return self.copy()
+            from copy import copy
+            return copy(self)
         
         cdef Vector_double_dense _right, _left
         _right = right
@@ -384,7 +389,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
             (0, 3.0, 6.0)
         """
         if self._degree == 0:
-            return self.copy()
+            from copy import copy
+            return copy(self)
 
         return self._new(self._python_dtype(left)*self._vector_numpy)
 
@@ -399,7 +405,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
             (0, 3.0, 6.0)
         """
         if self._degree == 0:
-            return self.copy()
+            from copy import copy
+            return copy(self)
 
         return self._new(self._vector_numpy*self._python_dtype(right))
 
@@ -505,7 +512,8 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
             sage: v.numpy()
             array([], dtype=float64)
         """
-        return self._vector_numpy.copy()
+        from copy import copy
+        return copy(self._vector_numpy)
 
     cdef _replace_self_with_numpy(self,cnumpy.ndarray numpy_array):
         """
@@ -513,8 +521,7 @@ cdef class Vector_double_dense(free_module_element.FreeModuleElement):
         """
         if self._degree == 0:
             return
-        shape = numpy_array.shape
-        if len(shape)!=1 or len(self._vector_numpy) != shape[0]:
+        if numpy_array.ndim != 1 or len(self._vector_numpy) != numpy_array.shape[0]:
             raise ValueError, "vector lengths are not the same"
 
         self._vector_numpy = numpy_array.astype(self._numpy_dtype)

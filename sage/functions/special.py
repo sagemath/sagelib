@@ -431,7 +431,7 @@ class MaximaFunction(PrimitiveFunction):
 
     def _maxima_init_evaled_(self, *args):
         """
-        Returns a string which reprsents this function evaluated at
+        Returns a string which represents this function evaluated at
         *args* in Maxima.
 
         EXAMPLES::
@@ -653,7 +653,7 @@ def bessel_I(nu,z,algorithm = "pari",prec=53):
         sage: bessel_I(0,1.1,"maxima") 
         1.32616018371265...
         sage: bessel_I(0,1,"maxima")   
-        1.26606587775200...
+        1.2660658777520...
         sage: bessel_I(1,1,"scipy")
         0.565159103992...
     """

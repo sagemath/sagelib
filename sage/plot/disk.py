@@ -120,7 +120,7 @@ class Disk(GraphicPrimitive):
         return {'alpha':'How transparent the figure is.',
                 'fill': 'Whether or not to fill the disk.',
                 'thickness':'How thick the border of the disk is.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'zorder':'The layer level in which to draw'}
 
@@ -240,7 +240,7 @@ def disk(point, radius, angle, **options):
         sage: bl = disk((0.0,0.0), 1, (pi, 3*pi/2), color='yellow')
         sage: bl.show(aspect_ratio=1)
 
-    You can also acheive the same aspect ratio by specifying a ``figsize`` 
+    You can also achieve the same aspect ratio by specifying a ``figsize`` 
     with square dimensions::
 
         sage: bl = disk((0.0,0.0), 1, (pi, 3*pi/2), rgbcolor=(1,1,0))
@@ -262,6 +262,11 @@ def disk(point, radius, angle, **options):
         sage: type(d)
         <type 'sage.plot.plot3d.index_face_set.IndexFaceSet'>
 
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: disk((0, 0), 5, (0, pi/2), xmin=0, xmax=5, ymin=0, ymax=5, figsize=(2,2), rgbcolor=(1, 0, 1))
+        sage: disk((0, 0), 5, (0, pi/2), rgbcolor=(1, 0, 1)).show(xmin=0, xmax=5, ymin=0, ymax=5, figsize=(2,2)) # These are equivalent
+
     TESTS:
 
     We cannot currently plot disks in more than three dimensions::
@@ -273,6 +278,7 @@ def disk(point, radius, angle, **options):
     """
     from sage.plot.plot import Graphics
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     g.add_primitive(Disk(point, radius, angle, options))
     if len(point)==2:
         return g

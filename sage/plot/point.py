@@ -92,7 +92,7 @@ class Point(GraphicPrimitive_xydata):
         return {'alpha':'How transparent the line is.',
                 'pointsize': 'How big the point is.',
                 'faceted': 'If True color the edge of the point.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'zorder':'The layer level in which to draw'}
 
@@ -288,7 +288,12 @@ def point(points, **kwds):
         sage: point((1,2,3))
         sage: point([(0,0), (1,1)])
         sage: point([(0,0,1), (1,1,1)])
-        """
+
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: point([(cos(theta), sin(theta)) for theta in srange(0, 2*pi, pi/8)], frame=True)
+        sage: point([(cos(theta), sin(theta)) for theta in srange(0, 2*pi, pi/8)]).show(frame=True) # These are equivalent
+    """
     try:
         return point2d(points, **kwds)
     except (ValueError, TypeError):
@@ -326,10 +331,16 @@ def point2d(points, **options):
     Here are some random larger red points, given as a list of tuples::
 
         sage: point(((0.5, 0.5), (1, 2), (0.5, 0.9), (-1, -1)), rgbcolor=hue(1), pointsize=30)
-        """
+
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: point([(cos(theta), sin(theta)) for theta in srange(0, 2*pi, pi/8)], frame=True)
+        sage: point([(cos(theta), sin(theta)) for theta in srange(0, 2*pi, pi/8)]).show(frame=True) # These are equivalent
+    """
     from sage.plot.plot import xydata_from_point_list, Graphics
     xdata, ydata = xydata_from_point_list(points)
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     g.add_primitive(Point(xdata, ydata, options))
     return g
 

@@ -1,5 +1,5 @@
 ###############################################################################
-#   SAGE: Open Source Mathematical Software
+#   Sage: Open Source Mathematical Software
 #       Copyright (C) 2008 - 2009 Burcin Erocal <burcin@erocal.org>
 #       Copyright (C) 2008 William Stein <wstein@gmail.com>
 #  Distributed under the terms of the GNU General Public License (GPL),
@@ -140,7 +140,7 @@ cdef class SFunction(SageObject):
             ...
             RuntimeError: foo
 
-            # eval_func returns non coercable
+            # eval_func returns non coercible
             sage: def ef(x): return ZZ
             sage: bar = nfunction("bar", 1, eval_func=ef)
             sage: bar(x)
@@ -831,6 +831,10 @@ cdef class PrimitiveFunction(SFunction):
             0.841470984807897
             sage: s(1)
             sin(1)
+
+            sage: import numpy
+            sage: sin(numpy.arange(5))
+            array([ 0.        ,  0.84147098,  0.90929743,  0.14112001, -0.7568025 ])
         """
         if isinstance(x, float):
             return self._approx_(x)
@@ -846,6 +850,14 @@ cdef class PrimitiveFunction(SFunction):
                 return getattr(x, self.name())()
             except AttributeError:
                 pass
+            
+            if type(x).__module__ == 'numpy': # avoid importing
+                import numpy
+                try:
+                    return getattr(numpy, self.name())(x)
+                except AttributeError:
+                    pass
+        
         return SFunction.__call__(self, x)
 
     def _latex_(self):
@@ -890,7 +902,7 @@ cdef class PrimitiveFunction(SFunction):
         s = '%s(%s), numer'%(self._maxima_init_(), float(x))
         return float(maxima.eval(s))
 
-    def _complex_approx_(self, x): # must be called with Python complex float as iput
+    def _complex_approx_(self, x): # must be called with Python complex float as input
         """
         Given a Python complex `x`, evaluate self and return a complex value.
 

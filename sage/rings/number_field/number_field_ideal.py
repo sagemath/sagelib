@@ -639,6 +639,42 @@ class NumberFieldIdeal(Ideal_generic):
                 self.__integral_split = (self*denominator, denominator)
             return self.__integral_split
 
+    def intersection(self, other):
+        r"""
+        Return the intersection of self and other.
+
+        EXAMPLE::
+
+            sage: K.<a> = QuadraticField(-11)
+            sage: p = K.ideal((a + 1)/2); q = K.ideal((a + 3)/2)
+            sage: p.intersection(q) == q.intersection(p) == K.ideal(a-2)
+            True
+
+        An example with non-principal ideals::
+
+            sage: L.<a> = NumberField(x^3 - 7)
+            sage: p = L.ideal(a^2 + a + 1, 2)
+            sage: q = L.ideal(a+1)
+            sage: p.intersection(q) == L.ideal(8, 2*a + 2)
+            True
+
+        A relative example::
+
+            sage: L.<a,b> = NumberField([x^2 + 11, x^2 - 5])
+            sage: A = L.ideal([15, (-3/2*b + 7/2)*a - 8])
+            sage: B = L.ideal([6, (-1/2*b + 1)*a - b - 5/2])
+            sage: A.intersection(B) == L.ideal(-1/2*a - 3/2*b - 1)
+            True
+        """
+        other = self.number_field().ideal(other)
+        mod = self.free_module().intersection(other.free_module())
+        L = self.number_field()
+        if L.is_absolute():
+            elts = [L(x.list()) for x in mod.gens()]
+        else:
+            elts = [sum([x[i] * L.absolute_generator()**i for i in xrange(L.absolute_degree())]) for x in mod.gens()]
+        return L.ideal(elts)
+
     def is_integral(self):
         """
         Return True if this ideal is integral.
@@ -2256,6 +2292,22 @@ class NumberFieldFractionalIdeal(NumberFieldIdeal):
             sage: F2(a)
             Traceback (most recent call last):
             ZeroDivisionError: Cannot reduce field element -2/5*i + 1/5 modulo Fractional ideal (2*i + 1): it has negative valuation        
+
+        An example with a relative number field::
+
+            sage: L.<a,b> = NumberField([x^2 + 1, x^2 - 5])                                                
+            sage: p = L.ideal((-1/2*b - 1/2)*a + 1/2*b - 1/2)
+            sage: R = p.residue_field(); R
+            Residue field in abar of Fractional ideal ((-1/2*b - 1/2)*a + 1/2*b - 1/2)
+            sage: R.cardinality()
+            9
+            sage: R(17)
+            2
+            sage: R((a + b)/17)
+            abar
+            sage: R(1/b)
+            2*abar
+
         """
         if not self.is_prime():
             raise ValueError, "The ideal must be prime"
@@ -2430,7 +2482,7 @@ def quotient_char_p(I, p):
     # "M_I mod p" to be the reduction mod p of the elements
     # compute in step 1.
 
-    n = K.degree()
+    n = K.absolute_degree()
     k = FiniteField(p)
     M_OK_modp = k**n
     B_mod = B_I_in_terms_of_M.change_ring(k)

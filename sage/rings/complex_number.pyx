@@ -36,6 +36,9 @@ from sage.libs.mpmath.utils cimport mpfr_to_mpfval
 
 include "../ext/stdsage.pxi"
 
+cdef object numpy_complex_interface = {'typestr': '=c16'}
+cdef object numpy_object_interface = {'typestr': '|O'}
+
 cdef mp_rnd_t rnd
 rnd = GMP_RNDN
 
@@ -91,7 +94,7 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
         sage: loads(b.dumps()) == b
         True
     """
-
+    
     cdef ComplexNumber _new(self):
         """
         Quickly creates a new initialized complex number with the same
@@ -175,6 +178,24 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
             True
         """
         return self.str(truncate=False)
+
+    property __array_interface__:
+        def __get__(self):
+            """
+            Used for NumPy conversion.
+            
+            EXAMPLES::
+
+                sage: import numpy
+                sage: numpy.array([1.0, 2.5j]).dtype
+                dtype('complex128')
+                sage: numpy.array([1.000000000000000000000000000000000000j]).dtype
+                dtype('object')
+            """
+            if self._prec <= 57: # max size of repr(float)
+                return numpy_complex_interface
+            else:
+                return numpy_object_interface
 
     def _sage_input_(self, sib, coerced):
         r"""
@@ -362,8 +383,8 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
         INPUTS: n - an integer which will define the multiplicative order
         of self
         
-        EXAMPLES: Note that it is not advised to explicity call
-        ``_set_multiplicative_order`` for explicity declared
+        EXAMPLES: Note that it is not advisable to explicitly call
+        ``_set_multiplicative_order`` for explicitly declared
         complex numbers.
         
         ::
@@ -523,11 +544,22 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
 
     def norm(self):
         r"""
-        Returns the norm of self.
+        Returns the norm of this complex number. If `c = a + bi` is a
+        complex number, then the norm of `c` is defined as
         
-        `norm(a + bi) = a^2 + b^2`
+        .. MATH::
+
+            \text{norm}(c) = \text{norm}(a + bi) = a^2 + b^2
+
+        The norm of a complex number is different from its absolute value.
+        The absolute value of a complex number is defined to be the square
+        root of its norm. A typical use of the complex norm is in the
+        integral domain `\ZZ[i]` of Gaussian integers, where the norm of
+        each Gaussian integer `c = a + bi` is defined as its complex norm.
         
-        EXAMPLES: This indeed acts as the square function when the
+        EXAMPLES: 
+
+        This indeed acts as the square function when the
         imaginary component of self is equal to zero::
         
             sage: a = ComplexNumber(2,1)
@@ -715,11 +747,15 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
             2.0000000000000000000000000000
             sage: x.parent()
             Real Field with 100 bits of precision
+            sage: z.real_part()
+            2.0000000000000000000000000000
         """
         cdef real_mpfr.RealNumber x
         x = real_mpfr.RealNumber(self._parent._real_field(), None)
         mpfr_set(<mpfr_t> x.value, self.__re, rnd)
         return x
+
+    real_part = real
 
     def imag(self):
         """
@@ -733,11 +769,15 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
             3.0000000000000000000000000000
             sage: x.parent()
             Real Field with 100 bits of precision
+            sage: z.imag_part()
+            3.0000000000000000000000000000
         """
         cdef real_mpfr.RealNumber x
         x = real_mpfr.RealNumber(self._parent._real_field(), None)
         mpfr_set(<mpfr_t> x.value, self.__im, rnd)
         return x
+
+    imag_part = imag
 
     def __neg__(self):
         r"""
@@ -1894,9 +1934,9 @@ def create_ComplexNumber(s_real, s_imag=None, int pad=0, min_prec=53):
         sage: ComplexNumber(10,10)
         10.0000000000000 + 10.0000000000000*I
         sage: ComplexNumber(1.000000000000000000000000000,2)
-        1.000000000000000000000000000 + 2.000000000000000000000000000*I
+        1.00000000000000000000000000 + 2.00000000000000000000000000*I
         sage: ComplexNumber(1,2.000000000000000000000)
-        1.000000000000000000000 + 2.000000000000000000000*I
+        1.00000000000000000000 + 2.00000000000000000000*I
     
     ::
     

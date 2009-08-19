@@ -127,6 +127,13 @@ def __create__NumberFieldElement_version1(parent, cls, poly):
         sage: k.<a> = NumberField(x^3 - 2)
         sage: loads(dumps(a+1)) == a + 1
         True
+
+    This also gets called for unpickling order elements; we check that #6462 is
+    fixed::
+
+        sage: L = NumberField(x^3 - x - 1,'a'); OL = L.maximal_order(); w = OL.0
+        sage: loads(dumps(w)) == w
+        True
     """
     return cls(parent, poly)
 
@@ -404,7 +411,7 @@ cdef class NumberFieldElement(FieldElement):
             True
         """
         return __create__NumberFieldElement_version1, \
-               (self.number_field(), type(self), self.polynomial())
+               (self.parent(), type(self), self.polynomial())
 
     def __repr__(self):
         """
@@ -3410,6 +3417,29 @@ cdef class OrderElement_relative(NumberFieldElement_relative):
             False
         """
         return self._parent.number_field()(NumberFieldElement_relative.__invert__(self))
+
+    def inverse_mod(self, I):
+        r""" 
+        Return an inverse of self modulo the given ideal.
+        
+        INPUT:
+        
+        
+        -  ``I`` - may be an ideal of self.parent(), or an
+           element or list of elements of self.parent() generating a nonzero
+           ideal. A TypeError is raised if I is non-integral, and a ValueError
+           if the generators are all zero. A ZeroDivisionError is raised if I
+           + (x) != (1).
+                
+        EXAMPLES::
+        
+            sage: E.<a,b> = NumberField([x^2 - x + 2, x^2+ 1])
+            sage: OE = E.ring_of_integers()
+            sage: t = OE(b - a).inverse_mod(17*b)
+            sage: (t * (b-a) - 1) in E.ideal(17*b)
+            True
+        """
+        return _inverse_mod_generic(self, I)
 
     def charpoly(self, var='x'):
         r"""

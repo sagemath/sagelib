@@ -9,7 +9,7 @@ AUTHORS:
 
 #*****************************************************************************
 #
-#   SAGE: System for Algebra and Geometry Experimentation    
+#   Sage: System for Algebra and Geometry Experimentation    
 #
 #       Copyright (C) 2005 William Stein <wstein@gmail.com>
 #
@@ -176,14 +176,14 @@ cdef class FractionFieldElement(FieldElement):
         except NotImplementedError, s:
             raise ArithmeticError, "unable to reduce because gcd algorithm not implemented on input"            
 
-    def copy(self):
+    def __copy__(self):
         """
         EXAMPLES::
         
             sage: R.<x,y> = ZZ[]
             sage: f = x/y+1; f
             (x + y)/y
-            sage: f.copy()
+            sage: copy(f)
             (x + y)/y
         """
         return self.__class__(self._parent, self.__numerator,
@@ -230,7 +230,7 @@ cdef class FractionFieldElement(FieldElement):
         """
         This function hashes in a special way to ensure that generators of
         a ring R and generators of a fraction field of R have the same
-        hash. This enables them to be used as keys interchangably in a
+        hash. This enables them to be used as keys interchangeably in a
         dictionary (since ``==`` will claim them equal). This
         is particularly useful for methods like subs on
         ``ParentWithGens`` if you are passing a dictionary of

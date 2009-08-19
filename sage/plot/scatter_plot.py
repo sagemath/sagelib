@@ -74,13 +74,13 @@ class ScatterPlot(GraphicPrimitive):
              ('hue', 'The color given as a hue.'),
              ('marker', 'What shape to plot the points.'),
              ('markersize', 'the size of the markers.'),
-             ('rgbcolor', 'The color as an rgb tuple.'),
+             ('rgbcolor', 'The color as an RGB tuple.'),
              ('zorder', 'The layer level in which to draw.')]
         """
         return {'markersize': 'the size of the markers.',
                 'marker': 'What shape to plot the points.',
                 'alpha':'How transparent the marker border is.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'facecolor':'The color of the marker face.',
                 'edgecolor':'The color of the marker border.',
@@ -137,10 +137,15 @@ def scatter_plot(datalist, **options):
         sage: s = scatter_plot([[0,1],[2,2],[4.3,1.1]], marker='s')
         sage: s
         
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: scatter_plot([(0, 0), (1, 1)], markersize=100, facecolor='green', ymax=100)
+        sage: scatter_plot([(0, 0), (1, 1)], markersize=100, facecolor='green').show(ymax=100) # These are equivalent
     """
     import numpy
     from sage.plot.plot import Graphics
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     data = numpy.array(datalist, dtype='float')
     if len(data) != 0:
         xdata = data[:,0]

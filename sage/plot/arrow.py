@@ -77,12 +77,12 @@ class CurveArrow(GraphicPrimitive):
              ('head', '2-d only: Which end of the path to draw the head (one of 0 (start), 1 (end) or 2 (both)'), 
              ('hue', 'The color given as a hue.'), 
              ('linestyle', "2d only: The style of the line, which is one of 'dashed', 'dotted', 'solid', 'dashdot'."), 
-             ('rgbcolor', 'The color as an rgb tuple.'), 
+             ('rgbcolor', 'The color as an RGB tuple.'), 
              ('width', 'The width of the shaft of the arrow, in points.'), 
              ('zorder', '2-d only: The layer level in which to draw')]
         """
         return {'width':'The width of the shaft of the arrow, in points.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'arrowstyle': 'todo',
                 'linestyle': 'todo',
@@ -198,12 +198,12 @@ class Arrow(GraphicPrimitive):
              ('head', '2-d only: Which end of the path to draw the head (one of 0 (start), 1 (end) or 2 (both)'), 
              ('hue', 'The color given as a hue.'), 
              ('linestyle', "2d only: The style of the line, which is one of 'dashed', 'dotted', 'solid', 'dashdot'."), 
-             ('rgbcolor', 'The color as an rgb tuple.'), 
+             ('rgbcolor', 'The color as an RGB tuple.'), 
              ('width', 'The width of the shaft of the arrow, in points.'), 
              ('zorder', '2-d only: The layer level in which to draw')]
         """
         return {'width':'The width of the shaft of the arrow, in points.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'arrowshorten':'The length in points to shorten the arrow.',
                 'arrowsize':'The size of the arrowhead',
@@ -378,9 +378,14 @@ def arrow(tailpoint=None, headpoint=None, path=None, **options):
 
         sage: line([(0,0),(1,0)],thickness=10)+line([(0,1),(1,1)], thickness=10)+arrow((0.5,0),(0.5,1), arrowshorten=10,rgbcolor=(1,0,0))
 
+    Extra options will get passed on to show(), as long as they are valid::
+ 
+        sage: arrow((-2, 2), (7,1), frame=True)
+        sage: arrow((-2, 2), (7,1)).show(frame=True)
     """
     from sage.plot.plot import Graphics
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     if headpoint is not None and tailpoint is not None:
         xtail, ytail = tailpoint
         xhead, yhead = headpoint

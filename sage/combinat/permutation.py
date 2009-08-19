@@ -890,7 +890,10 @@ class Permutation_class(CombinatorialObject):
             sage: Permutation([2, 4, 1, 5, 3]).inverse()
             [3, 1, 5, 2, 4]
         """
-        return Permutation([self.index(i+1)+1 for i in range(len(self))])
+        w = range(len(self))
+        for i,j in enumerate(self):
+            w[j-1] = i+1
+        return Permutation(w)
 
     def _icondition(self, i):
         """
@@ -2800,7 +2803,7 @@ class StandardPermutations_all(InfiniteAbstractCombinatorialClass):
 
     def _infinite_cclass_slice(self, n):
         """
-        Needed by InfiniteAbstractCombinatorialClass to buid __iter__.
+        Needed by InfiniteAbstractCombinatorialClass to build __iter__.
         
         TESTS::
         
@@ -3118,7 +3121,7 @@ def robinson_schensted_inverse(p, q):
         [[[1, 2, 2]], [[1, 2, 3]]]
 
     Note that currently the constructor of ``Tableau`` accept as input lists
-    that are not even tableaux but only filling of a parition diagram. This
+    that are not even tableaux but only filling of a partition diagram. This
     feature should not be used with ``robinson_schensted_inverse``.
         
     TESTS:

@@ -31,7 +31,7 @@ cdef class Matrix(matrix0.Matrix):
 
     def _pari_init_(self):
         """
-        Return a string defining a gp representation of self.
+        Return a string defining a GP representation of self.
 
         EXAMPLES::
 
@@ -426,9 +426,9 @@ cdef class Matrix(matrix0.Matrix):
 
             sage: a = matrix(3,range(12))
             sage: a.numpy()
-            array([[0, 1, 2, 3],
-                   [4, 5, 6, 7],
-                   [8, 9, 10, 11]], dtype=object)
+            array([[ 0,  1,  2,  3],
+                   [ 4,  5,  6,  7],
+                   [ 8,  9, 10, 11]])
             sage: a.numpy('f')
             array([[  0.,   1.,   2.,   3.],
                    [  4.,   5.,   6.,   7.],
@@ -1059,7 +1059,7 @@ cdef class Matrix(matrix0.Matrix):
 
         - Jaap Spies (2006-02-18)
 
-        - Didier Deshommes: some pyrex speedups implemented
+        - Didier Deshommes: some Pyrex speedups implemented
         """
         if not PY_TYPE_CHECK(rows, list):
             raise TypeError, "rows must be a list of integers"

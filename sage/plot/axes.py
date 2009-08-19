@@ -1,7 +1,7 @@
 r"""
 2D Axes
 
-SAGE provides several different axes for its 2D plotting functionality.
+Sage provides several different axes for its 2D plotting functionality.
 The 'look' of the axes are similar to what Mathematica provides for its
 2D plotting.
 
@@ -31,7 +31,7 @@ from copy import copy
 
 class Axes(SageObject):
     """
-    Axes for SAGE 2D Graphics.
+    Axes for Sage 2-D Graphics.
 
     Set all axis properties and then add one of 
     the following axes to the current (matplotlib) subplot:
@@ -52,11 +52,19 @@ class Axes(SageObject):
         self.__draw_y_axis = True
         
     def _tasteful_ticks(self, minval, maxval):
-        """
+        r"""
         This function finds spacing for axes tick marks that are well spaced.
         Were 'well spaced' means for any given min and max values
         the tick spacing should look even and visually nice (tasteful).
-        
+
+        TESTS: 
+
+        The following tests that #5649 is fixed::
+
+        sage: from sage.plot.axes import Axes
+        sage: A = Axes()
+        sage: A._tasteful_ticks(2^(-20*10),2^(-20*1))
+        ([1.9999999999999999e-07,  3.9999999999999998e-07,  5.9999999999999997e-07,  7.9999999999999996e-07], 1.9999999999999999e-07, 1.9999999999999999e-07)
         """
         minval, maxval = float(minval), float(maxval)
         absmin, absmax = abs(minval), abs(maxval)
@@ -70,23 +78,32 @@ class Axes(SageObject):
             else:
                 domneg  = True
 
-            # Is the stepsize going to be < 1?
+            # Is the step size going to be < 1?
             if absmin < 1:
-                n = 0
-                s = str(absmin).split('.')[1]
-                for c in s:
-                    n+=1
-                    if c != '0':
-                        break
-                p = -(n-1)
-                d0 = eval(s[n-1])
-                #string may be of length 1
-                try:
-                    d1 = eval(s[n])
-                except IndexError:
-                    d1 = 0
+                if str(absmax).find('e') != -1: # numbers represented e.g. as 9e^-6
+                    s,exponent = str(absmin).split('e') # split number from the exponent
+                    p = eval(exponent) + 1
+                    d0 = eval(s[0])
+                    try:
+                        d1 = eval(s[2])
+                    except IndexError:
+                        d1 = eval("0")
+                else: # numbers represented e.g. as 0.0003
+                    n = 0
+                    s = str(absmin).split('.')[1]
+                    for c in s:
+                        n+=1
+                        if c != '0':
+                            break
+                    p = -(n-1)
+                    d0 = eval(s[n-1])
+                    #string may be of length 1
+                    try:
+                        d1 = eval(s[n])
+                    except IndexError:
+                        d1 = 0
 
-            #the stepsize will be 1 or greater:
+            #the step size will be 1 or greater:
             else:
                 if absmin >= 10:
                     sl = [s for s in str(int(absmin))]
@@ -104,22 +121,31 @@ class Axes(SageObject):
                  onlypos = True
             else:
                  dompos = True
-            #is the stepsize going to be < 1?
+            #is the step size going to be < 1?
             if absmax < 1:
-                n = 0
-                s = str(absmax).split('.')[1]
-                for c in s:
-                    n+=1
-                    if c != '0':
-                        break
-                p = -(n-1)
-                d0 = eval(s[n-1])
-                try:
-                    sn = s[n]
-                except IndexError:
-                    sn = "0"
-                d1 = eval(sn)
-            #the stepsize will be 1 or greater:
+                if str(absmax).find('e') != -1: # numbers represented e.g. as 9e^-6
+                    s,exponent = str(absmax).split('e')
+                    p = eval(exponent) + 1
+                    d0 = eval(s[0])
+                    try:
+                        d1 = eval(s[2])
+                    except IndexError:
+                        d1 = eval("0")
+                else: # numbers represented e.g. as 0.0003
+                    n = 0
+                    s = str(absmax).split('.')[1]
+                    for c in s:
+                        n+=1
+                        if c != '0':
+                            break
+                    p = -(n-1)
+                    d0 = eval(s[n-1])
+                    try:
+                        sn = s[n]
+                    except IndexError:
+                        sn = "0"
+                    d1 = eval(sn)
+            #the step size will be 1 or greater:
             else:
                 if maxval >= 10:
                     sl = [s for s in str(int(absmax))]
@@ -298,7 +324,7 @@ class Axes(SageObject):
         from axis.py which attempts to find aesthetically pleasing
         tick and label spacing values.
 
-        Some definitons of the parameters:
+        Some definitions of the parameters:
 
         y_axis_xpos : "where on the x-axis to draw the y-axis"
         xstep : "the spacing between major tick marks"
@@ -315,13 +341,13 @@ class Axes(SageObject):
         yspan = ymax - ymin
         xspan = xmax - xmin
 
-        #evalute find_axes for x values and y ticks
+        #evaluate find_axes for x values and y ticks
         y_axis_xpos, xstep, xtslminor, xtslmajor = self._find_axes(xmin, xmax)
         yltheight = 0.015*xspan     
         ystheight = 0.25*yltheight
         ylabel = y_axis_xpos - 2*ystheight
         
-        #evalute find_axes for y values and x ticks
+        #evaluate find_axes for y values and x ticks
         x_axis_ypos, ystep, ytslminor, ytslmajor = self._find_axes(ymin, ymax)
         xltheight = 0.015*yspan
         xstheight = 0.25*xltheight
@@ -408,14 +434,14 @@ class Axes(SageObject):
         yspan = ymax - ymin
         xspan = xmax - xmin
 
-        #evalute find_axes for x values and y ticks
+        #evaluate find_axes for x values and y ticks
         y_axis_xpos, xstep, xtslminor, xtslmajor = self._find_axes(xmin, xmax)
         yltheight = 0.015 * xspan     
         ystheight = 0.25  * yltheight
         #ylabel    = y_axis_xpos - 2*ystheight
         ylabel    = -2*ystheight
         
-        #evalute find_axes for y values and x ticks
+        #evaluate find_axes for y values and x ticks
         x_axis_ypos, ystep, ytslminor, ytslmajor = self._find_axes(ymin, ymax)
         xltheight = 0.015 * yspan
         xstheight = 0.25  * xltheight
@@ -505,7 +531,7 @@ class Axes(SageObject):
         xmax = int(xmax)
         ymax = int(ymax)
 
-        #evalute find_axes for x values and y ticks
+        #evaluate find_axes for x values and y ticks
         # the > 14 is just for appearance improvement
         if xmax > 19:
             #get nice tick spacing and assure we get largest point
@@ -522,7 +548,7 @@ class Axes(SageObject):
         ystheight = 0.25*yltheight
         ylabel = -2*ystheight
         
-        #evalute find_axes for y values and x ticks
+        #evaluate find_axes for y values and x ticks
         # the > 14 is just for appearance improvement
         if ymax > 19:
             #get nice tick spacing and assure we get largest point
@@ -578,7 +604,7 @@ class Axes(SageObject):
 
 class GridLines(SageObject):
     """
-    Grid lines for SAGE 2D Graphics.
+    Grid lines for Sage 2-D Graphics.
 
     See the docstring for Graphics.show for examples.
     """
@@ -650,7 +676,7 @@ class GridLines(SageObject):
             self.__gridlinesstyle[1].update(hgridlinesstyle)
 
     def add_gridlines(self, subplot, xmin, xmax, ymin, ymax, frame=False):
-        # Process the input to get valid gridline data.
+        # Process the input to get valid grid line data.
         r"""
         Add the grid lines to a subplot object.
 

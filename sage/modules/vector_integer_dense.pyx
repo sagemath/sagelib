@@ -35,7 +35,7 @@ TESTS:
 """
 
 ###############################################################################
-#   SAGE: System for Algebra and Geometry Experimentation    
+#   Sage: System for Algebra and Geometry Experimentation    
 #       Copyright (C) 2007 William Stein <wstein@gmail.com>
 #  Distributed under the terms of the GNU General Public License (GPL)
 #                  http://www.gnu.org/licenses/
@@ -144,7 +144,7 @@ cdef class Vector_integer_dense(free_module_element.FreeModuleElement):
         
         """
         if not self._is_mutable:
-            raise ValueError, "vector is immutable; please change a copy instead (use self.copy())"
+            raise ValueError, "vector is immutable; please change a copy instead (use copy())"
         cdef Integer z
         if i < 0 or i >= self._degree:
             raise IndexError

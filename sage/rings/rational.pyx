@@ -76,6 +76,11 @@ import  sage.rings.fast_arith
 cdef sage.rings.fast_arith.arith_int ai
 ai = sage.rings.fast_arith.arith_int()
 
+cdef object numpy_long_interface = {'typestr': '=i4' if sizeof(long) == 4 else '=i8' }
+cdef object numpy_int64_interface = {'typestr': '=i8'}
+cdef object numpy_object_interface = {'typestr': '|O'}
+cdef object numpy_double_interface = {'typestr': '=f8'}
+
 cdef extern from "convert.h":
     ctypedef long* GEN    
     void QQ_to_t_FRAC (GEN *g, mpq_t value)
@@ -555,7 +560,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         elif i == 0: return 0
         else: return 1
 
-    def copy(self):
+    def __copy__(self):
         """
         Return a copy of self.
         
@@ -564,7 +569,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         EXAMPLES::
         
             sage: a = -17/37
-            sage: a.copy() is a
+            sage: copy(a) is a
             False
         
         Coercion does not make a new copy::
@@ -650,6 +655,37 @@ cdef class Rational(sage.structure.element.FieldElement):
         if not self.is_integral():
             s += '/' + self.denominator()._magma_init_(magma)
         return s
+
+    property __array_interface__:
+        def __get__(self):
+            """
+            Used for NumPy conversion. If self is integral, it converts the
+            same as an Integer. Otherwise it converts to a double floating
+            point value. 
+            
+            EXAMPLES::
+            
+                sage: import numpy
+                sage: numpy.array([1, 2, 3/1])
+                array([1, 2, 3])
+                
+                sage: numpy.array(QQ(2**40)).dtype
+                dtype('int64')
+                sage: numpy.array(QQ(2**400)).dtype
+                dtype('object')
+                
+                sage: numpy.array([1, 1/2, 3/4])
+                array([ 1.  ,  0.5 ,  0.75])
+            """
+            if mpz_cmp_ui(mpq_denref(self.value), 1) == 0:                    
+                if mpz_fits_slong_p(mpq_numref(self.value)):
+                    return numpy_long_interface
+                elif sizeof(long) == 4 and mpz_sizeinbase(mpq_numref(self.value), 2) <= 63:
+                    return numpy_int64_interface
+                else:
+                    return numpy_object_interface
+            else:
+                return numpy_double_interface
 
     def _mathml_(self):
         """
@@ -911,7 +947,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         
         -  ``p`` - a prime number
         
-        - ``prec`` (int) -- desired floating point precision (defult:
+        - ``prec`` (int) -- desired floating point precision (default:
           default RealField precision).
 
         OUTPUT:
@@ -943,12 +979,12 @@ cdef class Rational(sage.structure.element.FieldElement):
 
     def local_height_arch(self, prec=None):
         r"""
-        Returns the archimdean local height of this rational number at the infinite place.
+        Returns the Archimedean local height of this rational number at the infinite place.
         
         INPUT:
         
         
-        - ``prec`` (int) -- desired floating point precision (defult:
+        - ``prec`` (int) -- desired floating point precision (default:
           default RealField precision).
 
         OUTPUT:
@@ -983,7 +1019,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         
         INPUT:
         
-        - ``prec`` (int) -- desired floating point precision (defult:
+        - ``prec`` (int) -- desired floating point precision (default:
           default RealField precision).
 
         OUTPUT:
@@ -994,7 +1030,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         ALGORITHM:
         
         This is the sum of the local heights at all primes `p`, which
-        may be computed without fatorization as the log of the
+        may be computed without factorization as the log of the
         denominator.
         
         EXAMPLES::
@@ -1025,7 +1061,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         
         INPUT:
         
-        - ``prec`` (int) -- desired floating point precision (defult:
+        - ``prec`` (int) -- desired floating point precision (default:
           default RealField precision).
 
         OUTPUT:
@@ -1057,7 +1093,7 @@ cdef class Rational(sage.structure.element.FieldElement):
         
         INPUT:
         
-        - ``prec`` (int) -- desired floating point precision (defult:
+        - ``prec`` (int) -- desired floating point precision (default:
           default RealField precision).
 
         OUTPUT:
@@ -1681,7 +1717,7 @@ cdef class Rational(sage.structure.element.FieldElement):
                
         .. note::
 
-           Use this function when you nede test test if a rational
+           Use this function when you need to test if a rational
            number is an n'th power, but do not need to know the value
            of its n'th root.  If the value is needed, use nth_root().
         

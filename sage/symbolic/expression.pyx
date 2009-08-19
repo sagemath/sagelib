@@ -1,5 +1,5 @@
 ###############################################################################
-#   SAGE: Open Source Mathematical Software
+#   Sage: Open Source Mathematical Software
 #       Copyright (C) 2008 William Stein <wstein@gmail.com>
 #       Copyright (C) 2008 Burcin Erocal <burcin@erocal.org>
 #  Distributed under the terms of the GNU General Public License (GPL),
@@ -76,7 +76,7 @@ Here they aren't::
 
 ARBITRARY SAGE ELEMENTS:
 
-You can work symbolically with any Sage datatype.  This can lead to
+You can work symbolically with any Sage data type.  This can lead to
 nonsense if the data type is strange, e.g., an element of a finite
 field (at present).
 
@@ -90,7 +90,7 @@ We mix Singular variables with symbolic variables::
 
 TESTS:
 
-Test jacobian on pynac expressions. #5546 ::
+Test Jacobian on Pynac expressions. #5546 ::
 
     sage: var('x,y')
     (x, y)
@@ -137,7 +137,7 @@ from sage.rings.infinity import AnInfinity
 
 def is_Expression(x):
     """
-    Retruns True if *x* is a symbolic Expression.
+    Returns True if *x* is a symbolic Expression.
 
     EXAMPLES::
 
@@ -212,7 +212,7 @@ cdef class Expression(CommutativeRingElement):
         """
         Nearly all expressions are created by calling new_Expression_from_*, 
         but we need to make sure this at least doesn't leave self._gobj 
-        uninitalized and segfault.
+        uninitialized and segfault.
 
         TESTS::
 
@@ -220,11 +220,20 @@ cdef class Expression(CommutativeRingElement):
             0
             sage: sage.symbolic.expression.Expression(SR, 5)
             5
+
+        We test subclassing ``Expression``::
+
+            sage: from sage.symbolic.expression import Expression
+            sage: class exp_sub(Expression): pass
+            sage: f = function('f')
+            sage: t = f(x)
+            sage: u = exp_sub(SR, t)
+            sage: u.operator()
+            f
         """
-        cdef GEx exp
-        GEx_construct_pyobject(exp, x)
-        GEx_construct_ex(&self._gobj, exp)
         self._parent = SR
+        cdef Expression exp = self.coerce_in(x)
+        GEx_construct_ex(&self._gobj, exp._gobj)
 
     def __dealloc__(self):
         """
@@ -512,7 +521,7 @@ cdef class Expression(CommutativeRingElement):
             sage: latex(abs(x))
             {\left| x \right|}
             sage: latex((x*y).conjugate())
-            \bar{x} \bar{y}
+            \overline{x} \overline{y}
 
         Check spacing of coefficients of mul expressions (#3202)::
 
@@ -688,7 +697,7 @@ cdef class Expression(CommutativeRingElement):
         Convert self to the given type by converting each of the operands
         to that type and doing the arithmetic.
 
-        FIXME: Make sure these docs are correct with the new symbolcs.
+        FIXME: Make sure these docs are correct with the new symbolics.
         
         EXAMPLES::
         
@@ -978,6 +987,18 @@ cdef class Expression(CommutativeRingElement):
             Traceback (most recent call last):
             ...
             TypeError: mutable matrices are unhashable
+
+        TESTS:
+
+        Test if hashes for fderivatives with different parameters collide.
+        #6243::
+
+            sage: f = function('f'); t = f(x,y)
+            sage: u = t.derivative(x); v = t.derivative(y)
+            sage: hash(u) == hash(v)
+            False
+            sage: d = {u: 3, v: 5}; sorted(d.values())
+            [3, 5]
         """
         return self._gobj.gethash()
 
@@ -1688,7 +1709,7 @@ cdef class Expression(CommutativeRingElement):
             sage: (-x+z)*(3*x-3*z)
             -3*(x - z)^2
 
-            # check if comparison of constant terms in pynac add objects work
+            # check if comparison of constant terms in Pynac add objects work
             sage: (y-1)*(y-2)
             (y - 2)*(y - 1)
 
@@ -2466,54 +2487,98 @@ cdef class Expression(CommutativeRingElement):
     ############################################################################
     def match(self, pattern):
         """
-        See http://www.ginac.de/tutorial/Pattern-matching-and-advanced-substitutions.html
+        Check if self matches the given pattern.
+
+        INPUT:
+        
+        -  ``pattern`` - a symbolic expression, possibly containing wildcards
+           to match for
+
+        OUTPUT:
+
+        - None - if there is no match
+        - a dictionary mapping the wildcards to the matching values if a match
+          was found. Note that the dictionary is empty if there were no
+          wildcards in the given pattern.
+
+        See also http://www.ginac.de/tutorial/Pattern-matching-and-advanced-substitutions.html
 
         EXAMPLES::
         
             sage: var('x,y,z,a,b,c,d,e,f')
             (x, y, z, a, b, c, d, e, f)
             sage: w0 = SR.wild(0); w1 = SR.wild(1); w2 = SR.wild(2)
-            sage: ((x+y)^a).match((x+y)^a)
-            True
-            sage: ((x+y)^a).match((x+y)^b)
-            False
-            sage: ((x+y)^a).match(w0^w1)
-            True
-            sage: ((x+y)^a).match(w0^w0)
-            False
+            sage: ((x+y)^a).match((x+y)^a)  # no wildcards, so empty dict
+            {}
+            sage: print ((x+y)^a).match((x+y)^b)
+            None
+            sage: t = ((x+y)^a).match(w0^w1)
+            sage: t[w0], t[w1]
+            (x + y, a)
+            sage: print ((x+y)^a).match(w0^w0)
+            None
             sage: ((x+y)^(x+y)).match(w0^w0)
-            True
-            sage: ((a+b)*(a+c)).match((a+w0)*(a+w1))
-            True
+            {$0: x + y}
+            sage: t = ((a+b)*(a+c)).match((a+w0)*(a+w1))
+            sage: t[w0], t[w1]
+            (b, c)
             sage: ((a+b)*(a+c)).match((w0+b)*(w0+c))
-            True
-            sage: ((a+b)*(a+c)).match((w0+w1)*(w0+w2))    # surprising?
-            False
-            sage: (a*(x+y)+a*z+b).match(a*w0+w1)
-            True
-            sage: (a+b+c+d+e+f).match(c)
-            False
+            {$0: a}
+            sage: print ((a+b)*(a+c)).match((w0+w1)*(w0+w2))    # surprising?
+            None
+            sage: t = (a*(x+y)+a*z+b).match(a*w0+w1)
+            sage: t[w0], t[w1]
+            (x + y, a*z + b)
+            sage: print (a+b+c+d+e+f).match(c)
+            None
             sage: (a+b+c+d+e+f).has(c)
             True
             sage: (a+b+c+d+e+f).match(c+w0)
-            True
+            {$0: a + b + d + e + f}
             sage: (a+b+c+d+e+f).match(c+e+w0)
-            True
+            {$0: a + b + d + f}
             sage: (a+b).match(a+b+w0)
-            True
-            sage: (a*b^2).match(a^w0*b^w1)
-            False
+            {$0: 0}
+            sage: print (a*b^2).match(a^w0*b^w1)
+            None
             sage: (a*b^2).match(a*b^w1)
-            True
+            {$1: 2}
             sage: (x*x.arctan2(x^2)).match(w0*w0.arctan2(w0^2))
-            True
+            {$0: x}
+
+        Beware that behind-the-scenes simplification can lead to
+        surprising results in matching::
+
+            sage: print (x+x).match(w0+w1)
+            None
+            sage: t = x+x; t
+            2*x
+            sage: t.operator()
+            <built-in function mul>
+
+        Since asking to match w0+w1 looks for an addition operator,
+        there is no match.
         """
         cdef Expression p = self.coerce_in(pattern)
-        return self._gobj.match(p._gobj)
+        cdef GExList mlst
+        cdef bint res = self._gobj.match(p._gobj, mlst)
+        if not res:
+            return None
+
+        cdef dict rdict = {}
+        cdef GExListIter itr = mlst.begin()
+        cdef GExListIter lstend = mlst.end()
+        while itr.is_not_equal(lstend):
+            key = new_Expression_from_GEx(self._parent, itr.obj().lhs())
+            val = new_Expression_from_GEx(self._parent, itr.obj().rhs())
+            rdict[key] = val
+            itr.inc()
+        return rdict
+
 
     def find(self, pattern):
         """
-        Find all occurences of the given pattern in this expression.
+        Find all occurrences of the given pattern in this expression.
 
         Note that once a subexpression matches the pattern, the search doesn't
         extend to subexpressions of it.
@@ -2682,6 +2747,16 @@ cdef class Expression(CommutativeRingElement):
             Infinity
             sage: 1/gamma(x).subs(x=-1)
             0
+
+            # verify that this operation does not modify the passed dictionary (#6622)
+            sage: var('v t')
+            (v, t)
+            sage: f = v*t
+            sage: D = {v: 2}
+            sage: f(D, t=3)
+            6
+            sage: D
+            {v: 2}
         """
         cdef dict sdict = {}
         if in_dict is not None:
@@ -2689,7 +2764,7 @@ cdef class Expression(CommutativeRingElement):
                 return self._subs_expr(in_dict)
             if not isinstance(in_dict, dict):
                 raise TypeError, "subs takes either a set of keyword arguments, a dictionary, or a symbolic relational expression"
-            sdict = in_dict
+            sdict.update(in_dict)
 
         if kwds:
             for k, v in kwds.iteritems():
@@ -3213,7 +3288,7 @@ cdef class Expression(CommutativeRingElement):
 
         TESTS:
 
-        We test the evaluation of different infinities available in pynac::
+        We test the evaluation of different infinities available in Pynac::
         
             sage: t = x - oo; t
             -Infinity
@@ -3313,7 +3388,7 @@ cdef class Expression(CommutativeRingElement):
     ############################################################################
     def coefficient(self, s, int n=1):
         """
-        Returns the coefficient of `s^n` in this symoblic expression.
+        Returns the coefficient of `s^n` in this symbolic expression.
         
         INPUT:
 
@@ -4060,6 +4135,21 @@ cdef class Expression(CommutativeRingElement):
             sin(1)
             sage: sin(SR(RealField(150)(1)))
             0.84147098480789650665250232163029899962256306
+
+        TESTS::
+
+            sage: SR(oo).sin()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: sin_eval(): sin(infinity) encountered
+            sage: SR(-oo).sin()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: sin_eval(): sin(infinity) encountered
+            sage: SR(unsigned_infinity).sin()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: sin_eval(): sin(infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_sin(self._gobj))
 
@@ -4087,6 +4177,21 @@ cdef class Expression(CommutativeRingElement):
             0.540302305868140
             sage: SR(float(1)).cos().n()
             0.540302305868140            
+
+        TESTS::
+
+            sage: SR(oo).cos()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: cos_eval(): cos(infinity) encountered
+            sage: SR(-oo).cos()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: cos_eval(): cos(infinity) encountered
+            sage: SR(unsigned_infinity).cos()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: cos_eval(): cos(infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_cos(self._gobj))
 
@@ -4099,18 +4204,28 @@ cdef class Expression(CommutativeRingElement):
             sage: tan(x^2 + y^2)
             tan(x^2 + y^2)
             sage: tan(sage.symbolic.constants.pi/2)
-            Traceback (most recent call last):
-            ...
-            ValueError: simple pole at 1/2*pi
+            Infinity
             sage: tan(SR(1))
             tan(1)
             sage: tan(SR(RealField(150)(1)))
             1.5574077246549022305069748074583601730872508
-         """
-        try:
-            return new_Expression_from_GEx(self._parent, g_tan(self._gobj))
-        except RuntimeError:
-            raise ValueError, "simple pole at %s"%(self)
+
+        TESTS::
+
+            sage: SR(oo).tan()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: tan_eval(): tan(infinity) encountered
+            sage: SR(-oo).tan()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: tan_eval(): tan(infinity) encountered
+            sage: SR(unsigned_infinity).tan()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: tan_eval(): tan(infinity) encountered
+        """
+        return new_Expression_from_GEx(self._parent, g_tan(self._gobj))
 
     def arcsin(self):
         """
@@ -4135,6 +4250,19 @@ cdef class Expression(CommutativeRingElement):
             -arcsin(0.999000000000000)
             sage: SR(0.999).arcsin().n()
             1.52607123962616
+
+        TESTS::
+
+            sage: SR(oo).arcsin()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arcsin_eval(): arcsin(infinity) encountered
+            sage: SR(-oo).arcsin()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arcsin_eval(): arcsin(infinity) encountered
+            sage: SR(unsigned_infinity).arcsin()
+            Infinity
         """
         return new_Expression_from_GEx(self._parent, g_asin(self._gobj))
 
@@ -4158,6 +4286,19 @@ cdef class Expression(CommutativeRingElement):
             sage: SR(0.4).arccos().n()
             1.15927948072741
             sage: plot(lambda x: SR(x).arccos(), -1,1)
+
+        TESTS::
+
+            sage: SR(oo).arccos()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arccos_eval(): arccos(infinity) encountered
+            sage: SR(-oo).arccos()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arccos_eval(): arccos(infinity) encountered
+            sage: SR(unsigned_infinity).arccos()
+            Infinity
         """
         return new_Expression_from_GEx(self._parent, g_acos(self._gobj))
 
@@ -4182,6 +4323,17 @@ cdef class Expression(CommutativeRingElement):
             sage: SR(0.5).arctan().n()
             0.463647609000806
             sage: plot(lambda x: SR(x).arctan(), -20,20)
+
+        TESTS::
+
+            sage: SR(oo).arctan()
+            1/2*pi
+            sage: SR(-oo).arctan()
+            -1/2*pi
+            sage: SR(unsigned_infinity).arctan()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arctan_eval(): arctan(unsigned_infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_atan(self._gobj))
 
@@ -4246,6 +4398,29 @@ cdef class Expression(CommutativeRingElement):
             arctan2(1.0*I, 1)
             sage: SR(1).arctan2(CDF(0,1))
             arctan2(1, 1.0*I)
+
+            sage: SR(oo).arctan2(oo)
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arctan2_eval(): arctan2(infinity, infinity) encountered
+            sage: SR(oo).arctan2(0)
+            0
+            sage: SR(-oo).arctan2(0)
+            pi
+            sage: SR(-oo).arctan2(-2)
+            -pi
+            sage: SR(unsigned_infinity).arctan2(2)
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arctan2_eval(): arctan2(unsigned_infinity, x) encountered
+            sage: SR(2).arctan2(oo)
+            1/2*pi
+            sage: SR(2).arctan2(-oo)
+            -1/2*pi
+            sage: SR(2).arctan2(SR(unsigned_infinity))
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arctan2_eval(): arctan2(x, unsigned_infinity) encountered
         """
         cdef Expression nexp = self.coerce_in(x)
         return new_Expression_from_GEx(self._parent, g_atan2(self._gobj, nexp._gobj))
@@ -4281,6 +4456,17 @@ cdef class Expression(CommutativeRingElement):
             sinh(1)
             sage: SR(RIF(1)).sinh().n()
             1.175201193643802?
+
+        TESTS::
+
+            sage: SR(oo).sinh()
+            +Infinity
+            sage: SR(-oo).sinh()
+            -Infinity
+            sage: SR(unsigned_infinity).sinh()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: sinh_eval(): sinh(unsigned_infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_sinh(self._gobj))
 
@@ -4308,13 +4494,24 @@ cdef class Expression(CommutativeRingElement):
             sage: maxima('cosh(1.0)')
             1.543080634815244
             sage: SR(1.0000000000000000000000000).cosh()
-            cosh(1.0000000000000000000000000)
+            cosh(1.000000000000000000000000)
             sage: SR(1).cosh().n(90)
             1.5430806348152437784779056
             sage: SR(RIF(1)).cosh()
             cosh(1)
             sage: SR(RIF(1)).cosh().n()
             1.543080634815244?
+
+        TESTS::
+
+            sage: SR(oo).cosh()
+            +Infinity
+            sage: SR(-oo).cosh()
+            +Infinity
+            sage: SR(unsigned_infinity).cosh()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: cosh_eval(): cosh(unsigned_infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_cosh(self._gobj))
 
@@ -4342,6 +4539,17 @@ cdef class Expression(CommutativeRingElement):
             sage: maxima('tanh(1.0)')
             .7615941559557649
             sage: plot(lambda x: SR(x).tanh(), -1, 1)
+
+        TESTS::
+
+            sage: SR(oo).tanh()
+            1
+            sage: SR(-oo).tanh()
+            -1
+            sage: SR(unsigned_infinity).tanh()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: tanh_eval(): tanh(unsigned_infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_tanh(self._gobj))
 
@@ -4367,9 +4575,18 @@ cdef class Expression(CommutativeRingElement):
             sage: maxima('asinh(1.0)')
             0.881373587019543
 
-        Sage automatically applies certain identies::
+        Sage automatically applies certain identities::
             sage: SR(3/2).arcsinh().cosh()
             1/2*sqrt(13)
+
+        TESTS::
+
+            sage: SR(oo).arcsinh()
+            +Infinity
+            sage: SR(-oo).arcsinh()
+            -Infinity
+            sage: SR(unsigned_infinity).arcsinh()
+            Infinity
         """
         return new_Expression_from_GEx(self._parent, g_asinh(self._gobj))
 
@@ -4394,6 +4611,15 @@ cdef class Expression(CommutativeRingElement):
             1.0471975512*I
             sage: maxima('acosh(0.5)')
             1.047197551196598*%i
+
+        TESTS::
+
+            sage: SR(oo).arccosh()
+            +Infinity
+            sage: SR(-oo).arccosh()
+            +Infinity
+            sage: SR(unsigned_infinity).arccosh()
+            +Infinity
         """
         return new_Expression_from_GEx(self._parent, g_acosh(self._gobj))
 
@@ -4420,6 +4646,22 @@ cdef class Expression(CommutativeRingElement):
             0.500000000000000
             sage: maxima('atanh(0.5)')
             .5493061443340...
+
+        TESTS::
+
+            sage: SR(1).arctanh()
+            +Infinity
+            sage: SR(-1).arctanh()
+            -Infinity
+
+            sage: SR(oo).arctanh()
+            -1/2*I*pi
+            sage: SR(-oo).arctanh()
+            1/2*I*pi
+            sage: SR(unsigned_infinity).arctanh()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: arctanh_eval(): arctanh(unsigned_infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_atanh(self._gobj))
 
@@ -4450,6 +4692,19 @@ cdef class Expression(CommutativeRingElement):
 
             sage: SR(0.5).exp().log()
             0.500000000000000
+
+        TESTS:
+
+        Test if #6377 is fixed::
+
+            sage: SR(oo).exp()
+            +Infinity
+            sage: SR(-oo).exp()
+            0
+            sage: SR(unsigned_infinity).exp()
+            Traceback (most recent call last):
+            ...
+            RuntimeError: exp_eval(): exp^(unsigned_infinity) encountered
         """
         return new_Expression_from_GEx(self._parent, g_exp(self._gobj))
 
@@ -4465,9 +4720,7 @@ cdef class Expression(CommutativeRingElement):
             sage: (x^y + y^x).log()
             log(x^y + y^x)
             sage: SR(0).log()
-            Traceback (most recent call last):
-            ...
-            RuntimeError: log_eval(): log(0)
+            -Infinity
             sage: SR(1).log()
             0
             sage: SR(1/2).log()
@@ -4484,6 +4737,15 @@ cdef class Expression(CommutativeRingElement):
             sage: math.log(0.5)
             -0.69314718055994529
             sage: plot(lambda x: SR(x).log(), 0.1,10)
+
+        TESTS::
+
+            sage: SR(oo).log()
+            +Infinity
+            sage: SR(-oo).log()
+            +Infinity
+            sage: SR(unsigned_infinity).log()
+            +Infinity
         """
         res = new_Expression_from_GEx(self._parent, g_log(self._gobj))
         if b is None:
@@ -4813,7 +5075,7 @@ cdef class Expression(CommutativeRingElement):
         Applies simplify_trig, simplify_rational, and simplify_radical
         to self (in that order).
         
-        ALIAS: simplfy_full and full_simplify are the same.
+        ALIAS: simplify_full and full_simplify are the same.
         
         EXAMPLES::
         
@@ -5750,7 +6012,7 @@ cdef class Expression(CommutativeRingElement):
 
     def laplace(self, t, s):
         """
-        Return Lapalace transform of self.  See
+        Return Laplace transform of self.  See
         :obj:`sage.calculus.calculus.laplace`
 
         EXAMPLES::

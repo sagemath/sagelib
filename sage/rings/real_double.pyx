@@ -24,6 +24,16 @@ Also, you can instantly create a space of large dimension.
 ::
 
     sage: V = RDF^10000
+
+TESTS::
+
+    Test NumPy conversions::
+    
+        sage: RDF(1).__array_interface__
+        {'typestr': '=f8'}
+        sage: import numpy
+        sage: numpy.array([RDF.pi()]).dtype
+        dtype('float64')
 """
  
 include '../ext/python_float.pxi'
@@ -510,6 +520,9 @@ cdef class RealDoubleElement(FieldElement):
     calculations were performed with true real numbers. This is due to
     the rounding errors inherent to finite precision calculations.
     """
+    
+    __array_interface__ = {'typestr': '=f8'}
+    
     def __new__(self, x=None):
         (<Element>self)._parent = _RDF
         
@@ -1284,7 +1297,7 @@ cdef class RealDoubleElement(FieldElement):
             0.333333333333333
         
         If we coerce to a higher-precision field the extra bits appear
-        random; they are actualy 0's in base 2.
+        random; they are actually 0's in base 2.
         
         ::
         
@@ -2334,8 +2347,8 @@ cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
         # allocate enough room for the Integer, sizeof_Integer is
         # sizeof(Integer). The use of PyObject_MALLOC directly
         # assumes that Integers are not garbage collected, i.e. 
-        # they do not pocess references to other Python
-        # objects (Aas indicated by the Py_TPFLAGS_HAVE_GC flag). 
+        # they do not possess references to other Python
+        # objects (As indicated by the Py_TPFLAGS_HAVE_GC flag). 
         # See below for a more detailed description.
 
         new = PyObject_MALLOC( sizeof(RealDoubleElement) )

@@ -101,8 +101,8 @@ def abstract_method(f = None, optional = False):
 
     ..topic: Discussion
 
-    The policy details are not yet fixed. The purpose of this fist
-    implementation is to let developpers experiment with it and give
+    The policy details are not yet fixed. The purpose of this first
+    implementation is to let developers experiment with it and give
     feedback on what's most practical.
 
     The advantage of the current policy is that attempts at using a
@@ -203,7 +203,7 @@ class AbstractMethod(object):
             sage: src[0]
             'def banner():\n'
             sage: lines
-            72
+            79
 
         """
         from sage.misc.sageinspect import sage_getsourcelines

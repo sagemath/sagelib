@@ -53,6 +53,7 @@ def init(object_directory=None, globs={}):
         sage.structure.sage_object.base=object_directory
     sage.misc.latex.EMBEDDED_MODE = True
     sage.misc.pager.EMBEDDED_MODE = True
+    sage.misc.sageinspect.EMBEDDED_MODE = True
 
     setup_systems(globs)
     sage.misc.session.init(globs)
@@ -73,7 +74,7 @@ def help(obj):
     
     .. note::
 
-       This a wrapper around the builtin help. If formats the output
+       This a wrapper around the built-in help. If formats the output
        as HTML without word wrap, which looks better in the notebook.
     
     INPUT:
@@ -157,7 +158,7 @@ def completions(s, globs, format=False, width=90, system="None"):
                     v = [obj + '.'+x for x in D if x[:n] == method]
             except Exception, msg:
                 v = []
-        v = list(set(v))   # make uniq
+        v = list(set(v))   # make unique
         v.sort()
     except Exception, msg:
         v = []
@@ -191,19 +192,25 @@ def docstring(obj_name, globs, system='sage'):
     except (AttributeError, NameError, SyntaxError):
         return "No object '%s' currently defined."%obj_name
     s  = ''
+    newline = "\n\n"  # blank line to start new paragraph
     try:
         filename = sageinspect.sage_getfile(obj)
         #i = filename.find('site-packages/sage/')
         #if i == -1:
-        s += 'File:        %s\n'%filename
+        s += '**File:** %s'%filename
+        s += newline
         #else:
         #    file = filename[i+len('site-packages/sage/'):]
         #    s += 'File:        <html><a href="src_browser?%s">%s</a></html>\n'%(file,file)
     except TypeError:
         pass
-    s += 'Type:        %s\n'%type(obj)
-    s += 'Definition:  %s\n'%sageinspect.sage_getdef(obj, obj_name)
-    s += 'Docstring: \n%s\n'%sageinspect.sage_getdoc(obj, obj_name)
+    s += '**Type:** %s'%type(obj)
+    s += newline
+    s += '**Definition:** %s'%sageinspect.sage_getdef(obj, obj_name)
+    s += newline
+    s += '**Docstring:**'
+    s += newline
+    s += sageinspect.sage_getdoc(obj, obj_name)
     return s.rstrip()
 
 def source_code(s, globs, system='sage'):
@@ -229,13 +236,20 @@ def source_code(s, globs, system='sage'):
             return obj._sage_src_()
         except:
             pass
+        newline = "\n\n"  # blank line to start new paragraph
+        indent = "    "   # indent source code to mark it as a code block
+
         filename = sageinspect.sage_getfile(obj)
         lines, lineno = sageinspect.sage_getsourcelines(obj, is_binary=False)
-        src = ''.join(lines)
-        src = sagedoc.format_src(src)
+        src = indent.join(lines)
+        src = indent + sagedoc.format_src(src)
         if not lineno is None:
-            src = "File: %s\nSource Code (starting at line %s):\n%s"%(filename, lineno, src)
-        return src
+            output = "**File:** %s"%filename
+            output += newline
+            output += "**Source Code** (starting at line %s)::"%lineno
+            output += newline
+            output += src
+        return output
     
     except (TypeError, IndexError), msg:
         print msg
@@ -330,7 +344,7 @@ def syseval(system, cmd, dir=None):
         system -- an object with an eval method that takes as input
                   a cmd (a string), and two dictionaries:
                            sage_globals and locals.
-        dir -- an otional directory to change to before
+        dir -- an optional directory to change to before
                calling system.eval.
 
     OUTPUT:

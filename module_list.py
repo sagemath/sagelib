@@ -164,6 +164,12 @@ ext_modules = [
               depends = ['sage/combinat/partitions_c.h'],
               language='c++'),
 
+    Extension('sage.combinat.words.word_datatypes',
+            sources=['sage/combinat/words/word_datatypes.pyx'],
+            include_dirs = ['sage/combinat/words'],
+            libraries = ['stdc++'],
+            language='c++'),
+            
     ################################
     ## 
     ## sage.ext
@@ -231,6 +237,10 @@ ext_modules = [
 
     Extension('sage.graphs.chrompoly',
               sources = ['sage/graphs/chrompoly.pyx']),
+
+    Extension('sage.graphs.cliquer',
+              sources = ['sage/graphs/cliquer.pyx'],
+              libraries = ['cliquer']),
 
     Extension('sage.graphs.graph_fast',
               sources = ['sage/graphs/graph_fast.pyx'],

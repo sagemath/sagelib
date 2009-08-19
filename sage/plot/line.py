@@ -65,21 +65,21 @@ class Line(GraphicPrimitive_xydata):
              ('marker',
               "'0' (tickleft), '1' (tickright), '2' (tickup), '3' (tickdown), '' (nothing), ' ' (nothing), '+' (plus), ',' (pixel), '.' (point), '1' (tri_down), '3' (tri_left), '2' (tri_up), '4' (tri_right), '<' (triangle_left), '>' (triangle_right), 'None' (nothing), 'D' (diamond), 'H' (hexagon2), '_' (hline), '^' (triangle_up), 'd' (thin_diamond), 'h' (hexagon1), 'o' (circle), 'p' (pentagon), 's' (square), 'v' (triangle_down), 'x' (x), '|' (vline)"),
              ('markeredgecolor', 'the markerfacecolor can be any color arg'),
-             ('markeredgewidth', 'the size of the markter edge in points'),
+             ('markeredgewidth', 'the size of the marker edge in points'),
              ('markersize', 'the size of the marker in points'),
-             ('rgbcolor', 'The color as an rgb tuple.'),
+             ('rgbcolor', 'The color as an RGB tuple.'),
              ('thickness', 'How thick the line is.'),
              ('zorder', 'The layer level in which to draw')]
         """
         return {'alpha':'How transparent the line is.', 
                 'thickness':'How thick the line is.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'linestyle':"The style of the line, which is one of '--' (dashed), '-.' (dash dot), '-' (solid), 'steps', ':' (dotted).",
                 'marker':"'0' (tickleft), '1' (tickright), '2' (tickup), '3' (tickdown), '' (nothing), ' ' (nothing), '+' (plus), ',' (pixel), '.' (point), '1' (tri_down), '3' (tri_left), '2' (tri_up), '4' (tri_right), '<' (triangle_left), '>' (triangle_right), 'None' (nothing), 'D' (diamond), 'H' (hexagon2), '_' (hline), '^' (triangle_up), 'd' (thin_diamond), 'h' (hexagon1), 'o' (circle), 'p' (pentagon), 's' (square), 'v' (triangle_down), 'x' (x), '|' (vline)",
                 'markersize':'the size of the marker in points',
                 'markeredgecolor':'the markerfacecolor can be any color arg',
-                'markeredgewidth':'the size of the markter edge in points',
+                'markeredgewidth':'the size of the marker edge in points',
                 'zorder':'The layer level in which to draw'
                 }
                 
@@ -258,7 +258,7 @@ def line2d(points, **options):
 
     - ``thickness`` -- How thick the line is
 
-    - ``rgbcolor`` -- The color as an rgb tuple
+    - ``rgbcolor`` -- The color as an RGB tuple
 
     - ``hue`` -- The color given as a hue
 
@@ -307,7 +307,7 @@ def line2d(points, **options):
 
     - ``markeredgecolor`` -- the markerfacecolor can be any color arg
 
-    - ``markeredgewidth`` -- the size of the markter edge in points
+    - ``markeredgewidth`` -- the size of the marker edge in points
 
     EXAMPLES:
 
@@ -387,9 +387,14 @@ def line2d(points, **options):
         sage: line([])
         sage: line([(1,1)])
 
+    Extra options will get passed on to show(), as long as they are valid::
+    
+        sage: line([(0,1), (3,4)], figsize=[10, 2])
+        sage: line([(0,1), (3,4)]).show(figsize=[10, 2]) # These are equivalent
     """
     from sage.plot.plot import Graphics, xydata_from_point_list
     xdata, ydata = xydata_from_point_list(points)
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     g.add_primitive(Line(xdata, ydata, options))
     return g

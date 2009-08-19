@@ -402,11 +402,10 @@ class SBox(SageObject):
         
         A = Matrix(ZZ, nrows, ncols)
         
-        for di in range(nrows):
-            for do in range(ncols):
-                for i in range(nrows):
-                    if self(i) ^ self(i ^ di) == do:
-                        A[di, do] += 1
+        for i in range(nrows):
+            si = self(i)
+            for di in range(nrows):
+                A[ di , si^self(i^di)] += 1
         return A
 
     def maximal_difference_probability_absolute(self):
@@ -492,23 +491,42 @@ class SBox(SageObject):
         nrows = 1<<m
         ncols = 1<<n
 
-        inp = [self.to_bits(e,m) for e in range(nrows)]
-        out = [self.to_bits(self(e),n) for e in range(nrows)]
+        def _walsh_transform(f):
+            """
+            Compute the Walsh transform of `f` in place.
 
-        A = Matrix(ZZ, nrows, ncols)
-        for i in range(nrows): #input variable configurations
-            iconf = self.to_bits(i,m)
-            for o in range(ncols): # output variable configurations
-                oconf = self.to_bits(o,n)
-                counter = 0 
-                for j in range(nrows): # sbox value pairs
-                    isum = sum( map( mul, zip(inp[j], iconf) ) )
-                    osum = sum( map( mul, zip(out[j], oconf) ) )
-                    if isum == osum:
-                        counter += 1
-                A[i,o] = counter - 2**(m-1)
+            EXAMPLE::
 
-        self._linear_approximation_matrix = A
+                sage: S = mq.SBox(3,2,7,1)
+                sage: S.linear_approximation_matrix() # indirect doctest
+                [ 2 -1 -1  0  1  0  0 -1]
+                [ 0 -1 -1  2 -1  0  0  1]
+                [ 0  1 -1  0  1  0 -2  1]
+                [ 0 -1  1  0  1 -2  0  1]
+
+            NOTE: internal use only; we use the specific dimension of the S-Box.
+            """
+            for ldk in xrange(1,m+1):
+                k  = 1<<ldk
+                kh = k//2
+                for r in xrange(0,nrows,k):
+                    t1 = r
+                    t2 = r+kh
+                    for j in xrange(kh):
+                        u = f[t1]
+                        v = f[t2]
+                        f[t1] = u + v
+                        f[t2] = u - v
+                        t1 += 1
+                        t2 += 1
+            return f
+
+        A = Matrix(ZZ, ncols, nrows, [ _walsh_transform([sum((self(i)&j).bits())%2 for i in range(nrows)])
+                                       for j in range(ncols) ] )
+        A = -A.transpose()
+
+        for i in range(ncols):
+            A[0,i] += (nrows//2)
         return A
 
     def maximal_linear_bias_absolute(self):
@@ -559,8 +577,8 @@ class SBox(SageObject):
         m = self.m
         n = self.n
 
-        X = list(range(m))
-        Y = list(range(n))
+        X = range(m)
+        Y = range(n)
         self._ring = PolynomialRing(self._F, m+n, ["x%d"%i for i in X] + ["y%d"%i for i in Y])
         return self._ring
 
@@ -790,7 +808,7 @@ class SBox(SageObject):
             
     def cnf(self, xi=None, yi=None, format=None):
         """
-        Return a representation of this S-Box in conjuctive normal
+        Return a representation of this S-Box in conjunctive normal
         form.
 
         This function examines the truth tables for each output bit of

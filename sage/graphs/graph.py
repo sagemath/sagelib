@@ -57,6 +57,9 @@ AUTHORS:
 
 -  David Joyner (2009-2): Fixed docstring bug related to GAP.
 
+-  Stephen Hartke (2009-07-26): Fixed bug in blocks_and_cut_vertices()
+   that caused an incorrect result when the vertex 0 was a cut vertex.
+
 
 Graph Format
 ------------
@@ -166,7 +169,7 @@ examples are covered here.
        sage: G.plot().show()    # or G.show()
 
 -  incidence matrix: In an incidence matrix, each row represents a
-   vertex and each column reprensents an edge.
+   vertex and each column represents an edge.
 
    ::
 
@@ -304,7 +307,7 @@ down by their designated table names, type
     sage: graph_db_info()
     {...}
     
-For more details on datatypes or keyword input, enter
+For more details on data types or keyword input, enter
 
 ::
 
@@ -1119,7 +1122,7 @@ class GenericGraph(SageObject):
         If weighted == True, the weighted adjacency matrix is used for M,
         and the diagonal entries are the row-sums of M.
 
-        Note that any additional keywords will be pased on to either
+        Note that any additional keywords will be passed on to either
         the adjacency_matrix or weighted_adjacency_matrix method.
 
         AUTHORS:
@@ -1471,10 +1474,13 @@ class GenericGraph(SageObject):
         Returns any loops in the (di)graph.
         
         INPUT:
-        new -- deprecated
-        labels -- whether returned edges have labels ((u,v,l)) or not ((u,v)).
 
-        EXAMPLES:
+        - ``new`` -- deprecated
+
+        - ``labels`` -- whether returned edges have labels ((u,v,l)) or not ((u,v)).
+
+        EXAMPLES::
+
             sage: G = Graph(loops=True); G
             Looped graph on 0 vertices
             sage: G.has_loops()
@@ -1524,8 +1530,9 @@ class GenericGraph(SageObject):
         Returns whether there are multiple edges in the (di)graph.
         
         INPUT:
-            to_undirected -- (default: False) If True, runs the test on the undirected version of a DiGraph.
-                                Otherwise, treats DiGraph edges (u,v) and (v,u) as unique individual edges.
+
+        - ``to_undirected`` -- (default: False) If True, runs the test on the undirected version of a DiGraph.
+          Otherwise, treats DiGraph edges (u,v) and (v,u) as unique individual edges.
 
         EXAMPLES::
 
@@ -2587,7 +2594,7 @@ class GenericGraph(SageObject):
            priority over minimal.
         
         -  ``maximal (boolean)`` - whether or not to compute
-           the maximal genus of the graph (i.e., testin all embeddings). If
+           the maximal genus of the graph (i.e., testing all embeddings). If
            maximal is False, then either minimal must be True or on_embedding
            must not be None. If on_embedding is not None, it will take
            priority over maximal. However, maximal takes priority over the
@@ -2684,7 +2691,7 @@ class GenericGraph(SageObject):
                 faces = len(self.trace_faces(on_embedding))
                 return (2-verts+edges-faces)/2
         else: # then compute either maximal or minimal genus of all embeddings
-            # Construct an intitial combinatorial embedding for graph
+            # Construct an initial combinatorial embedding for graph
             part = []
             for vertex in G.vertices():
                 part.append(G.neighbors(vertex))
@@ -2918,16 +2925,25 @@ class GenericGraph(SageObject):
         EXAMPLES::
         
             sage: graphs.PetersenGraph().blocks_and_cut_vertices()
-            ([[0, 1, 2, 3, 8, 5, 7, 9, 4, 6]], [])
+            ([[6, 4, 9, 7, 5, 8, 3, 2, 1, 0]], [])
             sage: graphs.PathGraph(6).blocks_and_cut_vertices()
-            ([[5, 4], [4, 3], [3, 2], [2, 1], [0, 1]], [4, 3, 2, 1])
+            ([[5, 4], [4, 3], [3, 2], [2, 1], [1, 0]], [4, 3, 2, 1])
             sage: graphs.CycleGraph(7).blocks_and_cut_vertices()
-            ([[0, 1, 2, 3, 4, 5, 6]], [])
+            ([[6, 5, 4, 3, 2, 1, 0]], [])
             sage: graphs.KrackhardtKiteGraph().blocks_and_cut_vertices()
-            ([[9, 8], [8, 7], [0, 1, 3, 2, 5, 6, 4, 7]], [8, 7])
+            ([[9, 8], [8, 7], [7, 4, 6, 5, 2, 3, 1, 0]], [8, 7])
+            sage: G=Graph()  # make a bowtie graph where 0 is a cut vertex
+            sage: G.add_vertices(range(5))
+            sage: G.add_edges([(0,1),(0,2),(0,3),(0,4),(1,2),(3,4)])
+            sage: G.blocks_and_cut_vertices()
+            ([[2, 1, 0], [4, 3, 0]], [0])
         
-        ALGORITHM: 8.3.8 in [1]. Notice the typo - the stack must also be
-        considered as one of the blocks at termination.
+        ALGORITHM: 8.3.8 in [1]. Notice that the termination condition on 
+        line (23) of the algorithm uses "p[v] == 0" which in the book 
+        means that the parent is undefined; in this case, v must be the 
+        root s.  Since our vertex names start with 0, we substitute instead
+        the condition "v == s".  This is the terminating condition used 
+        in the general Depth First Search tree in Algorithm 8.2.1.
         
         REFERENCE:
 
@@ -2992,10 +3008,8 @@ class GenericGraph(SageObject):
                 B_k.append(s)
                 B.append(B_k)
             v = p[v]
-            if p[v] == 0 and all([edges[(v,u)] for u in G.neighbors(v)]):
+            if v == s and all([edges[(v,u)] for u in G.neighbors(v)]):
                 break
-        if len(S) != 0:
-            B.append(S)
         return B, C
 
     ### Vertex handlers
@@ -3051,7 +3065,7 @@ class GenericGraph(SageObject):
     def delete_vertex(self, vertex, in_order=False):
         """
         Deletes vertex, removing all incident edges. Deleting a
-        non-existant vertex will raise an exception.
+        non-existent vertex will raise an exception.
         
         INPUT:
         
@@ -3113,7 +3127,7 @@ class GenericGraph(SageObject):
     def delete_vertices(self, vertices):
         """
         Remove vertices from the (di)graph taken from an iterable container
-        of vertices. Deleting a non-existant vertex will raise an
+        of vertices. Deleting a non-existent vertex will raise an
         exception.
         
         EXAMPLES::
@@ -3385,7 +3399,7 @@ class GenericGraph(SageObject):
             3
         
         Note that since the intersection option is available, the
-        vertex_iterator() function is sub-optimal, speedwise, but note the
+        vertex_iterator() function is sub-optimal, speed-wise, but note the
         following optimization::
         
             sage: timeit V = P.vertices()                   # not tested
@@ -3451,7 +3465,7 @@ class GenericGraph(SageObject):
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         
         Note that the output of the vertices() function is always sorted.
-        This is sub-optimal, speedwise, but note the following
+        This is sub-optimal, speed-wise, but note the following
         optimizations::
         
             sage: timeit V = P.vertices()                     # not tested
@@ -3530,6 +3544,21 @@ class GenericGraph(SageObject):
             sage: G.add_edge(1,2,'label')
             sage: G.networkx_graph().adj           # random output order
             {1: {2: 'label'}, 2: {1: 'label'}}
+
+        The following syntax is supported, but note you must use the
+        label keyword.
+
+        ::
+        
+            sage: G = Graph()
+            sage: G.add_edge((1,2), label='label')
+            sage: G.edges()
+            [(1, 2, 'label')]
+            sage: G = Graph()
+            sage: G.add_edge((1,2), 'label')
+            sage: G.edges()
+            [((1, 2), 'label', None)]
+
         """
         if label is None:
             if v is None:
@@ -3538,6 +3567,9 @@ class GenericGraph(SageObject):
                 except:
                     u, v = u
                     label = None
+        else:
+            if v is None:
+                u, v = u
         if not self.allows_loops() and u==v:
             return
         self._backend.add_edge(u, v, label, self._directed)
@@ -4388,7 +4420,7 @@ class GenericGraph(SageObject):
     ### Substructures
 
     def subgraph(self, vertices=None, edges=None, inplace=False,
-                       vertex_property=None, edge_property=None):
+                       vertex_property=None, edge_property=None, algorithm=None):
         """
         Returns the subgraph containing the given vertices and edges. If
         either vertices or edges are not specified, they are assumed to be
@@ -4421,7 +4453,14 @@ class GenericGraph(SageObject):
            to be a function on edges, which is intersected with the edges
            specified, if any are.
         
-        
+        - ``algorithm`` - If ``algorithm=delete`` or ``inplace=True``,
+          then the graph is constructed by deleting edges and
+          vertices.  If ``add``, then the graph is constructed by
+          building a new graph from the appropriate vertices and
+          edges.  If not specified, then the algorithm is chosen based
+          on the number of vertices in the subgraph.
+
+
         EXAMPLES::
         
             sage: G = graphs.CompleteGraph(9)
@@ -4469,6 +4508,8 @@ class GenericGraph(SageObject):
             [(0, 1, 'a')]
             sage: J.vertices()
             [0, 1]
+            sage: G.subgraph(vertices=G.vertices())==G
+            True
         
         ::
         
@@ -4498,51 +4539,330 @@ class GenericGraph(SageObject):
             sage: S.edges()
             [('00', '01', None), ('11', '10', None)]
         
-        TESTS: We should delete unused _pos dictionary entries
+
+        The algorithm is not specified, then a reasonable choice is made for speed.
+
+        ::
+
+            sage: g=graphs.PathGraph(1000)
+            sage: g.subgraph(range(10)) # uses the 'add' algorithm
+            Subgraph of (Path Graph): Graph on 10 vertices
+            
+
+
+        TESTS: The appropriate properties are preserved.
+        
+        ::
+
+            sage: g = graphs.PathGraph(10)
+            sage: g.is_planar(set_embedding=True)
+            True
+            sage: g.set_vertices(dict((v, 'v%d'%v) for v in g.vertices()))
+            sage: h = g.subgraph([3..5])
+            sage: h.get_pos().keys()
+            [3, 4, 5]
+            sage: h.get_vertices()
+            {3: 'v3', 4: 'v4', 5: 'v5'}
+        """
+        if vertices is None:
+            vertices=self.vertices()
+        elif vertices in self:
+            vertices=[vertices]
+        else:
+            vertices=list(vertices)
+
+        if vertex_property is not None:
+            vertices = [v for v in vertices if vertex_property(v)]
+
+        if algorithm is not None and algorithm not in ("delete", "add"):
+            raise ValueError, 'algorithm should be None, "delete", or "add"'
+            
+        if inplace or len(vertices)>0.05*self.order() or algorithm=="delete":
+            return self._subgraph_by_deleting(vertices=vertices, edges=edges, 
+                                              inplace=inplace,
+                                              edge_property=edge_property)
+        else:
+            return self._subgraph_by_adding(vertices=vertices, edges=edges, 
+                                            edge_property=edge_property)
+
+    def _subgraph_by_adding(self, vertices=None, edges=None, edge_property=None):
+        """
+        Returns the subgraph containing the given vertices and edges.
+        The edges also satisfy the edge_property, if it is not None.
+        The subgraph is created by creating a new empty graph and
+        adding the necessary vertices, edges, and other properties.
+        
+        INPUT:
+        
+        -  ``vertices`` - Vertices is a list of vertices
+        
+        - ``edges`` - Edges can be a single edge or an iterable
+           container of edges (e.g., a list, set, file, numeric array,
+           etc.). If not edges are not specified, then all edges are
+           assumed and the returned graph is an induced subgraph. In
+           the case of multiple edges, specifying an edge as (u,v)
+           means to keep all edges (u,v), regardless of the label.
+        
+        -  ``edge_property`` - If specified, this is expected
+           to be a function on edges, which is intersected with the edges
+           specified, if any are.
+        
+
+        EXAMPLES::
+        
+            sage: G = graphs.CompleteGraph(9)
+            sage: H = G._subgraph_by_adding([0,1,2]); H
+            Subgraph of (Complete graph): Graph on 3 vertices
+            sage: G
+            Complete graph: Graph on 9 vertices
+            sage: J = G._subgraph_by_adding(vertices=G.vertices(), edges=[(0,1)])
+            sage: J.edges(labels=False)
+            [(0, 1)]
+            sage: J.vertices()==G.vertices()
+            True
+            sage: G._subgraph_by_adding(vertices=G.vertices())==G
+            True
+
+        ::
+        
+            sage: D = graphs.CompleteGraph(9).to_directed()
+            sage: H = D._subgraph_by_adding([0,1,2]); H
+            Subgraph of (Complete graph): Digraph on 3 vertices
+            sage: H = D._subgraph_by_adding(vertices=D.vertices(), edges=[(0,1), (0,2)])
+            sage: H.edges(labels=False)
+            [(0, 1), (0, 2)]
+            sage: H.vertices()==D.vertices()
+            True
+            sage: D
+            Complete graph: Digraph on 9 vertices
+            sage: D._subgraph_by_adding(D.vertices())==D
+            True
+        
+        A more complicated example involving multiple edges and labels.
+        
+        ::
+        
+            sage: G = Graph(multiedges=True, sparse=True)
+            sage: G.add_edges([(0,1,'a'), (0,1,'b'), (1,0,'c'), (0,2,'d'), (0,2,'e'), (2,0,'f'), (1,2,'g')])
+            sage: G._subgraph_by_adding(G.vertices(), edges=[(0,1), (0,2,'d'), (0,2,'not in graph')]).edges()
+            [(0, 1, 'a'), (0, 1, 'b'), (0, 1, 'c'), (0, 2, 'd')]
+            sage: J = G._subgraph_by_adding(vertices=[0,1], edges=[(0,1,'a'), (0,2,'c')])
+            sage: J.edges()
+            [(0, 1, 'a')]
+            sage: J.vertices()
+            [0, 1]
+            sage: G._subgraph_by_adding(vertices=G.vertices())==G
+            True
+        
+        ::
+        
+            sage: D = DiGraph(multiedges=True, sparse=True)
+            sage: D.add_edges([(0,1,'a'), (0,1,'b'), (1,0,'c'), (0,2,'d'), (0,2,'e'), (2,0,'f'), (1,2,'g')])
+            sage: D._subgraph_by_adding(vertices=D.vertices(), edges=[(0,1), (0,2,'d'), (0,2,'not in graph')]).edges()
+            [(0, 1, 'a'), (0, 1, 'b'), (0, 2, 'd')]
+            sage: H = D._subgraph_by_adding(vertices=[0,1], edges=[(0,1,'a'), (0,2,'c')])
+            sage: H.edges()
+            [(0, 1, 'a')]
+            sage: H.vertices()
+            [0, 1]
+        
+        Using the property arguments::
+        
+            sage: C = graphs.CubeGraph(2)
+            sage: S = C._subgraph_by_adding(vertices=C.vertices(), edge_property=(lambda e: e[0][0] == e[1][0]))
+            sage: C.edges()
+            [('00', '01', None), ('10', '00', None), ('11', '01', None), ('11', '10', None)]
+            sage: S.edges()
+            [('00', '01', None), ('11', '10', None)]
+        
+        TESTS: Properties of the graph are preserved.
         
         ::
         
             sage: g = graphs.PathGraph(10)
-            sage: h = g.subgraph([3..5])
-            sage: h._pos.keys()
+            sage: g.is_planar(set_embedding=True)
+            True
+            sage: g.set_vertices(dict((v, 'v%d'%v) for v in g.vertices()))
+            sage: h = g._subgraph_by_adding([3..5])
+            sage: h.get_pos().keys()
             [3, 4, 5]
+            sage: h.get_vertices()
+            {3: 'v3', 4: 'v4', 5: 'v5'}
         """
-        if vertices is None:
-            vertices = []
-        elif vertices in self:
-            vertices = [v for v in self if v != vertices]
+        G = self.__class__(weighted=self._weighted, loops=self.allows_loops(),
+                           multiedges= self.allows_multiple_edges())
+        G.name("Subgraph of (%s)"%self.name())
+        G.add_vertices(vertices)
+        if edges is not None:
+            if G._directed:
+                edges_graph = (e for e in self.edge_iterator(vertices) if e[1] in vertices)
+                edges_to_keep_labeled = [e for e in edges if len(e)==3]
+                edges_to_keep_unlabeled = [e for e in edges if len(e)==2]
+            else:
+                edges_graph = (sorted(e[0:2])+[e[2]] for e in self.edge_iterator(vertices) if e[0] in vertices and e[1] in vertices)
+                edges_to_keep_labeled = [sorted(e[0:2])+[e[2]] for e in edges if len(e)==3]
+                edges_to_keep_unlabeled = [sorted(e) for e in edges if len(e)==2]
+            edges_to_keep = [tuple(e) for e in edges_graph if e in edges_to_keep_labeled
+                             or e[0:2] in edges_to_keep_unlabeled]
         else:
-            vertices = [v for v in self if v not in vertices]
-        if vertex_property is not None:
-            for v in self:
-                if v not in vertices and not vertex_property(v):
-                    vertices.append(v)
+            edges_to_keep=[e for e in self.edge_iterator(vertices) if e[0] in vertices and e[1] in vertices]
+
+        if edge_property is not None:
+            edges_to_keep = [e for e in edges_to_keep if edge_property(e)]
+        G.add_edges(edges_to_keep)
+
+        attributes_to_update = ('_pos', '_assoc')
+        for attr in attributes_to_update:
+            if hasattr(self, attr) and getattr(self, attr) is not None:
+                value = dict([(v, getattr(self, attr).get(v, None)) for v in G])
+                setattr(G, attr,value)
+        
+        G._boundary = [v for v in self._boundary if v in G]
+        
+        return G
+        
+    def _subgraph_by_deleting(self, vertices=None, edges=None, inplace=False,
+                              edge_property=None):
+        """
+        Returns the subgraph containing the given vertices and edges.
+        The edges also satisfy the edge_property, if it is not None.
+        The subgraph is created by creating deleting things that are
+        not needed.
+        
+        INPUT:
+        
+        -  ``vertices`` - Vertices is a list of vertices
+        
+        - ``edges`` - Edges can be a single edge or an iterable
+           container of edges (e.g., a list, set, file, numeric array,
+           etc.). If not edges are not specified, then all edges are
+           assumed and the returned graph is an induced subgraph. In
+           the case of multiple edges, specifying an edge as (u,v)
+           means to keep all edges (u,v), regardless of the label.
+        
+        -  ``edge_property`` - If specified, this is expected
+           to be a function on edges, which is intersected with the edges
+           specified, if any are.
+        
+        -  ``inplace`` - Using inplace is True will simply
+           delete the extra vertices and edges from the current graph. This
+           will modify the graph.
+        
+
+        EXAMPLES::
+        
+            sage: G = graphs.CompleteGraph(9)
+            sage: H = G._subgraph_by_deleting([0,1,2]); H
+            Subgraph of (Complete graph): Graph on 3 vertices
+            sage: G
+            Complete graph: Graph on 9 vertices
+            sage: J = G._subgraph_by_deleting(vertices=G.vertices(), edges=[(0,1)])
+            sage: J.edges(labels=False)
+            [(0, 1)]
+            sage: J.vertices()==G.vertices()
+            True
+            sage: G._subgraph_by_deleting([0,1,2], inplace=True); G
+            Subgraph of (Complete graph): Graph on 3 vertices
+            sage: G._subgraph_by_deleting(vertices=G.vertices())==G
+            True
+
+        ::
+        
+            sage: D = graphs.CompleteGraph(9).to_directed()
+            sage: H = D._subgraph_by_deleting([0,1,2]); H
+            Subgraph of (Complete graph): Digraph on 3 vertices
+            sage: H = D._subgraph_by_deleting(vertices=D.vertices(), edges=[(0,1), (0,2)])
+            sage: H.edges(labels=False)
+            [(0, 1), (0, 2)]
+            sage: H.vertices()==D.vertices()
+            True
+            sage: D
+            Complete graph: Digraph on 9 vertices
+            sage: D._subgraph_by_deleting([0,1,2], inplace=True); D
+            Subgraph of (Complete graph): Digraph on 3 vertices
+            sage: D._subgraph_by_deleting(D.vertices())==D
+            True
+        
+        A more complicated example involving multiple edges and labels.
+        
+        ::
+        
+            sage: G = Graph(multiedges=True, sparse=True)
+            sage: G.add_edges([(0,1,'a'), (0,1,'b'), (1,0,'c'), (0,2,'d'), (0,2,'e'), (2,0,'f'), (1,2,'g')])
+            sage: G._subgraph_by_deleting(G.vertices(), edges=[(0,1), (0,2,'d'), (0,2,'not in graph')]).edges()
+            [(0, 1, 'a'), (0, 1, 'b'), (0, 1, 'c'), (0, 2, 'd')]
+            sage: J = G._subgraph_by_deleting(vertices=[0,1], edges=[(0,1,'a'), (0,2,'c')])
+            sage: J.edges()
+            [(0, 1, 'a')]
+            sage: J.vertices()
+            [0, 1]
+            sage: G._subgraph_by_deleting(vertices=G.vertices())==G
+            True
+        
+        ::
+        
+            sage: D = DiGraph(multiedges=True, sparse=True)
+            sage: D.add_edges([(0,1,'a'), (0,1,'b'), (1,0,'c'), (0,2,'d'), (0,2,'e'), (2,0,'f'), (1,2,'g')])
+            sage: D._subgraph_by_deleting(vertices=D.vertices(), edges=[(0,1), (0,2,'d'), (0,2,'not in graph')]).edges()
+            [(0, 1, 'a'), (0, 1, 'b'), (0, 2, 'd')]
+            sage: H = D._subgraph_by_deleting(vertices=[0,1], edges=[(0,1,'a'), (0,2,'c')])
+            sage: H.edges()
+            [(0, 1, 'a')]
+            sage: H.vertices()
+            [0, 1]
+        
+        Using the property arguments::
+        
+            sage: C = graphs.CubeGraph(2)
+            sage: S = C._subgraph_by_deleting(vertices=C.vertices(), edge_property=(lambda e: e[0][0] == e[1][0]))
+            sage: C.edges()
+            [('00', '01', None), ('10', '00', None), ('11', '01', None), ('11', '10', None)]
+            sage: S.edges()
+            [('00', '01', None), ('11', '10', None)]
+        
+        TESTS: Properties of the graph are preserved.
+        
+        ::
+        
+            sage: g = graphs.PathGraph(10)
+            sage: g.is_planar(set_embedding=True)
+            True
+            sage: g.set_vertices(dict((v, 'v%d'%v) for v in g.vertices()))
+            sage: h = g._subgraph_by_deleting([3..5])
+            sage: h.get_pos().keys()
+            [3, 4, 5]
+            sage: h.get_vertices()
+            {3: 'v3', 4: 'v4', 5: 'v5'}
+        """
         if inplace:
             G = self
         else:
             G = self.copy()
         G.name("Subgraph of (%s)"%self.name())
-        if edges is None and edge_property is not None:
-            G.delete_edges([e for e in self.edge_iterator() if not edge_property(e)])
-        elif edges is not None:
+
+        G.delete_vertices([v for v in G if v not in vertices])
+        
+        edges_to_delete=[]
+        if edges is not None:
             if G._directed:
-                edges_graph = G.edges()
+                edges_graph = G.edge_iterator()
                 edges_to_keep_labeled = [e for e in edges if len(e)==3]
                 edges_to_keep_unlabeled = [e for e in edges if len(e)==2]
             else:
-                edges_graph = [sorted(e[0:2])+[e[2]] for e in G.edges()]
+                edges_graph = [sorted(e[0:2])+[e[2]] for e in G.edge_iterator()]
                 edges_to_keep_labeled = [sorted(e[0:2])+[e[2]] for e in edges if len(e)==3]
                 edges_to_keep_unlabeled = [sorted(e) for e in edges if len(e)==2]
-            edges_to_delete=[]
             for e in edges_graph:
                 if e not in edges_to_keep_labeled and e[0:2] not in edges_to_keep_unlabeled:
                     edges_to_delete.append(tuple(e))
-            if edge_property is not None:
-                for e in G.edge_iterator():
-                    if e not in edges_to_delete and not edge_property(e):
-                        edges_to_delete.append(e)
-            G.delete_edges(edges_to_delete)
-        G.delete_vertices(vertices)
+        if edge_property is not None:
+            for e in G.edge_iterator():
+                if not edge_property(e):
+                    # We might get duplicate edges, but this does
+                    # handle the case of multiple edges.
+                    edges_to_delete.append(e)
+
+        G.delete_edges(edges_to_delete)
         if not inplace:
             return G
     
@@ -5578,119 +5898,223 @@ class GenericGraph(SageObject):
 
     ### Searches
     
-    def breadth_first_search(self, u, ignore_direction=False):
+    def breadth_first_search(self, start, ignore_direction=False, distance=None, neighbors=None):
         """
-        Returns an iterator over vertices in a breadth-first ordering.
+        Returns an iterator over the vertices in a breadth-first ordering.
         
         INPUT:
         
         
-        -  ``u`` - vertex at which to start search
+        - ``start`` - vertex or list of vertices from which to start
+          the traversal
         
-        -  ``ignore_direction`` - (default False) only applies
-           to directed graphs. If True, searches across edges in either
-           direction.
+        - ``ignore_direction`` - (default False) only applies to
+          directed graphs. If True, searches across edges in either
+          direction.
+
+        - ``distance`` - the maximum distance from the ``start`` nodes
+          to traverse.  The ``start`` nodes are distance zero from
+          themselves.
+
+        - ``neighbors`` - a function giving the neighbors of a vertex.
+          The function should take a vertex and return a list of
+          vertices.  For a graph, ``neighbors`` is by default the
+          :meth:`.neighbors` function of the graph.  For a digraph,
+          the ``neighbors`` function defaults to the
+          :meth:`.successors` function of the graph.
         
         
         EXAMPLES::
         
-            sage: G = Graph( { 0: {1: 1}, 1: {2: 1}, 2: {3: 1}, 3: {4: 2}, 4: {0: 2} } )
+            sage: G = Graph( { 0: [1], 1: [2], 2: [3], 3: [4], 4: [0]} )
             sage: list(G.breadth_first_search(0))
             [0, 1, 4, 2, 3]
-            sage: list(G.depth_first_search(0))
-            [0, 4, 3, 2, 1]
         
-        ::
+        By default, the edge direction of a digraph is respected, but this
+        can be overridden by the ``ignore_direction`` parameter::
         
-            sage: D = DiGraph( { 0: {1: 1}, 1: {2: 1}, 2: {3: 1}, 3: {4: 2}, 4: {0: 2} } )
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
             sage: list(D.breadth_first_search(0))
-            [0, 1, 2, 3, 4]
-            sage: list(D.depth_first_search(0))
-            [0, 1, 2, 3, 4]
+            [0, 1, 2, 3, 4, 5, 6, 7]
+            sage: list(D.breadth_first_search(0, ignore_direction=True))
+            [0, 1, 2, 3, 7, 4, 5, 6]
+
+        You can specify a maximum distance in which to search.  A
+        distance of zero returns the ``start`` vertices::
+            
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
+            sage: list(D.breadth_first_search(0,distance=0))
+            [0]
+            sage: list(D.breadth_first_search(0,distance=1))
+            [0, 1, 2, 3]
+
+        Multiple starting vertices can be specified in a list::
+
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
+            sage: list(D.breadth_first_search([0]))                                    
+            [0, 1, 2, 3, 4, 5, 6, 7]
+            sage: list(D.breadth_first_search([0,6]))
+            [0, 6, 1, 2, 3, 7, 4, 5]
+            sage: list(D.breadth_first_search([0,6],distance=0))
+            [0, 6]
+            sage: list(D.breadth_first_search([0,6],distance=1))
+            [0, 6, 1, 2, 3, 7]
+            sage: list(D.breadth_first_search(6,ignore_direction=True,distance=2))
+            [6, 3, 7, 0, 5]
         
-        ::
-        
+        More generally, you can specify a ``neighbors`` function.  For
+        example, you can traverse the graph backwards by setting
+        ``neighbors`` to be the :meth:`.predecessor` function of the graph::
+            
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
+            sage: list(D.breadth_first_search(5,neighbors=D.predecessors, distance=2))
+            [5, 1, 2, 0]
+            sage: list(D.breadth_first_search(5,neighbors=D.successors, distance=2))  
+            [5, 7, 0]
+            sage: list(D.breadth_first_search(5,neighbors=D.neighbors, distance=2)) 
+            [5, 1, 2, 7, 0, 4, 6]
+
+
+        TESTS::
+
             sage: D = DiGraph({1:[0], 2:[0]})
             sage: list(D.breadth_first_search(0))
             [0]
             sage: list(D.breadth_first_search(0, ignore_direction=True))
             [0, 1, 2]
-        """
-        # This function is straight from an old version of networkx
-        if not self._directed or ignore_direction:
-            neighbors=self.neighbor_iterator            
-        else:
-            neighbors=self.successor_iterator
-        # nlist=[u] # list of nodes in a BFS order
-        yield u
-        seen={} # nodes seen
-        queue=[u] # FIFO queue
-        seen[u]=True
-        while queue:
-            v=queue.pop(0)  # this is expensive, should use a faster FIFO queue
-            for w in neighbors(v):
-                if w not in seen:
-                    seen[w]=True
-                    queue.append(w)
-                    # nlist.append(w)
-                    yield w
-        # return nlist
 
-    def depth_first_search(self, u, ignore_direction=False):
         """
-        Returns an iterator over vertices in a depth-first ordering.
+        if neighbors is None:
+            if not self._directed or ignore_direction:
+                neighbors=self.neighbor_iterator            
+            else:
+                neighbors=self.successor_iterator
+        seen=set([])
+        if isinstance(start, list):
+            queue=[(v,0) for v in start]
+        else:
+            queue=[(start,0)]
+        
+        for v,d in queue:
+            yield v
+            seen.add(v)
+
+        while len(queue)>0:
+            v,d = queue.pop(0)
+            if distance is None or d<distance:
+                for w in neighbors(v):
+                    if w not in seen:
+                        seen.add(w)
+                        queue.append((w, d+1))
+                        yield w
+
+    def depth_first_search(self, start, ignore_direction=False, distance=None, neighbors=None):
+        """
+        Returns an iterator over the vertices in a depth-first ordering.
         
         INPUT:
         
         
-        -  ``u`` - vertex at which to start search
+        - ``start`` - vertex or list of vertices from which to start
+          the traversal
         
-        -  ``ignore_direction`` - (default False) only applies
-           to directed graphs. If True, searches across edges in either
-           direction.
+        - ``ignore_direction`` - (default False) only applies to
+          directed graphs. If True, searches across edges in either
+          direction.
+
+        - ``distance`` - the maximum distance from the ``start`` nodes
+          to traverse.  The ``start`` nodes are distance zero from
+          themselves.
+
+        - ``neighbors`` - a function giving the neighbors of a vertex.
+          The function should take a vertex and return a list of
+          vertices.  For a graph, ``neighbors`` is by default the
+          :meth:`.neighbors` function of the graph.  For a digraph,
+          the ``neighbors`` function defaults to the
+          :meth:`.successors` function of the graph.
         
         
         EXAMPLES::
         
-            sage: G = Graph( { 0: {1: 1}, 1: {2: 1}, 2: {3: 1}, 3: {4: 2}, 4: {0: 2} } )
-            sage: list(G.breadth_first_search(0))
-            [0, 1, 4, 2, 3]
+            sage: G = Graph( { 0: [1], 1: [2], 2: [3], 3: [4], 4: [0]} )
             sage: list(G.depth_first_search(0))
             [0, 4, 3, 2, 1]
         
-        ::
+        By default, the edge direction of a digraph is respected, but this
+        can be overridden by the ``ignore_direction`` parameter::
         
-            sage: D = DiGraph( { 0: {1: 1}, 1: {2: 1}, 2: {3: 1}, 3: {4: 2}, 4: {0: 2} } )
-            sage: list(D.breadth_first_search(0))
-            [0, 1, 2, 3, 4]
+
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
             sage: list(D.depth_first_search(0))
-            [0, 1, 2, 3, 4]
+            [0, 3, 6, 7, 2, 5, 1, 4]
+            sage: list(D.depth_first_search(0, ignore_direction=True))
+            [0, 7, 6, 3, 5, 2, 1, 4]
+
+        You can specify a maximum distance in which to search.  A
+        distance of zero returns the ``start`` vertices::
+            
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
+            sage: list(D.depth_first_search(0,distance=0))
+            [0]
+            sage: list(D.depth_first_search(0,distance=1))
+            [0, 3, 2, 1]
+
+        Multiple starting vertices can be specified in a list::
+
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
+            sage: list(D.depth_first_search([0]))                                    
+            [0, 3, 6, 7, 2, 5, 1, 4]
+            sage: list(D.depth_first_search([0,6]))
+            [0, 3, 6, 7, 2, 5, 1, 4]
+            sage: list(D.depth_first_search([0,6],distance=0))
+            [0, 6]
+            sage: list(D.depth_first_search([0,6],distance=1))
+            [0, 3, 2, 1, 6, 7]
+            sage: list(D.depth_first_search(6,ignore_direction=True,distance=2))
+            [6, 7, 5, 0, 3]
         
-        ::
+        More generally, you can specify a ``neighbors`` function.  For
+        example, you can traverse the graph backwards by setting
+        ``neighbors`` to be the :meth:`.predecessor` function of the graph::
         
+            sage: D = DiGraph( { 0: [1,2,3], 1: [4,5], 2: [5], 3: [6], 5: [7], 6: [7], 7: [0]})
+            sage: list(D.depth_first_search(5,neighbors=D.predecessors, distance=2))
+            [5, 2, 0, 1]
+            sage: list(D.depth_first_search(5,neighbors=D.successors, distance=2))  
+            [5, 7, 0]
+            sage: list(D.depth_first_search(5,neighbors=D.neighbors, distance=2)) 
+            [5, 7, 6, 0, 2, 1, 4]
+
+        TESTS::
+
             sage: D = DiGraph({1:[0], 2:[0]})
             sage: list(D.depth_first_search(0))
             [0]
             sage: list(D.depth_first_search(0, ignore_direction=True))
             [0, 2, 1]
+
         """
-        # This function is straight from an old version of networkx
-        if not self._directed or ignore_direction:
-            neighbors=self.neighbor_iterator            
+        if neighbors is None:
+            if not self._directed or ignore_direction:
+                neighbors=self.neighbor_iterator            
+            else:
+                neighbors=self.successor_iterator
+        seen=set([])
+        if isinstance(start, list):
+            # Reverse the list so that the initial vertices come out in the same order
+            queue=[(v,0) for v in reversed(start)]
         else:
-            neighbors=self.successor_iterator
-        # nlist=[] # list of nodes in a DFS preorder
-        seen={} # nodes seen
-        queue=[u]  # use as LIFO queue
-        seen[u]=True
-        while queue:
-            v=queue.pop()
-            # nlist.append(v)
-            yield v
-            for w in neighbors(v):
-                if w not in seen:
-                    seen[w]=True
-                    queue.append(w)
+            queue=[(start,0)]
+        
+        while len(queue)>0:
+            v,d = queue.pop()
+            if v not in seen:
+                yield v
+                seen.add(v)
+                if distance is None or d<distance:
+                    for w in neighbors(v):
+                        if w not in seen:
+                            queue.append((w, d+1))
 
     ### Constructors
 
@@ -6258,13 +6682,17 @@ class GenericGraph(SageObject):
         EXAMPLES::
         
             sage: g=graphs.PathGraph(4)
+            sage: g.transitive_closure()
+            Transitive closure of Path Graph: Graph on 4 vertices
             sage: g.transitive_closure()==graphs.CompleteGraph(4)
             True
             sage: g=DiGraph({0:[1,2], 1:[3], 2:[4,5]})
             sage: g.transitive_closure().edges(labels=False)
             [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 3), (2, 4), (2, 5)]
+
         """
         G = self.copy()
+        G.name('Transitive closure of ' + self.name())
         for v in G:
             # todo optimization opportunity: we are adding edges that
             # are already in the graph and we are adding edges
@@ -7768,7 +8196,7 @@ class GenericGraph(SageObject):
         INPUT:
         
         
-        -  ``translation`` - if True, then output includes a a
+        -  ``translation`` - if True, then output includes a
            dictionary translating from keys == vertices to entries == elements
            of 1,2,...,n (since permutation groups can currently only act on
            positive integers).
@@ -7884,6 +8312,9 @@ class GenericGraph(SageObject):
             sage: G = graphs.PetersenGraph()
             sage: G.automorphism_group(return_group=False, orbits=True)
             [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
+            sage: G.automorphism_group(partition=[[0],range(1,10)], return_group=False, orbits=True)
+            [[0], [2, 3, 6, 7, 8, 9], [1, 4, 5]]
+
         """
         from sage.groups.perm_gps.partn_ref.refinement_graphs import perm_group_elt, search_tree
         from sage.groups.perm_gps.permgroup import PermutationGroup
@@ -7912,7 +8343,7 @@ class GenericGraph(SageObject):
             for v in G_to:
                 b_new[v] = b[G_to[v]]
             b = b_new
-            # b is a translation of the labelings
+            # b is a translation of the labellings
             acting_vertices = {}
             translation_d = {}
             m = G.order()
@@ -7958,7 +8389,7 @@ class GenericGraph(SageObject):
             for v in G_to:
                 b_new[v] = b[G_to[v]]
             b = b_new
-            # b is a translation of the labelings
+            # b is a translation of the labellings
             acting_vertices = {}
             translation_d = {}
             m = G.order()
@@ -8369,7 +8800,7 @@ class Graph(GenericGraph):
 
        #.  A dictionary of lists
 
-       #.  A numpy matrix or ndarray
+       #.  A NumPy matrix or ndarray
 
        #.  A Sage adjacency matrix or incidence matrix
 
@@ -8536,7 +8967,7 @@ class Graph(GenericGraph):
           [1 0 1 1 0 1]
           [0 1 1 1 1 0]
     
-    #. A numpy matrix or ndarray::
+    #. A NumPy matrix or ndarray::
     
         sage: import numpy
         sage: A = numpy.array([[0,1,1],[1,0,1],[1,1,0]])
@@ -9417,7 +9848,7 @@ class Graph(GenericGraph):
         Returns the betweenness centrality (fraction of number of shortest
         paths that go through each vertex) as a dictionary keyed by
         vertices. The betweenness is normalized by default to be in range
-        (0,1). This wraps Networkx's implementation of the algorithm
+        (0,1). This wraps NetworkX's implementation of the algorithm
         described in [1].
         
         Measures of the centrality of a vertex within a graph determine the
@@ -9648,185 +10079,189 @@ class Graph(GenericGraph):
 
     ### Cliques
     
-    def cliques(self):
+    def cliques_maximal(self):
         """
-        Returns the list of maximal cliques. Each maximal clique is
-        represented by a list of vertices.
+        Returns the list of all maximal cliques, with each clique represented
+        by a list of vertices. A clique is an induced complete subgraph, and a
+        maximal clique is one not contained in a larger one.
         
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
+        NOTES:
         
-        Maximal cliques are the largest complete subgraphs containing a
-        given point. This function is based on Networkx's implementation of
-        the Bron and Kerbosch Algorithm, [1].
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
         
+        ALGORITHM:
+        
+        This function is based on NetworkX's implementation of the Bron and
+        Kerbosch Algorithm [BroKer1973]_.
+            
         REFERENCE:
 
-        - [1] Coen Bron and Joep Kerbosch. (1973). Algorithm 457:
+        .. [BroKer1973] Coen Bron and Joep Kerbosch. (1973). Algorithm 457:
           Finding All Cliques of an Undirected Graph. Commun. ACM. v
           16. n 9.  pages 575-577. ACM Press. [Online] Available:
           http://www.ram.org/computing/rambin/rambin.html
         
         EXAMPLES::
         
-            sage: (graphs.ChvatalGraph()).cliques()
+            sage: graphs.ChvatalGraph().cliques_maximal()
             [[0, 1], [0, 4], [0, 6], [0, 9], [2, 1], [2, 3], [2, 6], [2, 8], [3, 4], [3, 7], [3, 9], [5, 1], [5, 4], [5, 10], [5, 11], [7, 1], [7, 8], [7, 11], [8, 4], [8, 10], [10, 6], [10, 9], [11, 6], [11, 9]]
             sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
             sage: G.show(figsize=[2,2])
-            sage: G.cliques()
+            sage: G.cliques_maximal()
             [[0, 1, 2], [0, 1, 3]]
+            sage: C=graphs.PetersenGraph()
+            sage: C.cliques_maximal()
+            [[0, 1], [0, 4], [0, 5], [2, 1], [2, 3], [2, 7], [3, 4], [3, 8], [6, 1], [6, 8], [6, 9], [7, 5], [7, 9], [8, 5], [9, 4]]
+            sage: C = Graph('DJ{')
+            sage: C.cliques_maximal()
+            [[4, 1, 2, 3], [4, 0]]
+
         """
         import networkx.cliques
         return networkx.cliques.find_cliques(self.networkx_graph(copy=False))
         
-    def cliques_get_max_clique_graph(self, name=''):
+    def cliques(self):
         """
-        Returns a graph constructed with maximal cliques as vertices, and
-        edges between maximal cliques with common members in the original
-        graph.
+        (Deprecated) alias for ``cliques_maximal``. See that function for more
+        details.
         
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
+        EXAMPLE::
         
-        INPUT:
+            sage: C = Graph('DJ{')
+            sage: C.cliques()
+            doctest:...: DeprecationWarning: The function 'cliques' has been deprecated. Use 'cliques_maximal' or 'cliques_maximum'.
+            [[4, 1, 2, 3], [4, 0]]
+
+        """
+        from sage.misc.misc import deprecation
+        deprecation("The function 'cliques' has been deprecated. Use " + \
+                    "'cliques_maximal' or 'cliques_maximum'.")
+        return self.cliques_maximal()
         
+    def cliques_maximum(self):
+        """
+        Returns the list of all maximum cliques, with each clique represented
+        by a list of vertices. A clique is an induced complete subgraph, and a
+        maximum clique is one of maximal order.
         
-        -  ``name`` - The name of the new graph.
+        NOTES:
         
+        - Currently only implemented for undirected graphs. Use to_undirected
+          to convert a digraph to an undirected graph.
+        
+        ALGORITHM:
+        
+        This function is based on Cliquer [NisOst2003]_.
+            
+        REFERENCE:
+
+        .. [NisOst2003] Sampo Niskanen and Patric R. J. Ostergard,
+          "Cliquer User's Guide, Version 1.0," Communications Laboratory,
+          Helsinki University of Technology, Espoo, Finland, 
+          Tech. Rep. T48, 2003.
         
         EXAMPLES::
         
-            sage: (graphs.ChvatalGraph()).cliques_get_max_clique_graph()
-            Graph on 24 vertices
-            sage: ((graphs.ChvatalGraph()).cliques_get_max_clique_graph()).show(figsize=[2,2], vertex_size=20, vertex_labels=False)
+            sage: graphs.ChvatalGraph().cliques_maximum()
+            [[0, 1], [0, 4], [0, 6], [0, 9], [1, 2], [1, 5], [1, 7], [2, 3], [2, 6], [2, 8], [3, 4], [3, 7], [3, 9], [4, 5], [4, 8], [5, 10], [5, 11], [6, 10], [6, 11], [7, 8], [7, 11], [8, 10], [9, 10], [9, 11]]
             sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
             sage: G.show(figsize=[2,2])
-            sage: G.cliques_get_max_clique_graph()
-            Graph on 2 vertices
-            sage: (G.cliques_get_max_clique_graph()).show(figsize=[2,2])
-        """
-        import networkx.cliques
-        return Graph(networkx.cliques.make_max_clique_graph(self.networkx_graph(copy=False), name=name, create_using=networkx.xgraph.XGraph()))
+            sage: G.cliques_maximum()
+            [[0, 1, 2], [0, 1, 3]]
+            sage: C=graphs.PetersenGraph()
+            sage: C.cliques_maximum()
+            [[0, 1], [0, 4], [0, 5], [1, 2], [1, 6], [2, 3], [2, 7], [3, 4], [3, 8], [4, 9], [5, 7], [5, 8], [6, 8], [6, 9], [7, 9]]
+            sage: C = Graph('DJ{')
+            sage: C.cliques_maximum()
+            [[1, 2, 3, 4]]
 
-    def cliques_get_clique_bipartite(self, **kwds):
         """
-        Returns a bipartite graph constructed such that cliques are the
-        right vertices and the left vertices are retained from the given
-        graph. Right and left vertices are connected if the bottom vertex
-        belongs to the clique represented by a top vertex.
+        from sage.graphs.cliquer import all_max_clique
+        return sorted(all_max_clique(self))
+
+    def clique_maximum(self):
+        """
+        Returns the vertex set of a maximal order complete subgraph.
         
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
+        NOTE:
         
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
+        
+        ALGORITHM:
+        
+        This function is based on Cliquer [NisOst2003]_.
+            
         EXAMPLES::
         
-            sage: (graphs.ChvatalGraph()).cliques_get_clique_bipartite()
-            Bipartite graph on 36 vertices
-            sage: ((graphs.ChvatalGraph()).cliques_get_clique_bipartite()).show(figsize=[2,2], vertex_size=20, vertex_labels=False)
-            sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
-            sage: G.show(figsize=[2,2])
-            sage: G.cliques_get_clique_bipartite()
-            Bipartite graph on 6 vertices
-            sage: (G.cliques_get_clique_bipartite()).show(figsize=[2,2])
-        """
-        import networkx.cliques
-        from bipartite_graph import BipartiteGraph
-        return BipartiteGraph(networkx.cliques.make_clique_bipartite(self.networkx_graph(copy=False), **kwds))
+            sage: C=graphs.PetersenGraph()
+            sage: C.clique_maximum()
+            [7, 9]
+            sage: C = Graph('DJ{')
+            sage: C.clique_maximum()
+            [1, 2, 3, 4]
 
-    def clique_number(self, cliques=None):
         """
-        Returns the size of the largest clique of the graph (clique
+        from sage.graphs.cliquer import max_clique
+        return max_clique(self)
+
+    def clique_number(self, algorithm="cliquer", cliques=None):
+        r"""
+        Returns the order of the largest clique of the graph (the clique
         number).
+
+        NOTE:
         
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
-        
+         - Currently only implemented for undirected graphs. Use ``to_undirected``
+           to convert a digraph to an undirected graph.
+
         INPUT:
         
+         - ``algorithm`` - either ``cliquer`` or ``networkx``
         
-        -  ``cliques`` - list of cliques (if already
-           computed)
+           - ``cliquer`` - This wraps the C program Cliquer [NisOst2003]_.
         
+           - ``networkx`` - This function is based on NetworkX's implementation
+             of the Bron and Kerbosch Algorithm [BroKer1973]_.
+            
+         - ``cliques`` - an optional list of cliques that can be input if
+           already computed. Ignored unless ``algorithm=='networkx'``.
+
+        ALGORITHM:
+
+        This function is based on Cliquer [NisOst2003]_ and [BroKer1973]_.
         
         EXAMPLES::
         
             sage: C = Graph('DJ{')
             sage: C.clique_number()
             4
-            sage: E = C.cliques()
-            sage: E
-            [[4, 1, 2, 3], [4, 0]]
-            sage: C.clique_number(cliques=E)
-            4
             sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
             sage: G.show(figsize=[2,2])
             sage: G.clique_number()
             3
         """
-        import networkx.cliques
-        return networkx.cliques.graph_clique_number(self.networkx_graph(copy=False), cliques)
-        
-    def cliques_vertex_clique_number(self, vertices=None, with_labels=False, cliques=None):
-        r"""
-        Returns a list of sizes of the largest maximal cliques containing
-        each vertex. (Returns a single value if only one input vertex).
-        
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
-        
-        INPUT:
-        
-        
-        -  ``vertices`` - the vertices to inspect (default is
-           entire graph)
-        
-        -  ``with_labels`` - (boolean) default False returns
-           list as above True returns a dictionary keyed by vertex labels
-        
-        -  ``cliques`` - list of cliques (if already
-           computed)
-        
-        
-        EXAMPLES::
-        
-            sage: C = Graph('DJ{')
-            sage: C.cliques_vertex_clique_number()
-            [2, 4, 4, 4, 4]
-            sage: E = C.cliques()
-            sage: E
-            [[4, 1, 2, 3], [4, 0]]
-            sage: C.cliques_vertex_clique_number(cliques=E)
-            [2, 4, 4, 4, 4]
-            sage: F = graphs.Grid2dGraph(2,3)
-            sage: X = F.cliques_vertex_clique_number(with_labels=True)
-            sage: for v in sorted(X.iterkeys()):
-            ...    print v, X[v]
-            (0, 0) 2
-            (0, 1) 2
-            (0, 2) 2
-            (1, 0) 2
-            (1, 1) 2
-            (1, 2) 2
-            sage: F.cliques_vertex_clique_number(vertices=[(0, 1), (1, 2)])
-            [2, 2]
-            sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
-            sage: G.show(figsize=[2,2])
-            sage: G.cliques_vertex_clique_number()
-            [3, 3, 3, 3]
-        """
-        import networkx.cliques
-        return networkx.cliques.node_clique_number(self.networkx_graph(copy=False), vertices, with_labels, cliques)
-        
+        if algorithm=="cliquer":
+            from sage.graphs.cliquer import clique_number
+            return clique_number(self)        
+        elif algorithm=="networkx":
+            import networkx.cliques
+            return networkx.cliques.graph_clique_number(self.networkx_graph(copy=False),cliques)
+        else:
+            raise NotImplementedError("Only 'networkx' and 'cliquer' are supported.")
+
     def cliques_number_of(self, vertices=None, cliques=None, with_labels=False):
         """
         Returns a list of the number of maximal cliques containing each
         vertex. (Returns a single value if only one input vertex).
         
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
+        NOTES:
+        
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
         
         INPUT:
-        
         
         -  ``vertices`` - the vertices to inspect (default is
            entire graph)
@@ -9843,7 +10278,7 @@ class Graph(GenericGraph):
             sage: C = Graph('DJ{')
             sage: C.cliques_number_of()
             [1, 1, 1, 1, 2]
-            sage: E = C.cliques()
+            sage: E = C.cliques_maximal()
             sage: E
             [[4, 1, 2, 3], [4, 0]]
             sage: C.cliques_number_of(cliques=E)
@@ -9868,16 +10303,166 @@ class Graph(GenericGraph):
         import networkx.cliques
         return networkx.cliques.number_of_cliques(self.networkx_graph(copy=False), vertices, cliques, with_labels)
         
+    def cliques_get_max_clique_graph(self, name=''):
+        """
+        Returns a graph constructed with maximal cliques as vertices, and
+        edges between maximal cliques with common members in the original
+        graph.
+        
+        NOTES:
+        
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
+        
+        INPUT:
+        
+        -  ``name`` - The name of the new graph.
+        
+        EXAMPLES::
+        
+            sage: (graphs.ChvatalGraph()).cliques_get_max_clique_graph()
+            Graph on 24 vertices
+            sage: ((graphs.ChvatalGraph()).cliques_get_max_clique_graph()).show(figsize=[2,2], vertex_size=20, vertex_labels=False)
+            sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
+            sage: G.show(figsize=[2,2])
+            sage: G.cliques_get_max_clique_graph()
+            Graph on 2 vertices
+            sage: (G.cliques_get_max_clique_graph()).show(figsize=[2,2])
+        """
+        import networkx.cliques
+        return Graph(networkx.cliques.make_max_clique_graph(self.networkx_graph(copy=False), name=name, create_using=networkx.xgraph.XGraph()))
+
+    def cliques_get_clique_bipartite(self, **kwds):
+        """
+        Returns a bipartite graph constructed such that maximal cliques are the
+        right vertices and the left vertices are retained from the given
+        graph. Right and left vertices are connected if the bottom vertex
+        belongs to the clique represented by a top vertex.
+        
+        NOTES:
+        
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
+        
+        EXAMPLES::
+        
+            sage: (graphs.ChvatalGraph()).cliques_get_clique_bipartite()
+            Bipartite graph on 36 vertices
+            sage: ((graphs.ChvatalGraph()).cliques_get_clique_bipartite()).show(figsize=[2,2], vertex_size=20, vertex_labels=False)
+            sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
+            sage: G.show(figsize=[2,2])
+            sage: G.cliques_get_clique_bipartite()
+            Bipartite graph on 6 vertices
+            sage: (G.cliques_get_clique_bipartite()).show(figsize=[2,2])
+        """
+        import networkx.cliques
+        from bipartite_graph import BipartiteGraph
+        return BipartiteGraph(networkx.cliques.make_clique_bipartite(self.networkx_graph(copy=False), **kwds))
+
+    def independent_set(self):
+        """
+        Returns a maximal independent set, which is a set of vertices which
+        induces an empty subgraph. Uses Cliquer [NisOst2003]_.
+        
+        NOTES:
+        
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
+        
+        EXAMPLES::
+        
+            sage: C=graphs.PetersenGraph()
+            sage: C.independent_set()
+            [0, 3, 6, 7]
+        """
+        from sage.graphs.cliquer import max_clique
+        return max_clique(self.complement())
+
+    def cliques_vertex_clique_number(self, algorithm="cliquer", vertices=None,
+                                     with_labels=False, cliques=None):
+        r"""
+        Returns a list of sizes of the largest maximal cliques containing
+        each vertex. (Returns a single value if only one input vertex).
+        
+        NOTES:
+        
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
+        
+        INPUT:
+        
+         - ``algorithm`` - either ``cliquer`` or ``networkx``
+        
+           - ``cliquer`` - This wraps the C program Cliquer [NisOst2003]_.
+        
+           - ``networkx`` - This function is based on NetworkX's implementation
+                of the Bron and Kerbosch Algorithm [BroKer1973]_.
+
+        -  ``vertices`` - the vertices to inspect (default is entire graph).
+           Ignored unless ``algorithm=='networkx'``.
+        
+        -  ``with_labels`` - (boolean) default False returns list as above
+           True returns a dictionary keyed by vertex labels. Ignored unless
+           ``algorithm=='networkx'``.
+        
+        -  ``cliques`` - list of cliques (if already computed).  Ignored unless
+           ``algorithm=='networkx'``.
+        
+        EXAMPLES::
+        
+            sage: C = Graph('DJ{')
+            sage: C.cliques_vertex_clique_number()
+            [2, 4, 4, 4, 4]
+            sage: E = C.cliques_maximal()
+            sage: E
+            [[4, 1, 2, 3], [4, 0]]
+            sage: C.cliques_vertex_clique_number(cliques=E,algorithm="networkx")
+            [2, 4, 4, 4, 4]
+            sage: F = graphs.Grid2dGraph(2,3)
+            sage: X = F.cliques_vertex_clique_number(with_labels=True,algorithm="networkx")
+            sage: for v in sorted(X.iterkeys()):
+            ...    print v, X[v]
+            (0, 0) 2
+            (0, 1) 2
+            (0, 2) 2
+            (1, 0) 2
+            (1, 1) 2
+            (1, 2) 2
+            sage: F.cliques_vertex_clique_number(vertices=[(0, 1), (1, 2)])
+            [2, 2]
+            sage: G = Graph({0:[1,2,3], 1:[2], 3:[0,1]})
+            sage: G.show(figsize=[2,2])
+            sage: G.cliques_vertex_clique_number()
+            [3, 3, 3, 3]
+
+        """
+
+        if algorithm=="cliquer":
+            from sage.graphs.cliquer import clique_number
+            if vertices==None:
+                vertices=self
+            value=[]
+            for v in vertices:
+                value.append(1+clique_number(self.subgraph(self.neighbors(v))))
+                self.subgraph(self.neighbors(v)).plot()
+            return value
+        elif algorithm=="networkx":
+            import networkx.cliques
+            return networkx.cliques.node_clique_number(self.networkx_graph(copy=False), vertices, with_labels, cliques)
+        else:
+            raise NotImplementedError("Only 'networkx' and 'cliquer' are supported.")
+
     def cliques_containing_vertex(self, vertices=None, cliques=None, with_labels=False):
         """
         Returns the cliques containing each vertex, represented as a list
         of lists. (Returns a single list if only one input vertex).
         
-        Currently only implemented for undirected graphs. Use
-        to_undirected to convert a digraph to an undirected graph.
+        NOTE:
+        
+         - Currently only implemented for undirected graphs. Use to_undirected
+           to convert a digraph to an undirected graph.
         
         INPUT:
-        
         
         -  ``vertices`` - the vertices to inspect (default is
            entire graph)
@@ -9888,13 +10473,12 @@ class Graph(GenericGraph):
         -  ``cliques`` - list of cliques (if already
            computed)
         
-        
         EXAMPLES::
         
             sage: C = Graph('DJ{')
             sage: C.cliques_containing_vertex()
             [[[4, 0]], [[4, 1, 2, 3]], [[4, 1, 2, 3]], [[4, 1, 2, 3]], [[4, 1, 2, 3], [4, 0]]]
-            sage: E = C.cliques()
+            sage: E = C.cliques_maximal()
             sage: E
             [[4, 1, 2, 3], [4, 0]]
             sage: C.cliques_containing_vertex(cliques=E)
@@ -9915,6 +10499,7 @@ class Graph(GenericGraph):
             sage: G.show(figsize=[2,2])
             sage: G.cliques_containing_vertex()
             [[[0, 1, 2], [0, 1, 3]], [[0, 1, 2], [0, 1, 3]], [[0, 1, 2]], [[0, 1, 3]]]
+
         """
         import networkx.cliques
         return networkx.cliques.cliques_containing_node(self.networkx_graph(copy=False), vertices, cliques, with_labels)
@@ -10151,7 +10736,7 @@ class DiGraph(GenericGraph):
             sage: DiGraph(g)
             Digraph on 5 vertices
     
-       Note that in all cases, we copy the networkX structure.
+       Note that in all cases, we copy the NetworkX structure.
     
        ::
 
@@ -10862,7 +11447,7 @@ class DiGraph(GenericGraph):
         """
         if vertices in self:
             for d in self.in_degree_iterator(vertices):
-                return d # (weird, but works: only happends once!)
+                return d # (weird, but works: only happens once!)
         elif labels:
             di = {}
             for v, d in self.in_degree_iterator(vertices, labels=labels):
@@ -10934,7 +11519,7 @@ class DiGraph(GenericGraph):
         """
         if vertices in self:
             for d in self.out_degree_iterator(vertices):
-                return d # (weird, but works: only happends once!)
+                return d # (weird, but works: only happens once!)
         elif labels:
             di = {}
             for v, d in self.out_degree_iterator(vertices, labels=labels):

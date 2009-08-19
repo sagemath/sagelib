@@ -181,7 +181,7 @@ class tr_data_rel:
         
         # Initialize variables.
         if a == []:
-            # No starting input, all polynomials will be found; initalize to zero.
+            # No starting input, all polynomials will be found; initialize to zero.
             self.a = [0]*m + [1]
             self.amaxvals = [[]]*m
             anm1s = [[i] for i in range(0,m//2+1)]
@@ -194,11 +194,9 @@ class tr_data_rel:
             import numpy
             for i in range(len(anm1s)):
                 Q = [ [ v(m*x) for v in self.Foo] + [0] for x in Z_Fbasis] + [[v(anm1s[i]) for v in self.Foo] + [10**6]]
-                Q = str(numpy.array(Q).transpose())
-                Q = Q.replace(']\n [',';').replace('\n ', '').replace(' ', ',')
-                Q = Q[1:len(Q)-1]
-                adj = pari(Q).qflll()[self.d]
-                anm1s[i] += sum([m*Z_Fbasis[i]*adj[i].__int__()//adj[self.d].__int__() for i in range(self.d)])
+                pari_string = '['+';'.join([','.join(["%s"%ii for ii in row]) for row in zip(*Q)])+']'
+                adj = pari(pari_string).qflll()[self.d]
+                anm1s[i] += sum([m*Z_Fbasis[ii]*int(adj[ii])//int(adj[self.d]) for ii in range(self.d)])
                 
             self.amaxvals[m-1] = anm1s
             self.a[m-1] = self.amaxvals[m-1].pop()

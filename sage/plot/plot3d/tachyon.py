@@ -447,7 +447,7 @@ class Tachyon(SageObject):
 
 
         -  ``f`` - Function of two variables, which returns a
-           float (or coercable to a float) (xmin,xmax)
+           float (or coercible to a float) (xmin,xmax)
 
         -  ``(ymin,ymax)`` - defines the rectangle to plot over
            texture: Name of texture to be used Optional arguments:
@@ -520,7 +520,7 @@ class Tachyon(SageObject):
 
     def parametric_plot(self, f, t_0, t_f, tex, r=.1, cylinders = True, min_depth=4, max_depth=8, e_rel = .01, e_abs = .01):
         """
-        Plots a space curve as a series of speheres and finite cylinders.
+        Plots a space curve as a series of spheres and finite cylinders.
         Example (twisted cubic) ::
 
             sage: f = lambda t: (t,t^2,t^3)
@@ -697,7 +697,7 @@ class TachyonTriangleFactory(TriangleFactory):
 class TachyonPlot:
     #Recursively plots a function of two variables by building squares of 4 triangles, checking at
     # every stage whether or not each square should be split into four more squares.  This way,
-    # more planar areas get fewer triangles, and areas with higher curvature get more trianges
+    # more planar areas get fewer triangles, and areas with higher curvature get more triangles
 
     def str(self):
         return "".join([o.str() for o in self._objects])
@@ -986,5 +986,17 @@ class ParametricPlot:
         return False
 
 def tostr(s):
+    """
+    Converts vector information to a space-separated string.
+
+    EXAMPLES::
+
+        sage: from sage.plot.plot3d.tachyon import tostr
+	sage: tostr((1,1,1))
+	' 1.0 1.0 1.0 '
+	sage: tostr('2 3 2')
+	'2 3 2'
+    """
     if isinstance(s, str):
         return s
+    return ' %s %s %s '%(float(s[0]), float(s[1]), float(s[2]))

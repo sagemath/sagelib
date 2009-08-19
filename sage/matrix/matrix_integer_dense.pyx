@@ -609,7 +609,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         # TODO: This is about 6-10 slower than MAGMA doing what seems to be the same thing.
         # Moreover, NTL can also do this quickly.  Why?   I think both have specialized
         # small integer classes. (dmharvey: yes, NTL does not allocate any memory when
-        # intialising a ZZ to zero.)
+        # initializing a ZZ to zero.)
         _sig_on
         cdef Py_ssize_t i
         for i from 0 <= i < self._nrows * self._ncols:
@@ -1139,10 +1139,23 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         mpz_clear(h)
         mpz_clear(x)
         
-        return 0   # no error occured.
+        return 0   # no error occurred.
         
     def _multiply_multi_modular(left, Matrix_integer_dense right):
-    
+        """
+        Multiply this matrix by ``left`` using a multi modular algorithm.
+
+        EXAMPLES::
+
+            sage: M = Matrix(ZZ, 2, 3, range(5,11))
+            sage: N = Matrix(ZZ, 3, 2, range(15,21))
+            sage: M._multiply_multi_modular(N)
+            [310 328]
+            [463 490]
+            sage: M._multiply_multi_modular(-N)
+            [-310 -328]
+            [-463 -490]
+        """
         cdef Integer h
         cdef mod_int *moduli
         cdef int i, n, k
@@ -1210,7 +1223,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         cdef mod_int **row_list
         row_list = <mod_int**>sage_malloc(sizeof(mod_int*) * n)
         if row_list == NULL:
-            raise MemoryError, "out of memory allocating multi-modular coefficent list"
+            raise MemoryError, "out of memory allocating multi-modular coefficient list"
 
         _sig_on
         for i from 0 <= i < nr:
@@ -1267,13 +1280,13 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             raise NotImplementedError, "modulus to big"
         cdef mod_int** matrix = <mod_int**>sage_malloc(sizeof(mod_int*) * self._nrows)
         if matrix == NULL:
-            raise MemoryError, "out of memory allocating multi-modular coefficent list"
+            raise MemoryError, "out of memory allocating multi-modular coefficient list"
         
         cdef Py_ssize_t i, j
         for i from 0 <= i < self._nrows:
             matrix[i] = <mod_int *>sage_malloc(sizeof(mod_int) * self._ncols)
             if matrix[i] == NULL:
-                raise MemoryError, "out of memory allocating multi-modular coefficent list"
+                raise MemoryError, "out of memory allocating multi-modular coefficient list"
             for j from 0 <= j < self._ncols:
                 matrix[i][j] = mpz_fdiv_ui(self._matrix[i][j], n)
 
@@ -1749,7 +1762,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         
         ALGORITHM: 1. Replace input by a matrix of full rank got from a
         subset of the rows. 2. Divide out any common factors from rows. 3.
-        Check max_dets random dets of submatrices to see if their gcd
+        Check max_dets random dets of submatrices to see if their GCD
         (with p) is 1 - if so matrix is saturated and we're done. 4.
         Finally, use that if A is a matrix of full rank, then
         `hnf(transpose(A))^{-1}*A` is a saturation of A.
@@ -2297,7 +2310,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
            if False, impacts how determinants are computed.
         
         
-        By convention if self has 0 columnss, the right kernel is of dimension 0,
+        By convention if self has 0 columns, the right kernel is of dimension 0,
         whereas the right kernel is the whole domain if self has 0 rows.
         
         EXAMPLES::
@@ -3111,8 +3124,8 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
 
            The rank is cached.
         
-        ALGORITHM: First check if the matrix has maxim posible rank by
-        working modulo one random prime. If not call Linbox's rank
+        ALGORITHM: First check if the matrix has maxim possible rank by
+        working modulo one random prime. If not call LinBox's rank
         function.
         
         EXAMPLES::
@@ -3144,7 +3157,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
         if r == self._nrows or r == self._ncols:
             self.cache('rank', r)
             return r
-        # Detecting full rank didn't work -- use Linbox's general algorithm. 
+        # Detecting full rank didn't work -- use LinBox's general algorithm. 
         r = self._rank_linbox()
         self.cache('rank', r)
         return r
@@ -3239,7 +3252,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             sage: A.determinant(algorithm='linbox')
             Traceback (most recent call last):
             ...
-            RuntimeError: you must pass the proof=False option to the determinant command to use Linbox's det algorithm
+            RuntimeError: you must pass the proof=False option to the determinant command to use LinBox's det algorithm
             sage: A.determinant(algorithm='linbox',proof=False)
             -21
             sage: A._clear_cache()
@@ -3280,7 +3293,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             return matrix_integer_dense_hnf.det_padic(self, proof=proof, stabilize=stabilize)
         elif algorithm == 'linbox':
             if proof:
-                raise RuntimeError, "you must pass the proof=False option to the determinant command to use Linbox's det algorithm"
+                raise RuntimeError, "you must pass the proof=False option to the determinant command to use LinBox's det algorithm"
             d = self._det_linbox()
         elif algorithm == 'pari':
             d = self._det_pari()
@@ -3345,7 +3358,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
 
         cdef long dim
         cdef mpz_t *mp_N
-        time = verbose('computing nullspace of %s x %s matrix using IML'%(self._nrows, self._ncols))
+        time = verbose('computing null space of %s x %s matrix using IML'%(self._nrows, self._ncols))
         _sig_on
         dim = nullspaceMP (self._nrows, self._ncols, self._entries, &mp_N)
         _sig_off
@@ -3359,7 +3372,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
             mpz_clear(mp_N[i])
         free(mp_N)
 
-        verbose("finished computing nullspace", time)
+        verbose("finished computing null space", time)
         M._initialized = True
         return M
     
@@ -4643,7 +4656,7 @@ cdef class Matrix_integer_dense(matrix_dense.Matrix_dense):   # dense or sparse
     def _det_pari(self, int flag=0):
         """
         Determinant of this matrix using Gauss-Bareiss. If (optional)
-        flag is set to 1, use classical gaussian elimination.
+        flag is set to 1, use classical Gaussian elimination.
 
         For efficiency purposes, this det is computed entirely on the
         PARI stack then the PARI stack is cleared.  This function is
@@ -4837,6 +4850,27 @@ cdef _clear_columns(Matrix_integer_dense A, pivots, Py_ssize_t n):
 
 
 def _lift_crt(Matrix_integer_dense M, residues, moduli=None):
+    """
+    TESTS::
+
+        sage: from sage.matrix.matrix_integer_dense import _lift_crt
+        sage: T1 = Matrix(Zmod(5), 4, 4, [1, 4, 4, 0, 2, 0, 1, 4, 2, 0, 4, 1, 1, 4, 0, 3])
+        sage: T2 = Matrix(Zmod(7), 4, 4, [1, 4, 6, 0, 2, 0, 1, 2, 4, 0, 6, 6, 1, 6, 0, 5])
+        sage: T3 = Matrix(Zmod(11), 4, 4, [1, 4, 10, 0, 2, 0, 1, 9, 8, 0, 10, 6, 1, 10, 0, 9])
+        sage: _lift_crt(Matrix(ZZ, 4, 4), [T1, T2, T3])
+        [ 1  4 -1  0]
+        [ 2  0  1  9]
+        [-3  0 -1  6]
+        [ 1 -1  0 -2]
+
+        sage: from sage.ext.multi_modular import MultiModularBasis
+        sage: mm = MultiModularBasis([5,7,11])
+        sage: _lift_crt(Matrix(ZZ, 4, 4), [T1, T2, T3], mm)
+        [ 1  4 -1  0]
+        [ 2  0  1  9]
+        [-3  0 -1  6]
+        [ 1 -1  0 -2]
+    """
 
     cdef size_t n, i, j, k
     cdef Py_ssize_t nr, nc
@@ -4863,7 +4897,7 @@ def _lift_crt(Matrix_integer_dense M, residues, moduli=None):
     cdef mod_int **row_list
     row_list = <mod_int**>sage_malloc(sizeof(mod_int*) * n)
     if row_list == NULL:
-        raise MemoryError, "out of memory allocating multi-modular coefficent list"
+        raise MemoryError, "out of memory allocating multi-modular coefficient list"
     
     _sig_on
     for i from 0 <= i < nr:

@@ -333,7 +333,7 @@ cdef class ComplexDoubleField_class(sage.rings.ring.Field):
         Return the canonical coerce of x into the complex double field, if
         it is defined, otherwise raise a TypeError.
         
-        The rings that canonicaly coerce to the complex double field are:
+        The rings that canonically coerce to the complex double field are:
         
         - the complex double field itself
 
@@ -588,6 +588,9 @@ cdef class ComplexDoubleElement(FieldElement):
     calculations were performed with true complex numbers. This is due
     to the rounding errors inherent to finite precision calculations.
     """
+    
+    __array_interface__ = {'typestr': '=c16'}
+    
     def __new__(self, real=None, imag=None):
         self._parent = _CDF
         
@@ -638,7 +641,7 @@ cdef class ComplexDoubleElement(FieldElement):
         """
         cdef gsl_complex x
         _sig_on
-        # Signal handling is important, since rtodbl can easil overflow
+        # Signal handling is important, since rtodbl can easily overflow
         x = gsl_complex_rect(  rtodbl(greal(g)), rtodbl(gimag(g))  )
         _sig_off
         z = self._new_c(x)
@@ -1164,8 +1167,12 @@ cdef class ComplexDoubleElement(FieldElement):
             sage: a = CDF(3,-2)
             sage: a.real()
             3.0
+            sage: a.real_part()
+            3.0
         """
         return RealDoubleElement(self._complex.dat[0])
+
+    real_part = real
 
     def imag(self):
         """
@@ -1176,8 +1183,12 @@ cdef class ComplexDoubleElement(FieldElement):
             sage: a = CDF(3,-2)
             sage: a.imag()
             -2.0
+            sage: a.imag_part()
+            -2.0
         """
         return RealDoubleElement(self._complex.dat[1])
+
+    imag_part = imag
 
     def parent(self):
         """
@@ -1796,7 +1807,7 @@ cdef class ComplexDoubleElement(FieldElement):
             -0.121339721991 - 0.19619461894*I   
         
         We compute a few values of eta, but with the fractional power of e
-        omited.
+        omitted.
         
         ::
         
@@ -1842,7 +1853,7 @@ cdef class ComplexDoubleElement(FieldElement):
         """
         cdef GEN a, b, c, y, t
 
-        # Turn on SAGE C interrupt handling.  There must
+        # Turn on Sage C interrupt handling.  There must
         # be no Python code between here and _sig_off.
         #_sig_on  # we're not using this since it would dominate the runtime
 
@@ -1855,7 +1866,7 @@ cdef class ComplexDoubleElement(FieldElement):
             # this PARI can easily die, which will cause this function
             # to bomb unless we use _sig_on and _sig_off.  But
             # I don't want to use those, since they take more time
-            # than this entire function!  Moreover, I don't want SAGE's
+            # than this entire function!  Moreover, I don't want Sage's
             # eta to every bomb -- this function should work on all input; there's
             # no excuse for having it fail on easy edge cases (like PARI does).
             return ComplexDoubleElement(0,0)
@@ -2141,7 +2152,7 @@ cdef double_to_str(double x):
         return "NaN"
     # C99 only guarantees that isinf() returns a nonzero value (actually: 1) if x is an 
     # infinity (positive or negative). Modern Linux distros return -1 or +1 depending 
-    # on the sign of infinity, but that is not the case on OSX or Solaris 
+    # on the sign of infinity, but that is not the case on OS X or Solaris 
     if isinf(x) != 0 and x < 0:
         return '-infinity'
     elif isinf(x) != 0 and x > 0:

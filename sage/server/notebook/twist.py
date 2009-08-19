@@ -210,6 +210,16 @@ class WorksheetFile(resource.Resource):
 ############################
 
 DOC = os.path.abspath(SAGE_DOC + '/output/html/en/')
+DOC_PDF = os.path.abspath(SAGE_DOC + '/output/pdf')
+
+class DocPDF(resource.Resource):
+    addSlash = True
+    def render(self, ctx):
+        return static.File('%s' % DOC_PDF)
+
+    def childFactory(self, request, name):
+        gzip_handler(request)
+        return static.File('%s/%s' % (DOC_PDF, name))
 
 class DocStatic(resource.Resource):
     addSlash = True    
@@ -350,7 +360,7 @@ class UploadWorksheet(resource.PostableResource):
             # uploading a file from the user's computer
             dir = tmp_dir()
             filename = ctx.files['fileField'][0][0]
-            # Make tmp file in SAGE temp directory
+            # Make tmp file in Sage temp directory
             filename = '%s/%s'%(dir, filename)
             f = file(filename,'wb')
             # Then download to that file.
@@ -388,7 +398,7 @@ class UploadWorksheet(resource.PostableResource):
                         
                 except IOError, msg:
                     print msg
-                    raise ValueError, "Unfortunately, there was an error uploading the worksheet.  It could be an old unsupported format or worse.  If you desparately need its contents contact the Google group sage-support and post a link to your worksheet.  Alternatively, an sws file is just a bzip2'd tarball; take a look inside!"
+                    raise ValueError, "Unfortunately, there was an error uploading the worksheet.  It could be an old unsupported format or worse.  If you desperately need its contents contact the Google group sage-support and post a link to your worksheet.  Alternatively, an sws file is just a bzip2'd tarball; take a look inside!"
                 finally:
                     # Clean up the temporarily uploaded filename.
                     os.unlink(filename)
@@ -1216,7 +1226,7 @@ class Worksheet_eval(WorksheetResource, resource.PostableResource):
 class Worksheet_publish(WorksheetResource, resource.Resource):
     """
     This is a child resource of the Worksheet resource. It provides a
-    frontend to the mangement of worksheet publication. This mangement
+    frontend to the management of worksheet publication. This management
     functionality includes initializational of publication,
     re-publication, automated publication when a worksheet saved, and
     ending of publication.
@@ -1628,7 +1638,7 @@ class SendWorksheetToStop(SendWorksheetToFolder):
         W.quit()
 
 ############################
-# Publically Available Worksheets
+# Publicly Available Worksheets
 ############################
 class PublicWorksheets(resource.Resource):
     addSlash = True
@@ -2318,6 +2328,7 @@ class FailedToplevel(Toplevel):
 class UserToplevel(Toplevel):
     addSlash = True
 
+    child_pdf = DocPDF()
     child_images = Images()
     child_css = CSS()
     child_javascript = Javascript()

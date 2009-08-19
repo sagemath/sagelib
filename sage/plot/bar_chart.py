@@ -64,11 +64,11 @@ class BarChart(GraphicPrimitive):
             sage: g = BarChart(range(4), [1,3,2,0], {})
             sage: list(sorted(g._allowed_options().iteritems()))
             [('hue', 'The color given as a hue.'),
-             ('rgbcolor', 'The color as an rgb tuple.'),
+             ('rgbcolor', 'The color as an RGB tuple.'),
              ('width', 'The width of the bars'),
              ('zorder', 'The layer level in which to draw')]
         """
-        return {'rgbcolor':'The color as an rgb tuple.',
+        return {'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'width':'The width of the bars',
                 'zorder':'The layer level in which to draw'}
@@ -101,7 +101,7 @@ class BarChart(GraphicPrimitive):
         options = self.options()
         color = options['rgbcolor']
         width = float(options['width'])
-        # it is critical to make numpy arrays of type float below,
+        # it is critical to make NumPy arrays of type float below,
         # or bar will go boom:
         import numpy
         ind = numpy.array(self.ind, dtype=float)
@@ -112,7 +112,7 @@ class BarChart(GraphicPrimitive):
 def bar_chart(datalist, **options):
     """
     A bar chart of (currently) one list of numerical data.
-    Support for more datalists in progress.
+    Support for more data lists in progress.
 
     EXAMPLES:
 
@@ -127,6 +127,11 @@ def bar_chart(datalist, **options):
     A bar_chart with negative values and red bars::
 
         sage: bar_chart([-3,5,-6,11], rgbcolor=(1,0,0))
+
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: bar_chart([-2,8,-7,3], rgbcolor=(1,0,0), axes=False)
+        sage: bar_chart([-2,8,-7,3], rgbcolor=(1,0,0)).show(axes=False) # These are equivalent
     """
     dl = len(datalist)
     #if dl > 1:
@@ -142,6 +147,7 @@ def bar_chart(datalist, **options):
         #cnt += 1
 
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     #TODO: improve below for multiple data sets!
     #cnt = 1
     #for ind, pnts, xrange, yrange in bardata:

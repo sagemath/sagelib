@@ -141,7 +141,7 @@ class Polygon(GraphicPrimitive_xydata):
         """
         return {'alpha':'How transparent the figure is.',
                 'thickness': 'How thick the border line is.',
-                'rgbcolor':'The color as an rgb tuple.',
+                'rgbcolor':'The color as an RGB tuple.',
                 'hue':'The color given as a hue.',
                 'zorder':'The layer level in which to draw'}
 
@@ -251,6 +251,11 @@ def polygon(points, **options):
 
         sage: polygon([(0,0), (1,1), (0,1)])
         sage: polygon([(0,0,1), (1,1,1), (2,0,1)])
+
+    Extra options will get passed on to show(), as long as they are valid::
+
+        sage: polygon([(0,0), (1,1), (0,1)], axes=False)
+        sage: polygon([(0,0), (1,1), (0,1)]).show(axes=False) # These are equivalent
     """
     try:
         return polygon2d(points, **options)
@@ -329,5 +334,6 @@ def polygon2d(points, **options):
     from sage.plot.plot import xydata_from_point_list, Graphics
     xdata, ydata = xydata_from_point_list(points)
     g = Graphics()
+    g._set_extra_kwds(Graphics._extract_kwds_for_show(options))
     g.add_primitive(Polygon(xdata, ydata, options))
     return g 

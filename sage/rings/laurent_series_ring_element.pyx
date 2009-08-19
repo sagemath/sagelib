@@ -280,6 +280,16 @@ cdef class LaurentSeries(AlgebraElement):
             sage: f = (17/2)*x^-2 + x + x^2 + 3*x^4 + O(x^7)
             sage: latex(f)
             \frac{\frac{17}{2}}{x^{2}} + x + x^{2} + 3x^{4} + O(x^{7})
+
+        Verify that trac #6656 has been fixed::
+
+            sage: R.<a,b>=PolynomialRing(QQ)
+            sage: T.<x>=LaurentSeriesRing(R)
+            sage: y = a*x+b*x
+            sage: y._latex_()
+            '\\left(a + b\\right)x'
+            sage: latex(y)
+            \left(a + b\right)x
         """
         if self.is_zero():
             if self.prec() == infinity:
@@ -300,7 +310,7 @@ cdef class LaurentSeries(AlgebraElement):
             if x != '0':
                 if not first:
                     s += " + "
-                if not atomic_repr and n > 0 and (x[1:].find("+") != -1 or x[1:].find("-") != -1):
+                if not atomic_repr and e > 0 and (x[1:].find("+") != -1 or x[1:].find("-") != -1):
                     x = "\\left(%s\\right)"%x
                 if e == 1:
                     var = "|%s"%X
@@ -683,7 +693,7 @@ cdef class LaurentSeries(AlgebraElement):
            Despite the fact that higher order terms are printed to the
            right in a power series, right shifting decreases the
            powers of `t`, while left shifting increases
-           them. This is to be consistant with polynomials, integers,
+           them. This is to be consistent with polynomials, integers,
            etc.
         
         EXAMPLES::
@@ -940,7 +950,7 @@ cdef class LaurentSeries(AlgebraElement):
         """
         return self.__u.prec() + self.__n
 
-    def copy(self):
+    def __copy__(self):
         return LaurentSeries(self._parent, self.__u.copy(), self.__n)
 
 

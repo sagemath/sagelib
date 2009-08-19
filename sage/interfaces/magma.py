@@ -262,7 +262,7 @@ class Magma(Expect):
         
         -  ``user_config`` - if True, then local user
            configuration files will be read by Magma. If False (the default),
-           then Magma is started with the -n option which supresses user
+           then Magma is started with the -n option which suppresses user
            configuration files.
         
         
@@ -293,6 +293,7 @@ class Magma(Expect):
         self.__ref = 0
         self.__available_var = []
         self.__cache = {}
+        self._preparse_colon_equals = False  # if set to try, all "=" become ":=" (some users really appreciate this)
 
     def __reduce__(self):
         """
@@ -463,6 +464,7 @@ class Magma(Expect):
             sage: magma.eval("a := %s;"%(10^10000))    # optional - magma
             "
         """
+        x = self._preparse(x)
         x = str(x).rstrip()
         if len(x) == 0 or x[len(x) - 1] != ';':
             x += ';'
@@ -470,6 +472,27 @@ class Magma(Expect):
         if 'Runtime error' in ans or 'User error' in ans:
             raise RuntimeError, "Error evaluating Magma code.\nIN:%s\nOUT:%s"%(x, ans)
         return ans
+
+    def _preparse(self, s):
+        """
+        All input gets preparsed by calling this function before it gets evaluated.
+
+        EXAMPLES::
+        
+            sage: magma._preparse_colon_equals = False
+            sage: magma._preparse('a = 5')
+            'a = 5'
+            sage: magma._preparse_colon_equals = True
+            sage: magma._preparse('a = 5')
+            'a := 5'
+            sage: magma._preparse('a = 5; b := 7; c =a+b;')
+            'a := 5; b := 7; c :=a+b;'
+        """
+        try: # this is in a try/except only because of the possibility of old pickled Magma interfaces.
+            if self._preparse_colon_equals:
+                s = s.replace(':=','=').replace('=',':=')
+        except AttributeError: pass
+        return s
 
     def _start(self):
         """
@@ -988,7 +1011,7 @@ class Magma(Expect):
         -  ``args`` - list of objects coercible into this magma
            interface
         
-        -  ``params`` - Magma parameters, passed in aftera
+        -  ``params`` - Magma parameters, passed in after a
            colon
         
         -  ``nvals`` - number of return values from the
@@ -1982,7 +2005,7 @@ class MagmaElement(ExpectElement):
 
     def evaluate(self, *args):
         """
-        Evalute self at the inputs.
+        Evaluate self at the inputs.
         
         INPUT:
         

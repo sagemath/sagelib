@@ -113,6 +113,7 @@ Unfortunately, there is no argspec extractable from builtins::
 
 import inspect
 import os
+EMBEDDED_MODE = False
 
 def isclassinstance(obj):
     r"""
@@ -332,7 +333,7 @@ def sage_getargspec(obj):
     AUTHORS:
     
     - William Stein: a modified version of inspect.getargspec from the
-      Python Standard Library, which was taken from IPython for use in SAGE.
+      Python Standard Library, which was taken from IPython for use in Sage.
     - Extensions by Nick Alexander
     """
     if not callable(obj):
@@ -399,6 +400,33 @@ def sage_getdef(obj, obj_name=''):
         if s[:4] == 'self':
             s = s[4:]
         s = s.lstrip(',').strip()
+        # for use with typesetting the definition with the notebook:
+        # sometimes s contains "*args" or "**keywds", and the
+        # asterisks confuse ReST/sphinx/docutils, so escape them:
+        # change * to \*, and change ** to \**.
+        if EMBEDDED_MODE:
+            s = s.replace('**', '\\**')  # replace ** with \**
+            t = ''
+            while True:  # replace * with \*
+                i = s.find('*')
+                if i == -1:
+                    break
+                elif i > 0 and s[i-1] == '\\':
+                    if s[i+1] == "*":
+                        t += s[:i+2]
+                        s = s[i+2:]
+                    else:
+                        t += s[:i+1]
+                        s = s[i+1:]
+                    continue 
+                elif i > 0 and s[i-1] == '*':
+                    t += s[:i+1]
+                    s = s[i+1:]
+                    continue
+                else:
+                    t += s[:i] + '\\*'
+                    s = s[i+1:]
+            s = t + s
         return obj_name + '(' + s + ')'
     except (AttributeError, TypeError, ValueError):
         return '%s( [noargspec] )'%obj_name
@@ -415,8 +443,8 @@ def sage_getdoc(obj, obj_name=''):
     EXAMPLES::
 
         sage: from sage.misc.sageinspect import sage_getdoc
-        sage: sage_getdoc(identity_matrix)[5:43]
-        'Return the `n times n` identity matrix'
+        sage: sage_getdoc(identity_matrix)[5:39]
+        'Return the `n x n` identity matrix'
 
     AUTHORS:
     
@@ -438,7 +466,8 @@ def sage_getdoc(obj, obj_name=''):
 
     if r is None:
         return ''
-    s = sage.misc.sagedoc.format(str(r))
+
+    s = sage.misc.sagedoc.format(str(r), embedded=EMBEDDED_MODE)
 
     # If there is a Cython embedded position, it needs to be stripped
     pos = _extract_embedded_position(s)
