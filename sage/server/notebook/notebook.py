@@ -1168,14 +1168,16 @@ class Notebook(SageObject):
         We then export the worksheet to an sws file.
         
         ::
+
+            sage: savefile = SAGE_TMP + 'tmp.sws'
         
-            sage: nb.export_worksheet(W.filename(),  'tmp.sws', verbose=False)
+            sage: nb.export_worksheet(W.filename(),  savefile, verbose=False)
         
         Now we import the sws.
         
         ::
         
-            sage: nb._import_worksheet_sws('tmp.sws', 'admin', verbose=False)
+            sage: nb._import_worksheet_sws(savefile, 'admin', verbose=False)
             [Cell 0; in=2+3, out=]
         
         Yes, it's there now (as admin/2)::
