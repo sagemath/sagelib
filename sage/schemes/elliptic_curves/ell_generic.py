@@ -2326,7 +2326,7 @@ class EllipticCurve_generic(plane_curve.ProjectiveCurve_generic):
                 return False
             else:
                 return wm.isomorphisms(E,other,F) != None
-        
+
     def change_weierstrass_model(self, *urst):
         r"""
         Return a new Weierstrass model of self under the standard transformation `(u,r,s,,t)`
