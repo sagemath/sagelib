@@ -2404,7 +2404,7 @@ class GraphGenerators():
             pos[vertex] = [x,y]
 
         return graph.Graph(data=d, pos=pos, name="%d-Cube"%n)
-        
+
     def GeneralizedPetersenGraph(self, n,k):
         r"""
         Returns a generalized Petersen graph with `2n` nodes. The variables
@@ -2414,14 +2414,14 @@ class GraphGenerators():
         with the same `n`. The regular Petersen Graph has `n=5` and `k=2`.
         Other named graphs that can be described using this notation include 
         the Desargues graph and the Moebius-Kantor graph.   
-             
-        INPUT:       
-        
+
+        INPUT:
+
         - ``n`` - the number of nodes is `2*n`.
-        
+
         - ``k`` - integer `0<k\leq\lfloor(n-1)`/`2\rfloor`. Decides
           how inner vertices are connected.
-        
+
         PLOTTING: Upon construction, the position dictionary is filled to
         override the spring-layout algorithm. By convention, the generalized
         Petersen graphs are displayed as an inner and outer cycle pair, with
@@ -2429,29 +2429,25 @@ class GraphGenerators():
         drawn at the top of the outer-circle, moving counterclockwise after that.
         The inner circle is drawn with the (n)th node at the top, then
         counterclockwise as well.
-        
+
         EXAMPLES: For `k=1` the resulting graph will be isomorphic to a circular
-        ladder graph.
-        
-        ::
-        
+        ladder graph. ::
+
             sage: g = graphs.GeneralizedPetersenGraph(13,1)
             sage: g2 = graphs.CircularLadderGraph(13)
             sage: g.is_isomorphic(g2)
             True
-            
-        
-        The Desargues graph:
-        
-        ::
+
+        The Desargues graph::
+
             sage: g = graphs.GeneralizedPetersenGraph(10,3)
             sage: g.girth()
             6
             sage: g.is_bipartite()
             True
-        
+
         AUTHORS:
-        
+
         - Anders Jonsson (2009-10-15)
         """
         if (n < 3):
@@ -2473,7 +2469,7 @@ class GraphGenerators():
             G.add_edge(i, i+n)
             G.add_edge(i+n, n + (i+k) % n)
         return graph.Graph(G, pos=pos_dict, name="Generalized Petersen graph (n="+str(n)+",k="+str(k)+")")
-        
+
     def HyperStarGraph(self,n,k):
         r"""
         Returns the hyper-star graph HS(n,k).
