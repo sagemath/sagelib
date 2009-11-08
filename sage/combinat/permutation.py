@@ -489,17 +489,88 @@ class Permutation_class(CombinatorialObject):
             w = w[i:]
         return tableau.Tableau(t)
 
-        
-
     def to_cycles(self, singletons=True):
-        r"""
+        """
         Returns the permutation p as a list of disjoint cycles.
-        
+
+        If ``singleton=False`` is given, don't returns the singleton in the
+        list of cycles.
+
         EXAMPLES::
-        
+
             sage: Permutation([2,1,3,4]).to_cycles()
             [(1, 2), (3,), (4,)]
             sage: Permutation([2,1,3,4]).to_cycles(singletons=False)
+            [(1, 2)]
+
+        The algorithme is of complexity `O(n)` where `n` is the size of the
+        given permutation.
+            
+        TESTS::
+
+            sage: from sage.combinat.permutation import from_cycles
+            sage: all(from_cycles(n, p.to_cycles()) == p
+            ...     for n in range(6) for p in Permutations(n))
+            True
+
+            sage: size = 10000
+            sage: sample = (Permutations(size).random_element() for i in range(5))
+            sage: all(from_cycles(size, p.to_cycles()) == p for p in sample)
+            True
+
+
+        Note: there is an alternative implementation called ``_to_cycle_set``
+        which could be slightly (10%) faster for some input (typically for
+        permutations of size in the range [100, 10000]. You can run the
+        following benchmarks. For small permutations::
+
+            sage: for size in range(9): # not tested
+            ...    print size
+            ...    lp = Permutations(size).list()
+            ...    timeit('[p.to_cycles(False) for p in lp]')
+            ...    timeit('[p._to_cycles_set(False) for p in lp]')
+            ...    timeit('[p._to_cycles_list(False) for p in lp]')
+            ...    timeit('[p._to_cycles_orig(False) for p in lp]') 
+
+       and larger one::
+
+            sage: for size in [10, 20, 50, 75, 100, 200, 500, 1000, # not tested
+            ...         2000, 5000, 10000, 15000, 20000, 30000,
+            ...         50000, 80000, 100000]: 
+            ...      print(size)
+            ...      lp = [Permutations(size).random_element() for i in range(20)]
+            ...      timeit("[p.to_cycles() for p in lp]")
+            ...      timeit("[p._to_cycles_set() for p in lp]")
+            ...      timeit("[p._to_cycles_list() for p in lp]") # not tested
+        """
+        cycles = []
+
+        l = self[:]
+
+        #Go through until we've considered every number between 1 and len(p)
+        for i in range(len(l)):
+            if l[i] == False:
+                continue
+            cycleFirst = i+1
+            cycle = [ cycleFirst ]
+            l[i], next = False, l[i]
+            while next != cycleFirst:
+                cycle.append( next )
+                l[next - 1], next  = False, l[next - 1]
+            #Add the cycle to the list of cycles
+            if singletons or len(cycle) > 1:
+                cycles.append(tuple(cycle))
+        return cycles
+
+    def _to_cycles_orig(self, singletons=True):
+        r"""
+        Returns the permutation p as a list of disjoint cycles.
+
+        EXAMPLES::
+
+            sage: Permutation([2,1,3,4])._to_cycles_orig()
+            [(1, 2), (3,), (4,)]
+            sage: Permutation([2,1,3,4])._to_cycles_orig(singletons=False)
             [(1, 2)]
         """
         p = self[:]
@@ -523,8 +594,6 @@ class Permutation_class(CombinatorialObject):
                 else:
                     if len(cycle) > 1:
                         cycles.append(tuple(cycle))
-
-
                 #Start with the first element in the list
                 toConsider = l[0]
                 l.remove(toConsider)
@@ -540,7 +609,7 @@ class Permutation_class(CombinatorialObject):
             if next == cycleFirst:
                 toConsider = -1
             else:
-                cycle.append( next )    
+                cycle.append( next )
                 l.remove( next )
                 toConsider = next
 
@@ -551,13 +620,101 @@ class Permutation_class(CombinatorialObject):
         else:
             if len(cycle) > 1:
                 cycles.append(tuple(cycle))
+        return cycles
+
+    def _to_cycles_set(self, singletons=True):
+        r"""
+        Returns the permutation p as a list of disjoint cycles.
+
+        EXAMPLES::
+
+            sage: Permutation([2,1,3,4])._to_cycles_set()
+            [(1, 2), (3,), (4,)]
+            sage: Permutation([2,1,3,4])._to_cycles_set(singletons=False)
+            [(1, 2)]
+
+        TESTS::
+
+            sage: all((p._to_cycles_set(False) == p._to_cycles_orig(False)
+            ...            for i in range(7) for p in Permutations(i)))
+            True
+        """
+        p = self[:]
+        cycles = []
+
+        if not singletons:
+            #remove the fixed points
+            L = set( i+1 for i,pi in enumerate(p) if pi != i+1 )
+        else:
+            L = set(range(1,len(p)+1))
+
+        from bisect import bisect_left
+
+        #Go through until we've considered every remaining number
+        while len(L) > 0:
+            # take the first remaining element
+            cycleFirst = L.pop()
+            next = p[cycleFirst-1]
+            cycle = [cycleFirst]
+            while next != cycleFirst:
+                cycle.append(next)
+                L.remove(next)
+                next = p[next-1]
+            # add the cycle
+            cycles.append(tuple(cycle))
 
         return cycles
+
+    def _to_cycles_list(self, singletons=True):
+        r"""
+        Returns the permutation p as a list of disjoint cycles.
+
+        EXAMPLES::
+
+            sage: Permutation([2,1,3,4])._to_cycles_list()
+            [(1, 2), (3,), (4,)]
+            sage: Permutation([2,1,3,4])._to_cycles_list(singletons=False)
+            [(1, 2)]
+
+        TESTS::
+
+            sage: all((p._to_cycles_list(False) == p._to_cycles_orig(False)
+            ...            for i in range(7) for p in Permutations(i)))
+            True
+        """
+        p = self[:]
+        cycles = []
+
+        if not singletons:
+            #remove the fixed points
+            L = [i+1 for i,pi in enumerate(p) if pi != i+1]
+        else:
+            L = range(1,len(p)+1)
+
+        from bisect import bisect_left
+
+        #Go through until we've considered every remaining number
+        while len(L) > 0:
+            # take the first remaining element
+            cycleFirst = L.pop(0)
+            next = p[cycleFirst-1]
+            cycle = [cycleFirst]
+            while next != cycleFirst:
+                cycle.append(next)
+                # remove next from L
+                # we use a binary search to find it
+                L.pop(bisect_left(L,next))
+                next = p[next-1]
+            # add the cycle
+            cycles.append(tuple(cycle))
+
+        return cycles
+
 
     def to_permutation_group_element(self):
         """
         Returns a PermutationGroupElement equal to self.
-        
+
         EXAMPLES::
         
             sage: Permutation([2,1,4,3]).to_permutation_group_element()
@@ -3105,7 +3262,7 @@ class StandardPermutations_n(CombinatorialClass):
     def rank(self, p):
         """
         EXAMPLES::
-        
+
             sage: SP3 = Permutations(3)
             sage: map(SP3.rank, SP3)
             [0, 1, 2, 3, 4, 5]
@@ -3121,13 +3278,11 @@ class StandardPermutations_n(CombinatorialClass):
     def random_element(self):
         """
         EXAMPLES::
-        
-            sage: Permutations(4).random_element()
-            [1, 3, 2, 4]
-        """
-        r = randint(0, int(factorial(self.n)-1))
-        return self.unrank(r)
 
+            sage: Permutations(4).random_element()
+            [1, 2, 4, 3]
+        """
+        return Permutation(sample(xrange(1,self.n+1), self.n))
 
 #############################
 # Constructing Permutations #
