@@ -333,11 +333,11 @@ class HallLittlewood_p(HallLittlewood_generic):
     def __init__(self, R, t=None):
         """
         EXAMPLES::
-        
+
             sage: P = HallLittlewoodP(QQ)
-            sage: loads(dumps(P)) == P
-            True
-            sage: TestSuite(P).run() # todo: not implemented (multiplication test fails!)
+            sage: TestSuite(P).run() # todo: fix the product
+            Failure ...
+            The following tests failed: _test_associativity, _test_one, _test_prod
         """
         self._name = "Hall-Littlewood polynomials in the P basis"
         self._prefix = "P"
