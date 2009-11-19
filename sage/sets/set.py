@@ -46,7 +46,7 @@ def Set(X):
     builtin set type.
 
     EXAMPLES::
-    
+
         sage: X = Set(GF(9,'a'))
         sage: X
         {0, 1, 2, a, a + 1, a + 2, 2*a, 2*a + 1, 2*a + 2}
@@ -656,6 +656,27 @@ class Set_object_enumerated(Set_object):
         """
         s = repr(self.set())
         return "{" + s[5:-2] + "}"
+
+    def list(self):
+        """
+        Return the elements of self, as a list.
+
+        EXAMPLES::
+        
+            sage: X = Set(GF(8,'c'))
+            sage: X
+            {0, 1, c, c + 1, c^2, c^2 + 1, c^2 + c, c^2 + c + 1}
+            sage: X.list()
+            [0, 1, c, c + 1, c^2, c^2 + 1, c^2 + c, c^2 + c + 1]
+            sage: type(X.list())
+            <type 'list'>
+
+        FIXME: What should be the order of the result?
+        That of self.object()? Or the order given by set(self.object())?
+        Note that :meth:`__getitem__` is currently implemented in term
+        of this list method, which is really inefficient ...
+        """
+        return list(set(self.object()))
 
     def set(self):
         """
