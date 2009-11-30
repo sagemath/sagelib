@@ -209,7 +209,7 @@ from integer_vector import IntegerVectors
 from cartesian_product import CartesianProduct
 from integer_list import IntegerListsLex
 from sage.functions.other import ceil
-from sage.misc.misc import deprecation
+from sage.misc.misc import deprecation, deprecated_function_alias
 
 def Partition(mu=None, **keyword):
     """
@@ -692,20 +692,10 @@ class Partition_class(CombinatorialObject):
                 res.append( (i,j) )
         return res
 
-    def boxes(self):
-        r"""
-        Deprecated, please use ''cells'' instead.
 
-        TESTS::
-        
-            sage: Partition([3,2]).boxes()
-            doctest:...: DeprecationWarning: boxes is deprecated. Please use cells instead
-            [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1)]
-        """
-        deprecation('boxes is deprecated. Please use cells instead')
-        return self.cells()
-    
-    
+    boxes = deprecated_function_alias(cells,
+                'Sage Version 4.3')
+
     def generalized_pochhammer_symbol(self, a, alpha):
         r"""
         Returns the generalized Pochhammer symbol
@@ -813,18 +803,9 @@ class Partition_class(CombinatorialObject):
         else:
             #Error: invalid coordinates
             pass
-    def arm(self, i, j):
-        r"""
-        Deprecated. Please use ''arm_length'' instead.
-        
-        TESTS::
-        
-            sage: Partition([2,2,1]).arm(0, 0)
-            doctest:...: DeprecationWarning: arm is deprecated. Please use arm_length instead.
-            1
-        """
-        deprecation('arm is deprecated. Please use arm_length instead.')
-        return self.arm_length(i,j)
+
+    arm = deprecated_function_alias(arm_length, 
+        'Sage Version 4.3')
 
     def arm_lengths(self, flat=False):
         """
@@ -879,20 +860,10 @@ class Partition_class(CombinatorialObject):
         else:
             #Error: invalid coordinates
             pass
-        
-    def leg(self, i, j):
-        r"""
-        Deprecated. Please use ''leg_length'' instead.
-        
-        TESTS::
-        
-            sage: Partition([2,2,1]).leg(0, 0)
-            doctest:...: DeprecationWarning: leg is deprecated. Please use leg_length instead.
-            2
-        """
-        deprecation('leg is deprecated. Please use leg_length instead.')
-        return self.leg_length(i,j)
-        
+
+    leg = deprecated_function_alias(leg_length, 
+        'Sage Version 4.3')
+
     def leg_lengths(self, flat=False):
         """
         Returns a tableau of shape p with each cell filled in with its leg
@@ -1017,20 +988,11 @@ class Partition_class(CombinatorialObject):
             4
         """
         return self.leg_length(i,j)+self.arm_length(i,j)+1
-    def hook(self, i, j):
-        r"""
-        Deprecated. Please use ''hook_length'' instead.
-        
-        TESTS::
-        
-            sage: Partition([2,2,1]).hook(0, 0)
-            doctest:...: DeprecationWarning: hook is deprecated. Please use hook_length instead.
-            4
-        """
-        deprecation('hook is deprecated. Please use hook_length instead.')
-        return self.hook_length(i,j)
-    
-    
+
+    hook = deprecated_function_alias(hook_length,
+        'Sage Version 4.3')
+
+
     def hooks(self):
         """
         Returns a sorted list of the hook lengths in self.
@@ -1443,26 +1405,6 @@ class Partition_class(CombinatorialObject):
                 
         return res
 
-    def r_core(self, length):
-        """
-        This function is deprecated.
-
-        EXAMPLES::
-
-            sage: Partition([6,3,2,2]).r_core(3)
-            doctest:1: DeprecationWarning: r_core is deprecated. Please use core instead.
-            [2, 1, 1]
-
-        Please use :meth:`core` instead::
-
-            sage: Partition([6,3,2,2]).core(3)
-            [2, 1, 1]
-
-        """
-        from sage.misc.misc import deprecation
-        deprecation('r_core is deprecated. Please use core instead.')
-        return self.core(length)
-
     def core(self, length):
         """
         Returns the core of the partition -- in the literature the core is
@@ -1510,25 +1452,8 @@ class Partition_class(CombinatorialObject):
         part = [part[i-1]-len(part)+i for i in range(1, len(part)+1)]
         #Select the r-core
         return filter(lambda x: x != 0, part)
-
-    def r_quotient(self, length):
-        """
-        This function is deprecated.
-
-        EXAMPLES::
-
-            sage: Partition([6,3,2,2]).r_quotient(3)
-            doctest:1: DeprecationWarning: r_quotient is deprecated. Please use quotient instead.
-            [[], [], [2, 1]]
-
-        Please use :meth:`quotient` instead::
-
-            sage: Partition([6,3,2,2]).quotient(3)
-            [[], [], [2, 1]]
-        """
-        from sage.misc.misc import deprecation
-        deprecation('r_quotient is deprecated. Please use quotient instead.')
-        return self.quotient(length)
+    r_core = deprecated_function_alias(core, 
+        'Sage Version 4.3')
 
     def quotient(self, length):
         """
@@ -1545,9 +1470,9 @@ class Partition_class(CombinatorialObject):
 
             sage: Partition([7,7,5,3,3,3,1]).quotient(3)
             [[2], [1], [2, 2, 2]]
-        
+
         TESTS::
-        
+
             sage: Partition([8,7,7,4,1,1,1,1,1]).quotient(3)
             [[2, 1], [2, 2], [2]]
             sage: Partition([10,8,7,7]).quotient(4)
@@ -1590,23 +1515,27 @@ class Partition_class(CombinatorialObject):
 
         return result
 
+    r_quotient = deprecated_function_alias(quotient,
+        'Sage Version 4.3')
+
+
     def add_cell(self, i, j = None):
         r"""
         Returns a partition corresponding to self with a cell added in row
         i. i and j are 0-based row and column indices. This does not change
         p.
-        
+
         Note that if you have coordinates in a list, you can call this
         function with python's \* notation (see the examples below).
-        
+
         EXAMPLES::
-        
+
             sage: Partition([3, 2, 1, 1]).add_cell(0)
             [4, 2, 1, 1]
             sage: cell = [4, 0]; Partition([3, 2, 1, 1]).add_cell(*cell)
             [3, 2, 1, 1, 1]
         """
-        
+
         if j is None:
             if i >= len(self):
                 j = 0
@@ -1622,36 +1551,25 @@ class Partition_class(CombinatorialObject):
             return Partition(pl)
 
         raise ValueError, "[%s, %s] is not an addable cell"%(i,j)
-    
-    def add_box(self, i, j = None):
-        r"""
-        Deprecated, please use ''add_cell'' instead.
 
-        TESTS::
-        
-            sage: Partition([3, 2, 1, 1]).add_box(0)
-            doctest:...: DeprecationWarning: add_box is deprecated. Please use add_cell instead
-            [4, 2, 1, 1]
-        """
-        deprecation('add_box is deprecated. Please use add_cell instead')
-        return self.add_cell(i,j)
+    add_box = deprecated_function_alias(add_cell,
+        'Sage Version 4.3')
 
-    
     def remove_cell(self, i, j = None):
         """
         Returns the partition obtained by removing a cell at the end of row
         i.
-        
+
         EXAMPLES::
-        
+
             sage: Partition([2,2]).remove_cell(1)
             [2, 1]
             sage: Partition([2,2,1]).remove_cell(2)
             [2, 2]
             sage: #Partition([2,2]).remove_cell(0)
-        
+
         ::
-        
+
             sage: Partition([2,2]).remove_cell(1,1)
             [2, 1]
             sage: #Partition([2,2]).remove_cell(1,0)
@@ -1662,7 +1580,7 @@ class Partition_class(CombinatorialObject):
 
         if j is None:
             j = self[i] - 1
-            
+
         if [i,j] not in self.corners():
             raise ValueError, "[%d,%d] is not a corner of the partition" % (i,j)
 
@@ -1671,18 +1589,8 @@ class Partition_class(CombinatorialObject):
         else:
             return Partition(self[:i] + [ self[i:i+1][0] - 1 ] + self[i+1:])
 
-    def remove_box(self, i, j = None):
-        r"""
-        Deprecated, please use ''remove_cell'' instead.
-
-        TESTS::
-        
-            sage: Partition([2,2]).remove_box(1,1)
-            doctest:...: DeprecationWarning: remove_box is deprecated. Please use remove_cell instead.
-            [2, 1]
-        """
-        deprecation('remove_box is deprecated. Please use remove_cell instead.')
-        return self.remove_cell(i,j)
+    remove_box = deprecated_function_alias(remove_cell,
+        'Sage Version 4.3')
 
 
     def k_skew(self, k):
