@@ -311,6 +311,8 @@ cdef class RealDoubleField_class(Field):
             53
         """
         return 53
+
+    precision = prec
         
     def to_prec(self, prec):
         """
