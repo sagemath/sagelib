@@ -1,5 +1,5 @@
 """
-Graph Coloring Functions
+Graph Coloring
 
 AUTHORS:
 
@@ -28,39 +28,43 @@ def all_graph_colorings(G,n,count_only=False):
     into an implementation of the Dancing Links algorithm described
     by Knuth (who attributes the idea to Hitotumatu and Noshita).
 
-    The construction works as follows:
-     (columns)
-      * The first `|V|` columns correspond to a vertex -- a `1` in this
-           column indicates that that vertex has a color.
-      * After those `|V|` columns, we add `n*|E|` columns -- a `1` in
-           these columns indicate that a particular edge is
-           incident to a vertex with a certain color.
+    The construction works as follows. Columns:
 
-     (rows)
-      * For each vertex, add `n` rows; one for each color `c`.  Place
-           a `1` in the column corresponding to the vertex, and a `1`
-           in the appropriate column for each edge incident to the 
-           vertex, indicating that that edge is incident to the 
-           color `c`.
-      * If `n > 2`, the above construction cannot be exactly covered
-           since each edge will be incident to only two vertices
-           (and hence two colors) - so we add `n*|E|` rows, each one
-           containing a `1` for each of the `n*|E|` columns.  These
-           get added to the cover solutions "for free" during the
-           backtracking.
+    * The first `|V|` columns correspond to a vertex -- a `1` in this
+      column indicates that that vertex has a color.
+
+    * After those `|V|` columns, we add `n*|E|` columns -- a `1` in
+      these columns indicate that a particular edge is
+      incident to a vertex with a certain color.
+
+    Rows:
+
+    * For each vertex, add `n` rows; one for each color `c`.  Place
+      a `1` in the column corresponding to the vertex, and a `1`
+      in the appropriate column for each edge incident to the
+      vertex, indicating that that edge is incident to the
+      color `c`.
+
+    * If `n > 2`, the above construction cannot be exactly covered
+      since each edge will be incident to only two vertices
+      (and hence two colors) - so we add `n*|E|` rows, each one
+      containing a `1` for each of the `n*|E|` columns.  These
+      get added to the cover solutions "for free" during the
+      backtracking.
 
     Note that this construction results in `n*|V| + 2*n*|E| + n*|E|`
     entries in the matrix.  The Dancing Links algorithm uses a
     sparse representation, so if the graph is simple, `|E| \leq |V|^2`
     and `n <= |V|`, this construction runs in `O(|V|^3)` time.
     Back-conversion to a coloring solution is a simple scan of the
-    solutions, which will contain `|V| + (n-2)*|E|` entries,  so 
+    solutions, which will contain `|V| + (n-2)*|E|` entries,  so
     runs in `O(|V|^3)` time also.  For most graphs, the conversion
     will be much faster -- for example, a planar graph will be
     transformed for `4`-coloring in linear time since `|E| = O(|V|)`.
 
     REFERENCES:
-        http://www-cs-staff.stanford.edu/~uno/papers/dancing-color.ps.gz
+
+    http://www-cs-staff.stanford.edu/~uno/papers/dancing-color.ps.gz
 
     EXAMPLES::
 
@@ -225,12 +229,11 @@ def chromatic_number(G):
         sage: from sage.graphs.graph_coloring import chromatic_number
         sage: G = Graph({0:[1,2,3],1:[2]})
         sage: chromatic_number(G)
-        3   
+        3
 
         sage: G = graphs.PetersenGraph()
         sage: G.chromatic_number()
         3
-
     """
     o = G.order()
     if o == 0:
@@ -245,14 +248,14 @@ def chromatic_number(G):
         return m
     for n in range(m,o+1):
         for C in all_graph_colorings(G,n):
-            return n    
+            return n
 
 def vertex_coloring(g, k=None, value_only=False, hex_colors=False, log=0):
     r"""
     Computes the chromatic number of the given graph or tests its
     `k`-colorability. See http://en.wikipedia.org/wiki/Graph_coloring for
     further details on graph coloring.
-    
+
     INPUT:
 
     - ``g`` -- a graph.
@@ -279,12 +282,12 @@ def vertex_coloring(g, k=None, value_only=False, hex_colors=False, log=0):
       be no message printed by the solver.
 
     OUTPUT:
-    
+
     - If ``k=None`` and ``value_only=False``, then return a partition of the
       vertex set into the minimum possible of independent sets.
 
     - If ``k=None`` and ``value_only=True``, return the chromatic number.
-              
+
     - If ``k`` is set and ``value_only=None``, return ``False`` if the
       graph is not `k`-colorable, and a partition of the vertex set into
       `k` independent sets otherwise.
@@ -293,7 +296,7 @@ def vertex_coloring(g, k=None, value_only=False, hex_colors=False, log=0):
       `k`-colorable, and return ``True`` or ``False`` accordingly.
 
     EXAMPLE::
-    
+
        sage: from sage.graphs.graph_coloring import vertex_coloring
        sage: g = graphs.PetersenGraph()
        sage: vertex_coloring(g, value_only=True) # optional - requires GLPK or CBC
@@ -376,7 +379,7 @@ def vertex_coloring(g, k=None, value_only=False, hex_colors=False, log=0):
                 return dict(zip(rainbow(k), value))
             else:
                 return value
-                    
+
         # Degeneracy
         # Vertices whose degree is less than k are of no importance in
         # the coloring.
@@ -412,14 +415,14 @@ def vertex_coloring(g, k=None, value_only=False, hex_colors=False, log=0):
                 return dict(zip(rainbow(k), value))
             else:
                 return value
-        
+
         p = MixedIntegerLinearProgram(maximization=True)
         color = p.new_variable(dim=2)
         # a vertex has exactly one color
         [p.add_constraint(sum([color[v][i] for i in xrange(k)]), min=1, max=1)
              for v in g.vertices()]
         # adjacent vertices have different colors
-        [p.add_constraint(color[u][i] + color[v][i], max=1) 
+        [p.add_constraint(color[u][i] + color[v][i], max=1)
              for (u, v) in g.edge_iterator(labels=None)
                  for i in xrange(k)]
         # anything is good as an objective value as long as it is satisfiable
@@ -439,9 +442,9 @@ def vertex_coloring(g, k=None, value_only=False, hex_colors=False, log=0):
         color = p.get_values(color)
         # builds the color classes
         classes = [[] for i in xrange(k)]
-        [classes[i].append(v) 
-             for i in xrange(k) 
-                 for v in g.vertices() 
+        [classes[i].append(v)
+             for i in xrange(k)
+                 for v in g.vertices()
                      if color[v][i] == 1]
         if hex_colors:
             return dict(zip(rainbow(len(classes)), classes))
@@ -453,7 +456,7 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, log=0):
     Properly colors the edges of a graph. See the URL
     http://en.wikipedia.org/wiki/Edge_coloring for further details on
     edge coloring.
-    
+
     INPUT:
 
     - ``g`` -- a graph.
@@ -489,7 +492,7 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, log=0):
 
     In the following, `\Delta` is equal to the maximum degree in the graph
     ``g``.
-    
+
     - If ``vizing=True`` and ``value_only=False``, return a partition of
       the edge set into `\Delta + 1` matchings.
 
@@ -497,14 +500,14 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, log=0):
 
     - If ``vizing=False`` and ``value_only=False``, return a partition of
       the edge set into the minimum number of matchings.
-              
+
     - If ``vizing=True`` and ``value_only=True``, should return something,
       but mainly you are just trying to compute the maximum degree of the
       graph, and this is not the easiest way. By Vizing's theorem, a graph
       has a chromatic index equal to `\Delta` or to `\Delta + 1`.
 
     EXAMPLE::
-    
+
        sage: from sage.graphs.graph_coloring import edge_coloring
        sage: g = graphs.PetersenGraph()
        sage: edge_coloring(g, value_only=True) # optional - requires GLPK or CBC
@@ -532,7 +535,7 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, log=0):
         if hex_colors:
             return zip(rainbow(len(classes)), classes)
         else:
-            return classes              
+            return classes
 
     p = MixedIntegerLinearProgram(maximization=True)
     color = p.new_variable(dim=2)
@@ -556,7 +559,7 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, log=0):
     e = g.edge_iterator().next()
     p.set_objective(color[R(e)][0])
     p.set_binary(color)
-    try: 
+    try:
         if value_only:
             p.solve(objective_only=True, log=log)
         else:
@@ -572,9 +575,9 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, log=0):
     # Builds the color classes
     color = p.get_values(color)
     classes = [[] for i in xrange(k)]
-    [classes[i].append(e) 
-         for e in g.edge_iterator() 
-             for i in xrange(k) 
+    [classes[i].append(e)
+         for e in g.edge_iterator()
+             for i in xrange(k)
                  if color[R(e)][i] == 1]
     # if needed, builds a dictionary from the color classes adding colors
     if hex_colors:
@@ -632,7 +635,7 @@ def round_robin(n):
         sage: sum([Set([e[2] for e in g.edges_incident(v)]).cardinality() for v in g]) == 2*g.size()
         True
         sage: Set([e[2] for e in g.edge_iterator()]).cardinality()
-        9        
+        9
     """
     if n <= 1:
         raise ValueError("There must be at least two vertices in the graph.")
@@ -652,7 +655,7 @@ def round_robin(n):
 class Test:
     r"""
     This class performs randomized testing for all_graph_colorings.
-    Since everything else in this file is derived from 
+    Since everything else in this file is derived from
     all_graph_colorings, this is a pretty good randomized tester for
     the entire file.  Note that for a graph `G`, ``G.chromatic_polynomial()``
     uses an entirely different algorithm, so we provide a good,
@@ -661,9 +664,9 @@ class Test:
 
     def random(self,tests = 1000):
         r"""
-        Calls ``self.random_all_graph_colorings()``.  In the future, if 
+        Calls ``self.random_all_graph_colorings()``.  In the future, if
         other methods are added, it should call them, too.
-        
+
         TESTS::
 
             sage: from sage.graphs.graph_coloring import Test
@@ -673,12 +676,15 @@ class Test:
 
     def random_all_graph_colorings(self,tests = 1000):
         r"""
-        Verifies the results of all_graph_colorings in three ways:
-            1) all colorings are unique
-            2) number of m-colorings is `P(m)` (where `P` is the chromatic 
-               polynomial of the graph being tested)
-            3) colorings are valid -- that is, that no two vertices of 
-               the same color share an edge.
+        Verifies the results of ``all_graph_colorings()`` in three ways:
+
+        #. all colorings are unique
+
+        #. number of m-colorings is `P(m)` (where `P` is the chromatic
+           polynomial of the graph being tested)
+
+        #. colorings are valid -- that is, that no two vertices of
+           the same color share an edge.
 
         TESTS::
 
