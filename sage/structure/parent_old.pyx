@@ -72,7 +72,9 @@ cdef class Parent(parent.Parent):
             print mor
             other.init_coerce() # TODO remove when we can
             other._coerce_from_list.append(mor)
-        
+
+        self._set_element_constructor()
+
         # old
         self._has_coerce_map_from = {}
         if category is not None:
