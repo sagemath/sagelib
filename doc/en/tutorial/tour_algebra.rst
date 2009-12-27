@@ -4,7 +4,8 @@ Basic Algebra and Calculus
 Sage can perform various computations related to basic algebra and
 calculus: for example, finding solutions to equations,
 differentiation, integration, and Laplace transforms. See the
-"Sage Constructions" documentation for more examples.
+`Sage Constructions <http://www.sagemath.org/doc/constructions/>`_
+documentation for more examples.
 
 Solving Equations
 -----------------
@@ -51,7 +52,7 @@ symbolically:
     sage: eq2 = q*y+p*x==-6
     sage: eq3 = q*y^2+p*x^2==24
     sage: solve([eq1,eq2,eq3,p==1],p,q,x,y)
-    [[p == 1, q == 8, x == -4/3*sqrt(10) - 2/3, y == 1/6*sqrt(2)*sqrt(5) - 2/3], 
+    [[p == 1, q == 8, x == -4/3*sqrt(10) - 2/3, y == 1/6*sqrt(2)*sqrt(5) - 2/3],
      [p == 1, q == 8, x == 4/3*sqrt(10) - 2/3, y == -1/6*sqrt(2)*sqrt(5) - 2/3]]
 
 For numerical approximations of the solutions, you can instead use:
@@ -182,6 +183,7 @@ Here is a more involved example. The displacement from equilibrium
 is modeled by the system of 2nd order differential equations
 
 .. math::
+
     m_1 x_1'' + (k_1+k_2) x_1 - k_2 x_2 = 0
 
     m_2 x_2''+ k_2 (x_2-x_1) = 0,
@@ -234,9 +236,9 @@ equations:
 
     sage: var('s X Y')
     (s, X, Y)
-    sage: eqns = [(2*s^2+6)*X-2*Y == 6*s, -2*X +(s^2+2)*Y == 3*s] 
+    sage: eqns = [(2*s^2+6)*X-2*Y == 6*s, -2*X +(s^2+2)*Y == 3*s]
     sage: solve(eqns, X,Y)
-    [[X == 3*(s^3 + 3*s)/(s^4 + 5*s^2 + 4), 
+    [[X == 3*(s^3 + 3*s)/(s^4 + 5*s^2 + 4),
       Y == 3*(s^3 + 5*s)/(s^4 + 5*s^2 + 4)]]
 
 Now take inverse Laplace transforms to get the answer:
@@ -273,10 +275,9 @@ The individual components can be plotted using
     sage: p2 = plot(4*cos(t) - cos(2*t), (t,0, 2*pi), rgbcolor=hue(0.6))
     sage: show(p1 + p2)
 
-(For more on plotting, see :ref:`section-plot`.)
+For more on plotting, see :ref:`section-plot`. See section 5.5 of 
+[NagleEtAl2004]_ for further information on differential equations.
 
-REFERENCES: Nagle, Saff, Snider, Fundamentals of Differential
-Equations, 6th ed, Addison-Wesley, 2004. (see § 5.5).
 
 Euler's Method for Systems of Differential Equations
 ----------------------------------------------------
@@ -286,9 +287,8 @@ and second order ODEs. We first recall the basic idea for first
 order equations. Given an initial value problem of the form
 
 .. math::
-    y'=f(x,y)
-    y(a)=c 
 
+    y'=f(x,y), \quad y(a)=c,
 
 we want to find the approximate value of the solution at
 :math:`x=b` with :math:`b>a`.
@@ -323,10 +323,10 @@ this method in a table.
 ============== ==================   ================
 :math:`a`      :math:`c`            :math:`hf(a,c)`
 :math:`a+h`    :math:`c+hf(a,c)`    ...
-:math:`a+2h`   ...                   
-...	                             
+:math:`a+2h`   ...
+...
 :math:`b=a+nh` ???                  ...
-============== ==================   ================  
+============== ==================   ================
 
 
 The goal is to fill out all the blanks of the table, one row at a
@@ -412,7 +412,3 @@ the following example:
     'bessel_y(v,w)'
     sage: maxima.eval("diff(f,w)")
     '(bessel_y(v-1,w)-bessel_y(v+1,w))/2'
-
-.. [GAP] The GAP Group, ``GAP - Groups, Algorithms, and Programming``, http://www.gap-system.org
-
-.. [Max] Maxima, http://maxima.sf.net/

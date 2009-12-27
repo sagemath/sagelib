@@ -13,7 +13,8 @@ plots of functions in rectangular coordinates; and also polar
 plots, contour plots and vector field plots. We present examples of
 some of these here. For more examples of plotting with Sage, see
 :ref:`section-systems` and :ref:`section-maxima`, and also the
-"Sage Constructions" documentation.
+`Sage Constructions <http://www.sagemath.org/doc/constructions/>`_
+documentation.
 
 This command produces a yellow circle of radius 1, centered at the
 origin:
@@ -73,8 +74,8 @@ also:
     sage: x = var('x')
     sage: parametric_plot((cos(x),sin(x)^3),(x,0,2*pi),rgbcolor=hue(0.6))
 
-It's important to notice that the axes of the plots will only 
-intersect if the origin is in the viewing range of the graph, and 
+It's important to notice that the axes of the plots will only
+intersect if the origin is in the viewing range of the graph, and
 that with sufficiently large values scientific notation may be used:
 
 ::
@@ -225,6 +226,3 @@ Lemniscate:
     sage: x, y, z = var('x,y,z')
     sage: f(x, y, z) = 4*x^2 * (x^2 + y^2 + z^2 + z) + y^2 * (y^2 + z^2 - 1)
     sage: implicit_plot3d(f, (x, -0.5, 0.5), (y, -1, 1), (z, -1, 1))
-
-
-.. [Jmol] Jmol: an open-source Java viewer for chemical structures in 3D http://www.jmol.org/
