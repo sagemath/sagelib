@@ -20,31 +20,31 @@ place to start. For example:
     4
     sage: factor(-2007)
     -1 * 3^2 * 223
-    
+
     sage: A = matrix(4,4, range(16)); A
     [ 0  1  2  3]
     [ 4  5  6  7]
     [ 8  9 10 11]
     [12 13 14 15]
-    
+
     sage: factor(A.charpoly())
     x^2 * (x^2 - 30*x - 80)
-    
+
     sage: m = matrix(ZZ,2, range(4))
     sage: m[0,0] = m[0,0] - 3
     sage: m
     [-3  1]
     [ 2  3]
-    
-    sage: E = EllipticCurve([1,2,3,4,5]); 
+
+    sage: E = EllipticCurve([1,2,3,4,5]);
     sage: E
-    Elliptic Curve defined by y^2 + x*y + 3*y = x^3 + 2*x^2 + 4*x + 5 
+    Elliptic Curve defined by y^2 + x*y + 3*y = x^3 + 2*x^2 + 4*x + 5
     over Rational Field
     sage: E.anlist(10)
     [0, 1, 1, 0, -1, -3, 0, -1, -3, -3, -3]
     sage: E.rank()
     1
-    
+
     sage: k = 1/(sqrt(3)*I + 3/4 + sqrt(73)*5/9); k
     1/(I*sqrt(3) + 5/9*sqrt(73) + 3/4)
     sage: N(k)
@@ -54,6 +54,8 @@ place to start. For example:
     sage: latex(k)
     \frac{1}{I \, \sqrt{3} + \frac{5}{9} \, \sqrt{73} + \frac{3}{4}}
 
+.. _installation:
+
 Installation
 ============
 
@@ -62,7 +64,7 @@ want to try some commands, use online at http://www.sagenb.org.
 
 See the Sage Installation Guide in the documentation section of the
 main Sage webpage [SA]_ for instructions on installing Sage on your
-computer. Here we merely make two comments.
+computer. Here we merely make a few comments.
 
 
 #. The Sage download file comes with "batteries included". In other
@@ -80,6 +82,20 @@ computer. Here we merely make two comments.
    site) may be easier and quicker to install than the source code
    version. Just unpack the file and run ``sage``.
 
+#. If you'd like to use the SageTeX package (which allows you to embed
+   the results of Sage computations into a LaTeX file), you will need to
+   make SageTeX known to your TeX distribution. To do this, see the
+   section "Make SageTeX known to TeX" in the `Sage installation guide
+   <http://www.sagemath.org/doc/>`_ (`this link
+   <../installation/index.html>`_ should take you to a local copy of the
+   installation guide). It's quite easy; you just need to set an
+   environment variable or copy a single file to a directory that TeX
+   will search.
+
+   The documentation for using SageTeX is located in
+   ``$SAGE_ROOT/local/share/texmf/tex/generic/sagetex/``, where
+   "``$SAGE_ROOT``" refers to the directory where you installed Sage --
+   for example, ``/opt/sage-4.2.1``.
 
 Ways to Use Sage
 ================
