@@ -623,7 +623,7 @@ class EllipticCurvePoint_field(AdditiveGroupElement): # SchemeMorphism_abelian_v
                 m = (y1-y2)/(x1-x2)
             except ZeroDivisionError:
                 raise ZeroDivisionError, "Inverse of %s does not exist"%(x1-x2)
-            
+
         x3 = -x1 - x2 - a2 + m*(m+a1)
         y3 = -y1 - a3 - a1*x3 + m*(x1-x3)
         # See \#4820 for why we need to coerce 1 into the base ring here:
