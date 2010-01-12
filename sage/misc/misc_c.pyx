@@ -124,7 +124,7 @@ def prod(x, z=None, Py_ssize_t recursion_cutoff = 5):
         prod = z*prod
         
     return prod
-    
+
 
 cdef balanced_list_prod(L, Py_ssize_t offset, Py_ssize_t count, Py_ssize_t cutoff):
     """
