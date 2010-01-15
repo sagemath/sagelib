@@ -329,35 +329,46 @@ def limit(f, dir=None, taylor=False, **argv):
 
 lim = limit
 
-def taylor(f, v, a, n):
+def taylor(f, *args):
     """
     Expands self in a truncated Taylor or Laurent series in the
     variable `v` around the point `a`, containing terms
-    through `(x - a)^n`.
-    
+    through `(x - a)^n`. Functions in more variables are also
+    supported.
+     
     INPUT:
-    
-    
-    -  ``v`` - variable
-    
-    -  ``a`` - number
-    
-    -  ``n`` - integer
-    
-    
+     
+    -  ``*args`` - the following notation is supported 
+          
+       - ``x, a, n`` - variable, point, degree
+        
+       - ``(x, a), (y, b), ..., n`` - variables with points, degree of polynomial
+      
     EXAMPLES::
     
         sage: var('x,k,n')
         (x, k, n)
         sage: taylor (sqrt (1 - k^2*sin(x)^2), x, 0, 6)
         -1/720*(45*k^6 - 60*k^4 + 16*k^2)*x^6 - 1/24*(3*k^4 - 4*k^2)*x^4 - 1/2*k^2*x^2 + 1
+        
+    ::
+
         sage: taylor ((x + 1)^n, x, 0, 4)
         1/24*(n^4 - 6*n^3 + 11*n^2 - 6*n)*x^4 + 1/6*(n^3 - 3*n^2 + 2*n)*x^3 + 1/2*(n^2 - n)*x^2 + n*x + 1
+        
+    ::
+
+        sage: taylor ((x + 1)^n, x, 0, 4)
+        1/24*(n^4 - 6*n^3 + 11*n^2 - 6*n)*x^4 + 1/6*(n^3 - 3*n^2 + 2*n)*x^3 + 1/2*(n^2 - n)*x^2 + n*x + 1
+                 
+    Taylor polynomial in two variables:: 
+
+        sage: x,y=var('x y'); taylor(x*y^3,(x,1),(y,-1),4) 
+        (y + 1)^3*(x - 1) + (y + 1)^3 - 3*(y + 1)^2*(x - 1) - 3*(y + 1)^2 + 3*(y + 1)*(x - 1) - x + 3*y + 3 
     """
     if not isinstance(f, Expression):
         f = SR(f)
-    return f.taylor(v=v,a=a,n=n)
-    
+    return f.taylor(*args)
 
 def expand(x, *args, **kwds):
     """
