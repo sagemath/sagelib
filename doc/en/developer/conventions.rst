@@ -55,7 +55,7 @@ rings.
 .. You are encouraged
    to include miscellaneous notes, emails, design
    discussions, etc., in your package.  Make these
-   plain text files (with extension ``.txt``) 
+   plain text files (with extension ``.txt``)
    in a subdirectory called ``notes``.  (For example, see
    ``SAGE_ROOT/devel/sage/sage/ext/notes/``.)
 
@@ -81,25 +81,25 @@ The top of each Sage code file should follow this format:
 
     r"""
     <Very short 1-line summary>
-    
+
     <Paragraph description>
     ...
-    
-    AUTHORS: 
-        
+
+    AUTHORS:
+
     - YOUR NAME (2005-01-03): initial version
-    
-    - person (date in ISO year-month-day format): short desc
-    
-    ... 
 
     - person (date in ISO year-month-day format): short desc
-    
+
     ...
-    
+
+    - person (date in ISO year-month-day format): short desc
+
+    ...
+
     Lots and lots of examples.
     """
-    
+
     #*****************************************************************************
     #       Copyright (C) 2008 YOUR NAME <your email>
     #
@@ -117,71 +117,71 @@ contains the implementation for :math:`$\ZZ$`.
 
     """
     Elements of the ring m`\ZZ` of integers
-    
+
     AUTHORS:
-    
+
     - William Stein (2005): initial version
-    
+
     - Gonzalo Tornaria (2006-03-02): vastly improved python/GMP
       conversion; hashing
-    
+
     - Didier Deshommes (2006-03-06): numerous examples
       and docstrings
-    
+
     - William Stein (2006-03-31): changes to reflect GMP bug fixes
-    
+
     - William Stein (2006-04-14): added GMP factorial method (since it's
       now very fast).
-    
+
     - David Harvey (2006-09-15): added nth_root, exact_log
-    
+
     - David Harvey (2006-09-16): attempt to optimise Integer constructor
-    
+
     - Rishikesh (2007-02-25): changed quo_rem so that the rem is positive
-    
+
     - David Harvey, Martin Albrecht, Robert Bradshaw (2007-03-01):
       optimized Integer constructor and pool
-    
+
     - Pablo De Napoli (2007-04-01): multiplicative_order should return
       +infinity for non zero numbers
-    
+
     - Robert Bradshaw (2007-04-12): is_perfect_power, Jacobi symbol (with
       Kronecker extension).  Convert some methods to use GMP directly
       rather than pari, Integer(), PY_NEW(Integer)
-    
+
     - David Roe (2007-03-21): sped up valuation and is_square, added
       val_unit, is_power, is_power_of and divide_knowing_divisible_by
-    
+
     - Robert Bradshaw (2008-03-26): gamma function, multifactorials
-    
+
     - Robert Bradshaw (2008-10-02): bounded squarefree part
-    
+
     EXAMPLES:
-    
+
     Add 2 integers::
-    
+
         sage: a = Integer(3) ; b = Integer(4)
         sage: a + b == 7
         True
-    
+
     Add an integer and a real number::
-    
+
         sage: a + 4.0
         7.00000000000000
-    
+
     Add an integer and a rational number::
-    
+
         sage: a + Rational(2)/5
         17/5
-    
+
     Add an integer and a complex number::
-    
+
         sage: b = ComplexField().0 + 1.5
         sage: loads((a+b).dumps()) == a+b
         True
-    
+
     ::
-    
+
         sage: z = 32
         sage: -z
         -32
@@ -191,9 +191,9 @@ contains the implementation for :math:`$\ZZ$`.
         0
         sage: z = -1; -z
         1
-    
+
     Multiplication::
-    
+
         sage: a = Integer(3) ; b = Integer(4)
         sage: a * b == 12
         True
@@ -201,22 +201,22 @@ contains the implementation for :math:`$\ZZ$`.
         True
         sage: a * Rational(2)/5
         6/5
-    
+
     ::
-    
+
         sage: list([2,3]) * 4
         [2, 3, 2, 3, 2, 3, 2, 3]
-    
+
     ::
-    
+
         sage: 'sage'*Integer(3)
         'sagesagesage'
-    
+
     COERCIONS: Returns version of this integer in the multi-precision
     floating real field R.
-    
+
     ::
-    
+
         sage: n = 9390823
         sage: RR = RealField(200)
         sage: RR(n)
@@ -255,7 +255,9 @@ Docstring Content
 -----------------
 
 **Every** function must have a docstring that includes the
-following information:
+following information. Source files in the Sage library contain
+numerous examples on how to format your documentation, so you could
+use them as a guide.
 
 
 -  A one-sentence description of the function, followed by a blank
@@ -265,7 +267,33 @@ following information:
    below for format). The type names should be descriptive, but do not
    have to represent the exact Sage/Python types. For example, use
    "integer" for anything that behaves like an integer; you do not
-   have to put a precise type name such as ``int``.
+   have to put a precise type name such as ``int``. The INPUT block
+   describes the expected input to your function or method, while the
+   OUTPUT block describes the expected output of the
+   function/method. If appropriate, you need to describe any default
+   values for the input arguments. For example::
+
+       INPUT:
+
+       - ``p`` -- (default: 2) a positive prime integer.
+
+       OUTPUT:
+
+       A 5-tuple consisting of integers in this order:
+
+       1. the smallest primitive root modulo p
+       2. the smallest prime primitive root modulo p
+       3. the largest primitive root modulo p
+       4. the largest prime primitive root modulo p
+       5. total number of prime primitive roots modulo p
+
+   Some people prefer to format their OUTPUT section as a block by
+   using a dash. That is acceptable as well::
+
+       OUTPUT:
+
+       - The plaintext resulting from decrypting the ciphertext ``C``
+         using the Blum-Goldwasser decryption algorithm.
 
 -  Instead of INPUT and OUTPUT blocks, you can include descriptions of
    the arguments and output using Sphinx/ReST markup, as described in
@@ -279,13 +307,93 @@ following information:
 
 -  An ALGORITHM block (optional) which indicates what software
    and/or what algorithm is used. For example
-   ``ALGORITHM: Uses Pari``.
+   ``ALGORITHM: Uses Pari``. Here's a longer example that describes an
+   algorithm used. Note that it also cites the reference where this
+   algorithm can be found::
+
+       ALGORITHM:
+
+       The following algorithm is adapted from page 89 of [Nat2000]_.
+
+       Let `p` be an odd (positive) prime and let `g` be a generator
+       modulo `p`. Then `g^k` is a generator modulo `p` if and only if
+       `\gcd(k, p-1) = 1`. Since `p` is an odd prime and positive, then
+       `p - 1` is even so that any even integer between 1 and `p - 1`,
+       inclusive, is not relatively prime to `p - 1`. We have now
+       narrowed our search to all odd integers `k` between 1 and `p - 1`,
+       inclusive.
+
+       So now start with a generator `g` modulo an odd (positive) prime
+       `p`. For any odd integer `k` between 1 and `p - 1`, inclusive,
+       `g^k` is a generator modulo `p` if and only if `\gcd(k, p-1) = 1`.
+
+       REFERENCES:
+
+       .. [Nat2000] M.B. Nathanson. Elementary Methods in Number Theory.
+         Springer, 2000.
+
+   You can also number the steps in your algorithm using the hash-dot
+   symbol. This way, the actual numbering of the steps are
+   automatically taken care of when you build the documentation::
+
+        ALGORITHM:
+
+        The Blum-Goldwasser decryption algorithm is described in Algorithm
+        8.56, page 309 of [MenezesEtAl1996]_. The algorithm works as follows:
+
+        #. Let `C` be the ciphertext `C = (c_1, c_2, \dots, c_t, x_{t+1})`.
+           Then `t` is the number of ciphertext sub-blocks and `h` is the
+           length of each binary string sub-block `c_i`.
+        #. Let `(p, q, a, b)` be the private key whose corresponding
+           public key is `n = pq`. Note that `\gcd(p, q) = ap + bq = 1`.
+        #. Compute `d_1 = ((p + 1) / 4)^{t+1} \bmod{(p - 1)}`.
+        #. Compute `d_2 = ((q + 1) / 4)^{t+1} \bmod{(q - 1)}`.
+        #. Let `u = x_{t+1}^{d_1} \bmod p`.
+        #. Let `v = x_{t+1}^{d_2} \bmod q`.
+        #. Compute `x_0 = vap + ubq \bmod n`.
+        #. For `i` from 1 to `t`, do:
+
+           #. Compute `x_i = x_{t-1}^2 \bmod n`.
+           #. Let `p_i` be the `h` least significant bits of `x_i`.
+           #. Compute `m_i = p_i \oplus c_i`.
+
+        #. The plaintext is `m = m_1 m_2 \cdots m_t`.
 
 -  A NOTES block for special notes (optional). Include information
-   such as purpose etc.
+   such as purpose etc. A NOTES block should start with
+   ``.. NOTE::``. You can also use the lower-case version
+   ``.. note::``, but do not mix lower-case with upper-case. However,
+   you are encouraged to use the upper-case version ``.. NOTE::``. If
+   you want to put anything within the NOTES block, you should
+   indent it at least 4 spaces (no tabs). Here's an example of a NOTES
+   block::
+
+       .. NOTE::
+
+           You should note that this sentence is indented at least 4
+           spaces. Avoid tab characters as much as possible when
+           writing code or editing the Sage documentation. You should
+           follow Python conventions by using spaces only.
+
+- A WARNING block for critical information about your code. For
+  example, the WARNING block might include information about when or
+  under which conditions your code might break, or information that
+  the user should be particularly aware of. A WARNING block should start
+  with ``.. WARNING::``. It can also be the lower-case form
+  ``.. warning::``. However, you are encouraged to use the upper-case
+  form ``.. WARNING::``. Here's an example of a WARNING block::
+
+      .. WARNING::
+
+          Whenever you edit the Sage documentation, make sure that
+          the edited version still builds. That is, you need to ensure
+          that you can still build the HTML and PDF versions of the
+          updated documentation. If the edited documentation fails to
+          build, it is very likely that you would be requested to
+          change your patch.
 
 - A REFERENCES block to list books or papers (optional). This block serves
-  a similar purpose to a list of references in a research paper, or a 
+  a similar purpose to a list of references in a research paper, or a
   bibliography in a monograph. If your method, function or class uses an
   algorithm that can be found in a standard reference, you should list
   that reference under this block. The Sphinx/ReST markup for
@@ -303,19 +411,19 @@ indentation::
     def point(self, x=1, y=2):
         r"""
         This function returns the point `(x^5,y)`.
-    
+
         INPUT:
 
          - ``x`` - integer (default: 1) the description of the
 	   argument x goes here.  If it contains multiple lines, all
 	   the lines after the first need to be indented.
-            
+
          - ``y`` - integer (default: 2) the ...
-    
+
         OUTPUT:
 
         integer -- the ...
-    
+
         EXAMPLES:
 
         This example illustrates ...
@@ -325,36 +433,36 @@ indentation::
             sage: A = ModuliSpace()
             sage: A.point(2,3)
             xxx
-    
+
         We now ...
 
         ::
 
             sage: B = A.point(5,6)
             sage: xxx
-    
+
         It is an error to ...::
 
             sage: C = A.point('x',7)
             Traceback (most recent call last):
             ...
             TypeError: unable to convert x (=r) to an integer
-    
+
         NOTES:
-            
+
         This function uses the algorithm of [BCDT]_ to determine
         whether an elliptic curve E over Q is modular.
-    
+
         ...
-    
+
         REFERENCES:
-         
+
         .. [BCDT] Breuil, Conrad, Diamond, Taylor, "Modularity ...."
-    
-        AUTHORS: 
-        
+
+        AUTHORS:
+
         - William Stein (2005-01-03)
-        
+
         - First_name Last_name (yyyy-mm-dd)
         """
         <body of the function>
@@ -365,7 +473,7 @@ docstring would look like this::
     def point(self, x=1, y=2):
         r"""
         This function returns the point `(x^5,y)`.
-    
+
         :param x: the description of the argument x goes here.
 	   If it contains multiple lines, all the lines after the
 	   first need to be indented.
@@ -392,11 +500,20 @@ You are strongly encouraged to:
            """
            Returns `\\cos(x)`.
            """
-       
+
        def sin(x):
            r"""
            Returns `\sin(x)`.
            """
+
+   You can also use the MATH block to format complicated mathematical
+   expressions::
+
+       .. MATH::
+
+           \sum_{i=1}^{\infty} (a_1 a_2 \cdots a_i)^{1/i}
+           \leq
+           e \sum_{i=1}^{\infty} a_i
 
    .. note::
 
@@ -472,20 +589,20 @@ You are strongly encouraged to:
         Create a Hill cryptosystem defined by the `m` x `m` matrix space
         over `\mathbf{Z} / N \mathbf{Z}`, where `N` is the alphabet size of
         the string monoid ``S``.
-    
+
         INPUT:
-    
+
         - ``S`` - a string monoid over some alphabet
-    
+
         - ``m`` - integer `> 0`; the block length of matrices that specify
           block permutations
-    
+
         OUTPUT:
-    
+
         - A Hill cryptosystem of block length ``m`` over the alphabet ``S``.
-    
+
         EXAMPLES::
-    
+
             sage: S = AlphabeticStrings()
             sage: E = HillCryptosystem(S,3)
             sage: E
@@ -508,7 +625,7 @@ You are strongly encouraged to:
    (Before Sage 3.4, the reference manual used to include methods
    starting with underscores, so you will probably find many examples
    in the code which don't follow this advice...)
-	    
+
 
 Automatic Testing
 -----------------
@@ -517,7 +634,7 @@ The code in the examples should pass automatic testing. This means
 that if the above code is in the file ``f.py`` (or
 ``f.sage``), then ``sage -t f.py`` should not give any
 error messages. Testing occurs with full Sage preparsing of input
-within the standard Sage shell environment, as described in 
+within the standard Sage shell environment, as described in
 :ref:`section-preparsing`. **Important:** The file ``f.py`` is not imported
 when running tests unless you have arranged that it be imported
 into your Sage environment, i.e., unless its functions are
@@ -550,7 +667,7 @@ documentation, keep the following points in mind:
 -  All input is preparsed before being passed to Python, e.g.,
    ``2/3`` is replaced by ``Integer(2)/Integer(3)``, which evaluates
    to ``2/3`` as a rational instead of the Python int
-   ``0``. For more information on preparsing, see 
+   ``0``. For more information on preparsing, see
    :ref:`section-preparsing`.
 
 -  If a test outputs to a file, the file should be in a temporary
@@ -559,7 +676,7 @@ documentation, keep the following points in mind:
 
         sage: fig.savefig(os.path.join(SAGE_TMP, 'test.png'))
 
-   Here ``fig.savefig`` is the function doing the saving, 
+   Here ``fig.savefig`` is the function doing the saving,
    ``SAGE_TMP`` is a temporary directory -- this variable will always
    be defined properly during automated testing -- and ``os.path.join`` is
    the preferred way to construct a path from a directory and a file:
@@ -634,7 +751,7 @@ documentation, keep the following points in mind:
            sage: E = EllipticCurve(GF(41),[2,5])
            sage: E._magma_init_() # optional - requires Magma
            'EllipticCurve([...|GF(41)!0,GF(41)!0,GF(41)!0,GF(41)!2,GF(41)!5])'
-   
+
 
 -  If the entire documentation string contains all three words
    ``optional``, ``package``, and ``installed``,
@@ -674,7 +791,7 @@ and ``.pyx`` files.
 
 ::
 
-      sage -t [--verbose] [--optional]  [files and directories ... ] 
+      sage -t [--verbose] [--optional]  [files and directories ... ]
 
 When you run ``sage -t <filename.py>``, Sage makes a copy of
 ``<filename.py>`` with all the ``sage`` prompts
@@ -718,7 +835,7 @@ environments use the ``.. link::`` comment. For example::
     ::
 
             sage: a = 1
-            
+
 
     Next we add 1 to ``a``.
 
@@ -728,11 +845,11 @@ environments use the ``.. link::`` comment. For example::
 
             sage: 1 + a
             2
-            
+
 You can also put ``.. skip::`` right before a verbatim
 environment to have that example skipped when testing the file.  This
 goes right in the same place as the ``.. link::`` in the previous
-example. 
+example.
 
 See the files in ``SAGE_ROOT/devel/sage/doc/en/tutorial/`` for many
 examples of how to include automated testing in ReST documentation
