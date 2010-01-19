@@ -857,17 +857,17 @@ cdef class Ring(ParentWithGens):
         """
         Return a random integer coerced into this ring, where the
         integer is chosen uniformly from the interval [-bound,bound].
-
+        
         INPUT:
         
         - bound -- integer (default: 2)
-            
+        
         ALGORITHM:
         
         Uses Python's randint.
-
+        
         TESTS:
-
+        
         The following example returns a ``NotImplementedError`` since the
         generic ring class ``__call__`` function returns a
         ``NotImplementedError``. Note that
@@ -882,7 +882,34 @@ cdef class Ring(ParentWithGens):
             NotImplementedError
         """
         return self(randint(-bound,bound))
-
+    
+    def _random_nonzero_element(self, *args, **kwds):
+        """
+        Returns a random non-zero element in this ring.
+        
+        The default behaviour of this method is to repeatedly call the 
+        ``random_element`` method until a non-zero element is obtained. 
+        In this implementation, all parameters are simply pushed forward 
+        to the ``random_element`` method.
+        
+        INPUT:
+        
+        -  ``*args``, ``**kwds`` - Parameters that can be forwarded to 
+           the ``random_element`` method
+        
+        OUTPUT:
+        
+        - Random non-zero element
+        
+        EXAMPLES::
+        
+            sage: ZZ._random_nonzero_element()
+            -8
+        """
+        while True:
+            x = self.random_element(*args, **kwds)
+            if not x.is_zero():
+                return x
 
 cdef class CommutativeRing(Ring):
     """
