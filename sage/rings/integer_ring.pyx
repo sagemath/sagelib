@@ -69,6 +69,7 @@ import sage.rings.ideal
 import sage.structure.factorization as factorization
 import sage.libs.pari.all
 import sage.rings.ideal
+from sage.categories.basic import EuclideanDomains
 from sage.structure.parent_gens import ParentWithGens
 from sage.structure.parent cimport Parent
 
@@ -117,7 +118,10 @@ cdef class IntegerRing_class(PrincipalIdealDomain):
         0
         sage: Z.is_field()
         False
-    
+
+        sage: Z.category()
+        Category of euclidean domains
+
     We next illustrate basic arithmetic in `\ZZ`::
     
         sage: a = Z(1234); b = Z(5678); print a, b
@@ -194,7 +198,7 @@ cdef class IntegerRing_class(PrincipalIdealDomain):
     """
 
     def __init__(self):
-        ParentWithGens.__init__(self, self, ('x',), normalize=False)
+        ParentWithGens.__init__(self, self, ('x',), normalize=False, category = EuclideanDomains())
         self._populate_coercion_lists_(element_constructor=integer.Integer, 
                                        init_no_parent=True, 
                                        convert_method_name='_integer_')
