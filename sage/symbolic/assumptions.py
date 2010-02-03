@@ -145,6 +145,11 @@ class GenericDeclaration(SageObject):
     def contradicts(self, soln):
         """
         Returns ``True`` if this assumption is violated by the given variable assignment(s).
+
+        INPUT:
+
+        - ``soln`` - Either a dictionary with variables as keys or a symbolic
+            relation with a variable on the left hand side.
         
         EXAMPLES::
         
@@ -177,9 +182,9 @@ class GenericDeclaration(SageObject):
 
             sage: GenericDeclaration(x, 'rational').contradicts(y==pi)
             False
-            sage: GenericDeclaration(x, 'rational').contradicts(y==pi)
-            False
-            sage: GenericDeclaration(x, 'rational').contradicts(y==pi)
+            sage: GenericDeclaration(x, 'rational').contradicts(x==pi)
+            True
+            sage: GenericDeclaration(x, 'irrational').contradicts(x!=pi)
             False
             sage: GenericDeclaration(x, 'rational').contradicts({x: pi, y: pi})
             True
