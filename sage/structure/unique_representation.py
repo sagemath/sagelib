@@ -6,9 +6,9 @@ UniqueRepresentation
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
-#    This code is distributed in the hope that it will be useful, 
+#    This code is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #    General Public License for more details.
 #
 #  The full text of the GPL is available at:
@@ -36,7 +36,7 @@ class UniqueRepresentation:
     Everything below is for the curious or for advanced usage.
 
     .. rubric:: What is unique representation?
-    
+
     Instances of a class have a *unique representation behavior* when
     several instances constructed with the same arguments share the
     same memory representation. For example, calling twice::
@@ -61,13 +61,13 @@ class UniqueRepresentation:
     on a small set of elements (say the multiplication table of a
     small group), and access this cache as quickly as possible.
 
-    The :class:`UniqueRepresentation` and :class:`UniqueFactory`
-    classes provide two alternative implementations of this design
-    pattern. Both implementations have their own
-    merits. :class:`UniqueRepresentation` is very easy to use: a class
-    just needs to derive from it, or make sure some of its super
-    classes does. For basic usage . Also, it groups together the class and the factory
-    in a single gadget; in the example above, one would want to do::
+    The :class:`UniqueRepresentation` and :class:`UniqueFactory` classes
+    provide two alternative implementations of this design pattern. Both
+    implementations have their own merits. :class:`UniqueRepresentation` is
+    very easy to use: a class just needs to derive from it, or make sure some
+    of its super classes does. For basic usage . Also, it groups together the
+    class and the factory in a single gadget; in the example above, one would
+    want to do::
 
         sage: isinstance(f, GF)         # todo: not implemented
         True
@@ -80,7 +80,7 @@ class UniqueRepresentation:
     to some subtleties.
 
     EXAMPLES:
-    
+
     We start with a simple class whose constructor takes a single
     value as argument (TODO: find a more meaningful example)::
 
@@ -91,7 +91,7 @@ class UniqueRepresentation:
 
     Two coexisting instances of MyClass created with the same
     argument data are guaranteed to share the same identity::
-      
+
         sage: x = MyClass(1)
         sage: y = MyClass(1)
         sage: x is y
@@ -129,7 +129,7 @@ class UniqueRepresentation:
     The arguments can consist of any combination of positional or
     keyword arguments, as taken by a usual :meth:`__init__`
     function. However, all values passed in should be hashable::
-      
+
         sage: MyClass(value = [1,2,3])
         Traceback (most recent call last):
         ...
@@ -169,7 +169,7 @@ class UniqueRepresentation:
         ...
         sage: MyClass3(3) is MyClass3()
         False
-    
+
     Instead, one should do::
 
         sage: class MyClass3(UniqueRepresentation):
@@ -222,7 +222,7 @@ class UniqueRepresentation:
         sage: from copy import deepcopy
         sage: deepcopy(x) is x
         True
-   
+
     Using :class:`UniqueRepresentation` on mutable objects may lead to
     subtle behavior::
 
@@ -280,7 +280,7 @@ class UniqueRepresentation:
     Caveat: the default implementation of :meth:`__reduce__` in
     :class:`UniqueRepresentation` requires to store the constructor's
     arguments in the instance dictionary upon construction:
-        
+
         sage: x.__dict__
         {'_reduction': (<class '__main__.MyClass'>, (), {'value': 1}), 'value': 1}
 
@@ -288,7 +288,7 @@ class UniqueRepresentation:
     constructors arguments from the instance data structure. When this
     is the case, :meth:`__reduce__` should be overridden; automagically
     the arguments won't be stored anymore:
-      
+
         sage: class MyClass3(UniqueRepresentation):
         ...       def __init__(self, value):
         ...           self.value = value
@@ -317,7 +317,7 @@ class UniqueRepresentation:
         sage: pickle = dumps(MyClass4(1))
 
     It can be unpickled::
-    
+
         sage: y = loads(pickle)
         sage: y.value
         1
@@ -420,7 +420,7 @@ class UniqueRepresentation:
 
     For the record, this test did fail with previous implementation
     attempts::
-    
+
         sage: class bla(UniqueRepresentation, SageObject):
         ...       pass
         ...
@@ -436,7 +436,7 @@ class UniqueRepresentation:
         Constructs a new object of this class or reuse an existing one.
 
         See also :class:`UniqueRepresentation` for a discussion.
-        
+
         EXAMPLES::
 
             sage: x = UniqueRepresentation()
@@ -457,7 +457,7 @@ class UniqueRepresentation:
         identity.
 
         See also :class:`UniqueRepresentation` for a discussion.
-        
+
         EXAMPLES::
 
             sage: x = UniqueRepresentation()
@@ -471,13 +471,38 @@ class UniqueRepresentation:
         """
         return self is other
 
+    # Should be cythoned
+    def __hash__(self):
+        """
+        Returns the hash value of ``self``.
+
+        See also :class:`UniqueRepresentation` for a discussion.
+
+        EXAMPLES::
+
+            sage: x = UniqueRepresentation()
+            sage: y = UniqueRepresentation()
+            sage: hash(x) # random
+            74153040
+            sage: type(hash(x))
+            <type 'int'>
+            sage: hash(x) == hash(y)
+            True
+            sage: class bla(UniqueRepresentation, SageObject): pass
+            sage: x = bla(); hx = hash(x)
+            sage: x.rename("toto")
+            sage: hx == hash(x)
+            True
+        """
+        return id(self)
+
     def __reduce__(self):
         """
         Returns the argument that have been passed to :meth:`__new__`
         to construct this object, as per the pickle protocol.
 
         See also :class:`UniqueRepresentation` for a discussion.
-        
+
         EXAMPLES::
 
             sage: x = UniqueRepresentation()
