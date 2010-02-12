@@ -16,7 +16,8 @@ cdef class NumberFieldElement_quadratic(NumberFieldElement_absolute):
     cdef Integer D
     cdef NumberFieldElement conjugate_c(self)
     cdef bint is_sqrt_disc(self)
-    
+
+    cdef void _randomize(self, num_bound, den_bound, distribution)
 
 cdef class OrderElement_quadratic(NumberFieldElement_quadratic):
     pass
