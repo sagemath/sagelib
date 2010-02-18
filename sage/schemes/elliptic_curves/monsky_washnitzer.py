@@ -16,8 +16,7 @@ REFERENCES:
 
 -  Edixhoven, B., "Point counting after Kedlaya", EIDMA-Stieltjes
    graduate course, Lieden (lecture notes?).
-
-
+   
 AUTHORS:
 
 - David Harvey and Robert Bradshaw: initial code developed at the 2006
@@ -117,7 +116,7 @@ class SpecialCubicQuotientRing(CommutativeAlgebra):
         Univariate Polynomial Ring in T over Ring of integers modulo 125
         sage: R.create_element(z^2, z+1, 3)
         (T^2) + (T + 1)*x + (3)*x^2
-    
+        
     Some arithmetic::
     
         sage: x^3
@@ -741,7 +740,7 @@ def reduce_negative(Q, p, coeffs, offset, exact_form=None):
         sage: monsky_washnitzer.reduce_negative(Q, 5, coeffs, 3)
         sage: coeffs[3]
          [28, 52, 9]
-    
+         
     ::
     
         sage: R.<x> = Integers(7^3)['x']
@@ -988,7 +987,7 @@ def reduce_all(Q, p, coeffs, offset, compute_exact_form=False):
     
     -  ``A, B`` - pair such that the input differential is
        cohomologous to (A + Bx) dx/y.
-    
+       
     
     .. note::
 
@@ -1051,7 +1050,7 @@ def frobenius_expansion_by_newton(Q, p, M):
     .. math::
     
        r = ( (2M-3)p - 1 )/2.     
-    
+       
     
     (Here `T` is `y^2 = z^{-2}`, and `R` is the
     coefficient ring of `Q`.)
@@ -1103,7 +1102,7 @@ def frobenius_expansion_by_newton(Q, p, M):
     x_to_p = x_to_p_less_one * x
     x_to_p_cubed = x_to_p.square() * x_to_p
     r = (base_ring(1) / base_ring(2)) * (x_to_p_cubed + Q[1]*x_to_p + S(Q[0]))
-
+    
     # todo: this next loop would be clearer if it used the newton_method_sizes()
     # function
   
@@ -1120,7 +1119,7 @@ def frobenius_expansion_by_newton(Q, p, M):
         initial_precision = 2
     else:
         initial_precision = 3
-
+        
     # Now compute the first approximation. In the main loop below, X is the
     # normalised approximation, and k is the precision. More specifically,
     # X = T^{p(k-1)} x_i, where x_i is an approximation to s^{-1/2}, and the
@@ -2121,7 +2120,7 @@ class SpecialHyperellipticQuotientElement(CommutativeAlgebraElement):
         return parent._monsky_washnitzer( (R(2) * A << 1) + dQ * B )
 #        self._diff = self.parent()._monsky_washnitzer( two_y * A + dQ * B )
 #        return self._diff
-        
+
     def extract_pow_y(self, k):
         v = [a[k] for a in self._f.list()]
         while len(v) < self.parent()._n:
@@ -2173,7 +2172,7 @@ class MonskyWashnitzerDifferentialRing_class(Module):
         
     def change_ring(self, R):
         return MonskyWashnitzerDifferentialRing(self.base_ring().change_ring(R))
-        
+    
     def degree(self):
         return self.base_ring().degree()
         
@@ -2300,7 +2299,7 @@ class MonskyWashnitzerDifferential(ModuleElement):
         if isinstance(val, MonskyWashnitzerDifferential):
             val = val._coeff.coeffs()
         self._coeff = self.parent().base_ring()(val, offset)
-
+        
     def _add_(left, right):
         return MonskyWashnitzerDifferential(left.parent(), 
                                             left._coeff + right._coeff)
@@ -2324,7 +2323,7 @@ class MonskyWashnitzerDifferential(ModuleElement):
         dx/2y. Return `A` where `A dx/2y = self`.
         """
         return self._coeff
-        
+    
     def __nonzero__(self):
         return not not self._coeff
         
