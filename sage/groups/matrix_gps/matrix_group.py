@@ -739,26 +739,34 @@ class MatrixGroup_gap_finite_field(MatrixGroup_gap):
             sage: GU(3,GF(2)).center()
             Matrix group over Finite Field in a of size 2^2 with 1 generators: 
              [[[a + 1, 0, 0], [0, a + 1, 0], [0, 0, a + 1]]]
+            sage: A=Matrix(FiniteField(5), [[2,0,0], [0,3,0], [0,0,1]])
+            sage: B=Matrix(FiniteField(5), [[1,0,0], [0,1,0], [0,1,1]])
+            sage: MatrixGroup([A,B]).center()
+            Matrix group over Finite Field of size 5 with 1 generators: 
+             [[[1, 0, 0], [0, 1, 0], [0, 0, 1]]]
         """
         try:
             return self.__center
         except AttributeError:
             pass
         G = list(self._gap_().Center().GeneratorsOfGroup())
-        F = self.field_of_definition()
         from sage.groups.matrix_gps.matrix_group import MatrixGroup
-        self.__center = MatrixGroup([g._matrix_(F) for g in G])
+        if len(G) == 0:
+            self.__center = MatrixGroup([self.one()])
+        else:
+            F = self.field_of_definition()
+            self.__center = MatrixGroup([g._matrix_(F) for g in G])
         return self.__center
-    
+
 
 class MatrixGroup_gens(MatrixGroup_gap):
     """
     EXAMPLES:
-    
+
     A ValueError is raised if one of the generators is not invertible.
-    
+
     ::
-    
+
         sage: F = GF(5); MS = MatrixSpace(F,2,2)
         sage: G = MatrixGroup([MS.0])
         Traceback (most recent call last):
