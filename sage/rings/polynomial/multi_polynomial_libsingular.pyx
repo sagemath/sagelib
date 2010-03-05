@@ -3609,7 +3609,6 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
 
         delete(iv)
         id_Delete(&I,_ring)
-        p_Delete(&ptemp,_ring)
         
         return F
 
@@ -3923,8 +3922,8 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
         gcd = singclap_gcd(p_Copy(self._poly, _ring), p_Copy(_g._poly, _ring))
         prod = pp_Mult_qq(self._poly, _g._poly, _ring)
         ret = singclap_pdivide(prod , gcd )
-        p_Delete(&prod, _ring)
-        p_Delete(&gcd, _ring)
+        p_Delete(&prod, _ring) 
+        p_Delete(&gcd, _ring) 
         if count >= 20:
             _sig_off
         return new_MP(self._parent, ret)
@@ -4353,7 +4352,7 @@ cdef class MPolynomial_libsingular(sage.rings.polynomial.multi_polynomial.MPolyn
         cdef int count = singular_polynomial_length_bounded(self._poly,20)+singular_polynomial_length_bounded(other._poly,20)
         if count >= 20:
             _sig_on
-        rt =  singclap_resultant(self._poly, other._poly, (<MPolynomial_libsingular>variable)._poly )
+        rt =  singclap_resultant(self._poly, other._poly,(<MPolynomial_libsingular>variable)._poly )
         if count >= 20:
             _sig_off
         return new_MP(self._parent, rt)
