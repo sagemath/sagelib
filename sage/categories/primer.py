@@ -124,10 +124,12 @@ Example of mathematical information::
          Category of commutative additive groups,
          Category of commutative additive monoids,
          Category of commutative additive semigroups,
+         Category of additive magmas,
          Category of monoids,
          Category of semigroups,
+         Category of magmas,
          Category of sets,
-         Category of sets with partial maps, 
+         Category of sets with partial maps,
          Category of objects]
 
         sage: EuclideanDomains().category_graph().plot(talk = True)
@@ -295,10 +297,11 @@ categories translates into *inheritance* between classes::
     sage: FiniteSemigroups().all_super_categories()
     [Category of finite semigroups,
      Category of semigroups,
+     Category of magmas,
      Category of finite enumerated sets,
      Category of enumerated sets,
      Category of sets,
-     Category of sets with partial maps, 
+     Category of sets with partial maps,
      Category of objects]
     sage: S.__class__.mro()
     [<class 'sage.categories.examples.finite_semigroups.LeftRegularBand_with_category'>,
@@ -309,6 +312,7 @@ categories translates into *inheritance* between classes::
      <type 'sage.structure.sage_object.SageObject'>,
      <class 'sage.categories.finite_semigroups.FiniteSemigroups.parent_class'>,
      <class 'sage.categories.semigroups.Semigroups.parent_class'>,
+     <class 'sage.categories.magmas.Magmas.parent_class'>,
      <class 'sage.categories.finite_enumerated_sets.FiniteEnumeratedSets.parent_class'>,
      <class 'sage.categories.enumerated_sets.EnumeratedSets.parent_class'>,
      <class 'sage.categories.sets_cat.Sets.parent_class'>,
@@ -323,6 +327,7 @@ categories translates into *inheritance* between classes::
      <type 'sage.structure.sage_object.SageObject'>,
      <class 'sage.categories.category.FiniteSemigroups.element_class'>,
      <class 'sage.categories.semigroups.Semigroups.element_class'>,
+     <class 'sage.categories.magmas.Magmas.element_class'>,
      <class 'sage.categories.category.FiniteEnumeratedSets.element_class'>,
      <class 'sage.categories.enumerated_sets.EnumeratedSets.element_class'>,
      <class 'sage.categories.sets_cat.Sets.element_class'>,
@@ -497,6 +502,7 @@ This gives the following order::
      Category of rngs,
      Category of monoids,
      Category of semigroups,
+     Category of magmas,
      Category of coalgebras over Rational Field,
      Category of modules over Rational Field,
      Category of bimodules over Rational Field on the left and Rational Field on the right,
@@ -505,6 +511,7 @@ This gives the following order::
      Category of commutative additive groups,
      Category of commutative additive monoids,
      Category of commutative additive semigroups,
+     Category of additive magmas,
      Category of sets,
      Category of sets with partial maps,
      Category of objects]

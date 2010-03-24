@@ -177,9 +177,11 @@ cdef class CategoryObject(sage_object.SageObject):
              Category of commutative additive groups,
              Category of commutative additive monoids,
              Category of commutative additive semigroups,
+             Category of additive magmas,
              Category of monoids,
              Category of semigroups,
-             Category of sets, 
+             Category of magmas,
+             Category of sets,
              Category of sets with partial maps,
              Category of objects]
         """
