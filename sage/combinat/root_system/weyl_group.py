@@ -475,9 +475,9 @@ class WeylGroup_gens(ClearCacheOnPickle, UniqueRepresentation, MatrixGroup_gens)
             sage: G = WeylGroup(['F',4])
             sage: G.domain()
             Ambient space of the Root system of type ['F', 4]
-	    sage: G = WeylGroup(['A',3,1])
-	    sage: G.domain()
-	    Root space over the Rational Field of the Root system of type ['A', 3, 1]
+            sage: G = WeylGroup(['A',3,1])
+            sage: G.domain()
+            Root space over the Rational Field of the Root system of type ['A', 3, 1]
 
         This method used to be called ``lattice``:
 
@@ -509,7 +509,7 @@ class WeylGroup_gens(ClearCacheOnPickle, UniqueRepresentation, MatrixGroup_gens)
         """
         if i not in self.index_set():
             raise ValueError, "i must be in the index set"
-	return self.simple_reflections()[i]
+        return self.simple_reflections()[i]
 
     def long_element_hardcoded(self):
         """
@@ -872,7 +872,7 @@ class WeylGroupElement(MatrixGroupElement):
     def inverse(self):
         """
         Returns the inverse of self.
-	
+        
         EXAMPLES::
         
             sage: W = WeylGroup(['A',2])
@@ -932,7 +932,7 @@ class WeylGroupElement(MatrixGroupElement):
 
         If positive is True, tests if it is on the strict positive
         side instead.
-	
+        
         EXAMPLES::
         
             sage: W = WeylGroup(['A',3])

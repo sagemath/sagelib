@@ -491,7 +491,7 @@ def EllipticCurve_from_plane_curve(C, P):
 
     First we check that the Fermat cubic is isomorphic to the curve 
     with Cremona label '27a1'::
-	
+
         sage: x,y,z=PolynomialRing(QQ,3,'xyz').gens() # optional - magma 
         sage: C=Curve(x^3+y^3+z^3) # optional - magma
         sage: P=C(1,-1,0) # optional - magma
@@ -512,7 +512,7 @@ def EllipticCurve_from_plane_curve(C, P):
         sage: E.label() # optional - magma
         '32a1'
 
-	"""
+        """
     from sage.interfaces.all import magma
     if C.genus()!=1:
         raise TypeError, "The curve C must have genus 1"

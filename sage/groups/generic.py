@@ -598,14 +598,14 @@ def discrete_log_rho(a, base, ord=None, operation='*', hash_function=hash):
 
     # check if we need to set immutable before hashing
     mut = hasattr(base,'set_immutable')
-	 
+         
     isqrtord=ord.isqrt()
     
     if isqrtord < partition_size: #setup to costly, use bsgs 
         return bsgs(base,a, bounds=(0,ord), operation=operation) 
     
     reset_bound = 8*isqrtord # we take some margin
-	 
+         
     I=IntegerModRing(ord)
     
     for s in xrange(10): # to avoid infinite loops
@@ -613,20 +613,20 @@ def discrete_log_rho(a, base, ord=None, operation='*', hash_function=hash):
         m=[I.random_element() for i in xrange(partition_size)]
         n=[I.random_element() for i in xrange(partition_size)] 
         M=[mult(power(base,Integer(m[i])),power(a,Integer(n[i]))) for i in xrange(partition_size)]
-	 
+         
         ax = I.random_element() 
         x = power(base,Integer(ax))
         if mut:
             x.set_immutable()
 
         bx = I(0) 
-	 
+         
         sigma=[(0,None)]*memory_size 
         H={} # memory 
         i0=0 
         nextsigma = 0 
         for i in xrange(reset_bound): 
-	            #random walk, we need an efficient hash 
+                    #random walk, we need an efficient hash 
             s=hash_function(x) % partition_size 
             (x,ax,bx) = (mult(M[s],x), ax+m[s], bx+n[s]) 
             if mut:
@@ -650,7 +650,7 @@ def discrete_log_rho(a, base, ord=None, operation='*', hash_function=hash):
                 i0 = (i0+1) % memory_size 
                 nextsigma = 3*sigma[i0][0] #3 seems a good choice 
                 H[x]=(ax,bx)
-	 
+         
     raise ValueError, "Pollard rho algorithm failed to find a logarithm"
 
 

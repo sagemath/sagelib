@@ -255,7 +255,7 @@ class BooleanFormula:
     def __and__(self, other):
         r"""
         Overloads the & operator to 'and' two statements together.  
-    	
+        
         INPUT:
             self -- the right hand side statement.
             other -- the left hand side statement.
@@ -263,7 +263,7 @@ class BooleanFormula:
         OUTPUT:
             Returns a new statement that is the first statement logically
             and'ed together.
-    	
+        
         EXAMPLES:
             sage: import sage.logic.propcalc as propcalc
             sage: s = propcalc.formula("a&b")
@@ -491,14 +491,14 @@ class BooleanFormula:
         r"""
         Evaluates a formula for the given input values.
 
-    	INPUT:
-    	    self -- the calling object.
-    	    var_values -- a dictionary containing pairs of
+        INPUT:
+            self -- the calling object.
+            var_values -- a dictionary containing pairs of
                               variables and their boolean values.
                               All variable must be present.
 
-    	OUTPUT:
-    	    Return the evaluation of the formula with the given
+        OUTPUT:
+            Return the evaluation of the formula with the given
             inputs, either True or False.
 
         EXAMPLES:
@@ -534,7 +534,7 @@ class BooleanFormula:
         table = self.truthtable().get_table_list()
         for row in table[1:]:
             if row[-1] == True:
-	   	return True
+                return True
         return False
         
     def is_tautology(self):
@@ -568,14 +568,14 @@ class BooleanFormula:
         Is_contradiction determines if the formula is always 
         false.
 
-    	INPUT:
-     	    self -- the calling object.
+        INPUT:
+            self -- the calling object.
 
         OUTPUT:
             True if the formula is a contradiction, False otherwise.
 
-    	EXAMPLES:
-    	    sage: import sage.logic.propcalc as propcalc
+        EXAMPLES:
+            sage: import sage.logic.propcalc as propcalc
             sage: f = propcalc.formula("a&~a")
             sage: f.is_contradiction()
             True
@@ -602,7 +602,7 @@ class BooleanFormula:
             otherwise.
 
         EXAMPLES:
-    	    sage: import sage.logic.propcalc as propcalc
+            sage: import sage.logic.propcalc as propcalc
             sage: f = propcalc.formula("(a|b)&c")
             sage: g = propcalc.formula("c&(a|b)")
             sage: f.equivalent(g)
@@ -664,7 +664,7 @@ class BooleanFormula:
             sage: import sage.logic.propcalc as propcalc
             sage: s = propcalc.formula("a ^ b <-> c")
             sage: s.convert_cnf()
-    	    sage: s 
+            sage: s 
             (a|b|~c)&(a|~b|c)&(~a|b|c)&(~a|~b|~c)
 
         Ensure that convert_cnf() and convert_cnf_table() produce the same result.
@@ -743,7 +743,7 @@ class BooleanFormula:
         OUTPUT:
             A string representing the satformat representation of this object.
 
-        EXAMPLES:	
+        EXAMPLES:       
             sage: import sage.logic.propcalc as propcalc
             sage: f = propcalc.formula("a&((b|c)^a->c)<->b")
             sage: f.convert_cnf()
@@ -803,7 +803,7 @@ class BooleanFormula:
 #        OUTPUT:
 #            A simplified expression.
 #
-#        EXAMPLES:	
+#        EXAMPLES:      
 #            sage: import sage.logic.propcalc as propcalc
 #            sage: f = propcalc.formula("a&((b|c)^a->c)<->b")
 #            sage: f.truthtable()

@@ -330,7 +330,7 @@ def polygon2d(points, **options):
         sage: polygon2d(L, rgbcolor=(1,1/4,1/2))
 
     AUTHORS:
-	
+
     - David Joyner (2006-04-14): the long list of examples above.
     
     """

@@ -431,7 +431,7 @@ cdef class PolynomialRealDense(Polynomial):
         cdef PolynomialRealDense f 
         cdef mpfr_t tmp
         if left._degree < 0 or right._degree < 0:
-            f = left._new(-1)	
+            f = left._new(-1)
         else:
             f = left._new(left._degree + right._degree)
         _sig_on

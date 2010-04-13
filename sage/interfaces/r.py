@@ -944,7 +944,7 @@ class R(Expect):
         The R plot function.  Type r.help('plot') for much more extensive
         documentation about this function.  See also below for a brief
         introduction to more plotting with R.
-		
+
         If one simply wants to view an R graphic, using this function is
         is sufficient (because it calls dev.off() to turn off the device).
 

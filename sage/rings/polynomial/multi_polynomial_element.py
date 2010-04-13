@@ -1451,8 +1451,8 @@ class MPolynomial_polydict(Polynomial_singular_repr, MPolynomial_element):
             Traceback (most recent call last):
             ...
             ArithmeticError: Prime factorization of 0 not defined.
-	
-	Check if we can factor constant polynomial, #8207::
+
+        Check if we can factor constant polynomial, #8207::
 
             sage: R.<x,y> = CC[]
             sage: R(1).factor()

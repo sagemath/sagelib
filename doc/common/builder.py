@@ -715,7 +715,6 @@ def get_builder(name):
         print "'%s' is not a recognized document. Type 'sage -docbuild -D' for a list"%name
         print "of documents, or 'sage -docbuild --help' for more help."
         sys.exit(1)
-	      
 
 def format_columns(lst, align='<', cols=None, indent=4, pad=3, width=80):
     """
