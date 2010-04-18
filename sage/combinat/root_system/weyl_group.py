@@ -43,6 +43,7 @@ from sage.interfaces.gap import gap
 #from sage.misc.cache import Cache
 from sage.misc.cachefunc import cached_method, ClearCacheOnPickle
 from sage.misc.lazy_attribute import lazy_attribute
+from sage.misc.misc import deprecated_function_alias
 from sage.combinat.root_system.cartan_type import CartanType
 from sage.matrix.constructor import matrix, diagonal_matrix
 from sage.combinat.root_system.root_lattice_realization import RootLatticeRealization
@@ -314,15 +315,15 @@ class WeylGroup_gens(ClearCacheOnPickle, UniqueRepresentation, MatrixGroup_gens)
     def __repr__(self):
         """
         EXAMPLES::
-        
+
             sage: WeylGroup(['A', 1])
             Weyl Group of type ['A', 1] (as a matrix group acting on the ambient space)
             sage: WeylGroup(['A', 3, 1])
             Weyl Group of type ['A', 3, 1] (as a matrix group acting on the root space)
         """
-        return "Weyl Group of type %s (as a matrix group acting on the %s)"%(self.cartan_type(), 
-                                                                           self._domain._name_string(capitalize=False, 
-                                                                                                      base_ring=False, 
+        return "Weyl Group of type %s (as a matrix group acting on the %s)"%(self.cartan_type(),
+                                                                           self._domain._name_string(capitalize=False,
+                                                                                                      base_ring=False,
                                                                                                       type=False))
 
 
@@ -466,18 +467,27 @@ class WeylGroup_gens(ClearCacheOnPickle, UniqueRepresentation, MatrixGroup_gens)
 
     def domain(self):
         """
-        Returns the ambient domain of self's type.
-        
+        Returns the domain of the element of ``self``, that is the
+        root lattice realization on which they act.
+
         EXAMPLES::
-        
+
             sage: G = WeylGroup(['F',4])
             sage: G.domain()
             Ambient space of the Root system of type ['F', 4]
 	    sage: G = WeylGroup(['A',3,1])
 	    sage: G.domain()
 	    Root space over the Rational Field of the Root system of type ['A', 3, 1]
+
+        This method used to be called ``lattice``:
+
+            sage: G.lattice()
+            doctest:...: DeprecationWarning: (Since Sage Version 4.3.4) lattice is deprecated. Please use domain instead.
+            Root space over the Rational Field of the Root system of type ['A', 3, 1]
         """
         return self._domain
+
+    lattice = deprecated_function_alias(domain, 'Sage Version 4.3.4')
 
     def simple_reflection(self, i):
         """
