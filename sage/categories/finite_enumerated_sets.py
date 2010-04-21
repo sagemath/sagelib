@@ -28,7 +28,7 @@ class FiniteEnumeratedSets(Category):
         [Category of finite enumerated sets,
          Category of enumerated sets,
          Category of sets,
-         Category of sets with partial maps, 
+         Category of sets with partial maps,
          Category of objects]
 
     TESTS::
@@ -98,6 +98,8 @@ class FiniteEnumeratedSets(Category):
             EXAMPLES::
 
                 sage: C = FiniteEnumeratedSets().example()
+                sage: C._list_from_iterator()
+                [1, 2, 3]
                 sage: C.list() # indirect doctest
                 [1, 2, 3]
             """
