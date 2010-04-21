@@ -527,10 +527,10 @@ class GenericGraph(GenericGraph_pyx):
             sage: G = graphs.TetrahedralGraph()
             sage: N = G.networkx_graph()
             sage: type(N)
-            <class 'networkx.xgraph.XGraph'>
-        
+            <class 'networkx.classes.graph.Graph'>
+
         ::
-        
+
             sage: G = graphs.TetrahedralGraph()
             sage: G = Graph(G, implementation='networkx')
             sage: N = G.networkx_graph()
@@ -552,14 +552,26 @@ class GenericGraph(GenericGraph_pyx):
                 return self._backend._nxg
         except:
             import networkx
-            if self._directed:
-                class_type = networkx.XDiGraph
+            if self._directed and self.allows_multiple_edges():
+                class_type = networkx.MultiDiGraph
+            elif self._directed:
+                class_type = networkx.DiGraph
+            elif self.allows_multiple_edges():
+                class_type = networkx.MultiGraph
             else:
-                class_type = networkx.XGraph
+                class_type = networkx.Graph
             N = class_type(selfloops=self.allows_loops(), multiedges=self.allows_multiple_edges(),
                            name=self.name())
             N.add_nodes_from(self.vertices())
-            N.add_edges_from(self.edges())
+            for u,v,l in self.edges():
+                if l is None:
+                    N.add_edge(u,v)
+                else:
+                    from networkx import NetworkXError
+                    try:
+                        N.add_edge(u,v,l)
+                    except (TypeError, ValueError, NetworkXError):
+                        N.add_edge(u,v,weight=l)
             return N
 
     def adjacency_matrix(self, sparse=None, boundary_first=False):
@@ -1912,78 +1924,77 @@ class GenericGraph(GenericGraph_pyx):
                 else:
                     return d
 
-    def spanning_trees_count(self, root_vertex=None): 
-        """ 
-        Returns the number of spanning trees in a graph. In the case of a 
-        digraph, couts the number of spanning out-trees rooted in 
-        ``root_vertex``. Default is to set first vertex as root. 
-        
-        This computation uses Kirchhoff's Matrix Tree Theorem [1] to calculate 
-        the number of spanning trees. For complete graphs on `n` vertices the 
-        result can also be reached using Cayley's formula: the number of 
-        spanning trees are `n^(n-2)`. 
-        
-        For digraphs, the augmented Kirchhoff Matrix as defined in [2] is 
-        used for calculations. Here the result is the number of out-trees 
-        rooted at a specific vertex. 
-         
-        INPUT: 
- 
-        - ``root_vertex`` -- integer (default: the first vertex) This is
-          the vertex that will be used as root for all spanning out-trees
-          if the graph is a directed graph. This argument is ignored if
-          the graph is not a digraph. 
-         
+    def spanning_trees_count(self, root_vertex=None):
+        """
+        Returns the number of spanning trees in a graph. In the case of a
+        digraph, couts the number of spanning out-trees rooted in
+        ``root_vertex``.
+        Default is to set first vertex as root.
 
-        REFERENCES: 
-         
-        [1] http://mathworld.wolfram.com/MatrixTreeTheorem.html 
-         
-        [2] Lih-Hsing Hsu, Cheng-Kuan Lin, "Graph Theory and Interconnection Networks" 
+        This computation uses Kirchhoff's Matrix Tree Theorem [1] to calculate
+        the number of spanning trees. For complete graphs on `n` vertices the
+        result can also be reached using Cayley's formula: the number of
+        spanning trees are `n^(n-2)`.
 
-         
-        AUTHORS: 
-         
-        - Anders Jonsson (2009-10-10) 
-         
+        For digraphs, the augmented Kirchhoff Matrix as defined in [2] is
+        used for calculations. Here the result is the number of out-trees
+        rooted at a specific vertex.
 
-        EXAMPLES:: 
-         
-            sage: G = graphs.PetersenGraph() 
-            sage: G.spanning_trees_count() 
-            2000 
-         
-        :: 
-         
-            sage: n = 11 
-            sage: G = graphs.CompleteGraph(n) 
-            sage: ST = G.spanning_trees_count() 
-            sage: ST == n^(n-2) 
-            True 
-         
-        :: 
-         
-            sage: M=matrix(3,3,[0,1,0,0,0,1,1,1,0]) 
-            sage: D=DiGraph(M) 
-            sage: D.spanning_trees_count() 
-            1 
-            sage: D.spanning_trees_count(0) 
-            1 
-            sage: D.spanning_trees_count(2) 
+        INPUT:
+
+        - ``root_vertex`` -- integer (default: the first vertex) This is the vertex
+          that will be used as root for all spanning out-trees if the graph
+          is a directed graph.  This argument is ignored if the graph is not a digraph.
+
+        REFERENCES:
+
+        - [1] http://mathworld.wolfram.com/MatrixTreeTheorem.html
+
+        - [2] Lih-Hsing Hsu, Cheng-Kuan Lin, "Graph Theory and
+          Interconnection Networks"
+
+        AUTHORS:
+
+        - Anders Jonsson (2009-10-10)
+
+        EXAMPLES::
+
+            sage: G = graphs.PetersenGraph()
+            sage: G.spanning_trees_count()
+            2000
+
+        ::
+
+            sage: n = 11
+            sage: G = graphs.CompleteGraph(n)
+            sage: ST = G.spanning_trees_count()
+            sage: ST == n^(n-2)
+            True
+
+        ::
+
+            sage: M=matrix(3,3,[0,1,0,0,0,1,1,1,0])
+            sage: D=DiGraph(M)
+            sage: D.spanning_trees_count()
+            1
+            sage: D.spanning_trees_count(0)
+            1
+            sage: D.spanning_trees_count(2)
             2
-        """ 
-        if self.is_directed() == False: 
-            M=self.kirchhoff_matrix() 
-            M.subdivide(1,1) 
-            M2 = M.subdivision(1,1) 
-            return abs(M2.determinant()) 
-        else: 
-            if root_vertex == None: 
-                root_vertex=self.vertex_iterator().next() 
-            if root_vertex not in self.vertices(): 
-                raise ValueError, ("Vertex (%s) not in the graph."%root_vertex) 
- 
-            M=self.kirchhoff_matrix() 
+
+        """
+        if self.is_directed() == False:
+            M=self.kirchhoff_matrix()
+            M.subdivide(1,1)
+            M2 = M.subdivision(1,1)
+            return abs(M2.determinant())
+        else:
+            if root_vertex == None:
+                root_vertex=self.vertex_iterator().next()
+            if root_vertex not in self.vertices():
+                raise ValueError, ("Vertex (%s) not in the graph."%root_vertex)
+
+            M=self.kirchhoff_matrix()
 
             index=self.vertices().index(root_vertex)
             M[index,index]+=1
@@ -2007,12 +2018,11 @@ class GenericGraph(GenericGraph_pyx):
             compute the orientation and assumes a weight of `1`
             when there is no value available for a given edge.
           - When set to ``False`` (default), gives a weight of 1
-            to all the edges.        
-
+              to all the edges.
 
         EXAMPLE:
 
-        Given a complete bipartite graph `K_{n,m}`, the maximum out-degree 
+        Given a complete bipartite graph `K_{n,m}`, the maximum out-degree
         of an optimal orientation is `\left\lceil \frac {nm} {n+m}\right\rceil`::
 
             sage: g = graphs.CompleteBipartiteGraph(3,4)
@@ -5048,13 +5058,13 @@ class GenericGraph(GenericGraph_pyx):
             sage: g=graphs.CycleGraph(3)
             sage: g.merge_vertices([0,1])
             sage: g.edges()
-            [(0, 2, None)]
+            [(0, 2, {})]
             sage: # With a Multigraph :
             sage: g=graphs.CycleGraph(3)
             sage: g.allow_multiple_edges(True)
             sage: g.merge_vertices([0,1])
             sage: g.edges()
-            [(0, 2, None), (0, 2, None)]
+            [(0, 2, {}), (0, 2, {})]
             sage: P=graphs.PetersenGraph()
             sage: P.merge_vertices([5,7])
             sage: P.vertices()
@@ -5204,9 +5214,9 @@ class GenericGraph(GenericGraph_pyx):
             sage: N.delete_edge( (11, 12, 'label') )
             sage: N.delete_edges( [ (13, 14, 'label') ] )
             sage: N.size()
-            164
+            167
             sage: N.has_edge( (11, 12) )
-            False
+            True
 
         However, CGraph backends handle things properly::
         
@@ -5224,9 +5234,7 @@ class GenericGraph(GenericGraph_pyx):
             sage: C.delete_edge( 1, 2 )
             sage: C.delete_edge( (3, 4) )
             sage: C.delete_edges( [ (5, 6), (7, 8) ] )
-        
-        Again, NetworkX deleting edges when it shouldn't::
-        
+
             sage: D = graphs.CompleteGraph(19).to_directed(sparse=True, implementation='networkx')
             sage: D.size()
             342
@@ -5237,9 +5245,9 @@ class GenericGraph(GenericGraph_pyx):
             sage: D.delete_edge( (11, 12, 'label') )
             sage: D.delete_edges( [ (13, 14, 'label') ] )
             sage: D.size()
-            335
+            338
             sage: D.has_edge( (11, 12) )
-            False
+            True
 
         ::
 
@@ -5459,7 +5467,7 @@ class GenericGraph(GenericGraph_pyx):
         EXAMPLES::
         
             sage: graphs.DodecahedralGraph().edges()
-            [(0, 1, None), (0, 10, None), (0, 19, None), (1, 2, None), (1, 8, None), (2, 3, None), (2, 6, None), (3, 4, None), (3, 19, None), (4, 5, None), (4, 17, None), (5, 6, None), (5, 15, None), (6, 7, None), (7, 8, None), (7, 14, None), (8, 9, None), (9, 10, None), (9, 13, None), (10, 11, None), (11, 12, None), (11, 18, None), (12, 13, None), (12, 16, None), (13, 14, None), (14, 15, None), (15, 16, None), (16, 17, None), (17, 18, None), (18, 19, None)]
+            [(0, 1, {}), (0, 10, {}), (0, 19, {}), (1, 2, {}), (1, 8, {}), (2, 3, {}), (2, 6, {}), (3, 4, {}), (3, 19, {}), (4, 5, {}), (4, 17, {}), (5, 6, {}), (5, 15, {}), (6, 7, {}), (7, 8, {}), (7, 14, {}), (8, 9, {}), (9, 10, {}), (9, 13, {}), (10, 11, {}), (11, 12, {}), (11, 18, {}), (12, 13, {}), (12, 16, {}), (13, 14, {}), (14, 15, {}), (15, 16, {}), (16, 17, {}), (17, 18, {}), (18, 19, {})]
         
         ::
         
@@ -5470,7 +5478,7 @@ class GenericGraph(GenericGraph_pyx):
         
             sage: D = graphs.DodecahedralGraph().to_directed()
             sage: D.edges()
-            [(0, 1, None), (0, 10, None), (0, 19, None), (1, 0, None), (1, 2, None), (1, 8, None), (2, 1, None), (2, 3, None), (2, 6, None), (3, 2, None), (3, 4, None), (3, 19, None), (4, 3, None), (4, 5, None), (4, 17, None), (5, 4, None), (5, 6, None), (5, 15, None), (6, 2, None), (6, 5, None), (6, 7, None), (7, 6, None), (7, 8, None), (7, 14, None), (8, 1, None), (8, 7, None), (8, 9, None), (9, 8, None), (9, 10, None), (9, 13, None), (10, 0, None), (10, 9, None), (10, 11, None), (11, 10, None), (11, 12, None), (11, 18, None), (12, 11, None), (12, 13, None), (12, 16, None), (13, 9, None), (13, 12, None), (13, 14, None), (14, 7, None), (14, 13, None), (14, 15, None), (15, 5, None), (15, 14, None), (15, 16, None), (16, 12, None), (16, 15, None), (16, 17, None), (17, 4, None), (17, 16, None), (17, 18, None), (18, 11, None), (18, 17, None), (18, 19, None), (19, 0, None), (19, 3, None), (19, 18, None)]
+            [(0, 1, {}), (0, 10, {}), (0, 19, {}), (1, 0, {}), (1, 2, {}), (1, 8, {}), (2, 1, {}), (2, 3, {}), (2, 6, {}), (3, 2, {}), (3, 4, {}), (3, 19, {}), (4, 3, {}), (4, 5, {}), (4, 17, {}), (5, 4, {}), (5, 6, {}), (5, 15, {}), (6, 2, {}), (6, 5, {}), (6, 7, {}), (7, 6, {}), (7, 8, {}), (7, 14, {}), (8, 1, {}), (8, 7, {}), (8, 9, {}), (9, 8, {}), (9, 10, {}), (9, 13, {}), (10, 0, {}), (10, 9, {}), (10, 11, {}), (11, 10, {}), (11, 12, {}), (11, 18, {}), (12, 11, {}), (12, 13, {}), (12, 16, {}), (13, 9, {}), (13, 12, {}), (13, 14, {}), (14, 7, {}), (14, 13, {}), (14, 15, {}), (15, 5, {}), (15, 14, {}), (15, 16, {}), (16, 12, {}), (16, 15, {}), (16, 17, {}), (17, 4, {}), (17, 16, {}), (17, 18, {}), (18, 11, {}), (18, 17, {}), (18, 19, {}), (19, 0, {}), (19, 3, {}), (19, 18, {})]
             sage: D.edges(labels = False)
             [(0, 1), (0, 10), (0, 19), (1, 0), (1, 2), (1, 8), (2, 1), (2, 3), (2, 6), (3, 2), (3, 4), (3, 19), (4, 3), (4, 5), (4, 17), (5, 4), (5, 6), (5, 15), (6, 2), (6, 5), (6, 7), (7, 6), (7, 8), (7, 14), (8, 1), (8, 7), (8, 9), (9, 8), (9, 10), (9, 13), (10, 0), (10, 9), (10, 11), (11, 10), (11, 12), (11, 18), (12, 11), (12, 13), (12, 16), (13, 9), (13, 12), (13, 14), (14, 7), (14, 13), (14, 15), (15, 5), (15, 14), (15, 16), (16, 12), (16, 15), (16, 17), (17, 4), (17, 16), (17, 18), (18, 11), (18, 17), (18, 19), (19, 0), (19, 3), (19, 18)]
         """
@@ -5523,7 +5531,7 @@ class GenericGraph(GenericGraph_pyx):
 
             sage: G=graphs.DiamondGraph()
             sage: G.edge_boundary([0,1])
-            [(0, 2, None), (1, 2, None), (1, 3, None)]
+            [(0, 2, {}), (1, 2, {}), (1, 3, {})]
         """
         vertices1 = [v for v in vertices1 if v in self]
         output = []
@@ -6818,7 +6826,7 @@ class GenericGraph(GenericGraph_pyx):
             sage: (graphs.FruchtGraph()).clustering_coeff(nbunch=[0,1,2])
             [0.33333333333333331, 0.33333333333333331, 0.0]
             sage: (graphs.FruchtGraph()).clustering_coeff(nbunch=[0,1,2],with_labels=True,weights=True)
-            ({0: 0.33333333333333331, 1: 0.33333333333333331, 2: 0.0}, {0: 0.083333333333333329, 1: 0.083333333333333329, 2: 0.083333333333333329})
+            ({0: 0.33333333333333331, 1: 0.33333333333333331, 2: 0.0}, {0: 0.33333333333333331, 1: 0.33333333333333331, 2: 0.33333333333333331})
         """
         import networkx
         return networkx.clustering(self.networkx_graph(copy=False), nbunch, with_labels, weights)
@@ -7890,7 +7898,7 @@ class GenericGraph(GenericGraph_pyx):
                 if self.has_edge(u, v):
                     if by_weight is False:
                         dist[u][v] = 1
-                    elif self.edge_label(u, v) is None:
+                    elif self.edge_label(u, v) is None or self.edge_label(u, v) == {}:
                         dist[u][v] = default_weight
                     else:
                         dist[u][v] = self.edge_label(u, v)
@@ -8531,7 +8539,7 @@ class GenericGraph(GenericGraph_pyx):
             # We must sort the edges' endpoints so that (1,2,None) is
             # seen as the same edge as (2,1,None).
             if labels:
-                elist=[(min(i[0:2]),max(i[0:2]),i[2])
+                elist=[(min(i[0:2]),max(i[0:2]),i[2] if i[2] != {} else None)
                        for i in self.edge_iterator()]
             else:
                 elist=[(min(i),max(i))
@@ -8539,7 +8547,7 @@ class GenericGraph(GenericGraph_pyx):
             G.add_vertices(elist)
             for v in self:
                 if labels:
-                    elist=[(min(i[0:2]),max(i[0:2]),i[2])
+                    elist=[(min(i[0:2]),max(i[0:2]),i[2] if i[2] != {} else None)
                            for i in self.edge_iterator(v)]
                 else:
                     elist=[(min(i),max(i))
