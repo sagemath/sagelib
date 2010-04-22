@@ -30,9 +30,9 @@ from sage.combinat.combinat import CombinatorialClass, InfiniteAbstractCombinato
 def Poset(data=None, element_labels=None, cover_relations=False):
     r"""
     Construct a poset from various forms of input data.
-    
+
     INPUT:
-    
+
     1. A two-element list or tuple (E, R), where E is a collection of
        elements of the poset and R is the set of relations.  Elements
        of R are two-element lists/tuples/iterables.  If
@@ -69,22 +69,22 @@ def Poset(data=None, element_labels=None, cover_relations=False):
       assumed to describe a directed acyclic graph whose arrows are
       cover relations. If False, then the cover relations are first
       computed.
-        
+
     OUTPUT:
-    
+
         FinitePoset -- an instance of the FinitePoset class.
 
     EXAMPLES:
-    
+
     1. Elements and cover relations::
-    
+
           sage: elms = [1,2,3,4,5,6,7]
           sage: rels = [[1,2],[3,4],[4,5],[2,5]]
           sage: Poset((elms, rels), cover_relations = True)
           Finite poset containing 7 elements
 
        Elements and non-cover relations::
-       
+
           sage: elms = [1,2,3,4]
           sage: rels = [[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]
           sage: P = Poset( [elms,rels] ,cover_relations=False); P
@@ -99,10 +99,10 @@ def Poset(data=None, element_labels=None, cover_relations=False):
           sage: fcn = lambda p,q : p.bruhat_lequal(q)
           sage: Poset((elms, fcn))
           Finite poset containing 24 elements
-    
+
        With a function that identifies the cover relations: the set
        partitions of {1, 2, 3} ordered by refinement::
-       
+
           sage: elms = SetPartitions(3)
           sage: def fcn(A, B):
           ...     if len(A) != len(B)+1:
@@ -118,33 +118,33 @@ def Poset(data=None, element_labels=None, cover_relations=False):
 
           sage: Poset({'a':['b','c'], 'b':['d'], 'c':['d'], 'd':[]})
           Finite poset containing 4 elements
-    
+
        A list of upper covers::
 
           sage: Poset([[1,2],[4],[3],[4],[]])
           Finite poset containing 5 elements
-    
+
        A list of upper covers and a dictionary of labels::
-    
+
           sage: elm_labs = {0:"a",1:"b",2:"c",3:"d",4:"e"}
           sage: P = Poset([[1,2],[4],[3],[4],[]],elm_labs)
           sage: P.list()
           [a, b, c, d, e]
-    
+
        .. warning::
-       
+
          The special case where the argument data is a list or tuple of
          length 2 is handled by the above cases. So you cannot use this
          method to input a 2-element poset.
-    
+
     4. An acyclic DiGraph.
-    
+
        ::
-    
+
           sage: dag = DiGraph({0:[2,3], 1:[3,4], 2:[5], 3:[5], 4:[5]})
           sage: Poset(dag)
           Finite poset containing 6 elements
-    
+
        Any directed acyclic graph without loops or multiple edges, as long
        as cover_relations=False::
 
@@ -205,7 +205,7 @@ def Poset(data=None, element_labels=None, cover_relations=False):
     # Determine cover relations, if necessary.
     if cover_relations is False:
         D = D.transitive_reduction()
-    
+
     # Check that the digraph does not contain loops, multiple edges
     # and is transitively reduced.
     if D.has_loops():
@@ -338,6 +338,10 @@ class FinitePoset(ParentWithBase):
             sage: [[p2 == p1 for p1 in Posets(3)] for p2 in Posets(3)]
             [[True, False, False, False, False], [False, True, False, False, False], [False, False, True, False, False], [False, False, False, True, False], [False, False, False, False, True]]
         """
+        # This drastically improve the most common case which is used
+        # for example when comparing two poset elements.
+        if self is other:
+            return True
         if isinstance(other, type(self)):
             if len(self._elements) == len(other._elements) and self._elements == other._elements:
                 return self._hasse_diagram == other._hasse_diagram
