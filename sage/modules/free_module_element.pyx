@@ -748,6 +748,10 @@ cdef class FreeModuleElement(element_Vector):   # abstract base class
         `\geq 1`, Infinity, or a symbolic expression. If `p=2` (default),
         this is the usual Euclidean norm; if p=Infinity, this is the
         maximum norm; if `p=1`, this is the taxicab (Manhattan) norm.
+
+        .. SEEALSO::
+
+            - :func:`sage.misc.functional.norm`
         
         EXAMPLES::
         

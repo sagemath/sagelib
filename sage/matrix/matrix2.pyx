@@ -6672,6 +6672,10 @@ cdef class Matrix(matrix1.Matrix):
         
         
         OUTPUT: RDF number
+
+        .. SEEALSO::
+
+            - :func:`sage.misc.functional.norm`
         
         EXAMPLES::
         
