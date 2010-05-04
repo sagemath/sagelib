@@ -32,12 +32,12 @@ import __builtin__
 def Tableau(t):
     """
     Returns the tableau object corresponding to t.
-    
+
     Note that Sage uses the English convention for partitions and
     tableaux.
-    
+
     EXAMPLES::
-    
+
         sage: t = Tableau([[1,2,3],[4,5]]); t
         [[1, 2, 3], [4, 5]]
         sage: t.shape()
@@ -55,7 +55,7 @@ class Tableau_class(CombinatorialObject):
     def __init__(self, t):
         """
         TESTS::
-        
+
             sage: t = Tableau([[1,2],[3,4]])
             sage: t == loads(dumps(t))
             True
@@ -65,9 +65,9 @@ class Tableau_class(CombinatorialObject):
     def _latex_(self):
         r"""
         Returns a LaTeX version of self.
-        
+
         EXAMPLES::
-        
+
             sage: latex(Tableau([[1,1,2],[2,3],[3]]))
             {\def\lr#1{\multicolumn{1}{|@{\hspace{.6ex}}c@{\hspace{.6ex}}|}{\raisebox{-.3ex}{$#1$}}}
             \raisebox{-.6ex}{$\begin{array}[b]{ccc}
@@ -84,11 +84,11 @@ class Tableau_class(CombinatorialObject):
 	if len(self) == 0:
 	    return "{\emptyset}"
         return self._tex_from_array()
-    
+
     def _tex_from_array(self):
         r"""
         EXAMPLES::
-        
+
             sage: print Tableau([[1,2],[3,4]])._tex_from_array()
             {\def\lr#1{\multicolumn{1}{|@{\hspace{.6ex}}c@{\hspace{.6ex}}|}{\raisebox{-.3ex}{$#1$}}}
             \raisebox{-.6ex}{$\begin{array}[b]{cc}
@@ -106,10 +106,10 @@ class Tableau_class(CombinatorialObject):
 
     def __div__(self, t):
         """
-        Returns the skew partition self/t.
-        
+        Returns the skew tableau self/t.
+
         EXAMPLES::
-        
+
             sage: t = Tableau([[1,2,3],[3,4],[5]])
             sage: t/[1,1]
             [[None, 2, 3], [None, 4], [5]]
@@ -138,21 +138,21 @@ class Tableau_class(CombinatorialObject):
     def shape(self):
         r"""
         Returns the shape of a tableau t.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1,2,3],[4,5],[6]]).shape()
             [3, 2, 1]
         """
 
         return partition.Partition([len(row) for row in self])
-    
+
     def size(self):
         """
         Returns the size of the shape of the tableau t.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1, 4, 6], [2, 5], [3]]).size()
             6
             sage: Tableau([[1, 3], [2, 4]]).size()
@@ -163,22 +163,22 @@ class Tableau_class(CombinatorialObject):
     def corners(self):
         """
         Returns the corners of the tableau t.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1, 4, 6], [2, 5], [3]]).corners()
-            [[0, 2], [1, 1], [2, 0]]
+            [(0, 2), (1, 1), (2, 0)]
             sage: Tableau([[1, 3], [2, 4]]).corners()
-            [[1, 1]]
+            [(1, 1)]
         """
         return self.shape().corners()
 
     def conjugate(self):
         """
         Returns the conjugate of the tableau t.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1,2],[3,4]]).conjugate()
             [[1, 3], [2, 4]]
         """
@@ -197,9 +197,9 @@ class Tableau_class(CombinatorialObject):
     def pp(self):
         """
         Returns a pretty print string of the tableau.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1,2,3],[3,4],[5]]).pp()
               1  2  3
               3  4
@@ -210,9 +210,9 @@ class Tableau_class(CombinatorialObject):
     def to_word_by_row(self):
         """
         Returns a word obtained from a row reading of the tableau t.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1,2],[3,4]]).to_word_by_row()
             word: 3412
             sage: Tableau([[1, 4, 6], [2, 5], [3]]).to_word_by_row()
@@ -227,9 +227,9 @@ class Tableau_class(CombinatorialObject):
     def to_word_by_column(self):
         """
         Returns the word obtained from a column reading of the tableau t.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1,2],[3,4]]).to_word_by_column()
             word: 3142
             sage: Tableau([[1, 4, 6], [2, 5], [3]]).to_word_by_column()
@@ -245,9 +245,9 @@ class Tableau_class(CombinatorialObject):
     def to_word(self):
         """
         An alias for to_word_by_row.
-        
+
         EXAMPLES::
-        
+
             sage: Tableau([[1,2],[3,4]]).to_word()
             word: 3412
             sage: Tableau([[1, 4, 6], [2, 5], [3]]).to_word()
@@ -2112,9 +2112,9 @@ class StandardTableaux_partition(CombinatorialClass):
         """
         Returns a random standard tableau of shape p using the
         Green-Nijenhuis-Wilf Algorithm.
-        
+
         EXAMPLES::
-        
+
             sage: StandardTableaux([2,2]).random_element()
             [[1, 2], [3, 4]]
         """
@@ -2128,7 +2128,7 @@ class StandardTableaux_partition(CombinatorialClass):
         cells = []
         for i in range(len(p)):
             for j in range(p[i]):
-                cells.append([i,j])
+                cells.append((i,j))
 
         m = sum(p)
         while m > 0:
@@ -2142,10 +2142,10 @@ class StandardTableaux_partition(CombinatorialClass):
             while cell not in inner_corners:
                 hooks = []
                 for k in range(cell[1], p[cell[0]]):
-                    hooks.append([cell[0], k])
+                    hooks.append((cell[0], k))
                 for k in range(cell[0], len(p)):
                     if p[k] > cell[1]:
-                        hooks.append([k, cell[1]])
+                        hooks.append((k, cell[1]))
 
                 cell = random.choice(hooks)
 
