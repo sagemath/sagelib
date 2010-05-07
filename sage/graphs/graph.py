@@ -2113,7 +2113,7 @@ class Graph(GenericGraph):
             rs_dict[h] = [v for v in self if rs[h][v]==1]
 
         return rs_dict
-            
+
 
     ### Centrality
 
