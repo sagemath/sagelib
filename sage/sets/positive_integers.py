@@ -18,11 +18,11 @@ class PositiveIntegers(IntegerRangeInfinite):
     we mean `\{1, 2, 3, 4, 5, \dots \}`.
 
     This class implements the set of positive integers, as an
-    enumerated set (see :class:`InfiniteEnumeratedSets 
+    enumerated set (see :class:`InfiniteEnumeratedSets
     <sage.categories.infinite_enumerated_sets.InfiniteEnumeratedSets>`).
 
     This set is an integer range set. The construction is
-    therefore done by IntegerRange (see :class:`IntegerRange 
+    therefore done by IntegerRange (see :class:`IntegerRange
     <sage.sets.integer_range.IntegerRange>`).
 
     EXAMPLES::
@@ -55,7 +55,7 @@ class PositiveIntegers(IntegerRangeInfinite):
             sage: PP.category()
             Category of infinite enumerated sets
         """
-        IntegerRangeInfinite.__init__(self, Integer(1), Infinity, Integer(1))
+        IntegerRangeInfinite.__init__(self, Integer(1), Integer(1))
 
     def __repr__(self):
         r"""
