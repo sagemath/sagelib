@@ -36,7 +36,7 @@ import sage.misc.prandom as rnd
 import __builtin__
 import itertools
 from combinat import CombinatorialClass, CombinatorialObject
-from sage.sets.set import Set_generic
+from sage.sets.set import Set_object_enumerated
 
 
 def Subsets(s, k=None, submultiset=False):
@@ -123,8 +123,7 @@ class Subsets_s(CombinatorialClass):
         TESTS::
         
             sage: S = Subsets([1,2,3])
-            sage: S == loads(dumps(S))
-            True
+            sage: TestSuite(S).run()
             sage: s = Subsets(Set([1])) 
             sage: e = s.first() 
             sage: isinstance(e, s.element_class) 
@@ -277,9 +276,9 @@ class Subsets_s(CombinatorialClass):
     def unrank(self, r):
         """
         Returns the subset of s that has rank k.
-        
+
         EXAMPLES::
-        
+
             sage: Subsets(3).unrank(0)
             {}
             sage: Subsets([2,4,5]).unrank(1)
@@ -300,7 +299,20 @@ class Subsets_s(CombinatorialClass):
                 else:
                     return Set([lset[i] for i in choose_nk.from_rank(r, n, k)])
 
-    element_class = Set_generic 
+    def _element_constructor_(self, x):
+        """
+        TESTS::
+
+            sage: S3 = Subsets(3); S3([1,2])
+            {1, 2}
+            sage: S3([0,1,2])
+            Traceback (most recent call last):
+            ...
+            ValueError: [0, 1, 2] not in Subsets of {1, 2, 3}
+        """
+        return Set(x)
+
+    element_class = Set_object_enumerated
 
 
 class Subsets_sk(CombinatorialClass):
@@ -309,8 +321,7 @@ class Subsets_sk(CombinatorialClass):
         TESTS::
         
             sage: S = Subsets(3,2)
-            sage: S == loads(dumps(S))
-            True
+            sage: TestSuite(S).run()
             sage: s = Subsets(Set([1])) 
             sage: e = s.first() 
             sage: isinstance(e, s.element_class) 
@@ -498,9 +509,9 @@ class Subsets_sk(CombinatorialClass):
     def unrank(self, r):
         """
         Returns the subset of s that has rank k.
-        
+
         EXAMPLES::
-        
+
             sage: Subsets(3,2).unrank(0)
             {1, 2}
             sage: Subsets([2,4,5],2).unrank(0)
@@ -515,9 +526,22 @@ class Subsets_sk(CombinatorialClass):
         elif r >= self.cardinality() or r < 0:
             return None
         else:
-            return Set([lset[i] for i in choose_nk.from_rank(r, n, self.k)])            
+            return Set([lset[i] for i in choose_nk.from_rank(r, n, self.k)])
 
-    element_class = Set_generic 
+    def _element_constructor_(self, x):
+        """
+        TESTS::
+
+            sage: S32 = Subsets(3,2); S32([1,2])
+            {1, 2}
+            sage: S32([0,1,2])
+            Traceback (most recent call last):
+            ...
+            ValueError: [0, 1, 2] not in Subsets of {1, 2, 3} of size 2
+        """
+        return Set(x)
+
+    element_class = Set_object_enumerated
 
 
 class SubMultiset_s(CombinatorialClass):
@@ -541,8 +565,7 @@ class SubMultiset_s(CombinatorialClass):
         [1, 2, 1]
         sage: Subsets([1,2,3,3], submultiset=True).cardinality()
         12
-        sage: S == loads(dumps(S))
-        True
+        sage: TestSuite(S).run()
     """
     def __init__(self, s):
         """
@@ -641,8 +664,7 @@ class SubMultiset_sk(SubMultiset_s):
         [3, 3]
         sage: [sub for sub in S]
         [[1, 2], [1, 3], [2, 3], [3, 3]]
-        sage: S == loads(dumps(S))
-        True
+        sage: TestSuite(S).run()
         """
     def __init__(self, s, k):
         """
