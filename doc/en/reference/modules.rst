@@ -12,7 +12,8 @@ Modules
 
    sage/modules/complex_double_vector
    sage/modules/real_double_vector
-   
+   sage/modules/vector_callable_symbolic_dense   
+
    sage/modules/free_module_homspace
    sage/modules/free_module_morphism
    
