@@ -228,10 +228,10 @@ class LaurentSeriesRing_generic(commutative_ring.CommutativeRing):
             try:
                 if self.power_series_ring().has_coerce_map_from(x.parent()):
                     if self.power_series_ring().base_ring().has_coerce_map_from(x.parent()):
-                        return laurent_series_ring_element.LaurentSeries(self, x*self.one().power_series(internal=True), n,check=False)
+                        return laurent_series_ring_element.LaurentSeries(self, x*self.one(), n,check=False)
                     if x.is_zero():
                         return laurent_series_ring_element.LaurentSeries(self, x, n, check=False)
-                    v = x.valuation()
+                    v = x.valuation()      
                     return laurent_series_ring_element.LaurentSeries(self, x>>v, v+n,check=False)
             except:
                 pass
