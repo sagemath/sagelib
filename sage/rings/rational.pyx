@@ -2749,6 +2749,28 @@ cdef class Rational(sage.structure.element.FieldElement):
                 return q
             else:
                 return q+1
+    
+    def real(self):
+        """
+        Returns the real part of self, which is self. 
+        
+        EXAMPLES::
+        
+            sage: (1/2).real()
+            1/2
+        """
+        return self
+    
+    def imag(self):
+        """
+        Returns the imaginary part of self, which is zero.
+        
+        EXAMPLES::
+        
+            sage: (1/239).imag()
+            0
+        """
+        return self._parent(0)
         
     def height(self):
         """
