@@ -1040,6 +1040,10 @@ cdef class RealIntervalFieldElement(sage.structure.element.RingElement):
         elif isinstance(x, sage.rings.qqbar.AlgebraicReal):
             d = x.interval(self._parent)
             mpfi_set(self.value, d.value)
+        
+        elif hasattr(x, '_real_mpfi_'):
+            d = x._real_mpfi_(self._parent)
+            mpfi_set(self.value, d.value)
 
         else:
             from sage.symbolic.expression import Expression
