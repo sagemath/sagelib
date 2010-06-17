@@ -15,7 +15,7 @@ Let's create some lattices first::
 
     sage: N = ToricLattice(3)
     sage: M = N.dual()
-    
+
 Now we are ready to create elements of toric lattices::
 
     sage: n = N([1,2,3])
@@ -24,14 +24,14 @@ Now we are ready to create elements of toric lattices::
     sage: m = M(1,2,3)
     sage: m
     M(1, 2, 3)
-    
+
 Dual lattices can act on each other::
 
     sage: n * m
     14
     sage: m * n
     14
-    
+
 You can also add elements of the same lattice or scale them::
 
     sage: 2 * n
@@ -40,21 +40,21 @@ You can also add elements of the same lattice or scale them::
     N(2, 4, 6)
     sage: n + n
     N(2, 4, 6)
-    
+
 However, you cannot "mix wrong lattices" in your expressions::
 
     sage: n + m
     Traceback (most recent call last):
     ...
     TypeError: unsupported operand parent(s) for '+':
-    '3-dimensional lattice N' and '3-dimensional lattice M'    
+    '3-d lattice N' and '3-d lattice M'
     sage: n * n
     Traceback (most recent call last):
     ...
-    TypeError: elements of the same toric lattice cannot be multiplied!    
+    TypeError: elements of the same toric lattice cannot be multiplied!
     sage: n == m
     False
-    
+
 Note that ``n`` and ``m`` are not equal to each other even though they are
 both "just (1,2,3)." Moreover, you cannot easily convert elements between
 toric lattices::
@@ -62,8 +62,8 @@ toric lattices::
     sage: M(n)
     Traceback (most recent call last):
     ...
-    TypeError: N(1, 2, 3) cannot be converted to 3-dimensional lattice M!
-    
+    TypeError: N(1, 2, 3) cannot be converted to 3-d lattice M!
+
 If you really need to consider elements of one lattice as elements of another,
 you can either use intermediate conversion to "just a vector"::
 
@@ -75,7 +75,7 @@ you can either use intermediate conversion to "just a vector"::
     False
     sage: n_in_M == m
     True
-    
+
 Or you can create a homomorphism from one lattice to any other::
 
     sage: h = N.hom(identity_matrix(3), M)
@@ -106,17 +106,17 @@ from sage.structure.element cimport Element, Vector
 def is_ToricLatticeElement(x):
     r"""
     Check if ``x`` is an element of a toric lattice.
-    
+
     INPUT:
-    
+
     - ``x`` -- anything.
-    
+
     OUTPUT:
-    
+
     - ``True`` if ``x`` is an element of a toric lattice, ``False`` otherwise.
-    
+
     EXAMPLES::
-    
+
         sage: from sage.geometry.toric_lattice_element import (
         ...     is_ToricLatticeElement)
         sage: is_ToricLatticeElement(1)
@@ -128,7 +128,7 @@ def is_ToricLatticeElement(x):
         True
     """
     return isinstance(x, ToricLatticeElement)
-    
+
 
 # Why do we need a special class:
 # - customize output to include lattice name
@@ -136,22 +136,22 @@ def is_ToricLatticeElement(x):
 cdef class ToricLatticeElement(Vector_integer_dense):
     r"""
     Create an element of a toric lattice.
-    
+
     .. WARNING::
-    
+
         You probably should not construct such elements explicitly.
-        
+
     INPUT:
-    
+
     - same as for
       :class:`~sage.modules.vector_integer_dense.Vector_integer_dense`.
-      
+
     OUTPUT:
-    
+
     - element of a toric lattice.
-    
+
     TESTS::
-    
+
         sage: N = ToricLattice(3)
         sage: from sage.geometry.toric_lattice_element import (
         ...             ToricLatticeElement)
@@ -160,7 +160,7 @@ cdef class ToricLatticeElement(Vector_integer_dense):
         N(1, 2, 3)
         sage: TestSuite(e).run()
     """
-    
+
     # We do not add any new functionality, we actually limit the existing one
     # instead. In particular, there is no need in __init__, but the following
     # function ensures that _add_ etc. return ToricLatticeElement, rather
@@ -174,27 +174,27 @@ cdef class ToricLatticeElement(Vector_integer_dense):
         cdef ToricLatticeElement y
         y = PY_NEW(ToricLatticeElement)
         y._init(self._degree, self._parent)
-        return y    
-    
+        return y
+
     def __cmp__(self, right):
         r"""
         Compare ``self`` and ``right``.
 
         INPUT:
-        
+
         - ``right`` -- anything.
-        
+
         OUTPUT:
-        
+
         - 0 if ``right`` is an equal element of the same toric lattice as
           ``self``, 1 or -1 otherwise.
-          
+
         TESTS::
-        
+
             sage: N = ToricLattice(3)
             sage: M = N.dual()
             sage: n = N(1,2,3)
-            sage: m = M(1,2,3)            
+            sage: m = M(1,2,3)
             sage: cmp(n, m)
             1
             sage: n2 = N(1,2,3)
@@ -207,31 +207,31 @@ cdef class ToricLatticeElement(Vector_integer_dense):
         """
         c = cmp(type(self), type(right))
         if c:
-            return c        
+            return c
         c = cmp(self.parent(), right.parent())
         if c:
             return c
         # Now use the real comparison of vectors
         return self._cmp_c_impl(right)
-    
+
     # For some reason, vectors work just fine without redefining this function
     # from the base class, but if it is not here, we get "unhashable type"...
     def __hash__(self):
         r"""
         Return the hash of ``self``.
-        
+
         OUTPUT:
-        
+
         - integer.
-        
+
         TESTS::
-        
+
             sage: N = ToricLattice(3)
             sage: n = N(1,2,3)
             sage: hash(n)
             Traceback (most recent call last):
             ...
-            TypeError: mutable vectors are unhashable            
+            TypeError: mutable vectors are unhashable
             sage: n.set_immutable()
             sage: hash(n)  # 64-bit
             2528502973977326415
@@ -241,32 +241,32 @@ cdef class ToricLatticeElement(Vector_integer_dense):
     cpdef _act_on_(self, other, bint self_on_left):
         """
         Act on ``other``.
-        
+
         INPUT:
-        
+
         - ``other`` - :class:`ToricLatticeElement`.
-        
+
         OUTPUT:
-        
+
         - integer, if ``other`` is an element of the dual lattice of ``self``;
-        
+
         - ``CoercionException`` is raised if ``other`` is an element of
           an incompatible toric lattice;
-          
+
         - standard output for ``self`` acting as an integral vector on
           ``other`` if the latter one is not an element of a toric lattice.
-          
+
         TESTS::
-        
+
             sage: N = ToricLattice(3)
             sage: M = N.dual()
             sage: n = N(1,2,3)
             sage: m = M(1,2,3)
             sage: n * m # indirect doctest
             14
-            
+
         Now we test behaviour with other types::
-        
+
             sage: v = vector([1, 2, 3])
             sage: v * n == n * v
             True
@@ -288,7 +288,7 @@ cdef class ToricLatticeElement(Vector_integer_dense):
         if is_ToricLatticeElement(other):
             if other.parent() is self.parent().dual():
                 # Our own _dot_product_ is disabled
-                return Vector_integer_dense._dot_product_(self, other)                
+                return Vector_integer_dense._dot_product_(self, other)
             raise CoercionException("only elements of dual toric lattices "
                                     "can act on each other!")
         # ... however we also need to treat the case when other is an integral
@@ -305,20 +305,20 @@ cdef class ToricLatticeElement(Vector_integer_dense):
     cpdef Element _dot_product_(self, Vector right):
         """
         Raise a ``TypeError`` exception.
-        
+
         Dot product is not defined on toric lattices (there are actions of
         dual lattices on each other instead).
-        
+
         INPUT:
-        
+
         - ``right`` - vector.
-        
+
         OUTPUT:
-        
+
         - ``TypeError`` exception is raised.
-        
+
         TESTS::
-        
+
             sage: N = ToricLattice(3)
             sage: M = N.dual()
             sage: n = N(1,2,3)
@@ -327,21 +327,21 @@ cdef class ToricLatticeElement(Vector_integer_dense):
             Traceback (most recent call last):
             ...
             TypeError: elements of the same
-            toric lattice cannot be multiplied!    
+            toric lattice cannot be multiplied!
         """
         raise TypeError("elements of the same toric lattice cannot be "
                         "multiplied!")
-                 
+
     def _latex_(self):
         r"""
         Return a LaTeX representation of ``self``.
-        
+
         OUTPUT:
-        
+
         - string.
-        
+
         TESTS::
-        
+
             sage: Ld = ToricLattice(3, "L").dual()
             sage: e = Ld(1,2,3)
             sage: e._latex_()
@@ -349,17 +349,17 @@ cdef class ToricLatticeElement(Vector_integer_dense):
         """
         return "%s_{%s}" % (super(ToricLatticeElement, self)._latex_(),
                             self.parent()._latex_name)
-    
+
     def _repr_(self):
         r"""
         Return a string representation of ``self``.
-        
+
         OUTPUT:
-        
+
         - string.
-        
+
         TESTS::
-        
+
             sage: Ld = ToricLattice(3, "L").dual()
             sage: e = Ld(1,2,3)
             sage: e._repr_()
