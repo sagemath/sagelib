@@ -1442,14 +1442,14 @@ class CombinatorialClass(Parent):
         return UnionCombinatorialClass(self, right_cc, name=name)
 
     def map(self, f, name=None):
-        """
-        Returns the image `\{f(x) x in self\}` of this combinatorial
+        r"""
+        Returns the image `\{f(x) | x \in \text{self}\}` of this combinatorial
         class by `f`, as a combinatorial class.
 
         `f` is supposed to be injective.
 
         EXAMPLES::
-            
+
             sage: R = Permutations(3).map(attrcall('reduced_word')); R
             Image of Standard permutations of 3 by *.reduced_word()
             sage: R.cardinality()
@@ -1467,7 +1467,7 @@ class CombinatorialClass(Parent):
             [1, 2, 2, 3, 4]
 
         TESTS::
-            
+
             sage: R = Permutations(3).map(attrcall('reduced_word'))
             sage: R == loads(dumps(R))
             True
