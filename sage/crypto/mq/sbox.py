@@ -85,15 +85,26 @@ class SBox(SageObject):
           big endian order (default: ``True``)
 
         EXAMPLE:
-        
+
         We construct a 3-bit S-box where e.g. the bits (0,0,1) are
         mapped to (1,1,1).::
-        
+
             sage: S = mq.SBox(7,6,0,4,2,5,1,3); S
             (7, 6, 0, 4, 2, 5, 1, 3)
 
             sage: S(0)
             7
+
+        TESTS::
+
+            sage: S = mq.SBox()
+            Traceback (most recent call last):
+            ...
+            TypeError: No lookup table provided.
+            sage: S = mq.SBox(1, 2, 3)
+            Traceback (most recent call last):
+            ...
+            TypeError: Lookup table length is not a power of 2.
         """
         if "S" in kwargs:
             S = kwargs["S"]
@@ -102,7 +113,7 @@ class SBox(SageObject):
         elif len(args) > 1:
             S = args
         else:
-            TypeError, "No lookup table provided."
+            raise TypeError("No lookup table provided.")
 
         _S = []
         for e in S:
@@ -110,14 +121,12 @@ class SBox(SageObject):
                 e = e.polynomial().change_ring(ZZ).subs( e.parent().characteristic() )
             _S.append(e)
         S = _S
-        
+
+        if not ZZ(len(S)).is_power_of(2):
+            raise TypeError("Lookup table length is not a power of 2.")
         self._S = S
 
-        length = ZZ(len(S)).exact_log(2)
-        if length != int(length):
-            TypeError, "lookup table length is not a power of 2."
-        
-        self.m = int(length)
+        self.m = ZZ(len(S)).exact_log(2)
         self.n = ZZ(max(S)+1).exact_log(2)
         self._F = GF(2)
         self._big_endian = kwargs.get("big_endian",True)
