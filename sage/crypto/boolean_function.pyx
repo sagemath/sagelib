@@ -40,9 +40,17 @@ include "sage/misc/bitset_pxd.pxi"
 include "sage/misc/bitset.pxi"
 include "../ext/python_string.pxi"
 
-# for details about the implementation of walsh_hadamard transform,
-# reed_muller transform, and a lot more, see 'Matters computational'
-# available on www.jjj.de
+# for details about the implementation of hamming_weight_int,
+# walsh_hadamard transform, reed_muller transform, and a lot
+# more, see 'Matters computational' available on www.jjj.de.
+
+cdef inline unsigned int hamming_weight_int(unsigned int x):
+    # valid for 32bits
+    x -=  (x>>1) & 0x55555555UL                        # 0-2 in 2 bits
+    x  = ((x>>2) & 0x33333333UL) + (x & 0x33333333UL)  # 0-4 in 4 bits
+    x  = ((x>>4) + x) & 0x0f0f0f0fUL                   # 0-8 in 8 bits
+    x *= 0x01010101UL
+    return x>>24
 
 cdef walsh_hadamard(long *f, int ldn):
     """
@@ -53,7 +61,7 @@ cdef walsh_hadamard(long *f, int ldn):
     .. math:: W(j) = \sum_{i\in\{0,1\}^n} (-1)^{f(i)\oplus i \cdot j}
 
     EXAMPLES::
-    
+
         sage: from sage.crypto.boolean_function import BooleanFunction
         sage: B = BooleanFunction([1,0,0,1])
         sage: B.walsh_hadamard_transform() # indirect doctest
@@ -81,7 +89,7 @@ cdef long yellow_code(unsigned long a):
     word.
 
     EXAMPLES::
-    
+
         sage: from sage.crypto.boolean_function import BooleanFunction
         sage: R.<x,y,z> = BooleanPolynomialRing(3)
         sage: P = x*y
@@ -113,7 +121,7 @@ cdef reed_muller(unsigned long *f, int ldn):
 
 
     EXAMPLES::
-    
+
         sage: from sage.crypto.boolean_function import BooleanFunction
         sage: R.<x,y,z> = BooleanPolynomialRing(3)
         sage: P = x*y
@@ -147,12 +155,12 @@ cdef class BooleanFunction(SageObject):
         - an integer - the result is the zero function with ``x`` variables;
         - a list - it is expected to be the truth table of the
           result. Therefore it must be of length a power of 2, and its
-          elements are interpreted as Booleans; 
+          elements are interpreted as Booleans;
         - a string - representing the truth table in hexadecimal;
         - a Boolean polynomial - the result is the corresponding Boolean function;
         - a polynomial P over an extension of GF(2) - the result is
           the Boolean function with truth table ``( Tr(P(x)) for x in
-          GF(2^k) )`` 
+          GF(2^k) )``
 
     EXAMPLES:
 
@@ -185,7 +193,7 @@ cdef class BooleanFunction(SageObject):
         sage: R.<x,y,z> = BooleanPolynomialRing(3)
         sage: P = x*y
         sage: BooleanFunction( P )
-        Boolean function with 3 variables        
+        Boolean function with 3 variables
 
     from a polynomial over a binary field::
 
@@ -208,14 +216,13 @@ cdef class BooleanFunction(SageObject):
     """
 
     cdef bitset_t _truth_table
-    cdef _walsh_hadamard_transform
-    cdef _nvariables
-    cdef _nonlinearity
-    cdef _correlation_immunity
-    cdef _autocorrelation
-    cdef _absolut_indicator
-    cdef _sum_of_square_indicator
-    cdef long index
+    cdef object _walsh_hadamard_transform
+    cdef object _nvariables
+    cdef object _nonlinearity
+    cdef object _correlation_immunity
+    cdef object _autocorrelation
+    cdef object _absolut_indicator
+    cdef object _sum_of_square_indicator
 
     def __cinit__(self, x):
         r"""
@@ -225,11 +232,11 @@ cdef class BooleanFunction(SageObject):
         - an integer - the result is the zero function with ``x`` variables;
         - a list - it is expected to be the truth table of the
           result. Therefore it must be of length a power of 2, and its
-          elements are interpreted as Booleans; 
+          elements are interpreted as Booleans;
         - a Boolean polynomial - the result is the corresponding Boolean function;
         - a polynomial P over an extension of GF(2) - the result is
           the Boolean function with truth table ``( Tr(P(x)) for x in
-          GF(2^k) )`` 
+          GF(2^k) )``
 
         EXAMPLES:
 
@@ -283,7 +290,7 @@ cdef class BooleanFunction(SageObject):
             if L.is_power_of(2):
                 x = ZZ("0x"+x).digits(base=2,padto=4*L)
             else:
-                raise ValueError, "the length of the truth table must be a power of 2" 
+                raise ValueError, "the length of the truth table must be a power of 2"
         from types import GeneratorType
         if isinstance(x, (list,tuple,GeneratorType)):
         # initialisation from a truth table
@@ -365,13 +372,13 @@ cdef class BooleanFunction(SageObject):
         cdef BooleanFunction res=BooleanFunction(self.nvariables())
         bitset_complement(res._truth_table, self._truth_table)
         return res
-        
+
     def __add__(self, BooleanFunction other):
         """
         Return the element wise sum of `self`and `other` which must have the same number of variables.
 
         EXAMPLE::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: A=BooleanFunction([0, 1, 0, 1, 1, 0, 0, 1])
             sage: B=BooleanFunction([0, 1, 1, 0, 1, 0, 0, 0])
@@ -396,13 +403,13 @@ cdef class BooleanFunction(SageObject):
         cdef BooleanFunction res = BooleanFunction(self)
         bitset_xor(res._truth_table, res._truth_table, other._truth_table)
         return res
-        
+
     def __mul__(self, BooleanFunction other):
         """
         Return the elementwise multiplication of `self`and `other` which must have the same number of variables.
 
         EXAMPLE::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: A=BooleanFunction([0, 1, 0, 1, 1, 0, 0, 1])
             sage: B=BooleanFunction([0, 1, 1, 0, 1, 0, 0, 0])
@@ -468,7 +475,7 @@ cdef class BooleanFunction(SageObject):
         memcpy(&(res._truth_table.bits[nb_limbs]),other._truth_table.bits, nb_limbs * sizeof(unsigned long))
 
         return res
-        
+
 
     def algebraic_normal_form(self):
         """
@@ -482,7 +489,7 @@ cdef class BooleanFunction(SageObject):
             sage: P = B.algebraic_normal_form()
             sage: P
             x0*x1*x2 + x0 + x1*x2 + x1 + x2
-            sage: [ P(*ZZ(i).digits(base=2,padto=3)) for i in range(8) ] 
+            sage: [ P(*ZZ(i).digits(base=2,padto=3)) for i in range(8) ]
             [0, 1, 1, 0, 1, 0, 1, 1]
         """
         cdef bitset_t anf
@@ -602,8 +609,8 @@ cdef class BooleanFunction(SageObject):
 
     def __call__(self, x):
         """
-        Return the value of the function for the given input. 
-        
+        Return the value of the function for the given input.
+
         INPUT: either
 
         - a list - then all elements are evaluated as Booleans
@@ -637,7 +644,7 @@ cdef class BooleanFunction(SageObject):
     def __iter__(self):
         """
         Iterate through the value of the function.
-        
+
         EXAMPLE::
 
             sage: from sage.crypto.boolean_function import BooleanFunction
@@ -667,7 +674,7 @@ cdef class BooleanFunction(SageObject):
         Compute the Walsh Hadamard transform `W` of the function `f`.
 
         .. math:: W(j) = \sum_{i\in\{0,1\}^n} (-1)^{f(i)\oplus i \cdot j}
-        
+
         EXAMPLE::
 
             sage: from sage.crypto.boolean_function import BooleanFunction
@@ -684,7 +691,7 @@ cdef class BooleanFunction(SageObject):
 
             for 0<= i < n:
                 temp[i] = (bitset_in(self._truth_table,i)<<1)-1
-            
+
             walsh_hadamard(temp, self._nvariables)
             self._walsh_hadamard_transform = tuple( [temp[i] for i in xrange(n)] )
             sage_free(temp)
@@ -694,9 +701,9 @@ cdef class BooleanFunction(SageObject):
     def absolute_walsh_spectrum(self):
         """
         Return the absolute Walsh spectrum fo the function.
-        
+
         EXAMPLES::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction("7969817CC5893BA6AC326E47619F5AD0")
             sage: sorted([_ for _ in B.absolute_walsh_spectrum().iteritems() ])
@@ -730,6 +737,30 @@ cdef class BooleanFunction(SageObject):
         """
         return self.walsh_hadamard_transform()[0] == 0
 
+    def is_symmetric(self):
+        """
+        Return True if the function is symmetric, i.e. invariant under
+        permutation of its input bits. Another way to see it is that the
+        output depends only on the Hamming weight of the input.
+
+        EXAMPLES::
+
+            sage: from sage.crypto.boolean_function import BooleanFunction
+            sage: B = BooleanFunction(5)
+            sage: B[3] = 1
+            sage: B.is_symmetric()
+            False
+            sage: V_B = [0, 1, 1, 0, 1, 0]
+            sage: for i in srange(32): B[i] = V_B[i.popcount()]
+            sage: B.is_symmetric()
+            True
+        """
+        cdef list T = [ self(2**i-1) for i in range(self._nvariables+1) ]
+        for i in xrange(2**self._nvariables):
+            if T[ hamming_weight_int(i) ] != bitset_in(self._truth_table, i):
+                return False
+        return True
+
     def nonlinearity(self):
         """
         Return the nonlinearity of the function. This is the distance
@@ -737,7 +768,7 @@ cdef class BooleanFunction(SageObject):
         change to obtain a linear function.
 
         EXAMPLE::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction(5)
             sage: B[1] = B[3] = 1
@@ -773,7 +804,7 @@ cdef class BooleanFunction(SageObject):
 
         A Boolean function is said to be correlation immune of order
         `m` , if the output of the function is statistically
-        independent of the combination of any m of its inputs. 
+        independent of the combination of any m of its inputs.
 
         EXAMPLES::
 
@@ -782,13 +813,14 @@ cdef class BooleanFunction(SageObject):
             sage: B.correlation_immunity()
             2
         """
+        cdef int c
         if self._correlation_immunity is None:
             c = self._nvariables
             W = self.walsh_hadamard_transform()
             for 0 < i < len(W):
                 if (W[i] != 0):
-                    c = min( c , ZZ(i).popcount() )
-            self._correlation_immunity = c-1
+                    c = min( c , hamming_weight_int(i) )
+            self._correlation_immunity = ZZ(c-1)
         return self._correlation_immunity
 
     def resiliency_order(self):
@@ -835,19 +867,19 @@ cdef class BooleanFunction(SageObject):
 
             for 0<= i < n:
                 temp[i] = W[i]*W[i]
-            
+
             walsh_hadamard(temp, self._nvariables)
             self._autocorrelation = tuple( [temp[i]>>self._nvariables for i in xrange(n)] )
             sage_free(temp)
 
-        return self._autocorrelation        
+        return self._autocorrelation
 
     def absolute_autocorrelation(self):
         """
-        Return the absolute autocorrelation of the function. 
-        
+        Return the absolute autocorrelation of the function.
+
         EXAMPLES::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction("7969817CC5893BA6AC326E47619F5AD0")
             sage: sorted([ _ for _ in B.absolute_autocorrelation().iteritems() ])
@@ -877,7 +909,7 @@ cdef class BooleanFunction(SageObject):
             D = self.autocorrelation()
             self._absolut_indicator = max([ abs(a) for a in D[1:] ])
         return self._absolut_indicator
-    
+
     def sum_of_square_indicator(self):
         """
         Return the sum of square indicator of the function.
@@ -896,14 +928,14 @@ cdef class BooleanFunction(SageObject):
 
     def annihilator(self,d, dim = False):
         """
-        Return (if it exists) an annihilator of the boolean function of degree at most `d`, that is a Boolean polynomial `g` such that 
-        
+        Return (if it exists) an annihilator of the boolean function of degree at most `d`, that is a Boolean polynomial `g` such that
+
         .. math:
 
             f(x)g(x) = 0 \forall x.
 
         INPUT:
-        
+
         - d   - an integer;
         - dim - a Boolean (default: False), if True, returns also the dimension of the annihilator vector space.
 
@@ -961,9 +993,9 @@ cdef class BooleanFunction(SageObject):
         """
         Returns the algebraic immunity of the Boolean function. This is the smallest
         integer `i` such that there exists a non trivial annihilator for `self` or `~self`.
-        
+
         INPUT:
-        
+
         - annihilator - a Boolean (default: False), if True, returns also an annihilator of minimal degree.
 
         EXAMPLES::
@@ -992,8 +1024,8 @@ cdef class BooleanFunction(SageObject):
                         return i,A
                     else:
                         return i
-        raise ValueError, "you just found a bug!"        
-                
+        raise ValueError, "you just found a bug!"
+
     def __setitem__(self, i, y):
         """
         Set a value of the function.
@@ -1033,9 +1065,9 @@ cdef class BooleanFunction(SageObject):
     def _clear_cache(self):
         """
         Clear cached values.
-        
+
         EXAMPLE::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction([0,1,1,0])
             sage: W = B.walsh_hadamard_transform()
@@ -1085,7 +1117,7 @@ cdef class BooleanFunctionIterator:
         Iterator through the values of a Boolean function.
 
         EXAMPLE::
-       
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction(3)
             sage: type(B.__iter__())
@@ -1100,7 +1132,7 @@ cdef class BooleanFunctionIterator:
         Iterator through the values of a Boolean function.
 
         EXAMPLE::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction(1)
             sage: [b for b in B] # indirect doctest
@@ -1113,7 +1145,7 @@ cdef class BooleanFunctionIterator:
         Next value.
 
         EXAMPLE::
-        
+
             sage: from sage.crypto.boolean_function import BooleanFunction
             sage: B = BooleanFunction(1)
             sage: I = B.__iter__()
