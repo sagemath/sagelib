@@ -1908,10 +1908,10 @@ class EllipticCurve_number_field(EllipticCurve_field):
 
             sage: K.<i> = QuadraticField(-1)
             sage: E1 = EllipticCurve([i + 1, 0, 1, -240*i - 400, -2869*i - 2627])
-            sage: E1.conductor()                                                 
+            sage: E1.conductor()
             Fractional ideal (-7*i + 4)
-            sage: E2 = EllipticCurve([1+i,0,1,0,0])                              
-            sage: E2.conductor()                                                 
+            sage: E2 = EllipticCurve([1+i,0,1,0,0])
+            sage: E2.conductor()
             Fractional ideal (-7*i + 4)
             sage: E1.is_isogenous(E2)
             Traceback (most recent call last):

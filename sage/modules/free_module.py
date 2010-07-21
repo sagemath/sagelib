@@ -136,6 +136,8 @@ AUTHORS:
 
 - Niles Johnson (2010-08): Trac #3893: ``random_element()`` should pass on ``*args`` and ``**kwds``.
 
+- Simon King (2010-12): Trac #8800: Fixing a bug in ``denominator()``.
+
 """
 
 ###########################################################################
@@ -349,7 +351,7 @@ class FreeModuleFactory(UniqueFactory):
         if not isinstance(sparse,bool):
             raise TypeError, "Argument sparse (= %s) must be True or False" % sparse
 
-        if not base_ring.is_commutative():
+        if not (hasattr(base_ring,'is_commutative') and base_ring.is_commutative()):
             raise TypeError, "The base_ring must be a commutative ring."
 
         if not sparse and isinstance(base_ring,sage.rings.real_double.RealDoubleField_class):
@@ -596,6 +598,8 @@ class FreeModule_generic(module.Module_old):
             (VectorFunctor, Multivariate Polynomial Ring in x0, x1, x2 over Rational Field)
         """
         from sage.categories.pushout import VectorFunctor
+        if hasattr(self,'_inner_product_matrix'):
+            return VectorFunctor(self.rank(), self.is_sparse(),self.inner_product_matrix()), self.base_ring()
         return VectorFunctor(self.rank(), self.is_sparse()), self.base_ring()
 
     # FIXME: what's the level of generality of FreeModuleHomspace?
@@ -4891,21 +4895,22 @@ class FreeModule_submodule_with_basis_pid(FreeModule_generic_pid):
         
         EXAMPLES::
         
-            sage: V = QQ^3                                                                        
-            sage: L = V.span([[1,1/2,1/3], [-1/5,2/3,3]],ZZ)                                      
-            sage: L                                                                               
-            Free module of degree 3 and rank 2 over Integer Ring                                  
-            Echelon basis matrix:                                                                 
-            [ 1/5 19/6 37/3]                                                                      
-            [   0 23/6 46/3]                                                                      
+            sage: V = QQ^3 
+            sage: L = V.span([[1,1/2,1/3], [-1/5,2/3,3]],ZZ) 
+            sage: L
+            Free module of degree 3 and rank 2 over Integer Ring
+            Echelon basis matrix:
+            [ 1/5 19/6 37/3]
+            [   0 23/6 46/3]
             sage: L._denominator(L.echelonized_basis_matrix().list())
             30
+
         """
         if len(B) == 0:
             return 1
-        d = sage.rings.integer.Integer(B[0].denominator())
+        d = sage.rings.integer.Integer((hasattr(B[0],'denominator') and B[0].denominator()) or 1)
         for x in B[1:]:
-            d = d.lcm(x.denominator())
+            d = d.lcm((hasattr(x,'denominator') and x.denominator()) or 1)
         return d
     
     def _repr_(self):
