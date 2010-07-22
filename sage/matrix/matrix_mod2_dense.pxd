@@ -1,6 +1,6 @@
 # choose: dense or sparse
 
-cimport matrix_dense 
+cimport matrix_dense
 
 from sage.libs.m4ri cimport *
 
