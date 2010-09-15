@@ -1,15 +1,5 @@
 include '../../ext/cdefs.pxi'
 
-cdef extern from "stdlib.h":
-    void free(void *ptr)
-    void *malloc(size_t size)
-    void *realloc(void *ptr, size_t size)
-    void exit (int __status)
-
-cdef extern from "string.h":
-    void *memmove(void *dest, void *src, size_t n)
-    void *memcpy(void *dest, void *src, size_t n)
-
 cdef extern from 'setjmp.h':
     struct __jmp_buf_tag:
         pass
@@ -22,20 +12,24 @@ ctypedef unsigned long ulong
 cdef extern from 'pari/paricfg.h':
     char* PARIVERSION
 
+
 cdef extern from 'pari/pari.h':
     ctypedef long* GEN
-    ctypedef void entree   # fake -- not used
-    #ctypedef void FILE   # fake -- not used
-    ctypedef void pariFILE   # fake -- not used
-    ctypedef void va_list   # fake -- not used
-    ctypedef void pari_timer   # fake -- not used    
-    ctypedef void stackzone   # fake -- not used
 
-    int new_galois_format
+    # PARI types: these are actually an enum type, but I can't get Pyrex to "properly"
+    # wrap enums. It doesn't matter as long as they are treated as ints by pyrex.
+    extern int t_INT, t_REAL, t_INTMOD, t_FRAC, t_FFELT, t_COMPLEX, t_PADIC, t_QUAD, \
+        t_POLMOD, t_POL, t_SER, t_RFRAC, t_QFR, t_QFI, t_VEC, t_COL,  \
+        t_MAT, t_LIST, t_STR, t_VECSMALL, t_CLOSURE
+
+    # PARI stack
+    ctypedef unsigned long pari_sp
+    extern pari_sp avma, bot, top
 
 
     # parigen.h
 
+    extern int BITS_IN_LONG
     extern int DEFAULTPREC       #  64 bits precision
     extern int MEDDEFAULTPREC    # 128 bits precision
     extern int BIGDEFAULTPREC    # 192 bits precision
@@ -87,38 +81,20 @@ cdef extern from 'pari/pari.h':
     GEN     gi
     GEN     gen_0
     GEN     gnil
+    extern int INIT_JMPm, INIT_SIGm, INIT_DFTm
+    extern int new_galois_format, precdl
 
     # level1.h (incomplete!)
     
-    GEN     cgetc(long x)
     GEN     cgetg_copy(long lx, GEN x)
     GEN     cgetg(long x, long y)
     GEN     cgeti(long x)
     GEN     cgetr(long x)
-    GEN     real_0_bit(long bitprec)
-
-    # misc ...
     long    itos(GEN x)
-    double  gtodouble(GEN x)
+    GEN     real_0_bit(long bitprec)
     GEN     stoi(long s)
-    # These types are actually an enum type, but I can't get Pyrex to "properly"
-    # wrap enums.  It doesn't matter as long as they are treated as ints by pyrexc.
-    extern int t_INT, t_REAL, t_INTMOD, t_FRAC, t_FFELT, t_COMPLEX, t_PADIC, t_QUAD, \
-           t_POLMOD, t_POL, t_SER, t_RFRAC, t_QFR, t_QFI, t_VEC, t_COL,  \
-           t_MAT, t_LIST, t_STR, t_VECSMALL, t_CLOSURE
 
-    extern unsigned long precdl
-    extern char * diffptr
-
-    extern int BITS_IN_LONG
-    
-    ctypedef unsigned long pari_sp
-    pari_sp avma, bot, top, zonetop
-
-    GEN     sd_realprecision(char* n, int flag)
-
-
-    # Flx.c 
+    # Flx.c
 
     GEN     Fl_to_Flx(ulong x, long sv)
     GEN     Flm_to_FlxV(GEN x, long sv)
@@ -185,7 +161,7 @@ cdef extern from 'pari/pari.h':
     GEN     polx_Flx(long sv)
     GEN     zero_Flx(long sv)
 
-     # alglin1.c 
+     # alglin1.c
 
     GEN     Flm_deplin(GEN x, ulong p)
     GEN     Flm_indexrank(GEN x, ulong p)
@@ -242,17 +218,14 @@ cdef extern from 'pari/pari.h':
     GEN     matmultodiagonal(GEN x, GEN y)
     GEN     matsolvemod0(GEN M, GEN D, GEN Y,long flag)
     long    rank(GEN x)
-    GEN     row(GEN A, long x1)
-    GEN     row_i(GEN A, long x0, long x1, long x2)
     GEN     indexrank(GEN x)
     # we rename sum to pari_sum to avoid conflicts with
     # python's sum function
     GEN     pari_sum "sum"(GEN v, long a, long b)
     GEN     suppl(GEN x)
     GEN     vconcat(GEN A, GEN B)
-    GEN     vec_ei(long n, long i)
 
-    # alglin2.c 
+    # alglin2.c
 
     GEN     ZM_to_zm(GEN z)
     GEN     adj(GEN x)
@@ -286,26 +259,20 @@ cdef extern from 'pari/pari.h':
     GEN     zm_to_ZM(GEN z)
     GEN     zx_to_ZX(GEN z)
 
-    # anal.c 
+    # anal.c
 
-    void    addhelp(entree *ep, char *s)
+    void    addhelp(char *e, char *s)
     long    delete_var()
-    entree  *fetch_named_var(char *s)
     long    fetch_user_var(char *s)
     long    fetch_var()
     GEN     gp_read_str(char *s)
-    void    freeep(entree *ep)
-    entree  *gp_variable(char *s)
-    entree* install(void *f, char *name, char *code)
-    entree  *is_entry(char *s)
-    void    kill0(entree *ep)
-    long    manage_var(long n, entree *ep)
+    void    kill0(char *e)
     void    name_var(long n, char *s)
     GEN     readseq(char *t)
     GEN     strtoGENstr(char *s)
     GEN     type0(GEN x)
 
-    # arith1.c 
+    # arith1.c
 
     GEN     bestappr0(GEN x, GEN a, GEN b)
     GEN     bestappr(GEN x, GEN k)
@@ -345,8 +312,6 @@ cdef extern from 'pari/pari.h':
     GEN     lcmii(GEN a, GEN b)
     GEN     mpfact(long n)
     GEN     mpfactr(long n, long prec)
-    GEN     Fp_inv(GEN a, GEN m)
-    GEN     Fp_invsafe(GEN a, GEN m)
     GEN     Fp_pow(GEN a, GEN n, GEN m)
     GEN     Fp_sqrt(GEN a, GEN p)
     GEN     Fp_sqrtn(GEN a, GEN n, GEN p, GEN *zetan)
@@ -372,7 +337,7 @@ cdef extern from 'pari/pari.h':
     GEN     znprimroot0(GEN m)
     GEN     znstar(GEN x)
 
-    # arith2.c 
+    # arith2.c
 
     GEN     addprimes(GEN primes)
     long    bigomega(GEN n)
@@ -417,7 +382,7 @@ cdef extern from 'pari/pari.h':
     GEN     sumdiv(GEN n)
     GEN     sumdivk(GEN n,long k)
 
-    # base1.c 
+    # base1.c
 
     GEN     bnfnewprec(GEN nf, long prec)
     GEN     bnrnewprec(GEN bnr, long prec)
@@ -441,15 +406,12 @@ cdef extern from 'pari/pari.h':
     GEN     gzetakall(GEN nfz, GEN s, long flag, long prec)
     GEN     mathnf0(GEN x,long flag)
     GEN     matsnf0(GEN x,long flag)
-    long    nf_get_r1(GEN nf)
-    long    nf_get_r2(GEN nf)
-    void    nf_get_sign(GEN nf, long *r1, long *r2)
     GEN     nfinit0(GEN x, long flag, long prec)
     GEN     nfnewprec(GEN nf, long prec)
     GEN     rootsof1(GEN x)
     GEN     tschirnhaus(GEN x)
 
-    # base2.c 
+    # base2.c
 
     GEN     base(GEN x, GEN *y)
     GEN     base2(GEN x, GEN *y)
@@ -480,7 +442,7 @@ cdef extern from 'pari/pari.h':
     GEN     rnfpseudobasis(GEN nf, GEN pol)
     GEN     rnfsimplifybasis(GEN bnf, GEN order)
 
-    # base3.c 
+    # base3.c
 
     GEN     algtobasis(GEN nf, GEN x)
     GEN     basistoalg(GEN nf, GEN x)
@@ -498,7 +460,7 @@ cdef extern from 'pari/pari.h':
     GEN     zidealstar(GEN nf, GEN x)
     GEN     znlog(GEN x, GEN g)
 
-    # base4.c 
+    # base4.c
 
     GEN     nfreduce(GEN nf, GEN x, GEN ideal)
     GEN     idealtwoelt(GEN nf, GEN ix)
@@ -524,7 +486,6 @@ cdef extern from 'pari/pari.h':
     GEN     idealintersect(GEN nf, GEN x, GEN y)
     GEN     idealinv(GEN nf, GEN ix)
     GEN     idealred0(GEN nf, GEN ix, GEN vdir)
-    GEN     idealred_elt(GEN nf, GEN I)
     GEN     idealmul(GEN nf, GEN ix, GEN iy)
     GEN     idealmul0(GEN nf, GEN ix, GEN iy, long flag, long prec)
     GEN     idealmulred(GEN nf, GEN ix, GEN iy)
@@ -546,7 +507,7 @@ cdef extern from 'pari/pari.h':
     GEN     vecmul(GEN x, GEN y)
     GEN     vecpow(GEN x, GEN n)
 
-    # base5.c 
+    # base5.c
 
     GEN     matalgtobasis(GEN nf, GEN x)
     GEN     matbasistoalg(GEN nf, GEN x)
@@ -567,7 +528,7 @@ cdef extern from 'pari/pari.h':
     GEN     rnfidealup(GEN rnf, GEN x)
     GEN     rnfinit(GEN nf, GEN pol)
 
-    # bibli1.c 
+    # bibli1.c
 
     GEN     ZM_zc_mul(GEN x, GEN y)
     GEN     ZM_zm_mul(GEN x, GEN y)
@@ -612,7 +573,7 @@ cdef extern from 'pari/pari.h':
     char    *stackmalloc(size_t N)
     GEN     zncoppersmith(GEN P0, GEN N, GEN X, GEN B)
 
-    # bibli2.c 
+    # bibli2.c
 
     GEN     binomial(GEN x, long k)
     int     cmp_prime_ideal(GEN x, GEN y)
@@ -662,7 +623,7 @@ cdef extern from 'pari/pari.h':
     GEN     vecsort(GEN x, GEN k)
     GEN     vecsort0(GEN x, GEN k, long flag)
 
-    # buch1.c 
+    # buch1.c
 
     GEN     buchimag(GEN D, GEN gcbach, GEN gcbach2, GEN gCO)
     GEN     buchreal(GEN D, GEN gsens, GEN gcbach, GEN gcbach2, GEN gRELSUP, long prec)
@@ -671,10 +632,9 @@ cdef extern from 'pari/pari.h':
     GEN     quadhilbert(GEN D, long prec)
     GEN     quadray(GEN bnf, GEN f, GEN flag, long prec)
 
-    # buch2.c 
+    # buch2.c
     
     GEN     bnfinit0(GEN P,long flag,GEN data,long prec)
-    GEN     bnf_get_fu(GEN bignf)
     GEN     check_and_build_obj(GEN S, int tag, GEN (*build)(GEN))
     GEN     isprincipal(GEN bignf, GEN x)
     GEN     bnfisprincipal0(GEN bignf, GEN x,long flall)
@@ -710,11 +670,10 @@ cdef extern from 'pari/pari.h':
     GEN     bnrclassno(GEN bignf,GEN ideal)
     GEN     bnrclassnolist(GEN bnf,GEN listes)
     GEN     rnfconductor(GEN bnf, GEN polrel, long flag)
-    GEN     rnfkummer(GEN bnr, GEN subgroup, long all, long prec)
     GEN     rnfnormgroup(GEN bnr, GEN polrel)
     GEN     subgrouplist0(GEN bnr, GEN indexbound, long all)
 
-    # buch4.c 
+    # buch4.c
 
     GEN     bnfisnorm(GEN bnf,GEN x,long flag,long PREC)
     GEN     rnfisnorm(GEN S, GEN x, long flag)
@@ -723,12 +682,55 @@ cdef extern from 'pari/pari.h':
     long    nfhilbert(GEN bnf,GEN a,GEN b)
     long    nfhilbert0(GEN bnf,GEN a,GEN b,GEN p)
 
+    # default.c
+
+    extern int d_SILENT, d_ACKNOWLEDGE, d_INITRC, d_RETURN
+    GEN     default0(char *a, char *b)
+    long    getrealprecision()
+    GEN     sd_TeXstyle(char *v, long flag)
+    GEN     sd_breakloop(char *v, long flag)
+    GEN     sd_colors(char *v, long flag)
+    GEN     sd_compatible(char *v, long flag)
+    GEN     sd_datadir(char *v, long flag)
+    GEN     sd_debug(char *v, long flag)
+    GEN     sd_debugfiles(char *v, long flag)
+    GEN     sd_debugmem(char *v, long flag)
+    GEN     sd_echo(char *v, long flag)
+    GEN     sd_factor_add_primes(char *v, long flag)
+    GEN     sd_factor_proven(char *v, long flag)
+    GEN     sd_format(char *v, long flag)
+    GEN     sd_graphcolormap(char *v, long flag)
+    GEN     sd_graphcolors(char *v, long flag)
+    GEN     sd_help(char *v, long flag)
+    GEN     sd_histsize(char *v, long flag)
+    GEN     sd_lines(char *v, long flag)
+    GEN     sd_log(char *v, long flag)
+    GEN     sd_logfile(char *v, long flag)
+    GEN     sd_new_galois_format(char *v, long flag)
+    GEN     sd_output(char *v, long flag)
+    GEN     sd_parisize(char *v, long flag)
+    GEN     sd_path(char *v, long flag)
+    GEN     sd_prettyprinter(char *v, long flag)
+    GEN     sd_primelimit(char *v, long flag)
+    GEN     sd_prompt(char *v, long flag)
+    GEN     sd_prompt_cont(char *v, long flag)
+    GEN     sd_psfile(char *v, long flag)
+    GEN     sd_realprecision(char *v, long flag)
+    GEN     sd_recover(char *v, long flag)
+    GEN     sd_rl(char *v, long flag)
+    GEN     sd_secure(char *v, long flag)
+    GEN     sd_seriesprecision(char *v, long flag)
+    GEN     sd_simplify(char *v, long flag)
+    GEN     sd_strictmatch(char *v, long flag)
+    GEN     sd_timer(char *v, long flag)
+    long    setrealprecision(long n, long *prec)
+
     # ellanal.c
 
     GEN     ellanalyticrank(GEN e, GEN eps, long prec)
     GEN     ellL1(GEN e, long r, long prec)
 
-    # elliptic.c 
+    # elliptic.c
 
     GEN     addell(GEN e, GEN z1, GEN z2)
     GEN     akell(GEN e, GEN n)
@@ -763,7 +765,7 @@ cdef extern from 'pari/pari.h':
     GEN     weipell(GEN e, long precdl)
     GEN     zell(GEN e, GEN z, long prec)
 
-    # es.c 
+    # es.c
     
     GEN     GENtoGENstr(GEN x)
     char*   GENtoTeXstr(GEN x)
@@ -785,9 +787,6 @@ cdef extern from 'pari/pari.h':
     void    (*os_signal(int sig, void (*f)(int)))(int)
     void    outmat(GEN x)
     void    output(GEN x)
-    void    pari_fclose(pariFILE *f)
-    pariFILE*   pari_fopen(char *s, char *mode)
-    pariFILE*   pari_safefopen(char *s, char *mode)
     char*   pari_strdup(char *s)
     char*   pari_strndup(char *s, long n)
     char*   pari_unique_filename(char *s)
@@ -802,13 +801,12 @@ cdef extern from 'pari/pari.h':
     void    switchin(char *name)
     void    switchout(char *name)
     void    texe(GEN g, char format, long dec)
-    pariFILE* try_pipe(char *cmd, int flag)
     char*   type_name(long t)
     void    write0(char *s, GEN g)
     void    write1(char *s, GEN g)
     void    writetex(char *s, GEN g)
 
-    # galconj.c 
+    # galconj.c
 
     GEN     checkgal(GEN gal)
     GEN     galoisconj0(GEN nf, long flag, GEN d, long prec)
@@ -824,7 +822,7 @@ cdef extern from 'pari/pari.h':
     long    numberofconjugates(GEN T, long pdepart)
     GEN     vandermondeinverse(GEN L, GEN T, GEN den, GEN prep)
     
-    # gen1.c 
+    # gen1.c
 
     GEN     gadd(GEN x, GEN y)
     GEN     gaddsg(long x, GEN y)
@@ -833,7 +831,7 @@ cdef extern from 'pari/pari.h':
     GEN     gsqr(GEN x)
     GEN     gsub(GEN x, GEN y)
 
-    # gen2.c 
+    # gen2.c
     
     GEN     ZX_mul(GEN x, GEN y)
     GEN     cgetp(GEN x)
@@ -884,16 +882,12 @@ cdef extern from 'pari/pari.h':
     long    Z_pval(GEN n, GEN p)
     long    Z_pvalrem(GEN x, GEN p, GEN *py)
 
-    # gen3.c 
+    # gen3.c
 
     GEN     ceil_safe(GEN x)
     GEN     ceilr(GEN x)
     GEN     centerlift(GEN x)
     GEN     centerlift0(GEN x,long v)
-    GEN     mkcoln(long n, ...)
-    GEN     mkintn(long n, ...)
-    GEN     mkpoln(long n, ...)
-    GEN     mkvecn(long n, ...)
     GEN     compo(GEN x, long n)
     GEN     deg1pol(GEN x1, GEN x0,long v)
     long    degree(GEN x)
@@ -991,50 +985,31 @@ cdef extern from 'pari/pari.h':
     GEN     simplify(GEN x)
     GEN     tayl(GEN x, long v, long precdl)
     GEN     toser_i(GEN x)
-    GEN     truecoeff(GEN x, long n)
     GEN     trunc0(GEN x, GEN *pte)
-    GEN     zerocol(long n)
-    GEN     zeromat(long m, long n)
-    GEN     zeropadic(GEN p, long e)
-    GEN     zeropol(long v)
-    GEN     zeroser(long v, long prec)
-    GEN     zerovec(long n)
 
     # groupid.c
 
     long    group_ident(GEN G, GEN S)
 
-    # ifactor1.c 
+    # hash.c
 
-    long    is_357_power(GEN x, GEN *pt, ulong *mask)
+    ulong   hash_GEN(GEN x)
+
+    # ifactor1.c
+
+    int     is_357_power(GEN x, GEN *pt, ulong *mask)
+    int     is_pth_power(GEN x, GEN *pt, ulong *curexp, ulong cutoffbits)
     GEN     nextprime(GEN n)
     GEN     precprime(GEN n)
 
-    # init.c 
+    # init.c
 
-    long    TIMER(pari_timer *T)
-    void    TIMERstart(pari_timer *T)
     long    allocatemoremem(size_t newsize)
     GEN     changevar(GEN x, GEN y)
     void    pari_err(long numerr, ...)
     long    err_catch(long errnum, jmp_buf *penv)
     GEN     gcopy(GEN x)
-    GEN     gerepile(pari_sp ltop, pari_sp lbot, GEN q)
-    void    gerepileall(pari_sp av, int n, ...)
-    void    gerepileallsp(pari_sp av, pari_sp tetpil, int n, ...)
-    void    gerepilecoeffs(pari_sp av, GEN x, int n)
-    void    gerepilecoeffssp(pari_sp av, pari_sp tetpil, long *g, int n)
-    GEN     gerepilecopy(pari_sp av, GEN x)
-    void    gerepilemany(pari_sp av, GEN* g[], int n)
-    void    gerepilemanysp(pari_sp av, pari_sp tetpil, GEN* g[], int n)
-    GEN     gerepileupto(pari_sp av, GEN q)
-    GEN     gerepileuptoint(pari_sp av, GEN q)
-    GEN     gerepileuptoleaf(pari_sp av, GEN q)
-    char*   pari_malloc(size_t bytes)
-    char*   pari_realloc(void *pointer,size_t size)
     void    gunclone(GEN x)
-    void    killblock(GEN x)
-    void    msgTIMER(pari_timer *T, char *format, ...)
     void    msgtimer(char *format, ...)
     GEN     newblock(long n)
     void    pari_close()
@@ -1046,7 +1021,30 @@ cdef extern from 'pari/pari.h':
     long    timer()
     long    timer2()
 
-    # members.c 
+    # intnum.c
+
+    GEN     intcirc(void *E, GEN (*eval) (GEN, void *), GEN a, GEN R, GEN tab, long prec)
+    GEN     intfouriercos(void *E, GEN (*eval) (GEN, void *), GEN a, GEN b, GEN x, GEN tab, long prec)
+    GEN     intfourierexp(void *E, GEN (*eval)(GEN, void*), GEN a, GEN b, GEN x, GEN tab, long prec)
+    GEN     intfouriersin(void *E, GEN (*eval) (GEN, void *), GEN a, GEN b, GEN x, GEN tab, long prec)
+    GEN     intfuncinit(void *E, GEN (*eval) (GEN, void *), GEN a, GEN b, long m, long flag, long prec)
+    GEN     intlaplaceinv(void *E, GEN (*eval) (GEN, void *), GEN sig, GEN x, GEN tab, long prec)
+    GEN     intmellininv(void *E, GEN (*eval) (GEN, void *), GEN sig, GEN x, GEN tab, long prec)
+    GEN     intmellininvshort(GEN sig, GEN x, GEN tab, long prec)
+    GEN     intnum(void *E, GEN (*eval) (GEN, void *), GEN a, GEN b, GEN tab, long prec)
+    GEN     intnuminit(GEN a, GEN b, long m, long prec)
+    GEN     intnuminitgen(void *E, GEN (*eval) (GEN, void *), GEN a, GEN b, long m, long flext, long prec)
+    GEN     intnumromb(void *E, GEN (*eval) (GEN, void *), GEN a, GEN b, long flag, long prec)
+    long    intnumstep(long prec)
+    GEN     sumnum(void *E, GEN (*f) (GEN, void *), GEN a, GEN sig, GEN tab, long flag, long prec)
+    GEN     sumnumalt(void *E, GEN (*f) (GEN, void *), GEN a, GEN s, GEN tab, long flag, long prec)
+    GEN     sumnuminit(GEN sig, long m, long sgn, long prec)
+
+    # kummer.c
+
+    GEN     rnfkummer(GEN bnr, GEN subgroup, long all, long prec)
+
+    # members.c
 
     GEN     member_a1(GEN x)
     GEN     member_a2(GEN x)
@@ -1093,7 +1091,7 @@ cdef extern from 'pari/pari.h':
     GEN     member_zk(GEN x)
     GEN     member_zkst(GEN bid)
 
-    # mp.c 
+    # mp.c
 
     int     absi_cmp(GEN x, GEN y)
     int     absi_equal(GEN x, GEN y)
@@ -1108,7 +1106,6 @@ cdef extern from 'pari/pari.h':
     void    affrr(GEN x, GEN y)
     GEN     bezout(GEN a, GEN b, GEN *u, GEN *v)
     long    cbezout(long a,long b,long *uu,long *vv)
-    void    cgiv(GEN x)
     int     cmpii(GEN x, GEN y)
     int     cmprr(GEN x, GEN y)
     int     cmpsi(long x, GEN y)
@@ -1155,7 +1152,7 @@ cdef extern from 'pari/pari.h':
     ulong   umodiu(GEN y, ulong x)
     long    vals(ulong x)
 
-    # nffactor.c 
+    # nffactor.c
 
     GEN     nffactor(GEN nf,GEN x)
     GEN     nffactormod(GEN nf,GEN pol,GEN pr)
@@ -1163,11 +1160,11 @@ cdef extern from 'pari/pari.h':
     GEN     rnfcharpoly(GEN nf,GEN T,GEN alpha,int n)
     GEN     rnfdedekind(GEN nf,GEN T,GEN pr)
 
-    # part.c 
+    # part.c
 
     GEN     numbpart(GEN x)
 
-    # perm.c 
+    # perm.c
 
     GEN     abelian_group(GEN G)
     GEN     cyclicgroup(GEN g, long s)
@@ -1191,32 +1188,18 @@ cdef extern from 'pari/pari.h':
     GEN     groupelts_abelian_group(GEN S)
     int     perm_commute(GEN p, GEN q)
     GEN     perm_cycles(GEN v)
-    GEN     perm_inv(GEN x)
-    GEN     perm_mul(GEN s, GEN t)
     long    perm_order(GEN perm)
     GEN     perm_pow(GEN perm, long exp)
     GEN     quotient_group(GEN C, GEN G)
     GEN     quotient_perm(GEN C, GEN p)
-    GEN     vec_to_vecsmall(GEN z)
     GEN     vecperm_orbits(GEN v, long n)
-    GEN     vecsmall_append(GEN V, long s)
-    long    vecsmall_coincidence(GEN u, GEN v)
-    GEN     vecsmall_concat(GEN u, GEN v)
-    GEN     vecsmall_copy(GEN x)
-    int     vecsmall_lexcmp(GEN x, GEN y)
-    long    vecsmall_pack(GEN V, long base, long mod)
-    int     vecsmall_prefixcmp(GEN x, GEN y)
-    GEN     vecsmall_prepend(GEN V, long s)
-    GEN     vecsmall_shorten(GEN v, long n)
     void    vecsmall_sort(GEN V)
-    GEN     vecsmall_to_col(GEN z)
-    GEN     vecsmall_to_vec(GEN z)
     GEN     vecsmall_uniq(GEN V)
     GEN     vecvecsmall_indexsort(GEN x)
     GEN     vecvecsmall_sort(GEN x)
     long    vecvecsmall_search(GEN x, GEN y, long flag)
 
-    # polarit1.c 
+    # polarit1.c
 
     long    Flx_nbfact(GEN z, ulong p)
     long    Flx_nbroots(GEN f, ulong p)
@@ -1251,7 +1234,7 @@ cdef extern from 'pari/pari.h':
     GEN     rootpadicfast(GEN f, GEN p, long e)
     GEN     simplefactmod(GEN f, GEN p)
 
-    # polarit2.c 
+    # polarit2.c
 
     GEN     Q_content(GEN x)
     GEN     Q_denom(GEN x)
@@ -1312,7 +1295,7 @@ cdef extern from 'pari/pari.h':
     GEN     vecbezout(GEN x, GEN y)
     GEN     vecbezoutres(GEN x, GEN y)
 
-    # polarit3.c 
+    # polarit3.c
 
     GEN     Fp_pows(GEN A, long k, GEN N)
     GEN     Fp_powu(GEN x, ulong k, GEN p)
@@ -1389,7 +1372,7 @@ cdef extern from 'pari/pari.h':
     GEN     ZX_resultant(GEN A, GEN B)
     long    brent_kung_optpow(long d, long n)
 
-    # RgX.c 
+    # RgX.c
 
     int     RgX_is_rational(GEN x)
     GEN     RgM_to_RgXV(GEN x, long v)
@@ -1415,90 +1398,57 @@ cdef extern from 'pari/pari.h':
     GEN     RgXX_to_RgM(GEN v, long n)
     GEN     RgXY_swap(GEN x, long n, long w)
 
-    # rootpol.c 
+    # rootpol.c
 
     GEN     cleanroots(GEN x,long l)
     int     isrealappr(GEN x, long l)
     GEN     roots(GEN x,long l)
     GEN     roots0(GEN x,long flag,long l)
 
-    # subcyclo.c 
+    # subcyclo.c
 
     GEN     galoissubcyclo(GEN N, GEN sg, long flag, long v)
     GEN     polsubcyclo(long n, long d, long v)
     GEN     znstar_small(GEN zn)
 
-    # subfield.c 
+    # subfield.c
 
     GEN     nfsubfields(GEN nf, long d)
 
-    # subgroup.c 
+    # subgroup.c
 
-    void    forsubgroup(entree *oep, GEN cyc, GEN bound, char *och)
     GEN     subgrouplist(GEN cyc, GEN bound)
+    void    traversesubgroups(GEN cyc, GEN B, void fun(GEN,void*), void *E)
 
-    # stark.c 
+    # stark.c
 
     GEN     bnrL1(GEN bnr, GEN sbgrp, long flag, long prec)
     GEN     bnrrootnumber(GEN bnr, GEN chi, long flag, long prec)
     GEN     bnrstark(GEN bnr, GEN subgroup, long prec)
 
-    # sumiter.c 
+    # sumiter.c
 
+    GEN     derivnum(void *E, GEN (*eval)(GEN,void*), GEN x, long prec)
     GEN     direuler(void *E, GEN (*eval)(GEN,void*), GEN ga, GEN gb, GEN c)
-    GEN     direuler0(entree *ep, GEN a, GEN b, char *ch, GEN c)
-    GEN     divsum(GEN num,entree *ep, char *ch)
-    void    fordiv(GEN a, entree *ep, char *ch)
-    void    forpari(entree *ep, GEN a, GEN b, char *ch)
-    void    forprime(entree *ep, GEN a, GEN b, char *ch)
-    void    forstep(entree *ep, GEN a, GEN b, GEN s, char *ch)
-    void    forvec(entree *ep, GEN x, char *ch, long flag)
     GEN     forvec_start(GEN x, long flag, GEN *d, GEN (**next)(GEN,GEN))
-    GEN     intnum(void *E, GEN (*e)(GEN, void*), GEN a,GEN b, GEN tab, long prec)
-    long    intnumstep(long prec)
-    GEN     intnumromb0(entree *ep, GEN a, GEN b, char *ch, long flag, long prec)
-    GEN     intnum0(entree *ep, GEN a, GEN b, char *ch, GEN tab, long prec)
-    GEN     intcirc0(entree *ep, GEN a, GEN R, char *ch, GEN tab, long prec)
-    GEN     intmellininv0(entree *ep, GEN sig, GEN x, char *ch, GEN tab, long prec)
-    GEN     intmellininvshort(GEN sig, GEN x, GEN tab, long prec)
-    GEN     intlaplaceinv0(entree *ep, GEN sig, GEN x, char *ch, GEN tab, long prec)
-    GEN     intfoursin0(entree *ep, GEN a, GEN b, GEN x, char *ch, GEN tab, long prec)
-    GEN     intfourcos0(entree *ep, GEN a, GEN b, GEN x, char *ch, GEN tab, long prec)
-    GEN     intfourexp0(entree *ep, GEN a, GEN b, GEN x, char *ch, GEN tab, long prec)
-    GEN     sumnum(void *E, GEN (*f)(GEN,void*), GEN a,GEN sig,GEN tab,long flag,long prec)
-    GEN     sumnum0(entree *ep, GEN a, GEN sig, char *ch, GEN tab, long flag, long prec)
-    GEN     sumnumalt(void *E, GEN (*f)(GEN,void*),GEN a,GEN s,GEN tab,long flag,long prec)
-    GEN     sumnumalt0(entree *ep, GEN a, GEN sig, char *ch, GEN tab, long flag, long prec)
-    GEN     matrice(GEN nlig, GEN ncol,entree *ep1, entree *ep2, char *ch)
     GEN     polzag(long n, long m)
     GEN     prodeuler(void *E, GEN (*eval)(GEN,void*), GEN ga, GEN gb, long prec)
-    GEN     prodeuler0(entree *ep, GEN a, GEN b, char *ch, long prec)
     GEN     prodinf(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
-    GEN     prodinf0(entree *ep, GEN a, char *ch, long flag, long prec)
     GEN     prodinf1(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
-    GEN     produit(entree *ep, GEN a, GEN b, char *ch, GEN x)
-    GEN     somme(entree *ep, GEN a, GEN b, char *ch, GEN x)
     GEN     sumalt(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
-    GEN     sumalt0(entree *ep, GEN a, char *ch,long flag, long prec)
     GEN     sumalt2(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
     GEN     sumpos(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
     GEN     sumpos2(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
-    GEN     sumpos0(entree *ep, GEN a, char *ch, long flag,long prec)
     GEN     suminf(void *E, GEN (*eval)(GEN,void*), GEN a, long prec)
-    GEN     suminf0(entree *ep, GEN a, char *ch, long prec)
-    GEN     vecteur(GEN nmax, entree *ep, char *ch)
-    GEN     vecteursmall(GEN nmax, entree *ep, char *ch)
-    GEN     vvecteur(GEN nmax, entree *ep, char *ch)
-    GEN     zbrent0(entree *ep, GEN a, GEN b, char *ch, long prec)
     GEN     zbrent(void *E, GEN (*eval)(GEN,void*), GEN a, GEN b, long prec)
 
-    # thue.c 
+    # thue.c
 
     GEN     bnfisintnorm(GEN x, GEN y)
     GEN     thue(GEN thueres, GEN rhs, GEN ne)
     GEN     thueinit(GEN pol, long flag, long prec)
 
-    # trans1.c 
+    # trans1.c
 
     GEN     Pi2n(long n, long prec)
     GEN     PiI2(long prec)
@@ -1526,12 +1476,10 @@ cdef extern from 'pari/pari.h':
     GEN     mppi(long prec)
     GEN     mpsin(GEN x)
     void    mpsincos(GEN x, GEN *s, GEN *c)
-    GEN     sqrtr(GEN x)
-    GEN     sqrtnr(GEN x, long n)
     GEN     powgi(GEN x, GEN n)
     GEN     teich(GEN x)
 
-    # trans2.c 
+    # trans2.c
 
     GEN     bernfrac(long n)
     GEN     bernreal(long n, long prec)
@@ -1552,7 +1500,7 @@ cdef extern from 'pari/pari.h':
     GEN     gth(GEN x, long prec)
     void    mpbern(long nomb, long prec)
 
-    # trans3.c 
+    # trans3.c
 
     GEN     agm(GEN x, GEN y, long prec)
     GEN     dilog(GEN x, long prec)
@@ -1586,11 +1534,24 @@ cdef extern from 'pari/pari.h':
     GEN     weberf(GEN x, long prec)
     GEN     weberf2(GEN x, long prec)
 
+    # gmp/int.h
+    long*   int_MSW(GEN x)
+    long*   int_LSW(GEN x)
+    long*   int_precW(long * xp)
+    long*   int_nextW(long * xp)
+
+    # misc...
+    extern char* diffptr
+
+
+# Inline functions in separate file
+include 'declinl.pxi'
+
 
 cdef extern from 'pari/paripriv.h':
     struct __x:
-        char format  # e,f,g 
-        long fieldw  # 0 (ignored) or field width 
+        char format  # e,f,g
+        long fieldw  # 0 (ignored) or field width
         long sigd    # -1 (all) or number of significant digits printed */
         int sp       # 0 = suppress whitespace from output */
         int prettyp  # output style: raw, prettyprint, etc */
@@ -1603,10 +1564,6 @@ cdef extern from 'pari/paripriv.h':
     ctypedef __z gp_data
     extern gp_data* GP_DATA
 
-    long *   int_MSW(GEN x)
-    long *   int_LSW(GEN x)
-    long *   int_precW(long * xp)
-    long *   int_nextW(long * xp)
 
 cdef extern:   # paristio.h
     ctypedef struct PariOUT:
