@@ -1095,6 +1095,21 @@ cdef class IntegerMod_abstract(sage.structure.element.CommutativeRingElement):
             True
             sage: a.crt(b).modulus()
             100000000
+
+        TESTS::
+
+            sage: mod(0,1).crt(mod(4,2^127))
+            4
+            sage: mod(4,2^127).crt(mod(0,1))
+            4
+            sage: mod(4,2^30).crt(mod(0,1))
+            4
+            sage: mod(0,1).crt(mod(4,2^30))
+            4
+            sage: mod(0,1).crt(mod(4,2^15))
+            4
+            sage: mod(4,2^15).crt(mod(0,1))
+            4
         
         AUTHORS:
 
@@ -1116,14 +1131,13 @@ cdef class IntegerMod_abstract(sage.structure.element.CommutativeRingElement):
                 return self.__crt(other)
                 
         if not PY_TYPE_CHECK(self, IntegerMod_gmp):
+            if self.__modulus.int64 == 1: return other
             self = IntegerMod_gmp(self._parent, self.lift())
 
         if not PY_TYPE_CHECK(other, IntegerMod_gmp):
+            if other.__modulus.int64 == 1: return self
             other = IntegerMod_gmp(other._parent, other.lift())
 
-        if other.modulus() == 1:
-            return self
-            
         return self.__crt(other)
             
             
