@@ -819,12 +819,12 @@ def spherical_plot3d(f, urange, vrange, **kwds):
         sage: spherical_plot3d(2,(x,0,2*pi),(y,0,pi))
 
     The real and imaginary parts of a spherical harmonic with `l=2` and `m=1`::
-        
-        sage: phi,theta=var('phi theta')
-        sage: Y=spherical_harmonic(2,1,theta,phi)
-        sage: rea=spherical_plot3d(abs(real(Y)),(phi,0,2*pi),(theta,0,pi),color='blue',opacity=0.6)
-        sage: ima=spherical_plot3d(abs(imag(Y)),(phi,0,2*pi),(theta,0,pi),color='red' ,opacity=0.6)
-        sage: (rea+ima).show(aspect_ratio=1)
+
+        sage: phi, theta = var('phi, theta')
+        sage: Y = spherical_harmonic(2, 1, theta, phi)
+        sage: rea = spherical_plot3d(abs(real(Y)), (phi,0,2*pi), (theta,0,pi), color='blue', opacity=0.6)
+        sage: ima = spherical_plot3d(abs(imag(Y)), (phi,0,2*pi), (theta,0,pi), color='red', opacity=0.6)
+        sage: (rea + ima).show(aspect_ratio=1)
 
     A drop of water::
 
