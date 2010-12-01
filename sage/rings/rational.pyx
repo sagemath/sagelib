@@ -933,12 +933,16 @@ cdef class Rational(sage.structure.element.FieldElement):
 
         .. note::
 
-           See also ``val_unit()`` which returns the pair `(e,m)`.
+           See also ``val_unit()`` which returns the pair `(e,m)`. The function
+           ``ord()`` is an alias for ``valuation()``.
+
         
         EXAMPLES::
         
             sage: x = -5/9
             sage: x.valuation(5)
+            1
+            sage: x.ord(5)
             1
             sage: x.valuation(3)
             -2
@@ -954,6 +958,8 @@ cdef class Rational(sage.structure.element.FieldElement):
         """
         return self.numerator().valuation(p) - self.denominator().valuation(p)
         
+    ord = valuation
+
     def local_height(self, p, prec=None):
         r"""
         Returns the local height of this rational number at the prime `p`.
