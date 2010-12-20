@@ -2657,39 +2657,70 @@ cdef class Matrix(sage.structure.element.Matrix):
     # Matrix-vector multiply
     ###################################################
     def linear_combination_of_rows(self, v):
-        """
-        Return the linear combination of the rows of self given by the
-        coefficients in the list v.  Raise a ValueError if the length
-        of v is longer than the number of rows of the matrix.
-        
+        r"""
+        Return the linear combination of the rows of ``self`` given by the
+        coefficients in the list ``v``.
+
         INPUT:
-        
-        
-        -  ``v`` - list of length at most the number of rows of
-                   self (less is fine)
-        
-        
+
+        -  ``v`` -  a list of scalars.  The length can be less than
+           the number of rows of ``self`` but not greater.
+
+        OUTPUT:
+
+        The vector (or free module element) that is a linear
+        combination of the rows of ``self``. If the list of
+        scalars has fewer entries than the number of rows,
+        additional zeros are appended to the list until it
+        has as many entries as the number of rows.
+
         EXAMPLES::
-        
+
             sage: a = matrix(ZZ,2,3,range(6)); a
             [0 1 2]
             [3 4 5]
             sage: a.linear_combination_of_rows([1,2])
             (6, 9, 12)
+
             sage: a.linear_combination_of_rows([0,0])
             (0, 0, 0)
+
             sage: a.linear_combination_of_rows([1/2,2/3])
             (2, 19/6, 13/3)
+
+        The list ``v`` can be anything that is iterable.  Perhaps most
+        naturally, a vector may be used. ::
+
+            sage: v = vector(ZZ, [1,2])
+            sage: a.linear_combination_of_rows(v)
+            (6, 9, 12)
+
+        We check that a matrix with no rows behaves properly. ::
+
             sage: matrix(QQ,0,2).linear_combination_of_rows([])
             (0, 0)
-            
+
+        The object returned is a vector, or a free module element. ::
+
+            sage: B = matrix(ZZ, 4, 3, range(12))
+            sage: w = B.linear_combination_of_rows([-1,2,-3,4])
+            sage: w
+            (24, 26, 28)
+            sage: w.parent()
+            Ambient free module of rank 3 over the principal ideal domain Integer Ring
+            sage: x = B.linear_combination_of_rows([1/2,1/3,1/4,1/5])
+            sage: x
+            (43/10, 67/12, 103/15)
+            sage: x.parent()
+            Vector space of dimension 3 over Rational Field
+
         The length of v can be less than the number of rows, but not
-        more than the number of rows::
-        
-            sage: A = matrix(QQ,2,3)
-            sage: A.linear_combination_of_rows([0])
-            (0, 0, 0)
-            sage: A.linear_combination_of_rows([1,2,3])
+        greater. ::
+
+            sage: A = matrix(QQ,3,4,range(12))
+            sage: A.linear_combination_of_rows([2,3])
+            (12, 17, 22, 27)
+            sage: A.linear_combination_of_rows([1,2,3,4])
             Traceback (most recent call last):
             ...
             ValueError: length of v must be at most the number of rows of self
@@ -2703,39 +2734,70 @@ cdef class Matrix(sage.structure.element.Matrix):
         return (v * self)[0]
 
     def linear_combination_of_columns(self, v):
-        """
-        Return the linear combination of the columns of self given by
-        the coefficients in the list v.  Raise a ValueError if the
-        length of v is longer than the number of columns of the
-        matrix.
-        
+        r"""
+        Return the linear combination of the columns of ``self`` given by the
+        coefficients in the list ``v``.
+
         INPUT:
-        
-        
-        -  ``v`` - list of length at most the number of columns of self (less is fine)
-        
-        
+
+        -  ``v`` -  a list of scalars.  The length can be less than
+           the number of columns of ``self`` but not greater.
+
+        OUTPUT:
+
+        The vector (or free module element) that is a linear
+        combination of the columns of ``self``. If the list of
+        scalars has fewer entries than the number of columns,
+        additional zeros are appended to the list until it
+        has as many entries as the number of columns.
+
         EXAMPLES::
-        
+
             sage: a = matrix(ZZ,2,3,range(6)); a
             [0 1 2]
             [3 4 5]
             sage: a.linear_combination_of_columns([1,1,1])
             (3, 12)
+
             sage: a.linear_combination_of_columns([0,0,0])
             (0, 0)
+
             sage: a.linear_combination_of_columns([1/2,2/3,3/4])
-             (13/6, 95/12)
+            (13/6, 95/12)
+
+        The list ``v`` can be anything that is iterable.  Perhaps most
+        naturally, a vector may be used. ::
+
+            sage: v = vector(ZZ, [1,2,3])
+            sage: a.linear_combination_of_columns(v)
+            (8, 26)
+
+        We check that a matrix with no columns behaves properly. ::
+
             sage: matrix(QQ,2,0).linear_combination_of_columns([])
             (0, 0)
 
+        The object returned is a vector, or a free module element. ::
+
+            sage: B = matrix(ZZ, 4, 3, range(12))
+            sage: w = B.linear_combination_of_columns([-1,2,-3])
+            sage: w
+            (-4, -10, -16, -22)
+            sage: w.parent()
+            Ambient free module of rank 4 over the principal ideal domain Integer Ring
+            sage: x = B.linear_combination_of_columns([1/2,1/3,1/4])
+            sage: x
+            (5/6, 49/12, 22/3, 127/12)
+            sage: x.parent()
+            Vector space of dimension 4 over Rational Field
+
         The length of v can be less than the number of columns, but not
-        more than the number of columns::
-        
-            sage: A = matrix(QQ,2,3)
-            sage: A.linear_combination_of_columns([0])
-            (0, 0)
-            sage: A.linear_combination_of_columns([1,2,3,4])
+        greater. ::
+
+            sage: A = matrix(QQ,3,5, range(15))
+            sage: A.linear_combination_of_columns([1,-2,3,-4])
+            (-8, -18, -28)
+            sage: A.linear_combination_of_columns([1,2,3,4,5,6])
             Traceback (most recent call last):
             ...
             ValueError: length of v must be at most the number of columns of self
