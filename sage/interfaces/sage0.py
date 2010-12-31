@@ -354,6 +354,9 @@ class Sage(Expect):
     def clear(self, var):
         """
         Clear the variable named var.
+
+        Note that the exact format of the NameError for a cleared variable
+        is slightly platform dependent, see trac #10539.
         
         EXAMPLES::
         
