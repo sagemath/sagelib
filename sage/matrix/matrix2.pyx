@@ -7,7 +7,6 @@ AUTHORS:
     
     - Miguel Marco (2010-06-19): modified eigenvalues and eigenvectors functions to
         allow the option extend=False
-    
 
 
 TESTS::
@@ -6779,9 +6778,9 @@ cdef class Matrix(matrix1.Matrix):
 
         # Frobenius norm: square root of sum of squares of entries of self 
         if p == 'frob': 
-            return sum([i**2 for i in A.list()]).sqrt() 
-
-    def numerical_approx(self,prec=None,digits=None):
+            return sum([i**2 for i in A.list()]).sqrt()
+             
+    def _numerical_approx(self,prec=None,digits=None):
         r"""
         Return a numerical approximation of ``self`` as either
         a real or complex number with at least the requested number of bits
@@ -6845,6 +6844,15 @@ cdef class Matrix(matrix1.Matrix):
             sage: matrix(SR, 2, 2, range(4)).n()
             [0.000000000000000  1.00000000000000]
             [ 2.00000000000000  3.00000000000000]
+            
+        ::
+        
+            sage: numerical_approx(M)
+            [0.000000000000000 0.500000000000000 0.666666666666667]
+            [0.750000000000000 0.800000000000000 0.833333333333333]
+            [0.857142857142857 0.875000000000000 0.888888888888889]
+            [0.900000000000000 0.909090909090909 0.916666666666667]
+            
         """
 
         if prec is None:
@@ -6859,6 +6867,11 @@ cdef class Matrix(matrix1.Matrix):
             # try to return a complex result
             return self.change_ring(sage.rings.complex_field.ComplexField(prec))
 
+    #This line is added so the doctest are visible
+    numerical_approx=_numerical_approx
+    n=_numerical_approx
+    N=_numerical_approx
+   
     def plot(self, *args, **kwds):
         """
         A plot of this matrix.
@@ -6895,6 +6908,9 @@ cdef class Matrix(matrix1.Matrix):
         """
         from sage.plot.plot import matrix_plot
         return matrix_plot(self, *args, **kwds)
+    
+    #added this to make doctests visible to users
+    numerical_approx=_numerical_approx
     
     def derivative(self, *args):
         """
