@@ -118,8 +118,8 @@ floating real field R.
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #  as published by the Free Software Foundation; either version 2 of
-#  the License, or (at your option) any later version. 
-#                  http://www.gnu.org/licenses/ 
+#  the License, or (at your option) any later version.
+#                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
 doc="""
@@ -4378,19 +4378,19 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         from sage.rings.rational_field import QQ
         return QQ(self).is_norm(K, element=element, proof=proof)
 
-    def bnfisnorm(self, K, certify=True, extra_primes=0):
+    def _bnfisnorm(self, K, certify=True, extra_primes=0):
         r"""
-        See ``QQ(self).bnfisnorm()``.
+        See ``QQ(self)._bnfisnorm()``.
         
         EXAMPLES::
         
-            sage: 3.bnfisnorm(QuadraticField(-1, 'i')) 
+            sage: 3._bnfisnorm(QuadraticField(-1, 'i')) 
             (1, 3) 
-            sage: 7.bnfisnorm(CyclotomicField(7))
+            sage: 7._bnfisnorm(CyclotomicField(7))
             (-zeta7^2 + zeta7, 1)
         """
         from sage.rings.rational_field import QQ
-        return QQ(self).bnfisnorm(K, certify=certify, extra_primes=extra_primes)
+        return QQ(self)._bnfisnorm(K, certify=certify, extra_primes=extra_primes)
 
      
     def jacobi(self, b):
