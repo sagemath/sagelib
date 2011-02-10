@@ -1153,9 +1153,15 @@ class MatrixSpace_generic(parent_gens.ParentWithGens):
             nrows = self.__nrows
         if ncols is None:
             ncols = self.__ncols
-        return MatrixSpace(self.base_ring(), nrows, ncols, 
-                        sparse=sparse)
- 
+        base = self._base
+        try:
+            MS = _cache[base,nrows,ncols,sparse]()
+        except KeyError:
+            return MatrixSpace(base, nrows, ncols, sparse=sparse)
+        if MS is not None:
+            return MS
+        return MatrixSpace(base, nrows, ncols, sparse=sparse)
+
     def ncols(self):
         """
         Return the number of columns of matrices in this space.
