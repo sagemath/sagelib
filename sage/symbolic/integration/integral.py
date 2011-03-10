@@ -55,7 +55,7 @@ class IndefiniteIntegral(BuiltinFunction):
         """
         # The automatic evaluation routine will try these integrators
         # in the given order. This is an attribute of the class instead of
-        # a global variable in this module to enable customization by 
+        # a global variable in this module to enable customization by
         # creating a subclasses which define a different set of integrators
         self.integrators = [external.maxima_integrator]
 
@@ -141,7 +141,7 @@ class DefiniteIntegral(BuiltinFunction):
         """
         # The automatic evaluation routine will try these integrators
         # in the given order. This is an attribute of the class instead of
-        # a global variable in this module to enable customization by 
+        # a global variable in this module to enable customization by
         # creating a subclasses which define a different set of integrators
         self.integrators = [external.maxima_integrator]
 
@@ -332,7 +332,10 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
         sage: integral(x^n,x)
         Traceback (most recent call last):
         ...
-        TypeError: Computation failed since Maxima requested additional constraints (try the command 'assume(n+1>0)' before integral or limit evaluation, for example):
+        ValueError: Computation failed since Maxima requested additional
+        constraints; using the 'assume' command before integral evaluation
+        *may* help (example of legal syntax is 'assume(n+1>0)', see `assume?`
+        for more details)
         Is  n+1  zero or nonzero?
         sage: assume(n > 0)
         sage: integral(x^n,x)
@@ -348,13 +351,12 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
     Note that an exception is raised when a definite integral is
     divergent::
 
-        sage: forget()
-
+        sage: forget() # always remember to forget assumptions you no longer need
         sage: integrate(1/x^3,(x,0,1))
         Traceback (most recent call last):
         ...
         ValueError: Integral is divergent.
-        sage: integrate(1/x^3,x,-1,3) 
+        sage: integrate(1/x^3,x,-1,3)
         Traceback (most recent call last):
         ...
         ValueError: Integral is divergent.
@@ -362,7 +364,7 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
     But Sage can calculate the convergent improper integral of
     this function::
 
-        sage: integrate(1/x^3,x,1,infinity) 
+        sage: integrate(1/x^3,x,1,infinity)
         1/2
 
     The examples in the Maxima documentation::
@@ -411,7 +413,7 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
         -y*z + x^y/log(x)
         sage: (x^y-z).integrate(y,algorithm="sympy")
         -y*z + x^y/log(x)
-    
+
         
     We integrate the above function in maple now::
 
@@ -434,18 +436,23 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
 
     ::
 
-        sage: integral(e^(-x^2),(x, 0, 0.1))       
+        sage: integral(e^(-x^2),(x, 0, 0.1))
         0.0562314580091*sqrt(pi)
 
     ALIASES: integral() and integrate() are the same.
 
-    EXAMPLES: Here is example where we have to use assume::
+    EXAMPLES:
+
+    Here is an example where we have to use assume::
 
         sage: a,b = var('a,b')
         sage: integrate(1/(x^3 *(a+b*x)^(1/3)), x)
         Traceback (most recent call last):
         ...
-        TypeError: Computation failed since Maxima requested additional constraints (try the command 'assume(a>0)' before integral or limit evaluation, for example):
+        ValueError: Computation failed since Maxima requested additional
+        constraints; using the 'assume' command before integral evaluation
+        *may* help (example of legal syntax is 'assume(a>0)', see `assume?`
+        for more details)
         Is  a  positive or negative?
 
     So we just assume that `a>0` and the integral works::
@@ -483,9 +490,10 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
         sage: res = integral(f,x,0.0001414, 1.); res
         Traceback (most recent call last):
         ...
-        TypeError: Computation failed since Maxima requested additional 
-        constraints (try the command 'assume((y-1)*(y+1)>0)' before integral 
-        or limit evaluation, for example):
+        ValueError: Computation failed since Maxima requested additional
+        constraints; using the 'assume' command before integral evaluation
+        *may* help (example of legal syntax is 'assume((y-1)*(y+1)>0)',
+        see `assume?` for more details)
         Is  (y-1)*(y+1)  positive, negative, or zero?
         sage: assume(y>1)
         sage: res = integral(f,x,0.0001414, 1.); res
@@ -560,7 +568,7 @@ def integrate(expression, v=None, a=None, b=None, algorithm=None):
         2*pi
         sage: a.simplify_full().simplify_trig()
         1
-    """           
+    """
     if isinstance(v, (list, tuple)) and a is None and b is None:
         if len(v)==1: # bare variable in a tuple
             v=v[0]

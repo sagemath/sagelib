@@ -94,7 +94,7 @@ class GenericDeclaration(SageObject):
         """
         from sage.calculus.calculus import maxima
         if self._context is None:
-            # We get the list here because features may be added with time. 
+            # We get the list here because features may be added with time.
             valid_features = list(maxima("features"))
             if self._assumption not in [repr(x).strip() for x in list(valid_features)]:
                 raise ValueError, "%s not a valid assumption, must be one of %s" % (self._assumption, valid_features)
@@ -102,7 +102,10 @@ class GenericDeclaration(SageObject):
             self._context = maxima.newcontext('context' + maxima._next_var_name())
             try:
                 maxima.eval("declare(%s, %s)" % (repr(self._var), self._assumption))
-            except TypeError, mess:
+#            except TypeError, mess:
+#                if 'inconsistent' in str(mess): # note Maxima doesn't tell you if declarations are redundant
+#                    raise ValueError, "Assumption is inconsistent"
+            except RuntimeError, mess:
                 if 'inconsistent' in str(mess): # note Maxima doesn't tell you if declarations are redundant
                     raise ValueError, "Assumption is inconsistent"
                 else:
@@ -138,13 +141,14 @@ class GenericDeclaration(SageObject):
         else: # trying to forget a declaration explicitly rather than implicitly
             for x in _assumptions:
                 if repr(self) == repr(x): # so by implication x is also a GenericDeclaration
-                    x.forget() 
+                    x.forget()
                     break
             return
     
     def contradicts(self, soln):
         """
-        Returns ``True`` if this assumption is violated by the given variable assignment(s).
+        Returns ``True`` if this assumption is violated by the given
+        variable assignment(s).
 
         INPUT:
 
@@ -259,15 +263,49 @@ def assume(*args):
     
     -  ``*args`` - assumptions
     
-    EXAMPLES::
+    EXAMPLES:
+
+    Assumptions are typically used to ensure certain relations are
+    evaluated as true that are not true in general.
     
+    Here, we verify that for `x>0`, `\sqrt(x^2)=x`::
+
         sage: assume(x > 0)
         sage: bool(sqrt(x^2) == x)
         True
+
+    This will be assumed in the current Sage session until forgotten::
+
         sage: forget()
         sage: bool(sqrt(x^2) == x)
         False
     
+
+    Another major use case is in taking certain integrals and limits
+    where the answers may depend on some sign condition::
+
+        sage: var('x, n')
+        (x, n)
+        sage: assume(n+1>0)
+        sage: integral(x^n,x)
+        x^(n + 1)/(n + 1)
+        sage: forget()
+
+    ::
+
+        sage: var('q, a, k')
+        (q, a, k)
+        sage: assume(q > 1)
+        sage: sum(a*q^k, k, 0, oo)
+        Traceback (most recent call last):
+        ...
+        ValueError: Sum is divergent.
+        sage: forget()
+        sage: assume(abs(q) < 1)
+        sage: sum(a*q^k, k, 0, oo)
+        -a/(q - 1)
+        sage: forget()
+
     An integer constraint::
     
         sage: var('n, P, r, r2')
@@ -278,7 +316,7 @@ def assume(*args):
         sage: solve(c==d,r2)
         [r2 == e^r - 1]
     
-    ::
+    Simplifying certain well-known identities works as well::
     
         sage: sin(n*pi)
         sin(pi*n)
