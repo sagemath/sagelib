@@ -203,7 +203,7 @@ def integral(f, *args, **kwds):
         sage: (x,y) = (t^4,t)
         sage: (dx,dy) = (diff(x,t), diff(y,t))
         sage: integral(sin(x)*dx, t,-1, 1)
-        0    
+        0
         sage: restore('x,y')   # restore the symbolic variables x and y
     
     Sage is unable to do anything with the following integral::
@@ -242,7 +242,10 @@ def integral(f, *args, **kwds):
         sage: integral(abs(x)*x, x, 0, a)
         Traceback (most recent call last):
         ...
-        ValueError: Computation failed since Maxima requested additional constraints; using the 'assume' command before integral evaluation *may* help (example of legal syntax is 'assume(a>0)', see `assume?` for more details)
+        ValueError: Computation failed since Maxima requested additional
+        constraints; using the 'assume' command before integral evaluation
+        *may* help (example of legal syntax is 'assume(a>0)',
+        see `assume?` for more details)
         Is  a  positive, negative, or zero?
         sage: assume(a>0)
         sage: integral(abs(x)*x, x, 0, a)
@@ -266,7 +269,7 @@ def integral(f, *args, **kwds):
          -6.9388939039072284e-17]
         sage: h.factor()
         0
-        sage: bool(h == 0) 
+        sage: bool(h == 0)
         True
     """
     try:
@@ -293,18 +296,16 @@ def limit(f, dir=None, taylor=False, **argv):
     
     INPUT:
     
-    
-    -  ``dir`` - (default: None); dir may have the value
+    - ``dir`` - (default: None); dir may have the value
        'plus' (or 'above') for a limit from above, 'minus' (or 'below')
        for a limit from below, or may be omitted (implying a two-sided
        limit is to be computed).
     
-    -  ``taylor`` - (default: False); if True, use Taylor
+    - ``taylor`` - (default: False); if True, use Taylor
        series, which allows more limits to be computed (but may also
        crash in some obscure cases due to bugs in Maxima).
     
-    -  ``\*\*argv`` - 1 named parameter
-    
+    - ``\*\*argv`` - 1 named parameter
     
     ALIAS: You can also use lim instead of limit.
     
@@ -316,7 +317,7 @@ def limit(f, dir=None, taylor=False, **argv):
         +Infinity
         sage: lim(exp(x), x=-oo)
         0
-        sage: lim(1/x, x=0) 
+        sage: lim(1/x, x=0)
         Infinity
         sage: limit(sqrt(x^2+x+1)+x, taylor=True, x=-oo)
         -1/2
@@ -341,15 +342,15 @@ def taylor(f, *args):
     variable `v` around the point `a`, containing terms
     through `(x - a)^n`. Functions in more variables are also
     supported.
-     
+    
     INPUT:
-     
-    -  ``*args`` - the following notation is supported 
-          
-       - ``x, a, n`` - variable, point, degree
-        
-       - ``(x, a), (y, b), ..., n`` - variables with points, degree of polynomial
-      
+    
+    - ``*args`` - the following notation is supported
+    
+    - ``x, a, n`` - variable, point, degree
+    
+    - ``(x, a), (y, b), ..., n`` - variables with points, degree of polynomial
+    
     EXAMPLES::
     
         sage: var('x,k,n')
@@ -366,10 +367,10 @@ def taylor(f, *args):
 
         sage: taylor ((x + 1)^n, x, 0, 4)
         1/24*(n^4 - 6*n^3 + 11*n^2 - 6*n)*x^4 + 1/6*(n^3 - 3*n^2 + 2*n)*x^3 + 1/2*(n^2 - n)*x^2 + n*x + 1
-                 
-    Taylor polynomial in two variables:: 
+        
+    Taylor polynomial in two variables::
 
-        sage: x,y=var('x y'); taylor(x*y^3,(x,1),(y,-1),4) 
+        sage: x,y=var('x y'); taylor(x*y^3,(x,1),(y,-1),4)
         (y + 1)^3*(x - 1) + (y + 1)^3 - 3*(y + 1)^2*(x - 1) - 3*(y + 1)^2 + 3*(y + 1)*(x - 1) - x + 3*y + 3 
     """
     if not isinstance(f, Expression):
@@ -425,11 +426,10 @@ def expand(x, *args, **kwds):
         0.28867513459481287
         sage: float(expand(t1 + t2))
         -0.288675134594812...
-        sage: float(expand(tt1 + t2))       
+        sage: float(expand(tt1 + t2))
         -0.288675134594812...
     """
     try:
         return x.expand(*args, **kwds)
     except AttributeError:
         return x
-
