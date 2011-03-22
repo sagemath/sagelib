@@ -182,6 +182,25 @@ class ManinSymbolList(SageObject):
 
         """
         raise NotImplementedError, "Only implemented in derived classes"
+
+    def _apply_S_only_0pm1(self):
+        """
+        Return True if the coefficient when applying the S relation is
+        always 0, 1, or -1.  This is useful for optimizing code in
+        relation_matrix.py.
+
+        EXAMPLES::
+
+            sage: eps = DirichletGroup(4).gen(0)
+            sage: from sage.modular.modsym.manin_symbols import ManinSymbolList_character
+            sage: ManinSymbolList_character(eps,2)._apply_S_only_0pm1()
+            True
+            sage: eps = DirichletGroup(7).gen(0)
+            sage: from sage.modular.modsym.manin_symbols import ManinSymbolList_character
+            sage: ManinSymbolList_character(eps,2)._apply_S_only_0pm1()
+            False
+        """
+        return False # derived classes could overload and put True
         
     def apply_S(self, j):
         """
@@ -501,6 +520,20 @@ class ManinSymbolList_group(ManinSymbolList):
         else:
             return k, -1
         
+    def _apply_S_only_0pm1(self):
+        """
+        Return True if the coefficient when applying the S relation is
+        always 0, 1, or -1.  This is useful for optimizing code in
+        relation_matrix.py.
+
+        EXAMPLES::
+
+            sage: from sage.modular.modsym.manin_symbols import ManinSymbolList_gamma0
+            sage: ManinSymbolList_gamma0(5,8)._apply_S_only_0pm1()
+            True
+        """
+        return True
+
     def apply_I(self, j):
         """
         Apply the matrix `I=[-1,0,0,1]` to the `j`-th Manin symbol.
@@ -1047,6 +1080,23 @@ class ManinSymbolList_character(ManinSymbolList):
         else:
             return k, -s
         
+    def _apply_S_only_0pm1(self):
+        """
+        Return True if the coefficient when applying the S relation is
+        always 0, 1, or -1.  This is useful for optimizing code in
+        relation_matrix.py.
+
+        EXAMPLES::
+
+            sage: eps = DirichletGroup(4).gen(0)
+            sage: from sage.modular.modsym.manin_symbols import ManinSymbolList_character
+            sage: ManinSymbolList_character(eps,2)._apply_S_only_0pm1()
+            True
+            sage: ManinSymbolList_character(DirichletGroup(13).0,2)._apply_S_only_0pm1()
+            False
+        """
+        return self.__character.order() <= 2
+
     def apply_I(self, j):
         """
         Apply the matrix `I=[-1,0,0,1]` to the `j`-th Manin symbol.
