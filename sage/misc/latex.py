@@ -33,9 +33,10 @@ SLIDE_HEADER='\\documentclass[a0,8pt]{beamer}' + COMMON_HEADER + '\\textwidth=1.
 
 #SLIDE_HEADER='\\documentclass[landscape]{slides}\\usepackage{fullpage}\\usepackage{amsmath}\n\\usepackage{amssymb}\n\\usepackage{amsfonts}\\usepackage{graphicx}\usepackage{pstricks}\pagestyle{empty}\n'
 
-import os, shutil, re
+import shutil, re
 import os.path
 import random
+import subprocess
 
 from misc import tmp_dir, graphics_filename
 import sage_eval
@@ -122,7 +123,7 @@ def have_xelatex():
     global _have_xelatex
     if _have_xelatex is None:
         _have_xelatex = have_program('xelatex')
-    return _have_xelatex   
+    return _have_xelatex
 
 _have_dvipng = None
 def have_dvipng():
@@ -186,7 +187,7 @@ def list_function(x):
     INPUT: ``x`` - a list
 
     EXAMPLES::
-    
+
         sage: from sage.misc.latex import list_function
         sage: list_function([1,2,3])
         '\\left[1, 2, 3\\right]'
@@ -240,7 +241,7 @@ def bool_function(x):
     if EMBEDDED_MODE:
         return s[5:]
     return s
-    
+
 def str_function(x, escape_underscores=False):
     r"""
     Returns the LaTeX code for a string ``x``.  If ``x`` contains only
@@ -248,7 +249,7 @@ def str_function(x, escape_underscores=False):
     a minus sign in front, then return ``x`` itself.  Otherwise, enclose 
     ``x`` in "\texttt{}" and return that.
 
-    If optional argument ``escape_underscores`` is True, 
+    If optional argument ``escape_underscores`` is True,
     replace "_" with "\\_".
 
     INPUT:
@@ -259,7 +260,7 @@ def str_function(x, escape_underscores=False):
 
     OUTPUT:
 
-    - a string    
+    - a string
 
     EXAMPLES::
 
@@ -293,7 +294,7 @@ def dict_function(x):
     INPUT: ``x`` - a dictionary
 
     EXAMPLES::
-    
+
         sage: from sage.misc.latex import dict_function
         sage: x,y,z = var('x,y,z')
         sage: dict_function({x/2: y^2})
@@ -314,7 +315,7 @@ def float_function(x):
     INPUT: ``x`` - a python float
 
     EXAMPLES::
-    
+
         sage: from sage.misc.latex import float_function
         sage: float_function(float(3.14))
         3.14
@@ -353,7 +354,7 @@ class LatexExpr(str):
         3.14000000000000
         sage: LatexExpr("abc")
         abc
-    """     
+    """
     def __repr__(self):
         """
         EXAMPLES::
@@ -454,29 +455,29 @@ def latex_extra_preamble():
 def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_in_background=False):
     """
     This runs LaTeX on the TeX file "filename.tex".  It produces files
-    "filename.dvi" (or "filename.pdf"` if engine is either ``pdflatex`` 
-    or ``xelatex'') and if ``png`` is True, "filename.png".  If ``png`` 
-    is True and dvipng can't convert the dvi file to png (because of 
-    postscript specials or other issues), then dvips is called, and the 
+    "filename.dvi" (or "filename.pdf"` if engine is either ``pdflatex``
+    or ``xelatex'') and if ``png`` is True, "filename.png".  If ``png``
+    is True and dvipng can't convert the dvi file to png (because of
+    postscript specials or other issues), then dvips is called, and the
     PS file is converted to a png file.
-    
+
     INPUT:
-    
+
     -  ``filename`` - string: file to process, including full path
-    
+
     -  ``debug`` - bool (optional, default False): whether to print
        verbose debugging output
-    
+
     -  ``density`` - integer (optional, default 150): how big output
        image is.
-    
+
     -  ``engine`` - string: latex engine to use.
 
     -  ``png`` - bool (optional, default False): whether to produce a
        png file.
 
-    -  ``do_in_background`` - bool (optional, default False): whether
-       to run in the background.
+    -  ``do_in_background`` - bool (optional, default False).  Unused,
+       kept for backwards compatibility.
 
     OUTPUT: string, which could be a string starting with 'Error' (if
     there was a problem), or it could be 'pdf' or 'dvi'.  If
@@ -489,7 +490,7 @@ def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_i
     returned.)  If engine is pdflatex or xelatex and there are no errors, then
     'pdf' is returned.
 
-    .. warning:: 
+    .. warning::
 
        If ``png`` is True, then when using latex (the default), you
        must have 'dvipng' (or 'dvips' and 'convert') installed on your
@@ -544,12 +545,12 @@ def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_i
             print "requires this program, so please install and try again."
             print ""
             print "Go to http://www.imagemagick.org to download it."
-            return "Error"          
+            return "Error"
     # check_validity: check to see if the dvi file is okay by trying
     # to convert to a png file.  if this fails, return_suffix will be
     # set to "pdf".  return_suffix is the return value for this
     # function.
-    # 
+    #
     # thus if not png output, check validity of dvi output if dvipng
     # or convert is installed.
     else:
@@ -560,21 +561,21 @@ def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_i
     if len(filename.split()) > 1:
         raise ValueError, "filename must contain no spaces"
     if not debug:
-        redirect=' 2>/dev/null 1>/dev/null '
+        redirect = subprocess.PIPE
     else:
-        redirect=''
-    if do_in_background:
-        background = ' &'
-    else:
-        background = ''
+        redirect = None
+    # if do_in_background:
+    #     background = ' &'
+    # else:
+    #     background = ''
 
     if not engine or engine == "latex":
         command = "latex"
+        # 'suffix' is used in the 'convert' command list
         suffix = "ps"
-        return_suffix = "dvi" 
+        return_suffix = "dvi"
     elif engine == "pdflatex":
         command = "pdflatex"
-        # 'suffix' is used in the string 'convert' ...
         suffix = "pdf"
         return_suffix = "pdf"
     elif engine == "xelatex":
@@ -585,36 +586,47 @@ def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_i
         raise ValueError, "Unsupported LaTeX engine."
 
     # Define the commands to be used:
-    lt = 'cd "%s"&& sage-native-execute %s \\\\nonstopmode \\\\input{%s.tex} %s'%(base, command, filename, redirect)
+    lt = ['sage-native-execute', command, r'\nonstopmode', r'\input{' + filename + '.tex}']
     # dvipng is run with the 'picky' option: this means that if
     # there are warnings, no png file is created.
-    dvipng = 'cd "%s"&& sage-native-execute dvipng --picky -q -T tight -D %s %s.dvi -o %s.png'%(base, density, filename, filename)
-    dvips = 'sage-native-execute dvips %s.dvi %s'%(filename, redirect)
-    ps2pdf = 'sage-native-execute ps2pdf %s.ps %s'%(filename, redirect)
+    dvipng = ['sage-native-execute', 'dvipng', '--picky', '-q', '-T', 'tight',
+              '-D', str(density), filename + '.dvi', '-o', filename + '.png']
+
+    dvips = ['sage-native-execute', 'dvips', filename + '.dvi']
+
+    ps2pdf = ['sage-native-execute', 'ps2pdf', filename + '.ps']
+
     # We seem to need a larger size when using convert compared to
     # when using dvipng:
-    density = int(1.4 * density / 1.3)  
-    convert = 'sage-native-execute convert -density %sx%s -trim %s.%s %s.png %s '%\
-        (density,density, filename, suffix, filename, redirect)
+    density = int(1.4 * density / 1.3)
+    convert = ['sage-native-execute', 'convert', '-density',
+               '{0}x{0}'.format(density), '-trim', filename + '.' + suffix,
+               filename + '.png']
 
-    e = 1 # it is possible to get through the following commands
-          # without running a program, so in that case we force error
+    e = False # it is possible to get through the following commands
+              # without running a program, so in that case we force error
+
+    # our standard way of calling programs here; change this if we want
+    # finer-grained analysis of the return code. Think of the output as
+    # a boolean: "the command exited normally"
+    subpcall = lambda x: not subprocess.call(x, stdout=redirect,
+                                             stderr=redirect, cwd=base)
     if engine == "pdflatex" or engine == "xelatex":
-        if png:
-            cmd = ' && '.join([lt, convert])
-        else:
-            cmd = lt
         if debug:
-            print cmd
-        e = os.system(cmd + ' ' + redirect + background)  
+            print lt
+            if png:
+                print convert
+        e = subpcall(lt)
+        if png:
+            e = e and subpcall(convert)
     else:  # latex
         if (png or check_validity):
             if have_dvipng():
-                cmd = ' && '.join([lt, dvipng])
                 if debug:
-                    print cmd
-                e = os.system(cmd + ' ' + redirect)
-                dvipng_error = not os.path.exists(base + '/' + filename + '.png')
+                    print lt
+                    print dvipng
+                e = subpcall(lt) and subpcall(dvipng)
+                dvipng_error = not os.path.exists(os.path.join(base, filename + '.png'))
                 # If there is no png file, then either the latex
                 # process failed or dvipng failed.  Assume that dvipng
                 # failed, and try running dvips and convert.  (If the
@@ -623,34 +635,35 @@ def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_i
                 if dvipng_error:
                     if png:
                         if have_convert():
-                            cmd = ' && '.join(['cd "%s"'%(base,), dvips, convert])
                             if debug:
                                 print "'dvipng' failed; trying 'convert' instead..."
-                                print cmd
-                            e = os.system(cmd + ' ' + redirect + background)
+                                print dvips
+                                print convert
+                            e = subpcall(dvips) and subpcall(convert)
                         else:
                             print "Error: 'dvipng' failed and 'convert' is not installed."
                             return "Error: dvipng failed."
                     else:  # not png, i.e., check_validity
                         return_suffix = "pdf"
-                        cmd = ' && '.join(['cd "%s"'%(base,), dvips, ps2pdf])
                         if debug:
                             print "bad dvi file; running dvips and ps2pdf instead..."
-                            print cmd
-                        e = os.system(cmd)
-                        if e:  # error running dvips and/or ps2pdf
-                            command = "pdflatex"
-                            lt = 'cd "%s"&& sage-native-execute %s \\\\nonstopmode \\\\input{%s.tex} %s'%(base, command, filename, redirect)
+                            print dvips
+                            print ps2pdf
+                        e = subpcall(dvips) and subpcall(ps2pdf)
+                        if not e:  # error running dvips and/or ps2pdf
+                            pdflt = lt[:]
+                            pdflt[1] = 'pdflatex'
                             if debug:
                                 print "error running dvips and ps2pdf; trying pdflatex instead..."
-                                print cmd
-                            e = os.system(cmd + background)
+                                print pdflt
+                            e = subpcall(pdflt)
             else:  # don't have dvipng, so must have convert.  run latex, dvips, convert.
-                cmd = ' && '.join([lt, dvips, convert])
                 if debug:
-                    print cmd
-                e = os.system(cmd + ' ' + redirect + background)
-    if e:
+                    print lt
+                    print dvips
+                    print convert
+                e = subpcall(lt) and subpcall(dvips) and subpcall(convert)
+    if not e:
         print "An error occurred."
         try:
             print open(base + '/' + filename + '.log').read()
@@ -662,23 +675,23 @@ def _run_latex_(filename, debug=False, density=150, engine=None, png=False, do_i
 class Latex:
     r"""nodetex
     Enter, e.g.,
-    
+
     ::
-    
+
                 %latex
                 The equation $y^2 = x^3 + x$ defines an elliptic curve.
                 We have $2006 = \sage{factor(2006)}$.
-            
-    
+
+
     in an input cell in the notebook to get a typeset version. Use
     ``%latex_debug`` to get debugging output.
-    
+
     Use ``latex(...)`` to typeset a Sage object.
-    
+
     Use ``%slide`` instead to typeset slides.
-    
+
     .. warning::
-    
+
        You must have dvipng (or dvips and convert) installed
        on your operating system, or this command won't work.
 
@@ -727,7 +740,7 @@ class Latex:
         Returns a dictionary whose keys are attributes of the
         :mod:`operator` module and whose values are the corresponding
         LaTeX expressions.
-        
+
         EXAMPLES::
 
             sage: import operator
@@ -738,7 +751,7 @@ class Latex:
         return {operator.lt:' < ', operator.le:' \\leq ',
                 operator.eq:' = ', operator.ne:' \\neq ',
                 operator.ge:' \\geq ', operator.gt:' > '}
-    
+
     def _latex_preparse(self, s, locals):
         r"""
         Replace instances of '\sage{x}' in s with the LaTeX version of
@@ -768,7 +781,7 @@ class Latex:
                 print msg
                 k = '\\mbox{\\rm [%s undefined]}'%var
             s = s[:i] + k + t[j+1:]
-        
+
     def eval(self, x, globals, strip=False, filename=None, debug=None,
              density=None, pdflatex=None, engine=None, locals={}):
         """
@@ -777,24 +790,24 @@ class Latex:
         -  ``globals`` -- a globals dictionary
 
         -  ``x`` - string to evaluate.
-        
+
         -  ``strip`` - ignored
-        
+
         -  ``filename`` - output filename
-        
+
         -  ``debug`` - whether to print verbose debugging
            output
-        
+
         -  ``density`` - how big output image is.
-        
+
         -  ``pdflatex`` - whether to use pdflatex. This is deprecated. Use ``engine`` option instead.
 
         -  ``engine`` - latex engine to use. Currently latex, pdflatex, and xelatex are supported.
-        
+
         -  ``locals`` - extra local variables used when
            evaluating Sage code in ``x``.
 
-        .. warning:: 
+        .. warning::
 
            When using latex (the default), you must have 'dvipng' (or
            'dvips' and 'convert') installed on your operating system,
@@ -825,7 +838,7 @@ class Latex:
             O.write(LATEX_HEADER)
             O.write(MACROS)
             O.write('\\begin{document}\n')
-            
+
         from sagenb.misc.misc import encoded_str
         O.write(encoded_str(x))
         if self.__slide:
@@ -834,16 +847,12 @@ class Latex:
             O.write('\n\n\\end{document}\n')
 
         O.close()
-        if not debug:
-            redirect=' 2>/dev/null 1>/dev/null '
-        else:
-            redirect=''
         if engine is None:
             if self.__engine is None:
                 engine = _Latex_prefs._option["engine"]
             else:
-                engine = self.__engine 
-        e = _run_latex_(os.path.join(base, filename + ".tex"), debug=debug, 
+                engine = self.__engine
+        e = _run_latex_(os.path.join(base, filename + ".tex"), debug=debug,
                                density=density, engine=engine, png=True)
         if e.find("Error") == -1:
             shutil.copy(os.path.join(base, filename + ".png"),
@@ -857,9 +866,9 @@ class Latex:
         r"""nodetex
         Controls whether Sage uses blackboard bold or ordinary bold
         face for typesetting ZZ, RR, etc.
-        
+
         INPUT:
-        
+
         - ``t`` -- boolean or None
 
         OUTPUT: if t is None, return the current setting (True or False).
@@ -1121,7 +1130,7 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
         r"""nodetex
         String containing extra preamble to be used with %latex.
         Anything in this string won't be processed by %jsmath.
-        
+
         INPUT: ``s`` - string or ``None``
 
         If ``s`` is None, return the current preamble.  Otherwise, set
@@ -1180,9 +1189,9 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
         Now one can put various xypic diagrams into a %latex cell, such as
 
         ::
-        
+
           %latex
-          \[ \xymatrix{ \circ \ar `r[d]^{a} `[rr]^{b} `/4pt[rr]^{c} `[rrr]^{d} 
+          \[ \xymatrix{ \circ \ar `r[d]^{a} `[rr]^{b} `/4pt[rr]^{c} `[rrr]^{d}
           `_dl[drrr]^{e} [drrr]^{f} & \circ & \circ & \circ \\ \circ & \circ &
           \circ & \circ } \]
 
@@ -1224,7 +1233,7 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
         r"""nodetex
         List of strings which signal that jsMath should not
         be used when 'view'ing.
-        
+
         INPUT: ``L`` - list or ``None``
 
         If ``L`` is ``None``, then return the current list.
@@ -1250,7 +1259,7 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
         r"""nodetex
         Add to the list of strings which signal that jsMath should not
         be used when 'view'ing.
-        
+
         INPUT: ``s`` - string -- add ``s`` to the list of 'jsMath avoid' strings
 
         If you want to replace the current list instead of adding to
@@ -1274,13 +1283,13 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
 
     def pdflatex(self, t = None):  # this is deprecated since 4.3.3
         """
-        This is deprecated. Use engine("pdflatex") instead.   
-        
+        This is deprecated. Use engine("pdflatex") instead.
+
         Controls whether Sage uses PDFLaTeX or LaTeX when typesetting
         with :func:`view`, in ``%latex`` cells, etc.
-        
+
         INPUT:
-        
+
         - ``t`` -- boolean or None
 
         OUTPUT: if t is None, return the current setting (True or False).
@@ -1289,14 +1298,14 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
 
         EXAMPLES::
 
-            sage: latex.pdflatex()               
+            sage: latex.pdflatex()
             doctest:...: DeprecationWarning: Use engine() instead.
             False
             sage: latex.pdflatex(True)
             doctest:...: DeprecationWarning: Use engine("pdflatex") instead.
             sage: latex.pdflatex()
             True
-            sage: latex.pdflatex(False) 
+            sage: latex.pdflatex(False)
             doctest:...: DeprecationWarning: Use engine("latex") instead.
         """
         if t is None:
@@ -1305,20 +1314,20 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
             return _Latex_prefs._option["engine"] == "pdflatex"
         elif t:
             from sage.misc.misc import deprecation
-            deprecation('Use engine("pdflatex") instead.') 
+            deprecation('Use engine("pdflatex") instead.')
             self.engine("pdflatex")
         else:
             from sage.misc.misc import deprecation
-            deprecation('Use engine("latex") instead.')    
+            deprecation('Use engine("latex") instead.')
             self.engine("latex")
 
     def engine(self, e = None):
         r"""
         Set Sage to use ``e`` as latex engine when typesetting with
         :func:`view`, in ``%latex`` cells, etc.
-        
+
         INPUT:
-        
+
         - ``e`` -- 'latex', 'pdflatex', 'xelatex' or None
 
         If  ``e`` is None, return the current engine.
@@ -1343,14 +1352,14 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
             'xelatex'
         """
         if e is None:
-            return _Latex_prefs._option["engine"] 
+            return _Latex_prefs._option["engine"]
 
         if e == "latex":
             _Latex_prefs._option["engine"] = "latex"
-            _Latex_prefs._option["engine_name"] = "LaTeX" 
+            _Latex_prefs._option["engine_name"] = "LaTeX"
         elif e == "pdflatex":
             _Latex_prefs._option["engine"] = "pdflatex"
-            _Latex_prefs._option["engine_name"] = "PDFLaTeX"              
+            _Latex_prefs._option["engine_name"] = "PDFLaTeX"
         elif e == "xelatex":
             _Latex_prefs._option["engine"] = e
             _Latex_prefs._option["engine_name"] = "XeLaTeX"
@@ -1364,10 +1373,10 @@ Warning: `%s` is not part of this computer's TeX installation."""%file_name
 # function.  This has been changed around so that the contents of the
 # old latex function are now in Latex.__call__; thus the following
 # assignment.
-                
+
 latex = Latex()
 #########################################
-    
+
 def _latex_file_(objects, title='SAGE', debug=False, \
                  sep='', tiny=False, math_left='\\[',
                  math_right='\\]',
@@ -1375,22 +1384,22 @@ def _latex_file_(objects, title='SAGE', debug=False, \
     r"""nodetex
     Produce a string to be used as a LaTeX file, containing a
     representation of each object in objects.
-    
+
     INPUT:
-    
-    
+
+
     -  ``objects`` - list (or object)
-    
+
     -  ``title`` - string (default: 'Sage'): title for the document
 
     -  ``math_left`` - string (default: '\\['), left delimiter for math mode
-    
+
     -  ``math_right`` - string (default: '\\]'), right delimiter for math mode
-    
+
     -  ``debug`` - bool (default: False): print verbose output
-    
+
     -  ``sep`` - string (default: ''): separator between math objects
-    
+
     -  ``tiny`` - bool (default: False): use 'tiny' font.
 
     -  ``extra_preamble`` - string (default: ''): extra LaTeX commands,
@@ -1400,13 +1409,13 @@ def _latex_file_(objects, title='SAGE', debug=False, \
     LaTeX representations of objects. It contains the following:
 
       - a header (with documentclass and usepackage commands)
-      
+
       - ``extra_preamble``
-      
+
       - the title (centered)
-      
+
       - a size specification if ``tiny`` is True
-      
+
       - LaTeX representation of the first element of ``objects``,
         surrounded by ``math_left`` and ``math_right``
 
@@ -1420,7 +1429,7 @@ def _latex_file_(objects, title='SAGE', debug=False, \
         with ``sep='\\newpage'``.
 
       - the LaTeX representation of the element
-      
+
     The string ends with '\\end{document}'.
 
     EXAMPLES::
@@ -1450,7 +1459,7 @@ def _latex_file_(objects, title='SAGE', debug=False, \
     process = True
     if has_latex_attr(objects):
         objects = [objects]
-    
+
     if not isinstance(objects, list):
         objects = [objects]
 
@@ -1477,7 +1486,7 @@ def _latex_file_(objects, title='SAGE', debug=False, \
                 s += '\n\n%s\n\n'%sep
     else:
         s += "\n\n".join([str(x) for x in objects])
-        
+
     s += '\n\\end{document}'
     if debug:
         print s
@@ -1508,7 +1517,7 @@ class JSMathExpr:
 
             sage: from sage.misc.latex import JSMathExpr
             sage: js = JSMathExpr(3); js  # indirect doctest
-            3            
+            3
         """
         self.__y = y
 
@@ -1587,7 +1596,7 @@ class JSMath:
             True
         """
         return self.eval(x)
-    
+
     def eval(self, x, globals=None, locals=None, mode='display'):
         r"""
         Render LaTeX input using JSMath.  This returns a :class:`JSMathExpr`.
@@ -1677,7 +1686,7 @@ def jsmath(x, mode='display'):
         notebook this gets embedded into the cell.
 
     EXAMPLES::
-    
+
         sage: from sage.misc.latex import jsmath
         sage: f = maxima('1/(x^2+1)')
         sage: g = f.integrate()
@@ -1689,7 +1698,7 @@ def jsmath(x, mode='display'):
         sage: jsmath('\int' + latex(f) + '\ dx=' + latex(g))
         <html><font color='black'><div class="math">\int{{1}\over{x^2+1}}\ dx=\tan^{-1} x</div></font></html>
 
-    AUTHORS: 
+    AUTHORS:
 
     - William Stein (2006-10): general layout (2006-10)
 
@@ -1697,7 +1706,7 @@ def jsmath(x, mode='display'):
     """
     from sage.misc.misc import deprecation
     from sage.misc.html import html
-    deprecation("The jsmath function is deprecated.  Use html('$math$') for inline mode or html('$$math$$') for display mode.")    
+    deprecation("The jsmath function is deprecated.  Use html('$math$') for inline mode or html('$$math$$') for display mode.")
     if mode == 'display':
         delimiter = '$$'
     elif mode == 'inline':
@@ -1717,39 +1726,39 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     Compute a latex representation of each object in objects, compile,
     and display typeset. If used from the command line, this requires
     that latex be installed.
-    
+
     INPUT:
-    
+
     -  ``objects`` - list (or object)
-    
+
     -  ``title`` - string (default: 'Sage'): title for the
        document
-    
+
     -  ``debug`` - bool (default: False): print verbose
        output
-    
+
     -  ``sep`` - string (default: ''): separator between
        math objects
-    
+
     -  ``tiny`` - bool (default: False): use tiny font.
-    
-    -  ``pdflatex`` - bool (default: False): use pdflatex. This is deprecated. 
-       Use 'engine' option instead. 
+
+    -  ``pdflatex`` - bool (default: False): use pdflatex. This is deprecated.
+       Use 'engine' option instead.
 
     -  ``engine`` - 'latex', 'pdflatex', or 'xelatex'
-    
+
     -  ``viewer`` -- string or None (default: None): specify a viewer to
        use; currently the only options are None and 'pdf'.
-    
+
     -  ``tightpage`` - bool (default: False): use the LaTeX package
        'preview' with the 'tightpage' option.
 
     - ``mode`` -- string (default: 'inline'): 'display' for
       displaymath or 'inline' for inline math
-       
-    
+
+
     OUTPUT: Display typeset objects.
-    
+
     This function behaves differently depending on whether in notebook
     mode or not.
 
@@ -1765,8 +1774,8 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     adds a horizontal line between objects, and ``sep='\\newpage'``
     inserts a page break between objects.
 
-    If ``pdflatex`` is ``True``, then the latex engine is set to 
-    pdflatex. If the engine is either pdflatex or xelatex,  it produces 
+    If ``pdflatex`` is ``True``, then the latex engine is set to
+    pdflatex. If the engine is either pdflatex or xelatex,  it produces
     a pdf file. Otherwise, it produces a dvi file, and if the program dvipng is
     installed, it checks the dvi file by trying to convert it to a png
     file.  If this conversion fails, the dvi file probably contains
@@ -1775,7 +1784,7 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     converted to a pdf file, which is then displayed.
 
     Setting ``viewer`` to ``'pdf'`` forces the use of a separate
-    viewer, even in notebook mode. This also sets the latex engine to be 
+    viewer, even in notebook mode. This also sets the latex engine to be
     ``pdflatex`` if the current engine is latex.
 
     Setting the option ``tightpage`` to ``True`` tells LaTeX to use
@@ -1804,9 +1813,9 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
     for ``objects`` contains a string in
     :meth:`latex.jsmath_avoid_list() <Latex.jsmath_avoid_list>`.  In
     this case, it creates and displays a png file.
-    
+
     EXAMPLES::
-    
+
         sage: sage.misc.latex.EMBEDDED_MODE = True
         sage: view(3)
         <html><span class="math">\newcommand{\Bold}[1]{\mathbf{#1}}3</span></html>
@@ -1835,19 +1844,19 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
             print JSMath().eval(objects, mode=mode)  # put comma at end of line?
         else:
             if pdflatex is True:
-                engine = "pdflatex"   
+                engine = "pdflatex"
             else:
                 engine = _Latex_prefs._option["engine"]
             base_dir = os.path.abspath("")
             png_file = graphics_filename(ext='png')
             png_link = "cell://" + png_file
             png(objects, os.path.join(base_dir, png_file),
-                debug=debug, do_in_background=False, engine=engine)
+                debug=debug, engine=engine)
             print '<html><img src="%s"></html>'%png_link  # put comma at end of line?
         return
     # command line or notebook with viewer
     if pdflatex:
-        engine = "pdflatex"   
+        engine = "pdflatex"
     else:
         engine = _Latex_prefs._option["engine"]
         if viewer == "pdf" and engine == "latex":
@@ -1866,7 +1875,14 @@ def view(objects, title='SAGE', debug=False, sep='', tiny=False, pdflatex=None, 
         print "Latex error"
         return
     output_file = os.path.join(tmp, "sage." + suffix)
-    os.system('sage-native-execute %s %s'%(viewer, output_file))
+    # this should get changed if we switch the stuff in misc.viewer to
+    # producing lists
+    if viewer.startswith('sage-native-execute '):
+        viewer = viewer.split()[1]
+    if debug:
+        print 'viewer: "{0}"'.format(viewer)
+    subprocess.call(['sage-native-execute', viewer, output_file],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return
 
 def png(x, filename, density=150, debug=False,
@@ -1886,12 +1902,12 @@ def png(x, filename, density=150, debug=False,
     -  ``debug`` - bool (default: False): print verbose
        output
 
-    -  ``do_in_background`` - bool (default: False): create the
-       file in the background.
+    -  ``do_in_background`` - bool (default: False): Unused,
+       kept for backwards compatibility
 
     -  ``tiny`` - bool (default: False): use 'tiny' font
-    
-    -  ``pdflatex`` - bool (default: True): use pdflatex. This option is deprecated. 
+
+    -  ``pdflatex`` - bool (default: True): use pdflatex. This option is deprecated.
        Use ``engine`` option instead. See below.
 
     -  ``engine`` - 'latex', 'pdflatex', or 'xelatex' (default: 'pdflatex')
@@ -1899,15 +1915,15 @@ def png(x, filename, density=150, debug=False,
     EXAMPLES::
 
         sage: from sage.misc.latex import png
-        sage: png(ZZ[x], SAGE_TMP + "zz.png", do_in_background=False) # random - error if no latex
+        sage: png(ZZ[x], SAGE_TMP + "zz.png") # random - error if no latex
     """
     if not pdflatex:
-        engine = "latex"  
+        engine = "latex"
     import sage.plot.all
     if sage.plot.all.is_Graphics(x):
         x.save(filename)
         return
-    # if not graphics: create a string of latex code to write in a file 
+    # if not graphics: create a string of latex code to write in a file
     s = _latex_file_([x], math_left='$\\displaystyle', math_right='$', title='',
                      debug=debug, tiny=tiny,
                      extra_preamble='\\textheight=2\\textheight')
@@ -1921,8 +1937,7 @@ def png(x, filename, density=150, debug=False,
     open(tex_file,'w').write(s)
     # run latex on the file, producing png output to png_file
     e = _run_latex_(tex_file, density=density, debug=debug,
-                    png=True, do_in_background=do_in_background,
-                    engine=engine)
+                    png=True, engine=engine)
     if e.find("Error") == -1:
         # if no errors, copy png_file to the appropriate place
         shutil.copy(png_file, abs_path_to_png)
@@ -1960,22 +1975,22 @@ def coeff_repr(c):
     if s.find("+") != -1 or s.find("-") != -1:
         return "(%s)"%s
     return s
-        
+
 def repr_lincomb(symbols, coeffs):
     r"""
     Compute a latex representation of a linear combination of some
     formal symbols.
-    
+
     INPUT:
-    
+
     -  ``symbols`` - list of symbols
-    
+
     -  ``coeffs`` - list of coefficients of the symbols
-    
+
     OUTPUT: a string
-    
+
     EXAMPLES::
-    
+
         sage: t = PolynomialRing(QQ, 't').0
         sage: from sage.misc.latex import repr_lincomb
         sage: repr_lincomb(['a', 's', ''], [-t, t - 2, t^12 + 2])
@@ -1983,10 +1998,10 @@ def repr_lincomb(symbols, coeffs):
         sage: repr_lincomb(['a', 'b'], [1,1])
         '\\texttt{a} + \\texttt{b}'
 
-    Verify that a certain corner case works (see trac 5707 and 5766):: 
+    Verify that a certain corner case works (see trac 5707 and 5766)::
 
-        sage: repr_lincomb([1,5,-3],[2,8/9,7]) 
-        '2\\cdot 1 + \\frac{8}{9}\\cdot 5 + 7\\cdot -3' 
+        sage: repr_lincomb([1,5,-3],[2,8/9,7])
+        '2\\cdot 1 + \\frac{8}{9}\\cdot 5 + 7\\cdot -3'
     """
     s = ""
     first = True
@@ -2027,14 +2042,14 @@ def repr_lincomb(symbols, coeffs):
 def print_or_typeset(object):
     r"""
     'view' or 'print' the object depending on the situation.
-    
+
     In particular, if in notebook mode with the typeset box checked,
     view the object. Otherwise, print the object.
-    
+
     INPUT: object: anything
-    
+
     EXAMPLES::
-    
+
         sage: sage.misc.latex.print_or_typeset(3)
         3
         sage: sage.misc.latex.EMBEDDED_MODE=True
@@ -2189,7 +2204,7 @@ def latex_varify(a, is_fname=False):
 def latex_variable_name(x, is_fname=False):
     r"""
     Return latex version of a variable name.
-    
+
     Here are some guiding principles for usage of this function:
 
     1. If the variable is a single letter, that is the latex version.
@@ -2204,12 +2219,12 @@ def latex_variable_name(x, is_fname=False):
        properly.
 
     5. Recurse nicely with subscripts.
-    
+
     Refer to the examples section for how these rules might play out in
     practice.
-    
+
     EXAMPLES::
-    
+
         sage: from sage.misc.latex import latex_variable_name
         sage: latex_variable_name('a')
         'a'
@@ -2237,7 +2252,7 @@ def latex_variable_name(x, is_fname=False):
         '{\\rm nothing}_{{\\rm abc}}'
         sage: latex_variable_name('alpha_beta_gamma12')
         '\\alpha_{\\beta_{\\gamma_{12}}}'
-    
+
     AUTHORS:
 
     - Joel B. Mohler: drastic rewrite and many doc-tests
@@ -2472,7 +2487,7 @@ should get a picture (of forces acting on a mass on a pendulum)."""
             """
             return r"""LaTeX example for testing display of a knot produced by xypic.
 
-To use, try to view this object -- it won't work.  Now try 
+To use, try to view this object -- it won't work.  Now try
 'latex.add_to_preamble("\\usepackage[graph,knot,poly,curve]{xypic}")',
 and try viewing again -- it should work in the command line but not
 from the notebook.  In the notebook, run
@@ -2585,5 +2600,5 @@ H_{p+q-1}(K^{p}/K^{p-1}) \ar[r]^{k} & H_{p+q-2}(K^{p-1}) \ar[r] \ar[d]^{i} &
      '+<0pc,-4pc>
 \restore
 }"""
-            
+
 latex_examples = LatexExamples()
