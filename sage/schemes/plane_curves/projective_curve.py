@@ -106,7 +106,7 @@ class ProjectiveCurve_generic(Curve_generic_projective):
         F = self.base_ring()
         f = self.defining_polynomial()
         x, y, z = f.parent().gens()
-        pnts = self.rational_points() 
+        pnts = self.rational_points()
         divf = []
         for P in pnts:
             if P[2] != F(0):
@@ -139,7 +139,7 @@ class ProjectiveCurve_generic(Curve_generic_projective):
         
         EXAMPLES::
         
-            sage: FF = FiniteField(5)   
+            sage: FF = FiniteField(5)
             sage: P2 = ProjectiveSpace(2, FF, names = ['x','y','z'])
             sage: x, y, z = P2.coordinate_ring().gens()
             sage: C = Curve(y^2*z^7-x^9-x*z^8)
@@ -167,7 +167,7 @@ class ProjectiveCurve_generic(Curve_generic_projective):
         S.eval('poly f = '+str(ft))
         cmd = 'matrix c = coeffs ('+str(ft)+',t)'
         S.eval(cmd)
-        N = int(S.eval('size(c)'))  
+        N = int(S.eval('size(c)'))
         b = ["c["+str(i)+",1]," for i in range(2,N/2-4)]
         b = ''.join(b)
         b = b[:len(b)-1] #to cut off the trailing comma
@@ -199,7 +199,7 @@ class ProjectiveCurve_generic(Curve_generic_projective):
     def plot(self, *args, **kwds):
         """
         Plot the real points of an affine patch of this projective
-        plane curve. 
+        plane curve.
 
         
         INPUT:
@@ -225,7 +225,7 @@ class ProjectiveCurve_generic(Curve_generic_projective):
             sage: R.<x, y, z> = QQ[]
             sage: C = Curve(x^3 - y^2*z)
             sage: C.plot()
- 
+
         The other affine patches of the same curve::
 
             sage: C.plot(patch=0)
@@ -274,16 +274,16 @@ class ProjectiveCurve_generic(Curve_generic_projective):
 
             sage: F = GF(19)
             sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)
-            sage: C = Curve(X^3+Y^3+Z^3)   
+            sage: C = Curve(X^3+Y^3+Z^3)
             sage: C.is_singular()
             False
             sage: D = Curve(X^4-X*Z^3)
             sage: D.is_singular()
             True
-            sage: E = Curve(X^5+19*Y^5+Z^5)         
+            sage: E = Curve(X^5+19*Y^5+Z^5)
             sage: E.is_singular()
             True
-            sage: E = Curve(X^5+9*Y^5+Z^5) 
+            sage: E = Curve(X^5+9*Y^5+Z^5)
             sage: E.is_singular()
             False
 
@@ -295,7 +295,7 @@ class ProjectiveCurve_generic(Curve_generic_projective):
             sage: C.is_singular()
             False
             sage: D = Curve(Y^2*Z-X^3)
-            sage: D.is_singular() 
+            sage: D.is_singular()
             True
             sage: E = Curve(Y^2*Z-X^3+Z^3)
             sage: E.is_singular()
@@ -310,7 +310,7 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
         r"""
         Return a generator object for the rational points on this curve.
 
-        INPUT: 
+        INPUT:
         
         - ``self`` -- a projective curve
 
@@ -320,9 +320,9 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
 
         EXAMPLE::
 
-            sage: F = GF(37)                                                
-            sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)                         
-            sage: C = Curve(X^7+Y*X*Z^5*55+Y^7*12)                          
+            sage: F = GF(37)
+            sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)
+            sage: C = Curve(X^7+Y*X*Z^5*55+Y^7*12)
             sage: len(list(C.rational_points_iterator()))
             37
    
@@ -379,7 +379,7 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
             Traceback (most recent call last):
             ...
             StopIteration
-                  
+
         """
         g = self.defining_polynomial()
         K = g.parent().base_ring()
@@ -393,10 +393,10 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
         try:
             t = self.point([one,zero,zero])
             yield(t)
-        except TypeError:    
+        except TypeError:
             pass
 
-        # points with Z = 0, Y = 1        
+        # points with Z = 0, Y = 1
         g10 = R(g(X,one,zero))
         if g10.is_zero():
             for x in K:
@@ -418,7 +418,7 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
     def rational_points(self, algorithm="enum", sort=True):
         r"""
         Return the rational points on this curve computed via enumeration.
-        
+
 
         INPUT:
 
@@ -441,14 +441,14 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
 
         EXAMPLES::
 
-            sage: F = GF(7)                       
+            sage: F = GF(7)
             sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)
-            sage: C = Curve(X^3+Y^3-Z^3) 
+            sage: C = Curve(X^3+Y^3-Z^3)
             sage: C.rational_points()
             [(0 : 1 : 1), (0 : 2 : 1), (0 : 4 : 1), (1 : 0 : 1), (2 : 0 : 1), (3 : 1 : 0), (4 : 0 : 1), (5 : 1 : 0), (6 : 1 : 0)]
 
 
-        ::    
+        ::
 
             sage: F = GF(1237)
             sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)
@@ -458,15 +458,15 @@ class ProjectiveCurve_finite_field(ProjectiveCurve_generic):
 
         ::
         
-            sage: F = GF(2^6,'a')                                 
-            sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)               
+            sage: F = GF(2^6,'a')
+            sage: P2.<X,Y,Z> = ProjectiveSpace(F,2)
             sage: C = Curve(X^5+11*X*Y*Z^3 + X^2*Y^3 - 13*Y^2*Z^3)
-            sage: len(C.rational_points())                        
+            sage: len(C.rational_points())
             104
 
         ::
 
-            sage: R.<x,y,z> = GF(2)[]   
+            sage: R.<x,y,z> = GF(2)[]
             sage: f = x^3*y + y^3*z + x*z^3
             sage: C = Curve(f); pts = C.rational_points()
             sage: pts
@@ -483,27 +483,30 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
         r"""
         Return all rational points on this curve, computed using Singular's
         Brill-Noether implementation.
-        
+
         INPUT:
-        
-        
+
+
         -  ``sort`` - bool (default: True), if True return the
            point list sorted. If False, returns the points in the order
            computed by Singular.
-        
-        
+
+
         EXAMPLE::
-        
+
             sage: x, y, z = PolynomialRing(GF(5), 3, 'xyz').gens()
             sage: f = y^2*z^7 - x^9 - x*z^8
             sage: C = Curve(f); C
-            Projective Curve over Finite Field of size 5 defined by -x^9 + y^2*z^7 - x*z^8
+            Projective Curve over Finite Field of size 5 defined by
+            -x^9 + y^2*z^7 - x*z^8
             sage: C._points_via_singular()
-            [(0 : 0 : 1), (0 : 1 : 0), (2 : 2 : 1), (2 : 3 : 1), (3 : 1 : 1), (3 : 4 : 1)]
+            [(0 : 0 : 1), (0 : 1 : 0), (2 : 2 : 1), (2 : 3 : 1),
+             (3 : 1 : 1), (3 : 4 : 1)]
             sage: C._points_via_singular(sort=False)     #random
-            [(0 : 1 : 0), (3 : 1 : 1), (3 : 4 : 1), (2 : 2 : 1), (0 : 0 : 1), (2 : 3 : 1)]
+            [(0 : 1 : 0), (3 : 1 : 1), (3 : 4 : 1), (2 : 2 : 1),
+             (0 : 0 : 1), (2 : 3 : 1)]
 
-        
+
         .. note::
 
            The Brill-Noether package does not always work (i.e., the
@@ -516,11 +519,12 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
         try:
             X1 = f.Adj_div()
         except (TypeError, RuntimeError), s:
-            raise RuntimeError, str(s) + "\n\n ** Unable to use the Brill-Noether Singular package to compute all points (see above)."
+            raise RuntimeError, str(s) + "\n\n ** Unable to use the\
+                                          Brill-Noether Singular package to\
+                                          compute all points (see above)."
 
         X2 = singular.NSplaces(1, X1)
-        X3 = singular.extcurve(1, X2)
-        R = X3[1][5]
+        R = X2[5][1][1]
         singular.set_ring(R)
 
         # We use sage_flattened_str_list since iterating through
@@ -529,9 +533,18 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
         # the expect interface could crop up.  Also, this is vastly
         # faster (and more robust).
         v = singular('POINTS').sage_flattened_str_list()
-        pnts = [self(int(v[3*i]), int(v[3*i+1]), int(v[3*i+2])) for i in range(len(v)/3)]
-        
-        
+        pnts = [self(int(v[3*i]), int(v[3*i+1]), int(v[3*i+2]))
+                for i in range(len(v)/3)]
+        # singular always dehomogenizes with respect to the last variable
+        # so if this variable divides the curve equation, we need to add
+        # points at infinity
+        F = self.defining_polynomial()
+        z = F.parent().gens()[-1]
+        if z.divides(F):
+            pnts += [self(1,a,0) for a in self.base_ring()]
+            pnts += [self(0,1,0)]
+        # remove multiple points
+        pnts = list(set(pnts))
         if sort:
             pnts.sort()
         return pnts
@@ -542,9 +555,9 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
         `D`.
 
         This uses Singular's Brill-Noether implementation.
-        
+
         INPUT:
-  
+
         -  ``D`` - a divisor
 
         OUTPUT:
@@ -631,13 +644,21 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
             sage: x, y, z = PolynomialRing(GF(5), 3, 'xyz').gens()
             sage: f = y^2*z^7 - x^9 - x*z^8
             sage: C = Curve(f); C
-            Projective Curve over Finite Field of size 5 defined by -x^9 + y^2*z^7 - x*z^8
+            Projective Curve over Finite Field of size 5 defined by
+            -x^9 + y^2*z^7 - x*z^8
             sage: C.rational_points()
-            [(0 : 0 : 1), (0 : 1 : 0), (2 : 2 : 1), (2 : 3 : 1), (3 : 1 : 1), (3 : 4 : 1)]
+            [(0 : 0 : 1), (0 : 1 : 0), (2 : 2 : 1), (2 : 3 : 1),
+             (3 : 1 : 1), (3 : 4 : 1)]
             sage: C = Curve(x - y + z)
             sage: C.rational_points()
-            [(0 : 1 : 1), (1 : 1 : 0), (1 : 2 : 1), (2 : 3 : 1), (3 : 4 : 1), (4 : 0 : 1)]
-        
+            [(0 : 1 : 1), (1 : 1 : 0), (1 : 2 : 1), (2 : 3 : 1),
+             (3 : 4 : 1), (4 : 0 : 1)]
+            sage: C = Curve(x*z+z^2)
+            sage: C.rational_points('all')
+            [(0 : 1 : 0), (1 : 0 : 0), (1 : 1 : 0), (2 : 1 : 0),
+             (3 : 1 : 0), (4 : 0 : 1), (4 : 1 : 0), (4 : 1 : 1),
+             (4 : 2 : 1), (4 : 3 : 1), (4 : 4 : 1)]
+
         .. note::
 
            The Brill-Noether package does not always work (i.e., the
@@ -646,7 +667,9 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
         """
         if algorithm == "enum":
 
-            return ProjectiveCurve_finite_field.rational_points(self, algorithm="enum", sort=sort)
+            return ProjectiveCurve_finite_field.rational_points(self,
+                                                                algorithm="enum",
+                                                                sort=sort)
 
         elif algorithm == "bn":
 
@@ -657,7 +680,9 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
             S_enum = self.rational_points(algorithm = "enum")
             S_bn = self.rational_points(algorithm = "bn")
             if S_enum != S_bn:
-                raise RuntimeError, "Bug in rational_points -- different algorithms give different answers for curve %s!"%self
+                raise RuntimeError, "Bug in rational_points -- different\
+                                     algorithms give different answers for\
+                                     curve %s!"%self
             return S_enum
 
         else:
@@ -665,7 +690,7 @@ class ProjectiveCurve_prime_finite_field(ProjectiveCurve_finite_field):
             raise ValueError, "No algorithm '%s' known"%algorithm
 
 def Hasse_bounds(q, genus=1):
-    r""" 
+    r"""
     Return the Hasse-Weil bounds for the cardinality of a nonsingular
     curve defined over `\GF{q}` of given ``genus``.
 
