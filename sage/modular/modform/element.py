@@ -200,17 +200,17 @@ class ModularForm_abstract(ModuleElement):
 
     def qexp(self, prec=None):
         """
-        Same as self.q_expansion(prec).
+        Same as ``self.q_expansion(prec)``.
 
-        .. seealso: :meth:`q_expansion`
+        .. seealso:: :meth:`q_expansion`
 
         EXAMPLES::
-        
+
             sage: CuspForms(1,12).0.qexp()
-            q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 + O(q^6)        
+            q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 + O(q^6)
         """
         return self.q_expansion(prec)
-        
+
 
     def __eq__(self, other):
         """
