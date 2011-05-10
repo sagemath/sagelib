@@ -2483,6 +2483,21 @@ cdef class Polynomial(CommutativeAlgebraElement):
         
             sage: expand(F)
             2*x^10 + 2*x + 2*a
+
+        A new ring.  In the example below, we add the special method
+        _factor_univariate_polynomial to the base ring, and observe
+        that this method is called instead to factor univariate
+        polynomials over this ring.  This facility can be used to
+        easily extend polynomial factorization to work over new rings
+        you introduce::
+
+             sage: R.<x> = QQ[]
+             sage: (x^2 + 1).factor()
+             x^2 + 1
+             sage: QQ._factor_univariate_polynomial = lambda f: f.change_ring(CDF).factor()
+             sage: (x^2 + 1).factor()
+             (x - ... + I) * (x - I)
+             sage: del QQ._factor_univariate_polynomial
         
         Arbitrary precision real and complex factorization::
         
@@ -2593,7 +2608,7 @@ cdef class Polynomial(CommutativeAlgebraElement):
             (5) * (x - 16.00000000000000?) * (x - 5.000000000000000?) * (x - 1.959674775249769?) * (x + 2.959674775249769?) * (x^2 - 2.854101966249685?*x + 15.47213595499958?) * (x^2 + 1.909830056250526?*x + 1.660606461254312?) * (x^2 + 3.854101966249685?*x + 6.527864045000421?) * (x^2 + 13.09016994374948?*x + 93.33939353874569?)
 
         TESTS:
-        
+
         This came up in ticket #7088::
         
             sage: R.<x>=PolynomialRing(ZZ)
@@ -2754,9 +2769,12 @@ cdef class Polynomial(CommutativeAlgebraElement):
             raise ValueError, "factorization of 0 not defined"
         if self.degree() == 0:
             return Factorization([], unit=self[0])
-        G = None
 
         R = self.parent().base_ring()
+        if hasattr(R, '_factor_univariate_polynomial'):
+            return R._factor_univariate_polynomial(self)
+
+        G = None
         ch = R.characteristic()
         if not (ch == 0 or sage.rings.arith.is_prime(ch)):
             raise NotImplementedError, "factorization of polynomials over rings with composite characteristic is not implemented"
@@ -2769,6 +2787,7 @@ cdef class Polynomial(CommutativeAlgebraElement):
         from sage.rings.rational_field import is_RationalField
 
         n = None
+
         if is_IntegerModRing(R) or is_IntegerRing(R) or is_RationalField(R):
 
             try:
@@ -4362,6 +4381,22 @@ cdef class Polynomial(CommutativeAlgebraElement):
             sage: g.roots(multiplicities=False)
             [4, 2]
         
+        A new ring.  In the example below, we add the special method
+        _roots_univariate_polynomial to the base ring, and observe
+        that this method is called instead to find roots of
+        polynomials over this ring.  This facility can be used to
+        easily extend root finding to work over new rings you
+        introduce::
+
+             sage: R.<x> = QQ[]
+             sage: (x^2 + 1).roots()
+             []
+             sage: g = lambda f, *args, **kwds: f.change_ring(CDF).roots()
+             sage: QQ._roots_univariate_polynomial = g
+             sage: (x^2 + 1).roots()
+             [(... - 1.0*I, 1), (1.0*I, 1)]
+             sage: del QQ._roots_univariate_polynomial
+             
         An example over RR, which illustrates that only the roots in RR are
         returned::
         
@@ -4753,11 +4788,13 @@ cdef class Polynomial(CommutativeAlgebraElement):
             sage: [abs(p(rt)) < eps for rt in rts] == [True]*50
             True
         """
-        seq = []
-
         K = self.parent().base_ring()
-        L = K if ring is None else ring
+        if hasattr(K, '_roots_univariate_polynomial'):
+            return K._roots_univariate_polynomial(self, ring=ring, multiplicities=multiplicities, algorithm=algorithm)
         
+        seq = []
+        L = K if ring is None else ring
+
         late_import()
 
         input_fp = (is_RealField(K)
