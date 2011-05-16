@@ -23,7 +23,9 @@ cdef class Element(sage_object.SageObject):
     cpdef _act_on_(self, x, bint self_on_left)
     cpdef _acted_upon_(self, x, bint self_on_left)
     
-    
+cdef class ElementWithCachedMethod(Element):
+    cdef public dict __cached_methods
+
 cdef class ModuleElement(Element)       # forward declaration
 
 cdef class RingElement(ModuleElement)   # forward declaration
