@@ -273,7 +273,7 @@ def LaurentPolynomialRing(base_ring, arg1=None, arg2=None, sparse = False, order
         # LaurentPolynomialRing(base_ring, names (list or tuple), order='degrevlex'):        
         names = arg1
         n = len(names)
-        R = _multi_variate(base_ring, names, n, sparse, order)        
+        R = _multi_variate(base_ring, names, n, sparse, order)
 
     if arg1 is None and arg2 is None:
         raise TypeError, "you *must* specify the indeterminates (as not None)."
@@ -347,7 +347,7 @@ def _single_variate(base_ring, names, sparse):
             prepend_string += 'k'
         else:
             break
-    R = _multi_variate_poly(base_ring, names, 1, sparse, 'degrevlex')
+    R = _multi_variate_poly(base_ring, names, 1, sparse, 'degrevlex', None)
     P = LaurentPolynomialRing_mpair(R, prepend_string, names)
     _save_in_cache(key, P)
     return P
@@ -386,7 +386,7 @@ def _multi_variate(base_ring, names, n, sparse, order):
                 break
         else:
             break
-    R = _multi_variate_poly(base_ring, names, n, sparse, order)
+    R = _multi_variate_poly(base_ring, names, n, sparse, order, None)
     P = LaurentPolynomialRing_mpair(R, prepend_string, names)
     _save_in_cache(key, P)
     return P
@@ -542,7 +542,7 @@ class LaurentPolynomialRing_generic(CommutativeRing, ParentWithGens):
             Composite map:
               From: Rational Field
               To:   Multivariate Laurent Polynomial Ring in x, y over Rational Field
-              Defn:   Call morphism:
+              Defn:   Polynomial base injection morphism:
                       From: Rational Field
                       To:   Multivariate Polynomial Ring in x, y over Rational Field
                     then
