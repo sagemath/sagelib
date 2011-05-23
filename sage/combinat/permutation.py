@@ -3461,8 +3461,8 @@ def from_reduced_word(rw):
         sage: permutation.from_reduced_word([])
         []
     """
-    if rw == []:
-        return []
+    if not rw:
+        return Permutation([])
 
     p = [i+1 for i in range(max(rw)+1)]
 
@@ -4231,16 +4231,19 @@ def permutohedron_lequal(p1, p2, side="right"):
 def to_standard(p):
     r"""
     Returns a standard permutation corresponding to the permutation p.
-    
+
     EXAMPLES::
-    
+
         sage: import sage.combinat.permutation as permutation
         sage: permutation.to_standard([4,2,7])
         [2, 1, 3]
         sage: permutation.to_standard([1,2,3])
         [1, 2, 3]
+        sage: permutation.to_standard([])
+        []
     """
-
+    if not p:
+        return Permutation([])
     s = p[:]
     biggest = max(p) + 1
     i = 1
