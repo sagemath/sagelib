@@ -2,14 +2,14 @@
 r"""
 Elliptic curves over number fields
 
-An elliptic curve `E` over a number field `K` can be given 
+An elliptic curve `E` over a number field `K` can be given
 by a Weierstrass equation whose coefficients lie in `K` or by
 using ``base_extend`` on an elliptic curve defined over a subfield.
 
 One major difference to elliptic curves over `\QQ` is that there
 might not exist a global minimal equation over `K`, when `K` does
 not have class number one.
-Another difference is the lack of understanding of modularity for 
+Another difference is the lack of understanding of modularity for
 general elliptic curves over general number fields.
 
 Currently Sage can obtain local information about `E/K_v` for finite places
@@ -67,11 +67,11 @@ AUTHORS:
 
 REFERENCE:
     
-- [Sil] Silverman, Joseph H. The arithmetic of elliptic curves. Second edition. Graduate Texts in    
+- [Sil] Silverman, Joseph H. The arithmetic of elliptic curves. Second edition. Graduate Texts in
   Mathematics, 106. Springer, 2009.
 
-- [Sil2] Silverman, Joseph H. Advanced topics in the arithmetic of elliptic curves. Graduate Texts in  
-  Mathematics, 151. Springer, 1994. 
+- [Sil2] Silverman, Joseph H. Advanced topics in the arithmetic of elliptic curves. Graduate Texts in
+  Mathematics, 151. Springer, 1994.
 """
 
 #*****************************************************************************
@@ -160,7 +160,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         self._point_class = ell_point.EllipticCurvePoint_number_field
 
     def simon_two_descent(self, verbose=0, lim1=5, lim3=50, limtriv=10, maxprob=20, limbigprime=30):
-        r""" 
+        r"""
         Computes lower and upper bounds on the rank of the Mordell-Weil group,
         and a list of independent points. Used internally by the :meth:`~rank`,
         :meth:`~rank_bounds` and :meth:`~gens` methods.
@@ -294,7 +294,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         
         - points - either a list of points, which must be on this
           curve, or (default) None, in which case self.gens() will be
-          used. 
+          used.
 
         - precision - number of bits of precision of result
           (default: None, for default RealField precision)
@@ -359,7 +359,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         for j in range(r):
             mat[j,j] = points[j].height(precision=precision)
         for j in range(r):
-            for k in range(j+1,r):              
+            for k in range(j+1,r):
                 mat[j,k]=((points[j]+points[k]).height(precision=precision) - mat[j,j] - mat[k,k])/2
                 mat[k,j]=mat[j,k]
         return mat
@@ -377,7 +377,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         
         EXAMPLES::
         
-            sage: E = EllipticCurve('37a1')                  
+            sage: E = EllipticCurve('37a1')
             sage: P = E(0,0)
             sage: Q = E(1,0)
             sage: E.regulator_of_points([P,Q])
@@ -389,22 +389,22 @@ class EllipticCurve_number_field(EllipticCurve_field):
         
             sage: E = EllipticCurve('5077a1')
             sage: points = [E.lift_x(x) for x in [-2,-7/4,1]]
-            sage: E.regulator_of_points(points)              
+            sage: E.regulator_of_points(points)
             0.417143558758384
             sage: E.regulator_of_points(points,precision=100)
             0.41714355875838396981711954462
         
         ::
         
-            sage: E = EllipticCurve('389a')                   
-            sage: E.regulator_of_points()             
+            sage: E = EllipticCurve('389a')
+            sage: E.regulator_of_points()
             1.00000000000000
-            sage: points = [P,Q] = [E(-1,1),E(0,-1)]          
-            sage: E.regulator_of_points(points)               
+            sage: points = [P,Q] = [E(-1,1),E(0,-1)]
+            sage: E.regulator_of_points(points)
             0.152460177943144
             sage: E.regulator_of_points(points, precision=100)
             0.15246017794314375162432475705
-            sage: E.regulator_of_points(points, precision=200) 
+            sage: E.regulator_of_points(points, precision=200)
             0.15246017794314375162432475704945582324372707748663081784028
             sage: E.regulator_of_points(points, precision=300)
             0.152460177943143751624324757049455823243727077486630817840280980046053225683562463604114816
@@ -492,7 +492,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         return forall(self.ainvs(), lambda x : x.valuation(P) >= 0)[0]
 
     def local_integral_model(self,*P):
-        r""" 
+        r"""
         Return a model of self which is integral at the prime ideal
         `P`.
 
@@ -581,7 +581,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
     integral_model = global_integral_model
 
     def _reduce_model(self):
-        r""" 
+        r"""
 
         Transforms the elliptic curve to a model in which `a_1`,
         `a_2`, `a_3` are reduced modulo 2, 3, 2 respectively.
@@ -685,7 +685,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             Minimal discriminant valuation: 1
             Conductor exponent: 1
             Kodaira Symbol: I1
-            Tamagawa Number: 1, 
+            Tamagawa Number: 1,
             Local data at Fractional ideal (-3*i - 2):
             Reduction type: bad split multiplicative
             Local minimal model: Elliptic Curve defined by y^2 + (i+1)*x*y + y = x^3 over Number Field in i with defining polynomial x^2 + 1
@@ -726,7 +726,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         from sage.schemes.elliptic_curves.ell_local_data import check_prime
         P = check_prime(self.base_field(),P)
 
-        return self._get_local_data(P,proof,algorithm)       
+        return self._get_local_data(P,proof,algorithm)
 
     def _get_local_data(self, P, proof, algorithm="pari"):
         r"""
@@ -779,9 +779,9 @@ class EllipticCurve_number_field(EllipticCurve_field):
             self._local_data = {}
         except KeyError:
             pass
-        from sage.schemes.elliptic_curves.ell_local_data import EllipticCurveLocalData    
+        from sage.schemes.elliptic_curves.ell_local_data import EllipticCurveLocalData
         self._local_data[P, proof, algorithm] = EllipticCurveLocalData(self, P, proof, algorithm)
-        return self._local_data[P, proof, algorithm]       
+        return self._local_data[P, proof, algorithm]
 
     def local_minimal_model(self, P, proof = None, algorithm="pari"):
         r"""
@@ -859,10 +859,10 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^3-2)
             sage: P17a, P17b = [P for P,e in K.factor(17)]
             sage: E = EllipticCurve([0,0,0,0,2*a+1])
-            sage: [(p,E.has_good_reduction(p)) for p in [P17a,P17b]]           
+            sage: [(p,E.has_good_reduction(p)) for p in [P17a,P17b]]
             [(Fractional ideal (4*a^2 - 2*a + 1), True),
             (Fractional ideal (2*a + 1), False)]
-        """    
+        """
         return self.local_data(P).has_good_reduction()
         
     def has_bad_reduction(self, P):
@@ -893,7 +893,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^3-2)
             sage: P17a, P17b = [P for P,e in K.factor(17)]
             sage: E = EllipticCurve([0,0,0,0,2*a+1])
-            sage: [(p,E.has_bad_reduction(p)) for p in [P17a,P17b]]           
+            sage: [(p,E.has_bad_reduction(p)) for p in [P17a,P17b]]
             [(Fractional ideal (4*a^2 - 2*a + 1), False),
             (Fractional ideal (2*a + 1), True)]
         """
@@ -927,7 +927,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^3-2)
             sage: P17a, P17b = [P for P,e in K.factor(17)]
             sage: E = EllipticCurve([0,0,0,0,2*a+1])
-            sage: [(p,E.has_multiplicative_reduction(p)) for p in [P17a,P17b]]           
+            sage: [(p,E.has_multiplicative_reduction(p)) for p in [P17a,P17b]]
             [(Fractional ideal (4*a^2 - 2*a + 1), False), (Fractional ideal (2*a + 1), False)]
         """
         return self.local_data(P).has_multiplicative_reduction()
@@ -955,7 +955,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^3-2)
             sage: P17a, P17b = [P for P,e in K.factor(17)]
             sage: E = EllipticCurve([0,0,0,0,2*a+1])
-            sage: [(p,E.has_split_multiplicative_reduction(p)) for p in [P17a,P17b]]           
+            sage: [(p,E.has_split_multiplicative_reduction(p)) for p in [P17a,P17b]]
             [(Fractional ideal (4*a^2 - 2*a + 1), False), (Fractional ideal (2*a + 1), False)]
         """
         return self.local_data(P).has_split_multiplicative_reduction()
@@ -983,7 +983,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^3-2)
             sage: P17a, P17b = [P for P,e in K.factor(17)]
             sage: E = EllipticCurve([0,0,0,0,2*a+1])
-            sage: [(p,E.has_nonsplit_multiplicative_reduction(p)) for p in [P17a,P17b]]           
+            sage: [(p,E.has_nonsplit_multiplicative_reduction(p)) for p in [P17a,P17b]]
             [(Fractional ideal (4*a^2 - 2*a + 1), False), (Fractional ideal (2*a + 1), False)]
         """
         return self.local_data(P).has_nonsplit_multiplicative_reduction()
@@ -1010,7 +1010,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^3-2)
             sage: P17a, P17b = [P for P,e in K.factor(17)]
             sage: E = EllipticCurve([0,0,0,0,2*a+1])
-            sage: [(p,E.has_additive_reduction(p)) for p in [P17a,P17b]]           
+            sage: [(p,E.has_additive_reduction(p)) for p in [P17a,P17b]]
             [(Fractional ideal (4*a^2 - 2*a + 1), False),
             (Fractional ideal (2*a + 1), True)]
         """
@@ -1108,9 +1108,9 @@ class EllipticCurve_number_field(EllipticCurve_field):
     def tamagawa_product_bsd(self):
         r"""
         Given an elliptic curve `E` over a number field `K`, this function returns the
-        integer `C(E/K)` that appears in the Birch and Swinnerton-Dyer conjecture accounting 
+        integer `C(E/K)` that appears in the Birch and Swinnerton-Dyer conjecture accounting
         for the local information at finite places. If the model is a global minimal model then `C(E/K)` is
-        simply the product of the Tamagawa numbers `c_v` where `v` runs over all prime ideals of `K`. Otherwise, if the model has to be changed at a place `v` a correction factor appears. 
+        simply the product of the Tamagawa numbers `c_v` where `v` runs over all prime ideals of `K`. Otherwise, if the model has to be changed at a place `v` a correction factor appears.
         The definition is such that `C(E/K)` times the periods at the infinite places is invariant
         under change of the Weierstrass model. See [Ta2] and [Do] for details.
         
@@ -1159,7 +1159,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         
         """
         da = self.local_data()
-        pr = 1 
+        pr = 1
         for dav in da:
             pp = dav.prime()
             cv = dav.tamagawa_number()
@@ -1200,8 +1200,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<a>=NumberField(x^2-5)
             sage: E=EllipticCurve([20, 225, 750, 625*a + 6875, 31250*a + 46875])
             sage: bad_primes = E.discriminant().support(); bad_primes
-            [Fractional ideal  (a), Fractional ideal (7/2*a - 81/2), Fractional ideal (-a - 52), Fractional ideal (2)]  # 32-bit
-            [Fractional ideal (-a), Fractional ideal (7/2*a - 81/2), Fractional ideal (-a - 52), Fractional ideal (2)]  # 64-bit
+            [Fractional ideal (-a), Fractional ideal (7/2*a - 81/2), Fractional ideal (-a - 52), Fractional ideal (2)]
             sage: [E.kodaira_symbol(P) for P in bad_primes]
             [I0, I1, I1, II]
             sage: K.<a> = QuadraticField(-11)
@@ -1345,16 +1344,16 @@ class EllipticCurve_number_field(EllipticCurve_field):
            sage: v = K.fractional_ideal(2*i+3)
            sage: EK.reduction(v)
            Elliptic Curve defined by y^2  = x^3 + 5*x + 8 over Residue field of Fractional ideal (2*i + 3)
-           sage: EK.reduction(K.ideal(1+i))     
+           sage: EK.reduction(K.ideal(1+i))
            Traceback (most recent call last):
-           ...  
+           ...
            ValueError: The curve must have good reduction at the place.
-           sage: EK.reduction(K.ideal(2))  
+           sage: EK.reduction(K.ideal(2))
            Traceback (most recent call last):
-           ...  
+           ...
            ValueError: The ideal must be prime.
            sage: K=QQ.extension(x^2+x+1,"a")
-           sage: E=EllipticCurve([1024*K.0,1024*K.0]) 
+           sage: E=EllipticCurve([1024*K.0,1024*K.0])
            sage: E.reduction(2*K)
            Elliptic Curve defined by y^2 + (abar+1)*y = x^3 over Residue field in abar of Fractional ideal (2)
        """
@@ -1372,7 +1371,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
            if local_data.has_good_reduction():
                Fv = OK.residue_field(place)
                return local_data.minimal_model().change_ring(Fv)
-           raise ValueError, "The curve must have good reduction at the place." 
+           raise ValueError, "The curve must have good reduction at the place."
        Fv = OK.residue_field(place)
        return self.change_ring(Fv)
     
@@ -1399,13 +1398,13 @@ class EllipticCurve_number_field(EllipticCurve_field):
         
         EXAMPLES::
 
-            sage: CDB=CremonaDatabase() 
+            sage: CDB=CremonaDatabase()
             sage: [E._torsion_bound() for E in CDB.iter([14])]
             [6, 6, 6, 6, 6, 6]
-            sage: [E.torsion_order() for E in CDB.iter([14])] 
-            [6, 6, 2, 6, 2, 6]    
+            sage: [E.torsion_order() for E in CDB.iter([14])]
+            [6, 6, 2, 6, 2, 6]
         """
-        E = self            
+        E = self
         bound = 0
         k = 0
         K = E.base_field()
@@ -1548,30 +1547,30 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<t> = NumberField(x^4 + x^3 + 11*x^2 + 41*x + 101)
             sage: EK = E.base_extend(K)
             sage: EK.torsion_points()
-            [(5 : 5 : 1), 
-            (5 : -6 : 1), 
-            (16 : -61 : 1), 
-            (-3/55*t^3 - 7/55*t^2 - 2/55*t - 133/55 : 6/55*t^3 + 3/55*t^2 + 25/11*t + 156/55 : 1), 
-            (-9/121*t^3 - 21/121*t^2 - 127/121*t - 377/121 : -7/121*t^3 + 24/121*t^2 + 197/121*t + 16/121 : 1), 
-            (5/121*t^3 - 14/121*t^2 - 158/121*t - 453/121 : -49/121*t^3 - 129/121*t^2 - 315/121*t - 207/121 : 1), 
-            (10/121*t^3 + 49/121*t^2 + 168/121*t + 73/121 : 32/121*t^3 + 60/121*t^2 - 261/121*t - 807/121 : 1), 
-            (1/11*t^3 - 5/11*t^2 + 19/11*t - 40/11 : -6/11*t^3 - 3/11*t^2 - 26/11*t - 321/11 : 1), 
-            (14/121*t^3 - 15/121*t^2 + 90/121*t + 232/121 : 16/121*t^3 - 69/121*t^2 + 293/121*t - 46/121 : 1), 
-            (3/55*t^3 + 7/55*t^2 + 2/55*t + 78/55 : 7/55*t^3 - 24/55*t^2 + 9/11*t + 17/55 : 1), 
-            (-5/121*t^3 + 36/121*t^2 - 84/121*t + 24/121 : 34/121*t^3 - 27/121*t^2 + 305/121*t + 708/121 : 1), 
-            (-26/121*t^3 + 20/121*t^2 - 219/121*t - 995/121 : 15/121*t^3 + 156/121*t^2 - 232/121*t + 2766/121 : 1), 
-            (1/11*t^3 - 5/11*t^2 + 19/11*t - 40/11 : 6/11*t^3 + 3/11*t^2 + 26/11*t + 310/11 : 1), 
-            (-26/121*t^3 + 20/121*t^2 - 219/121*t - 995/121 : -15/121*t^3 - 156/121*t^2 + 232/121*t - 2887/121 : 1), 
-            (-5/121*t^3 + 36/121*t^2 - 84/121*t + 24/121 : -34/121*t^3 + 27/121*t^2 - 305/121*t - 829/121 : 1), 
-            (3/55*t^3 + 7/55*t^2 + 2/55*t + 78/55 : -7/55*t^3 + 24/55*t^2 - 9/11*t - 72/55 : 1), 
-            (14/121*t^3 - 15/121*t^2 + 90/121*t + 232/121 : -16/121*t^3 + 69/121*t^2 - 293/121*t - 75/121 : 1), 
-            (t : -1/11*t^3 - 6/11*t^2 - 19/11*t - 59/11 : 1), 
-            (10/121*t^3 + 49/121*t^2 + 168/121*t + 73/121 : -32/121*t^3 - 60/121*t^2 + 261/121*t + 686/121 : 1), 
-            (5/121*t^3 - 14/121*t^2 - 158/121*t - 453/121 : 49/121*t^3 + 129/121*t^2 + 315/121*t + 86/121 : 1), 
-            (-9/121*t^3 - 21/121*t^2 - 127/121*t - 377/121 : 7/121*t^3 - 24/121*t^2 - 197/121*t - 137/121 : 1), 
-            (-3/55*t^3 - 7/55*t^2 - 2/55*t - 133/55 : -6/55*t^3 - 3/55*t^2 - 25/11*t - 211/55 : 1), 
-            (0 : 1 : 0), 
-            (16 : 60 : 1), 
+            [(5 : 5 : 1),
+            (5 : -6 : 1),
+            (16 : -61 : 1),
+            (-3/55*t^3 - 7/55*t^2 - 2/55*t - 133/55 : 6/55*t^3 + 3/55*t^2 + 25/11*t + 156/55 : 1),
+            (-9/121*t^3 - 21/121*t^2 - 127/121*t - 377/121 : -7/121*t^3 + 24/121*t^2 + 197/121*t + 16/121 : 1),
+            (5/121*t^3 - 14/121*t^2 - 158/121*t - 453/121 : -49/121*t^3 - 129/121*t^2 - 315/121*t - 207/121 : 1),
+            (10/121*t^3 + 49/121*t^2 + 168/121*t + 73/121 : 32/121*t^3 + 60/121*t^2 - 261/121*t - 807/121 : 1),
+            (1/11*t^3 - 5/11*t^2 + 19/11*t - 40/11 : -6/11*t^3 - 3/11*t^2 - 26/11*t - 321/11 : 1),
+            (14/121*t^3 - 15/121*t^2 + 90/121*t + 232/121 : 16/121*t^3 - 69/121*t^2 + 293/121*t - 46/121 : 1),
+            (3/55*t^3 + 7/55*t^2 + 2/55*t + 78/55 : 7/55*t^3 - 24/55*t^2 + 9/11*t + 17/55 : 1),
+            (-5/121*t^3 + 36/121*t^2 - 84/121*t + 24/121 : 34/121*t^3 - 27/121*t^2 + 305/121*t + 708/121 : 1),
+            (-26/121*t^3 + 20/121*t^2 - 219/121*t - 995/121 : 15/121*t^3 + 156/121*t^2 - 232/121*t + 2766/121 : 1),
+            (1/11*t^3 - 5/11*t^2 + 19/11*t - 40/11 : 6/11*t^3 + 3/11*t^2 + 26/11*t + 310/11 : 1),
+            (-26/121*t^3 + 20/121*t^2 - 219/121*t - 995/121 : -15/121*t^3 - 156/121*t^2 + 232/121*t - 2887/121 : 1),
+            (-5/121*t^3 + 36/121*t^2 - 84/121*t + 24/121 : -34/121*t^3 + 27/121*t^2 - 305/121*t - 829/121 : 1),
+            (3/55*t^3 + 7/55*t^2 + 2/55*t + 78/55 : -7/55*t^3 + 24/55*t^2 - 9/11*t - 72/55 : 1),
+            (14/121*t^3 - 15/121*t^2 + 90/121*t + 232/121 : -16/121*t^3 + 69/121*t^2 - 293/121*t - 75/121 : 1),
+            (t : -1/11*t^3 - 6/11*t^2 - 19/11*t - 59/11 : 1),
+            (10/121*t^3 + 49/121*t^2 + 168/121*t + 73/121 : -32/121*t^3 - 60/121*t^2 + 261/121*t + 686/121 : 1),
+            (5/121*t^3 - 14/121*t^2 - 158/121*t - 453/121 : 49/121*t^3 + 129/121*t^2 + 315/121*t + 86/121 : 1),
+            (-9/121*t^3 - 21/121*t^2 - 127/121*t - 377/121 : 7/121*t^3 - 24/121*t^2 - 197/121*t - 137/121 : 1),
+            (-3/55*t^3 - 7/55*t^2 - 2/55*t - 133/55 : -6/55*t^3 - 3/55*t^2 - 25/11*t - 211/55 : 1),
+            (0 : 1 : 0),
+            (16 : 60 : 1),
             (t : 1/11*t^3 + 6/11*t^2 + 19/11*t + 48/11 : 1)]
 
         ::
@@ -1580,28 +1579,28 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: K.<t> = NumberField(x^2 + 2*x + 10)
             sage: EK = E.base_extend(K)
             sage: EK.torsion_points()
-            [(3 : -2 : 1), 
-            (8 : -27 : 1), 
-            (1/2 : 5/4*t + 1/2 : 1), 
-            (-t - 2 : 2*t + 8 : 1), 
-            (-7 : -5*t - 2 : 1), 
-            (-1 : 0 : 1), 
-            (-2 : 3 : 1), 
-            (-13/4 : 9/8 : 1), 
-            (-2 : -2 : 1), 
-            (t : -2*t + 4 : 1), 
-            (-7 : 5*t + 8 : 1), 
-            (-t - 2 : -t - 7 : 1), 
-            (1/2 : -5/4*t - 2 : 1), 
-            (0 : 1 : 0), 
-            (8 : 18 : 1), 
+            [(3 : -2 : 1),
+            (8 : -27 : 1),
+            (1/2 : 5/4*t + 1/2 : 1),
+            (-t - 2 : 2*t + 8 : 1),
+            (-7 : -5*t - 2 : 1),
+            (-1 : 0 : 1),
+            (-2 : 3 : 1),
+            (-13/4 : 9/8 : 1),
+            (-2 : -2 : 1),
+            (t : -2*t + 4 : 1),
+            (-7 : 5*t + 8 : 1),
+            (-t - 2 : -t - 7 : 1),
+            (1/2 : -5/4*t - 2 : 1),
+            (0 : 1 : 0),
+            (8 : 18 : 1),
             (t : t - 5 : 1)]
         
         ::
     
             sage: K.<i> = QuadraticField(-1)
-            sage: EK = EllipticCurve(K,[0,0,0,0,-1])            
-            sage: EK.torsion_points ()              
+            sage: EK = EllipticCurve(K,[0,0,0,0,-1])
+            sage: EK.torsion_points ()
             [(0 : -i : 1), (1 : 0 : 1), (0 : i : 1), (-2 : 3*i : 1), (0 : 1 : 0), (-2 : -3*i : 1)]
          """
         T = self.torsion_subgroup() # make sure it is cached
@@ -1612,13 +1611,13 @@ class EllipticCurve_number_field(EllipticCurve_field):
         Returns the lower and upper bounds using :meth:`~simon_two_descent`.
         The results of :meth:`~simon_two_descent` are cached.
 
-        .. NOTE:: 
+        .. NOTE::
 
             The optional parameters control the Simon two descent algorithm;
             see the documentation of :meth:`~simon_two_descent` for more
             details.
 
-        INPUT: 
+        INPUT:
 
         - ``verbose`` -- 0, 1, 2, or 3 (default: 0), the verbosity level
 
@@ -1657,7 +1656,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         bounds on the rank::
 
             sage: Qrt5.<rt5>=NumberField(x^2-5)
-            sage: E=EllipticCurve([0,5-rt5,0,rt5,0])  
+            sage: E=EllipticCurve([0,5-rt5,0,rt5,0])
             sage: E.rank_bounds()
             (1, 2)
 
@@ -1675,13 +1674,13 @@ class EllipticCurve_number_field(EllipticCurve_field):
         r"""
         Return the rank of this elliptic curve, if it can be determined.
 
-        .. NOTE:: 
+        .. NOTE::
 
             The optional parameters control the Simon two descent algorithm;
             see the documentation of :meth:`~simon_two_descent` for more
             details.
 
-        INPUT: 
+        INPUT:
 
         - ``verbose`` -- 0, 1, 2, or 3 (default: 0), the verbosity level
 
@@ -1701,8 +1700,8 @@ class EllipticCurve_number_field(EllipticCurve_field):
 
         If the upper and lower bounds given by Simon two-descent are
         the same, then the rank has been uniquely identified and we
-        return this. Otherwise, we raise a ValueError with an error 
-        message specifying the upper and lower bounds. 
+        return this. Otherwise, we raise a ValueError with an error
+        message specifying the upper and lower bounds.
         
         .. NOTE::
 
@@ -1722,10 +1721,10 @@ class EllipticCurve_number_field(EllipticCurve_field):
         algorithm do not uniquely determine the rank::
 
             sage: Qrt5.<rt5>=NumberField(x^2-5)
-            sage: E=EllipticCurve([0,5-rt5,0,rt5,0])  
+            sage: E=EllipticCurve([0,5-rt5,0,rt5,0])
             sage: E.rank()
             Traceback (most recent call last):
-            ...  
+            ...
             ValueError: There is insufficient data to determine the rank -
             2-descent gave lower bound 1 and upper bound 2
 
@@ -1739,7 +1738,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         lower,upper = self.rank_bounds(verbose=verbose,lim1=lim1,lim3=lim3,limtriv=limtriv,maxprob=maxprob,limbigprime=limbigprime)
         if lower == upper:
             return lower
-        else: 
+        else:
             raise ValueError, 'There is insufficient data to determine the rank - 2-descent gave lower bound %s and upper bound %s' % (lower, upper)
 
     def gens(self,verbose=0, lim1=5, lim3=50, limtriv=10, maxprob=20, limbigprime=30):
@@ -1747,13 +1746,13 @@ class EllipticCurve_number_field(EllipticCurve_field):
         Returns some generators of this elliptic curve. Check :meth:`~rank` or
         :meth:`~rank_bounds` to verify the number of generators.
 
-        .. NOTE:: 
+        .. NOTE::
 
             The optional parameters control the Simon two descent algorithm;
             see the documentation of :meth:`~simon_two_descent` for more
             details.
 
-        INPUT: 
+        INPUT:
 
         - ``verbose`` -- 0, 1, 2, or 3 (default: 0), the verbosity level
 
@@ -1792,7 +1791,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         uniquely determine the rank::
 
             sage: Qrt5.<rt5>=NumberField(x^2-5)
-            sage: E=EllipticCurve([0,5-rt5,0,rt5,0])  
+            sage: E=EllipticCurve([0,5-rt5,0,rt5,0])
             sage: E.gens()
             [(3/2*rt5 + 5/2 : -9/2*rt5 - 15/2 : 1), (-1/2*rt5 + 3/2 : 3/2*rt5 - 9/2 : 1), (0 : 0 : 1)]
 
@@ -1814,7 +1813,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
 
         - ``embedding`` - an embedding of the base number field into `\RR` or `\CC`.
 
-        .. note:: 
+        .. note::
 
            The precision of the embedding is ignored: we only use the
            given embedding to determine which embedding into ``QQbar``
@@ -1827,7 +1826,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
         First define a field with two real embeddings::
 
             sage: K.<a> = NumberField(x^3-2)
-            sage: E=EllipticCurve([0,0,0,a,2])                            
+            sage: E=EllipticCurve([0,0,0,a,2])
             sage: embs=K.embeddings(CC); len(embs)
             3
 
@@ -1899,18 +1898,18 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: E1 = EllipticCurve(F, [7,8])
             sage: E2 = EllipticCurve(F, [0,5,0,1,0])
             sage: E3 = EllipticCurve(F, [0,-10,0,21,0])
-            sage: E1.is_isogenous(E2)    
+            sage: E1.is_isogenous(E2)
             False
-            sage: E1.is_isogenous(E1) 
+            sage: E1.is_isogenous(E1)
             True
             sage: E2.is_isogenous(E2)
             True
-            sage: E2.is_isogenous(E1) 
+            sage: E2.is_isogenous(E1)
             False
-            sage: E2.is_isogenous(E3) 
+            sage: E2.is_isogenous(E3)
             True
 
-        ::    
+        ::
 
             sage: x = polygen(QQ, 'x')
             sage: F = NumberField(x^2 -2, 's'); F
@@ -1959,7 +1958,7 @@ class EllipticCurve_number_field(EllipticCurve_field):
            True
            sage: E3.is_isogenous(E2)
            True
-           sage: E1.isogeny_degree(E2)            
+           sage: E1.isogeny_degree(E2)
            9
 
         """
@@ -2038,15 +2037,15 @@ class EllipticCurve_number_field(EllipticCurve_field):
             sage: x = QQ['x'].0
             sage: F = NumberField(x^2 -2, 's'); F
             Number Field in s with defining polynomial x^2 - 2
-            sage: E = EllipticCurve('14a1')                    
+            sage: E = EllipticCurve('14a1')
             sage: EE = EllipticCurve('14a2')
             sage: E1 = E.change_ring(F)
             sage: E2 = EE.change_ring(F)
             sage: E1.isogeny_degree(E2)
             2
-            sage: E2.isogeny_degree(E2)     
+            sage: E2.isogeny_degree(E2)
             1
-            sage: E5 = EllipticCurve('14a5').change_ring(F)    
+            sage: E5 = EllipticCurve('14a5').change_ring(F)
             sage: E1.isogeny_degree(E5)
             6
         """
