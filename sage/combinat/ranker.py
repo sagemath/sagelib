@@ -88,14 +88,14 @@ def unrank_from_list(l):
 def on_fly():
     """
     Returns a pair of enumeration functions rank / unrank.
-    
+
     rank assigns on the fly an integer, starting from 0, to any object
     passed as argument. The object should be hashable. unrank is the
     inverse function; it returns None for indices that have not yet
     been assigned.
-    
+
     EXAMPLES::
-    
+
         sage: [rank, unrank] = sage.combinat.ranker.on_fly()
         sage: rank('a')
         0
@@ -112,8 +112,8 @@ def on_fly():
         3
         sage: unrank(3)
         'd'
-    
-    TODO: add tests as in combinat::rankers
+
+    .. todo:: add tests as in combinat::rankers
     """
     def count():
         i = 0
