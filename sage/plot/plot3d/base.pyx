@@ -520,7 +520,7 @@ resolution 400 400
 
     %s
 
-end_scene""" % (render_params.antialiasing, 
+end_scene""" % (render_params.antialiasing,
                "\n".join([t.tachyon_str() for t in self.texture_set()]),
                "\n".join(flatten_list(self.tachyon_repr(render_params))))
 
@@ -596,7 +596,7 @@ end_scene""" % (render_params.antialiasing,
             select atomno = 1
             color atom  [102,102,255]
             label "hi"
-            isosurface fullylit; pmesh o* fullylit; set antialiasdisplay on; 
+            isosurface fullylit; pmesh o* fullylit; set antialiasdisplay on;
 
             sage: print z.read(z.namelist()[0])
             24
@@ -657,8 +657,8 @@ end_scene""" % (render_params.antialiasing,
 
         # Put the rest of the object in
         f.write("\n".join(all))
-        # Make sure the lighting is correct 
-        f.write("isosurface fullylit; pmesh o* fullylit; set antialiasdisplay on;\n") 
+        # Make sure the lighting is correct
+        f.write("isosurface fullylit; pmesh o* fullylit; set antialiasdisplay on;\n")
 
         render_params.output_archive.writestr('SCRIPT', f.getvalue())
         render_params.output_archive.close()
@@ -671,7 +671,7 @@ end_scene""" % (render_params.antialiasing,
         representation is intended to be consumed by the canvas3d viewer backend.
 
         EXAMPLES::
-        
+
             sage: G = sage.plot.plot3d.base.Graphics3d()
             sage: G.json_repr(G.default_render_params())
             []
@@ -687,7 +687,7 @@ end_scene""" % (render_params.antialiasing,
         are stored in render_parames.output_archive.
 
         EXAMPLES::
-        
+
             sage: G = sage.plot.plot3d.base.Graphics3d()
             sage: G.jmol_repr(G.default_render_params())
             []
@@ -698,7 +698,7 @@ end_scene""" % (render_params.antialiasing,
         return []
 
     def tachyon_repr(self, render_params):
-        """
+        r"""
         A (possibly nested) list of strings which will be concatenated and
         used by tachyon to render self. (Nested lists of strings are used
         because otherwise all the intermediate concatenations can kill
@@ -706,6 +706,7 @@ end_scene""" % (render_params.antialiasing,
         is stored elsewhere.
 
         EXAMPLES::
+        
             sage: G = sage.plot.plot3d.base.Graphics3d()
             sage: G.tachyon_repr(G.default_render_params())
             []
@@ -946,7 +947,7 @@ end_scene""" % (render_params.antialiasing,
             opts['aspect_ratio'] = (1, 1, 1)
         if not isinstance(opts['aspect_ratio'], (str, list, tuple)):
             raise TypeError, 'aspect ratio must be a string, list, tuple, or 1'
-        
+
         if opts['frame_aspect_ratio'] == 'automatic':
             if opts['aspect_ratio'] != 'automatic':
                 # Set the aspect_ratio of the frame to be the same as that of
@@ -1146,7 +1147,7 @@ end_scene""" % (render_params.antialiasing,
         later) depending on the file extension you give the filename.
 
         INPUT:
-        
+
         - ``filename`` - Specify where to save the image or object.
 
         - ``**kwds`` - When specifying an image file to be rendered by Tachyon,
@@ -1155,7 +1156,7 @@ end_scene""" % (render_params.antialiasing,
           Accepted keywords include: ``viewer``, ``verbosity``, ``figsize``,
           ``aspect_ratio``, ``frame_aspect_ratio``, ``zoom``, ``frame``, and
           ``axes``. Default values are provided.
-        
+
         EXAMPLES::
 
             sage: f = tmp_filename() + '.png'
@@ -1201,7 +1202,7 @@ end_scene""" % (render_params.antialiasing,
                 Image.open(out_filename).save(filename)
         else:
             raise ValueError, 'filetype not supported by save()'
-                
+
 
 
 # if you add any default parameters you must update some code below
@@ -1310,7 +1311,7 @@ class Graphics3dGroup(Graphics3d):
         representations of its objects.
 
         EXAMPLES::
-        
+
             sage: G = sphere() + sphere((1, 2, 3))
             sage: G.json_repr(G.default_render_params())
             [[["{vertices:..."]], [["{vertices:..."]]]
@@ -1402,7 +1403,7 @@ class Graphics3dGroup(Graphics3d):
             sage: [t for t in G.texture_set() if t.color == colors.red] # one red texture
             [Texture(texture..., red, ff0000)]
             sage: [t for t in G.texture_set() if t.color == colors.yellow] # one yellow texture
-            [Texture(texture..., yellow, ffff00)] 
+            [Texture(texture..., yellow, ffff00)]
 
             sage: T = sage.plot.plot3d.texture.Texture('blue'); T
             Texture(texture..., blue, 0000ff)
