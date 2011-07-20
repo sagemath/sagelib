@@ -78,6 +78,11 @@ def EllipticCurve(x=None, y=None, j=None):
         Elliptic Curve defined by y^2 + y = x^3 - 7*x + 6 over Rational Field
         sage: EllipticCurve('389a')
         Elliptic Curve defined by y^2 + y = x^3 + x^2 - 2*x over Rational Field
+
+    Unicode labels are allowed::
+
+        sage: EllipticCurve(u'389a')
+        Elliptic Curve defined by y^2 + y = x^3 + x^2 - 2*x over Rational Field
     
     We create curves over a finite field as follows::
     
@@ -282,6 +287,9 @@ def EllipticCurve(x=None, y=None, j=None):
         elif rings.is_Field(x):
             return ell_field.EllipticCurve_field(x, y)
         return ell_generic.EllipticCurve_generic(x, y)
+
+    if isinstance(x, unicode):
+        x = str(x)
         
     if isinstance(x, str):
         return ell_rational_field.EllipticCurve_rational_field(x)
