@@ -4,13 +4,13 @@ This file gathers together all the tables in Sage.
     * ConwayPolynomials -- database of selected Conway polynomials.
 
     * CremonaDatabase() - Cremona's tables of elliptic curves and related data.
-                
+
     * Gamma0Wt2Database() -- table of arithmetic information about
                     newforms of weight 2 on Gamma_0(N).
 
     * JonesDatabase() -- returns the John Jones table of number fields
                 with bounded ramification and degree <= 6.
-                
+
     * SteinWatkinsDatabase() - The Stein-Watkins tables of elliptic curves
                 and related data.
 
@@ -58,7 +58,7 @@ EXAMPLES:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from database import SQLQuery, GenericSQLQuery, GenericSQLDatabase, SQLDatabase
+from sql_db import SQLQuery, SQLDatabase
 
 from conway import ConwayPolynomials
 
@@ -86,7 +86,7 @@ from symbolic_data import SymbolicData
 
 # commented out, since it's broken -- nobody updated the parser
 # for the new format; nobody complained it didn't work, so it
-# can't be that important. 
+# can't be that important.
 #from lincodes import linear_code_bound
 
 from odlyzko import zeta_zeros
