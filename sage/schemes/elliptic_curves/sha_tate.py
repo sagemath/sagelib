@@ -5,10 +5,10 @@ Tate-Shafarevich group
 If `E` is an elliptic curve over a global field `K`, the Tate-Shafarevich group
 is the subgroup of elements in `H^1(K,E)` which map to zero under every global-to-local
 restriction map `H^1(K,E) \to H^1(K_v,E)`, one for each place `v`
-of `K`. 
+of `K`.
 
 The group is usually denoted by the Russian letter Sha, in this document it will be denoted by `Sha`.
-    
+
 `Sha` is known to be an abelian torsion group. It is conjectured that the Tate-Shafarevich group is finite for any elliptic curve over a global field. But it is not known in general.
 
 A theorem of Kolyvagin and Gross-Zagier using Heegner points shows that if the L-series of an elliptic curve `E/\QQ` does not
@@ -60,7 +60,7 @@ AUTHORS:
 - William Stein (2007) -- initial version
 
 - Chris Wuthrich (April 2009) -- reformat docstrings
-  
+
 """
 #*****************************************************************************
 #       Copyright (C) 2007 William Stein <wstein@gmail.com>
@@ -91,15 +91,16 @@ Q = RationalField()
 class Sha(SageObject):
     r"""
     The Tate-Shafarevich group associated to an elliptic curve.
-    
+
     If `E` is an elliptic curve over a global field `K`, the Tate-Shafarevich group
     is the subgroup of elements in `H^1(K,E)` which map to zero under every global-to-local
     restriction map `H^1(K,E) \to H^1(K_v,E)`, one for each place `v`
-    of `K`. 
+    of `K`.
 
     EXAMPLES::
 
         sage: E = EllipticCurve('571a1')
+        sage: E._set_gens([])
         sage: S = E.sha()
         sage: S.bound_kato()
         [2, 3]
@@ -128,12 +129,12 @@ class Sha(SageObject):
     def __init__(self, E):
         r"""
         The Tate-Shafarevich group associated to an elliptic curve.
-      
+
         INPUT:
         a elliptic curve over `\QQ`
-        
+
         EXAMPLES::
-        
+
             sage: E = EllipticCurve('11a1')
             sage: S = E.sha()
             sage: S
@@ -158,9 +159,9 @@ class Sha(SageObject):
             True
         """
         c = cmp(type(self), type(other))
-        if c: 
+        if c:
             return c
-        return cmp(self.E, other.E)               
+        return cmp(self.E, other.E)
 
     def __repr__(self):
         r"""
@@ -187,9 +188,9 @@ class Sha(SageObject):
         a floating point number in all cases.
 
         INPUT:
-        
+
         - ``prec`` - integer (default: 53) bits precision -- used
-          for the L-series computation, period,  regulator, etc. 
+          for the L-series computation, period,  regulator, etc.
         - ``use_database`` - whether the rank and generators should
           be looked up in the database if possible. Default is True
         - ``proof`` - bool or None (default: None, see proof.[tab] or
@@ -200,7 +201,7 @@ class Sha(SageObject):
             See also the an() command, which will return a
             provably correct integer when the rank is 0 or 1.
 
-        .. WARNING:: 
+        .. WARNING::
             If the curve's generators are not known, computing
             them may be very time-consuming.  Also, computation of the
             L-series derivative will be time-consuming for large rank and
@@ -234,7 +235,7 @@ class Sha(SageObject):
 
         See trac #1115::
 
-            sage: sha=EllipticCurve('37a1').sha()                       
+            sage: sha=EllipticCurve('37a1').sha()
             sage: [sha.an_numerical(prec) for prec in xrange(40,100,10)]
             [1.0000000000,
             1.0000000000000,
@@ -268,7 +269,7 @@ class Sha(SageObject):
         Sha = RR((Lr*T*T)/(r.factorial()*Om*cp*Reg))
         self.__an_numerical = Sha
         return Sha
-        
+
     def an(self, use_database=False, descent_second_limit=12):
         r"""
         Returns the Birch and Swinnerton-Dyer conjectural order of `Sha`
@@ -276,11 +277,11 @@ class Sha(SageObject):
         in which case this function returns a numerical value.
 
         INPUT:
-        
+
             - ``use_database`` -- bool (default: False); if True, try to use any
               databases installed to lookup the analytic order of `Sha`, if
               possible.  The order of `Sha` is computed if it can't be looked up.
-            
+
             - ``descent_second_limit`` -- int (default: 12); limit to use on
               point searching for the quartic twist in the hard case
 
@@ -293,9 +294,9 @@ class Sha(SageObject):
         tables.
 
         NOTE:
-        
+
         If you come across the following error::
-        
+
             sage: E = EllipticCurve([0, 0, 1, -34874, -2506691])
             sage: E.sha().an()
             Traceback (most recent call last):
@@ -405,7 +406,7 @@ class Sha(SageObject):
             E.__an = Sha
             self.__an = Sha
             return Sha
-        
+
         else:  # rank > 0  (Not provably correct)
             L1, error_bound = E.lseries().deriv_at1(10*sqrt(E.conductor()) + 10)
             if abs(L1) < error_bound:
@@ -413,7 +414,7 @@ class Sha(SageObject):
                 E.__an = s
                 self.__an = s
                 return s
-            
+
             regulator = E.regulator(use_database=use_database, descent_second_limit=descent_second_limit)
             T = E.torsion_subgroup().order()
             omega = E.period_lattice().omega()
@@ -438,19 +439,19 @@ class Sha(SageObject):
         in [MTT] and [BP].
 
         REFERENCES:
-                
+
         - [MTT] B. Mazur, J. Tate, and J. Teitelbaum,
-          On `p`-adic analogues of the conjectures of Birch and 
+          On `p`-adic analogues of the conjectures of Birch and
           Swinnerton-Dyer, Inventiones mathematicae 84, (1986), 1-48.
-          
+
         - [BP] Dominique Bernardi and Bernadette Perrin-Riou,
-          Variante `p`-adique de la conjecture de Birch et 
-          Swinnerton-Dyer (le cas supersingulier), C. R. Acad. Sci. Paris, 
+          Variante `p`-adique de la conjecture de Birch et
+          Swinnerton-Dyer (le cas supersingulier), C. R. Acad. Sci. Paris,
           Ser I. Math, 317 (1993), no 3, 227-232.
 
         - [SW] William Stein and Christian Wuthrich, Computations About Tate-Shafarevich Groups
           using Iwasawa theory, preprint 2009.
-      
+
 
         INPUT:
 
@@ -461,7 +462,7 @@ class Sha(SageObject):
         - ``use_twists`` (default = True) - If true the algorithm may change
           to a quadratic twist with minimal conductor to do the modular
           symbol computations rather than using the modular symbols of the
-          curve itself. If False it forces the computation using the 
+          curve itself. If False it forces the computation using the
           modular symbols of the curve itself.
 
         OUTPUT:  `p`-adic number - that conjecturally equals `\# Sha(E/\QQ)`.
@@ -469,11 +470,11 @@ class Sha(SageObject):
         If prec is set to zero (default) then the precision is set so that
         at least the first `p`-adic digit of conjectural `\# Sha(E/\QQ)` is
         determined.
-                
+
         EXAMPLES:
 
         Good ordinary examples::
-        
+
             sage: EllipticCurve('11a1').sha().an_padic(5)    # rank 0
             1 + O(5^2)
             sage: EllipticCurve('43a1').sha().an_padic(5)    # rank 1
@@ -486,33 +487,33 @@ class Sha(SageObject):
             3^2 + O(3^6)
             sage: EllipticCurve('300b2').sha().an_padic(7, prec=6)  # long time
             2 + 7 + O(7^8)
-            
+
         Exceptional cases::
-        
+
             sage: EllipticCurve('11a1').sha().an_padic(11) # rank 0
             1 + O(11^2)
             sage: EllipticCurve('130a1').sha().an_padic(5) # rank 1
             1 + O(5)
 
         Non-split, but rank 0 case (trac #7331)::
-        
+
             sage: EllipticCurve('270b1').sha().an_padic(5) # rank 0, long time (2s on sage.math, 2011)
             1 + O(5^2)
-            
+
         The output has the correct sign::
 
             sage: EllipticCurve('123a1').sha().an_padic(41) # rank 1, long time (3s on sage.math, 2011)
             1 + O(41)
-            
+
         Supersingular cases::
-        
+
             sage: EllipticCurve('34a1').sha().an_padic(5) # rank 0
             1 + O(5^2)
             sage: EllipticCurve('53a1').sha().an_padic(5) # rank 1, long time (11s on sage.math, 2011)
             1 + O(5)
-            
+
         Cases that use a twist to a lower conductor::
-            
+
             sage: EllipticCurve('99a1').sha().an_padic(5)
             1 + O(5)
             sage: EllipticCurve('240d3').sha().an_padic(5)  # sha has 4 elements here
@@ -528,14 +529,14 @@ class Sha(SageObject):
             self.__an_padic = {}
         except KeyError:
             pass
-           
+
         E = self.Emin
         tam = E.tamagawa_product()
         tors = E.torsion_order()**2
         reg = E.padic_regulator(p)
-        # todo : here we should cache the rank computation 
+        # todo : here we should cache the rank computation
         r = E.rank()
-     
+
 
         if use_twists and p > 2:
             Et, D = E.minimal_quadratic_twist()
@@ -567,11 +568,11 @@ class Sha(SageObject):
             lp = E.padic_lseries(p)
             D = 1
 
-        if r == 0 and D == 1: 
-            # short cut for rank 0 curves, we do not 
+        if r == 0 and D == 1:
+            # short cut for rank 0 curves, we do not
             # to compute the p-adic L-function, the leading
             # term will be the L-value divided by the Neron
-            # period. 
+            # period.
             ms = E.modular_symbol(sign=+1, normalize='L_ratio')
             lstar = ms(0)/E.real_components()
             bsd = tam/tors
@@ -579,11 +580,11 @@ class Sha(SageObject):
                 prec = valuation(lstar/bsd, p)
             shan = Qp(p,prec=prec+2)(lstar/bsd)
 
-     
+
         elif E.is_ordinary(p):
             K = reg.parent()
             lg = log(K(1+p))
-        
+
             if (E.is_good(p) or E.ap(p) == -1):
                 if not E.is_good(p):
                     eps = 2
@@ -595,19 +596,19 @@ class Sha(SageObject):
                 r += 1   # exceptional zero
                 eq = E.tate_curve(p)
                 Li = eq.L_invariant()
-        
+
                 # according to the p-adic BSD (Mazur-Tate-Teitelbaum)
                 # this should be equal to the leading term of the p-adic L-series divided by sha:
                 bsdp = tam * reg * Li/tors/lg**r
-                
-  
+
+
             v = bsdp.valuation()
             if v > 0:
                 verbose("the prime is irregular.")
-          
-            # determine how much prec we need to prove at least the triviality of 
+
+            # determine how much prec we need to prove at least the triviality of
             # the p-primary part of Sha
-            
+
             if prec == 0:
                 n = max(v,2)
                 bounds = lp._prec_bounds(n,r+1)
@@ -616,10 +617,10 @@ class Sha(SageObject):
                     bounds = lp._prec_bounds(n,r+1)
                 verbose("set precision to %s"%n)
             else:
-                n = max(2,prec)        
-        
-            not_yet_enough_prec = True    
-            while not_yet_enough_prec:     
+                n = max(2,prec)
+
+            not_yet_enough_prec = True
+            while not_yet_enough_prec:
                 lps = lp.series(n,quadratic_twist=D,prec=r+1)
                 lstar = lps[r]
                 if (lstar != 0) or (prec != 0):
@@ -627,31 +628,31 @@ class Sha(SageObject):
                 else:
                     n += 1
                     verbose("increased precision to %s"%n)
-        
+
             shan = lstar/bsdp
-  
+
         elif E.is_supersingular(p):
             K = reg[0].parent()
             lg = log(K(1+p))
-        
-            
+
+
             # according to the p-adic BSD this should be equal to the leading term of the D_p - valued
             # L-series :
             bsdp = tam /tors/lg**r * reg
             # note this is an element in Q_p^2
-           
+
             verbose("the algebraic leading terms : %s"%bsdp)
-            
+
             v = [bsdp[0].valuation(),bsdp[1].valuation()]
-            
+
             if prec == 0:
                 n = max(min(v)+2,3)
             else:
-                n = max(3,prec)        
-            
+                n = max(3,prec)
+
             verbose("...computing the p-adic L-series")
-            not_yet_enough_prec = True    
-            while not_yet_enough_prec:     
+            not_yet_enough_prec = True
+            while not_yet_enough_prec:
                 lps = lp.Dp_valued_series(n,quadratic_twist=D,prec=r+1)
                 lstar = [lps[0][r],lps[1][r]]
                 verbose("the leading terms : %s"%lstar)
@@ -660,7 +661,7 @@ class Sha(SageObject):
                 else:
                     n += 1
                     verbose("increased precision to %s"%n)
-     
+
             verbose("...putting things together")
             if bsdp[0] != 0:
                 shan0 = lstar[0]/bsdp[0]
@@ -671,43 +672,43 @@ class Sha(SageObject):
             else:
                 shan1 = 0   # this should conjecturally only happen when the rank is 0
             verbose("the two values for Sha : %s"%[shan0,shan1])
-            
+
             # check consistency (the first two are only here to avoid a bug in the p-adic L-series
             # (namely the coefficients of zero-relative precision are treated as zero)
             if shan0 != 0 and shan1 != 0 and shan0 - shan1 != 0:
                 raise RuntimeError, "There must be a bug in the supersingular routines for the p-adic BSD."
-                
+
             #take the better
             if shan1 == 0 or shan0.precision_relative() > shan1.precision_relative():
                 shan = shan0
             else:
                 shan = shan1
-        
+
         else:
             raise ValueError, "The curve has to have semi-stable reduction at p."
-        
-        self.__an_padic[(p,prec)] = shan 
+
+        self.__an_padic[(p,prec)] = shan
         return shan
 
-                   
+
     def p_primary_bound(self, p):
         r"""
         Returns a provable upper bound for the order of `Sha(E)(p)`. In particular,
         if this algorithm does not fail, then it proves that the `p`-primary
-        part of `Sha` is finite. 
+        part of `Sha` is finite.
 
         INPUT: ``p`` -- a prime > 2
 
         OUTPUT:  integer -- power of `p` that bounds the order of `Sha(E)(p)` from above
 
         The result is a proven upper bound on the order of `Sha(E)(p)`.
-        So in particular it proves it finiteness even if the rank of 
+        So in particular it proves it finiteness even if the rank of
         the curve is larger than 1. Note also that this bound is sharp
         if one assumes the main conjecture of Iwasawa theory of
         elliptic curves (and this is known in certain cases).
-        
+
         Currently the algorithm is only implemented when certain conditions are verified.
-        
+
         - The mod `p` Galois representation must be surjective.
         - The reduction at `p` is not allowed to be additive.
         - If the reduction at `p` is non-split multiplicative, then the rank has to be 0.
@@ -723,9 +724,9 @@ class Sha(SageObject):
             0
             sage: e.sha().p_primary_bound(11)
             0
-            sage: e.sha().p_primary_bound(13)    
+            sage: e.sha().p_primary_bound(13)
             0
-          
+
             sage: e = EllipticCurve('389a1')
             sage: e.sha().p_primary_bound(5)
             0
@@ -735,23 +736,23 @@ class Sha(SageObject):
             0
             sage: e.sha().p_primary_bound(13)
             0
-            
+
             sage: e = EllipticCurve('858k2')
             sage: e.sha().p_primary_bound(3)  # long time (10s on sage.math, 2011)
             0
 
             # checks for trac 6406
-            sage: e.sha().p_primary_bound(7)          
+            sage: e.sha().p_primary_bound(7)
             Traceback (most recent call last):
-            ...            
+            ...
             ValueError: The mod-p Galois representation is not surjective. Current knowledge about Euler systems does not provide an upper bound in this case. Try an_padic for a conjectural bound.
             sage: e.sha().an_padic(7)  # long time (depends on "e.sha().p_primary_bound(3)" above)
-            7^2 + O(7^6)         
+            7^2 + O(7^6)
 
             sage: e = EllipticCurve('11a3')
             sage: e.sha().p_primary_bound(5)
             Traceback (most recent call last):
-            ...            
+            ...
             ValueError: The mod-p Galois representation is not surjective. Current knowledge about Euler systems does not provide an upper bound in this case. Try an_padic for a conjectural bound.
             sage: e.sha().an_padic(5)
             1 + O(5^2)
@@ -769,12 +770,12 @@ class Sha(SageObject):
             S = shan.valuation()
         else:
             raise ValueError, "The curve has to have semi-stable reduction at p."
-        
+
         return S
 
     def two_selmer_bound(self):
         r"""
-        This returns the 2-rank, i.e. the `\GF{2}`-dimension 
+        This returns the 2-rank, i.e. the `\GF{2}`-dimension
         of the 2-torsion part of `Sha`, provided we can determine the
         rank of `E`.
 
@@ -825,12 +826,12 @@ class Sha(SageObject):
           If True, then gives the bound coming from Heegner point
           index, but without any hypothesis on surjectivity
           of the mod-`p` representation.
-                      
+
         OUTPUT:
 
         - list - a list of primes such that if `p` divides `Sha(E/K)`, then
           `p` is in this list, unless `E/K` has complex multiplication or
-          analytic rank greater than 2 (in which case we return 0). 
+          analytic rank greater than 2 (in which case we return 0).
 
         - index - the odd part of the index of the Heegner point in the full
           group of `K`-rational points on E.  (If `E` has CM, returns 0.)
@@ -876,18 +877,18 @@ class Sha(SageObject):
             sage: E.sha().an()
             9
             sage: E.sha().bound_kolyvagin()
-            ([2, 3], 9)        
-        
+            ([2, 3], 9)
+
         """
         E = self.Emin
         if E.has_cm():
             return 0, 0
-        
+
         if D == 0:
             D = -5
             while not E.satisfies_heegner_hypothesis(D):
                 D -= 1
-                
+
         if not E.satisfies_heegner_hypothesis(D):
             raise ArithmeticError, "Discriminant (=%s) must be a fundamental discriminant that satisfies the Heegner hypothesis."%D
         if D == -3 or D == -4:
@@ -905,7 +906,7 @@ class Sha(SageObject):
 
         MIN_ERR = 1e-10   # we assume that regulator and
                           # discriminant, etc., computed to this accuracy.
-        tries = 0                         
+        tries = 0
         while True:
             tries += 1
             if tries >= 6:
@@ -961,12 +962,12 @@ class Sha(SageObject):
             else:
                 n /= 2**e  # replace n by its odd part
         if not ignore_nonsurj_hypothesis:
-            for p in E.galois_representation().non_surjective():   
+            for p in E.galois_representation().non_surjective():
                 B.append(p)
         B = list(set([int(x) for x in B]))
         B.sort()
         return B, n
-    
+
 
     def bound_kato(self):
         r"""
@@ -976,7 +977,7 @@ class Sha(SageObject):
         the list.
 
         If `L(E,1) = 0`, then this function gives no information, so
-        it returns False. 
+        it returns False.
 
         THEOREM (Kato): Suppose `L(E,1) \neq 0` and `p \neq 2, 3` is a prime such that
 
@@ -1070,4 +1071,4 @@ class Sha(SageObject):
         else:
             B = self.bound_kato()
         return B
-        
+
