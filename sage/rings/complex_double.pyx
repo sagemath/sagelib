@@ -73,9 +73,6 @@ cdef double M_PI_4 = 0.785398163397448309615660845819875721
 cdef extern from "complex.h":
     double complex csqrt(double complex)
     double cabs(double complex)
-
-cdef extern from "stdsage.h":
-    void set_gel(GEN x, long n, GEN z)
     
 cimport sage.rings.ring
 
