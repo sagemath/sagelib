@@ -87,9 +87,10 @@ class p_iter_fork:
         from sage.misc.misc import tmp_dir, walltime
         dir = tmp_dir()
         timeout = self.timeout
+        # Subprocesses shouldn't inherit unflushed buffers (cf. #11778):
         sys.stdout.flush()
         sys.stderr.flush()
-        
+
         workers = {}
         try:
             while len(v) > 0 or len(workers) > 0:
@@ -106,7 +107,7 @@ class p_iter_fork:
                     else:
                         # This is the subprocess.
                         self._subprocess(f, dir, v[0])
-                        
+
                 if len(workers) > 0:
                     # Now wait for one subprocess to finish and report the result.
                     # However, wait at most the time since the oldest process started.
@@ -125,7 +126,10 @@ class p_iter_fork:
                         for pid, X in workers.iteritems():
                             if walltime() - X[1] > timeout:
                                 if self.verbose:
-                                    print "Killing subprocess %s with input %s which took too long"%(pid, X[0])
+                                    print(
+                                        "Killing subprocess %s with input %s which took too long"
+                                         % (pid, X[0]) )
+                                    sys.stdout.flush()
                                 os.kill(pid,9)
                                 X[-1] = ' (timed out)'
                     else:
@@ -149,13 +153,15 @@ class p_iter_fork:
 
                             if output.strip():
                                 print output,
+                                sys.stdout.flush()
 
                             yield (workers[pid][0], X)
                             del workers[pid]
 
         except Exception, msg:
             print msg
-            
+            sys.stdout.flush()
+
         finally:
 
             # Clean up all temporary files.
@@ -166,18 +172,21 @@ class p_iter_fork:
             except OSError, msg:
                 if self.verbose:
                     print msg
-                
+                    sys.stdout.flush()
+
             # Send "kill -9" signal to workers that are left.
             if len(workers) > 0:
                 print "Killing any remaining workers..."
+                sys.stdout.flush()
                 for pid in workers.keys():
                     try:
                         os.kill(pid, 9)
                     except OSError, msg:
                         if self.verbose:
                             print msg
+                            sys.stdout.flush()
                 os.wait()
-            
+
     def _subprocess(self, f, dir, x):
         """
         Setup and run evaluation of ``f(*x[0], **x[1])``, storing the
@@ -200,7 +209,7 @@ class p_iter_fork:
         """
         import os, sys
         from sage.structure.sage_object import save
-        
+
         try:
             # Make it so all stdout is sent to a file so it can
             # be displayed.
@@ -231,4 +240,3 @@ class p_iter_fork:
         finally:
             sys.stdout.flush()
             os._exit(0)
-        
