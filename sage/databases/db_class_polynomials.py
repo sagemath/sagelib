@@ -45,7 +45,7 @@ class ClassPolynomialDatabase:
             sage: db.__getitem__(-23,level=2)
             Traceback (most recent call last):
             ...
-            NotImplementedError: Level (= 2) > 1 not yet implemented.    
+            NotImplementedError: Level (= 2) > 1 not yet implemented.
         """
         if level != 1:
             raise NotImplementedError, "Level (= %s) > 1 not yet implemented."%level
@@ -71,10 +71,11 @@ class HilbertClassPolynomialDatabase(ClassPolynomialDatabase):
     """
     The database of Hilbert class polynomials.
 
-    EXAMPLES:
+    EXAMPLES::
+
         sage: db = HilbertClassPolynomialDatabase()
         sage: db[-4]                 # optional Kohel database required
-        x - 1728   
+        x - 1728
         sage: db[-7]                 # optional
         x + 3375
         sage: f = db[-23]; f         # optional
@@ -89,7 +90,7 @@ class HilbertClassPolynomialDatabase(ClassPolynomialDatabase):
         Initialize the database.
         """
         self.model = "Cls"
-    
+
     def __repr__(self):
         return "Hilbert class polynomial database"
 
