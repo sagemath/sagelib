@@ -2284,7 +2284,7 @@ class EllipticCurvePoint_number_field(EllipticCurvePoint_field):
         # If the curve has good reduction at P, the result is True:
         t = E.local_data(P).bad_reduction_type()
         if t is None:
-            return True       
+            return True
 
         # Make sure the curve is integral and locally minimal at P:
         Emin = E.local_minimal_model(P)
@@ -2294,16 +2294,16 @@ class EllipticCurvePoint_number_field(EllipticCurvePoint_field):
         # Scale the homogeneous coordinates of the point to be primitive:
         xyz = list(Q)
         e = min([c.valuation(P) for c in xyz])
-        if e !=0:            
+        if e !=0:
             if K is rings.QQ:
                 pi = P
             else:
                 pi = K.uniformizer(P)
             pie = pi**e
             xyz = [c/pie for c in xyz]
-           
+
         # Evaluate the partial derivatives at the point to see if they
-        # are zero mod P 
+        # are zero mod P
 
         # See #8498: sometimes evaluating F's derivatives at xyz
         # returns a constant polynomial instead of a constant
@@ -2317,8 +2317,59 @@ class EllipticCurvePoint_number_field(EllipticCurvePoint_field):
                 val = c.constant_coefficient().valuation(P)
             if val == 0:
                 return True
-        return False    
-        
+        return False
+
+    def reduction(self,p):
+        """
+        This finds the reduction of a point `P` on the elliptic curve modulo the prime `p`.
+
+        INPUT:
+
+        - ``self`` -- A point on an elliptic curve.
+
+        - ``p`` -- a prime number
+
+        OUTPUT:
+
+        The point reduced to be a point on the elliptic curve modulo `p`.
+
+        EXAMPLES::
+
+            sage: E = EllipticCurve([1,2,3,4,0])
+            sage: P = E(0,0)
+            sage: P.reduction(5)
+            (0 : 0 : 1)
+            sage: Q = E(98,931)
+            sage: Q.reduction(5)
+            (3 : 1 : 1)
+            sage: Q.reduction(5).curve() == E.reduction(5)
+            True
+
+        ::
+
+            sage: F.<a> = NumberField(x^2+5)
+            sage: E = EllipticCurve(F,[1,2,3,4,0])
+            sage: Q = E(98,931)
+            sage: Q.reduction(a)
+            (3 : 1 : 1)
+            sage: Q.reduction(11)
+            (10 : 7 : 1)
+
+        ::
+
+            sage: F.<a> = NumberField(x^3+x^2+1)
+            sage: E = EllipticCurve(F,[a,2])
+            sage: P = E(a,1)
+            sage: P.reduction(F.ideal(5))
+            (abar : 1 : 1)
+            sage: P.reduction(F.ideal(a^2-4*a-2))
+            (abar : 1 : 1)
+
+        """
+        P = self
+        E = P.curve()
+        return E.reduction(p)(P)
+
     def height(self, precision=None):
         """
         The Neron-Tate canonical height of the point.
