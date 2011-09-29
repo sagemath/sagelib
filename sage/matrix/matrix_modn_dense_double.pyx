@@ -165,7 +165,8 @@ cdef class Matrix_modn_dense_double(Matrix_modn_dense_template):
             sage: K(1237101)^2
             3803997
         """
-        if (<Matrix_modn_dense_template>self).p <= INTEGER_MOD_INT32_LIMIT: 
+        # note that INTEGER_MOD_INT32_LIMIT is ceil(sqrt(2^31-1)) < 2^23
+        if (<Matrix_modn_dense_template>self).p <= INTEGER_MOD_INT32_LIMIT:
             return IntegerMod_int(self._base_ring, <mod_int>(<Matrix_modn_dense_template>self)._matrix[i][j])
         else:
             return IntegerMod_int64(self._base_ring, <mod_int>(<Matrix_modn_dense_template>self)._matrix[i][j])
