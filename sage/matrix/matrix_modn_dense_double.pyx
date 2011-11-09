@@ -98,7 +98,7 @@ cdef class Matrix_modn_dense_double(Matrix_modn_dense_template):
     cdef set_unsafe(self, Py_ssize_t i, Py_ssize_t j, x):
         r"""
         Set the (i,j) entry with no bounds-checking, or any other checks.
-        
+
         Assumes that `x` is in the base ring.
 
         EXAMPLE::
@@ -131,12 +131,16 @@ cdef class Matrix_modn_dense_double(Matrix_modn_dense_template):
             sage: a*a
             4337773
         """
-        self._matrix[i][j] = <double>(<IntegerMod_int>x).ivalue
+        # note that INTEGER_MOD_INT32_LIMIT is ceil(sqrt(2^31-1)) < 2^23
+        if (<Matrix_modn_dense_template>self).p <= INTEGER_MOD_INT32_LIMIT:
+            self._matrix[i][j] = <double>(<IntegerMod_int>x).ivalue
+        else:
+            self._matrix[i][j] = <double>(<IntegerMod_int64>x).ivalue
 
     cdef IntegerMod_abstract get_unsafe(self, Py_ssize_t i, Py_ssize_t j):
         r"""
         Return the (i,j) entry with no bounds-checking.
-        
+
         EXAMPLE::
 
             sage: A = random_matrix(GF(3016963), 4, 4); A
