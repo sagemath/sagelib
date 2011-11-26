@@ -218,7 +218,7 @@ def _test_mpz_set_longlong(long long v):
 
 cdef _digits_naive(mpz_t v,l,int offset,Integer base,digits):
     """
-    This method fills in digit entries in the list, l, using the most 
+    This method fills in digit entries in the list, l, using the most
     basic digit algorithm -- repeat division by base.
 
     INPUT:
@@ -340,8 +340,8 @@ set_zero_one_elements()
 cdef Integer zero = the_integer_ring._zero_element
 cdef Integer one = the_integer_ring._one_element
 
-# The documentation for the ispseudoprime() function in the PARI 
-# manual states that its result is always prime up to this 10^13. 
+# The documentation for the ispseudoprime() function in the PARI
+# manual states that its result is always prime up to this 10^13.
 cdef mpz_t PARI_PSEUDOPRIME_LIMIT
 mpz_init(PARI_PSEUDOPRIME_LIMIT)
 mpz_set_str(PARI_PSEUDOPRIME_LIMIT, "10000000000000", 10)
@@ -597,7 +597,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: ZZ(pari("Mod(x, x^3+x+1)"))   # Note error message refers to lifted element
             Traceback (most recent call last):
             ...
-            TypeError: Unable to coerce PARI x to an Integer        
+            TypeError: Unable to coerce PARI x to an Integer
         """
         # TODO: All the code below should somehow be in an external
         # cdef'd function.  Then e.g., if a matrix or vector or
@@ -796,10 +796,10 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: n.__xor__(m)
             1
         """
-        if PY_TYPE_CHECK(x, Integer) and PY_TYPE_CHECK(y, Integer):        
+        if PY_TYPE_CHECK(x, Integer) and PY_TYPE_CHECK(y, Integer):
             return (<Integer>x)._xor(y)
         return bin_op(x, y, operator.xor)
-        
+
     def __richcmp__(left, right, int op):
         """
         cmp for integers
@@ -1051,10 +1051,10 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         ::
         
             sage: big = 10^5000000
-            sage: s = big.str()                 # long time (> 20 seconds)
-            sage: len(s)                        # long time (depends on above defn of s)
+            sage: s = big.str()       # long time (> 20 seconds)
+            sage: len(s)              # long time (depends on above defn of s)
             5000001
-            sage: s[:10]                        # long time (depends on above defn of s)
+            sage: s[:10]              # long time (depends on above defn of s)
             '1000000000'
         """
         if base < 2 or base > 36:
@@ -1145,7 +1145,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: print hex(long(16938402384092843092843098243))
             0x36bb1e3929d1a8fe2802f083L
         """
-        return self.str(16) 
+        return self.str(16)
         
     def __oct__(self):
         r"""
@@ -1946,7 +1946,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
            self is not an n'th power.
         
         OUTPUT:
-        
+
         If truncate_mode is 0 (default), then returns the exact n'th root
         if self is an n'th power, or raises a ValueError if it is not.
         
@@ -2228,7 +2228,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         r"""
         Returns the largest integer `k` such that `m^k \leq \text{self}`,
         i.e., the floor of `\log_m(\text{self})`.
-        
+
         This is guaranteed to return the correct answer even when the usual
         log function doesn't have sufficient precision.
         
@@ -2320,12 +2320,12 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         if mpz_divisible_2exp_p(_m.value,m_log2):
             # Here, m is a power of 2 and the correct answer is found
             # by a log 2 approximation.
-            guess = n_log2/m_log2 # truncating division
+            guess = n_log2/m_log2  # truncating division
         elif n_log2/(m_log2+1) == n_log2/m_log2:
             # In this case, we have an upper bound and lower bound which
             # give the same answer, thus, the correct answer.
             guess = n_log2/m_log2
-        elif m_log2 < 8: # i.e. m<256
+        elif m_log2 < 8:  # i.e. m<256
             # if the base m is at most 256, we can use mpz_sizeinbase
             # to get the following guess which is either the exact
             # log, or 1+ the exact log
@@ -2334,7 +2334,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             # we've already excluded the case when m is an exact power of 2
 
             if n_log2/m_log2 > 8000:
-                # If we have a very large number of digits, it can be a nice 
+                # If we have a very large number of digits, it can be a nice
                 # shortcut to test the guess using interval arithmetic.
                 # (suggested by David Harvey and Carl Witty)
                 # "for randomly distributed integers, the chance of this
@@ -2347,7 +2347,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
                     guess_filled = 1
                     guess =  guess - 1
             if not guess_filled:
-                # At this point, either 
+                # At this point, either
                 #  1)  self is close enough to a perfect power of m that we
                 #      need an exact comparison, or
                 #  2)  the numbers are small enough that converting to the
@@ -2611,8 +2611,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         prev_c = ptr + (2*divisor_count)
 
         # These are used to keep track of whether or not we are able to
-        # perform the operations in machine words. A factor of two safety 
-        # margin is added to cover any floating-point rounding issues. 
+        # perform the operations in machine words. A factor of two safety
+        # margin is added to cover any floating-point rounding issues.
         cdef bint fits_c = True
         cdef double cur_max = 1
         cdef double fits_max = 2.0**(sizeof(long long)*8-2)
@@ -2707,8 +2707,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage_free(ptr)
         
         return sorted
-        
-                          
+
+
     def __pos__(self):
         """
         EXAMPLES::
@@ -3134,7 +3134,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
     def trial_division(self, long bound=LONG_MAX):
         """
-        Return smallest prime divisor of self up to bound, 
+        Return smallest prime divisor of self up to bound,
         or abs(self) if no such divisor is found.
 
         INPUT:
@@ -3173,18 +3173,18 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: (-n).trial_division(bound=10^4)
             1000030000000000000000000000000000000012100363
             sage: (-n).trial_division()
-            100003            
+            100003
             sage: n = 2 * next_prime(10^40); n.trial_division()
             2
             sage: n = 3 * next_prime(10^40); n.trial_division()
             3
-            sage: n = 5 * next_prime(10^40); n.trial_division()            
+            sage: n = 5 * next_prime(10^40); n.trial_division()
             5
             sage: n = 2 * next_prime(10^4); n.trial_division()
             2
             sage: n = 3 * next_prime(10^4); n.trial_division()
             3
-            sage: n = 5 * next_prime(10^4); n.trial_division()            
+            sage: n = 5 * next_prime(10^4); n.trial_division()
             5
         """
         if bound <= 0:
@@ -3243,7 +3243,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sig_off()
             return x
 
-    def factor(self, algorithm='pari', proof=None, limit=None, int_=False, 
+    def factor(self, algorithm='pari', proof=None, limit=None, int_=False,
                      verbose=0):
         """
         Return the prime factorization of this integer as a list of pairs
@@ -3311,7 +3311,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             mpz_set_si(unit.value, -1)
 
         if mpz_cmpabs_ui(n.value, 1) == 0:
-            return IntegerFactorization([], unit=unit, unsafe=True, 
+            return IntegerFactorization([], unit=unit, unsafe=True,
                                             sort=False, simplify=False)
 
         if limit is not None:
@@ -3325,7 +3325,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             z_factor(&f, mpz_get_ui(n.value), proof)
             F = [(Integer(f.p[i]), int(f.exp[i])) for i from 0 <= i < f.num]
             F.sort()
-            return IntegerFactorization(F, unit=unit, unsafe=True, 
+            return IntegerFactorization(F, unit=unit, unsafe=True,
                                            sort=False, simplify=False)
 
         if mpz_sizeinbase(n.value, 2) < 40:
@@ -3473,7 +3473,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
         - David Roe (2007-03-31)
         """
-        cdef Integer v, u        
+        cdef Integer v, u
         if mpz_cmp_ui(p.value, 2) < 0:
             raise ValueError, "You can only compute the valuation with respect to a integer larger than 1."
         if self == 0:
@@ -3561,7 +3561,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         and in Sage 4.6 this special case was not handled at all, eventually
         propagating a TypeError.  The caller should not rely on the behaviour
         in case self is 0.
-        
+
         EXAMPLES::
         
             sage: odd_part(5)
@@ -3795,7 +3795,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         cdef int tip = 0
         for i from 1 <= i <= n//k:
             mpz_set_ui(sub_prods[tip], k*i + residue)
-            # for the i-th terms we use the bits of i to calculate how many 
+            # for the i-th terms we use the bits of i to calculate how many
             # times we need to multiply "up" the stack of sub-products
             for j from 0 <= j < 32:
                 if i & (1 << j):
@@ -3817,7 +3817,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         sage_free(sub_prods)
 
         return z
-
+        
     def gamma(self):
         r"""
         The gamma function on integers is the factorial function (shifted by
@@ -3868,7 +3868,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
     
     def real(self):
         """
-        Returns the real part of self, which is self. 
+        Returns the real part of self, which is self.
         
         EXAMPLES::
         
@@ -4027,12 +4027,12 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
                 if mpz_popcount(nabs) == 1: # |n| = 2^k for k >= 2.  We special case this for speed
                     mpz_init(sabs)
                     mpz_abs(sabs, self.value)
-                    if mpz_popcount(sabs) == 1: # |self| = 2^L for some L >= 0.  
+                    if mpz_popcount(sabs) == 1: # |self| = 2^L for some L >= 0.
                         b = mpz_scan1(sabs, 0) # the bit that self is set at
                         c = mpz_scan1(nabs, 0) # the bit that n is set at
                         # Having obtained b and c, we're done with nabs and sabs (on this branch anyway)
                         mpz_clear(nabs)
-                        mpz_clear(sabs) 
+                        mpz_clear(sabs)
                         if b % c == 0: # Now we know that |self| is a power of |n|
                             b = (b // c) % 2 # Whether b // c is even or odd determines whether (-2^c)^(b // c) is positive or negative
                             a = mpz_cmp_ui(self.value, 0)
@@ -4385,7 +4385,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         
         EXAMPLES::
         
-            sage: 3._bnfisnorm(QuadraticField(-1, 'i')) 
+            sage: 3._bnfisnorm(QuadraticField(-1, 'i'))
             (1, 3) 
             sage: 7._bnfisnorm(CyclotomicField(7))
             (-zeta7 + 1, 1)            # 64-bit
@@ -4461,7 +4461,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
     def radical(self, *args, **kwds):
         r"""
-        Return the product of the prime divisors of self.  Computing
+        Return the product of the prime divisors of self. Computing
         the radical of zero gives an error.
         
         EXAMPLES::
@@ -4570,7 +4570,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: (100).next_probable_prime()
             101
             sage: (2^512).next_probable_prime()
-            13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084171        
+            13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084171
             sage: 0.next_probable_prime()
             2
             sage: 126.next_probable_prime()
@@ -4995,7 +4995,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
            compute minimal cofactors (see below)
         
         OUTPUT:
-        
+
         A triple (g, s, t), where `g` is the non-negative gcd of self
         and `n`, and `s` and `t` are cofactors satisfying the Bezout identity
         
@@ -5147,13 +5147,13 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             sage: n._shift_helper(1, -1)
             617
             sage: n._shift_helper(100, 1)
-            1564280840681635081446931755433984            
+            1564280840681635081446931755433984
             sage: n._shift_helper(100, -1)
             0
             sage: n._shift_helper(-100, 1)
             0
             sage: n._shift_helper(-100, -1)
-            1564280840681635081446931755433984            
+            1564280840681635081446931755433984
         """
         cdef long n
 
@@ -5265,9 +5265,9 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
     def __and__(x, y):
         """
         Return the bitwise and two integers.
-        
+
         EXAMPLES::
-        
+
             sage: n = Integer(6);  m = Integer(2)
             sage: n & m
             2
@@ -5286,9 +5286,9 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
     def __or__(x, y):
         """
         Return the bitwise or of the integers x and y.
-        
+
         EXAMPLES::
-        
+
             sage: n = 8; m = 4
             sage: n.__or__(m)
             12
@@ -5300,9 +5300,9 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
     def __invert__(self):
         """
         Return the multiplicative inverse of self, as a rational number.
-        
+
         EXAMPLE::
-        
+
             sage: n = 10
             sage: 1/n
             1/10
@@ -5310,7 +5310,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             1/10
         """
         return one / self
-        
+
     def inverse_of_unit(self):
         """
         Return inverse of self if self is a unit in the integers, i.e.,
@@ -5525,7 +5525,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
         INPUT:
 
-            - ``m`` -- an integer 
+            - ``m`` -- an integer
 
             - ``algorithm`` -- ``'mpir'`` (default) or ``'pari'``; ``'mpir'`` is
               faster for small ``m``, and ``'pari'`` tends to be faster for
@@ -5734,19 +5734,19 @@ cdef class long_to_Z(Morphism):
 
 ############### INTEGER CREATION CODE #####################
 
-# We need a couple of internal GMP datatypes. 
+# We need a couple of internal GMP datatypes.
 
 # This may be potentially very dangerous as it reaches
 # deeply into the internal structure of GMP which may not
 # be consistent across future versions of GMP.
-# See extensive note in the fast_tp_new() function below. 
+# See extensive note in the fast_tp_new() function below.
 
-include "../ext/python_rich_object.pxi" 
+include "../ext/python_rich_object.pxi"
 cdef extern from "gmp.h":
     ctypedef long mp_limb_t
     ctypedef mp_limb_t* mp_ptr #"mp_ptr"
 
-    # We allocate _mp_d directly (mpz_t is typedef of this in GMP) 
+    # We allocate _mp_d directly (mpz_t is typedef of this in GMP)
     ctypedef struct __mpz_struct "__mpz_struct":
         int _mp_alloc
         int _mp_size
@@ -5778,27 +5778,27 @@ global_dummy_Integer = Integer()
 # To avoid this we calculate the byte offset of the value member and
 # remember it in this variable.
 #
-# Eventually this may be rendered obsolete by a change in Cython allowing 
+# Eventually this may be rendered obsolete by a change in Cython allowing
 # non-reference counted extension types. 
 cdef long mpz_t_offset
 mpz_t_offset_python = None
 
 
-# stores the GMP alloc function 
+# stores the GMP alloc function
 cdef void * (* mpz_alloc)(size_t)
 
 # stores the GMP free function
 cdef void (* mpz_free)(void *, size_t)
 
-# A global  pool for performance when integers are rapidly created and destroyed. 
+# A global  pool for performance when integers are rapidly created and destroyed.
 # It operates on the following principles:
 #
-# - The pool starts out empty. 
-# - When an new integer is needed, one from the pool is returned 
+# - The pool starts out empty.
+# - When an new integer is needed, one from the pool is returned
 #   if available, otherwise a new Integer object is created
-# - When an integer is collected, it will add it to the pool 
-#   if there is room, otherwise it will be deallocated. 
-    
+# - When an integer is collected, it will add it to the pool
+#   if there is room, otherwise it will be deallocated.
+
 
 cdef int integer_pool_size = 100
     
@@ -5810,7 +5810,7 @@ cdef int total_alloc = 0
 cdef int use_pool = 0
 
 # The signature of tp_new is 
-# PyObject* tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k). 
+# PyObject* tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k).
 # However we only use t in this implementation.
 #
 # t in this case is the Integer TypeObject.
@@ -5824,8 +5824,8 @@ cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
     # for profiling pool usage
     # total_alloc += 1
     
-    # If there is a ready integer in the pool, we will 
-    # decrement the counter and return that. 
+    # If there is a ready integer in the pool, we will
+    # decrement the counter and return that.
 
     if integer_pool_count > 0:
     
@@ -5835,15 +5835,15 @@ cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
         integer_pool_count -= 1
         new = <RichPyObject *> integer_pool[integer_pool_count]
       
-    # Otherwise, we have to create one.  
+    # Otherwise, we have to create one.
 
     else:
 
         # allocate enough room for the Integer, sizeof_Integer is
         # sizeof(Integer). The use of PyObject_MALLOC directly
-        # assumes that Integers are not garbage collected, i.e. 
+        # assumes that Integers are not garbage collected, i.e.
         # they do not possess references to other Python
-        # objects (as indicated by the Py_TPFLAGS_HAVE_GC flag). 
+        # objects (as indicated by the Py_TPFLAGS_HAVE_GC flag).
         # See below for a more detailed description.
         new = PyObject_MALLOC( sizeof_Integer )
 
@@ -5881,10 +5881,10 @@ cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
         #
         # The clean version of the following line is:
         #
-        #  mpz_init( <mpz_t>(<char *>new + mpz_t_offset) ) 
+        #  mpz_init( <mpz_t>(<char *>new + mpz_t_offset) )
         #
-        # We save time both by avoiding an extra function call and 
-        # because the rest of the mpz struct was already initialized 
+        # We save time both by avoiding an extra function call and
+        # because the rest of the mpz struct was already initialized
         # fully using the memcpy above.
 
         (<__mpz_struct *>( <char *>new + mpz_t_offset) )._mp_d = <mp_ptr>mpz_alloc(__GMP_BITS_PER_MP_LIMB >> 3)
@@ -5896,7 +5896,7 @@ cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
     # one reference in that case.
     
     # Objects from the pool have reference count zero, so this
-    # needs to be set in this case. 
+    # needs to be set in this case.
 
     new.ob_refcnt = 1
 
@@ -5904,8 +5904,8 @@ cdef PyObject* fast_tp_new(RichPyTypeObject *t, PyObject *a, PyObject *k):
 
 cdef void fast_tp_dealloc(PyObject* o):
 
-    # If there is room in the pool for a used integer object, 
-    # then put it in rather than deallocating it. 
+    # If there is room in the pool for a used integer object,
+    # then put it in rather than deallocating it.
 
     global integer_pool, integer_pool_count
     
@@ -5919,7 +5919,7 @@ cdef void fast_tp_dealloc(PyObject* o):
         # It's cheap to zero out an integer, so do it here. 
         (<__mpz_struct *>( <char *>o + mpz_t_offset))._mp_size = 0
         
-        # And add it to the pool. 
+        # And add it to the pool.
         integer_pool[integer_pool_count] = o
         integer_pool_count += 1
         return
@@ -5954,7 +5954,7 @@ cdef hook_fast_tp_functions():
     # an Integer which includes reference counting. Reference counting
     # is bad in constructors and destructors as it potentially calls
     # the destructor.
-    # Eventually this may be rendered obsolete by a change in Cython allowing 
+    # Eventually this may be rendered obsolete by a change in Cython allowing
     # non-reference counted extension types. 
     mpz_t_offset = <char *>(&global_dummy_Integer.value) - <char *>o
     global mpz_t_offset_python
