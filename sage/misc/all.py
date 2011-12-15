@@ -144,11 +144,8 @@ from functional import (additive_order,
                         parent)
 
 
-from latex import latex, view, pretty_print, pretty_print_default
+from latex import LatexExpr, latex, view, pretty_print, pretty_print_default
  
-# disabled -- nobody uses mathml
-#from mathml ml
-
 from trace import trace
 
 from constant_function import ConstantFunction
