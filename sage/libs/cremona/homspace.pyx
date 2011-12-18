@@ -7,11 +7,11 @@ cdef class ModularSymbols:
     Class of Cremona Modular Symbols of given level and sign (and weight 2).
 
     EXAMPLES::
-    
+
         sage: M = CremonaModularSymbols(225)
         sage: type(M)
         <type 'sage.libs.cremona.homspace.ModularSymbols'>
-    """    
+    """
     def __init__(self, long level, int sign=0, bint cuspidal=False, int verbose=0):
         """
         Called when creating a space of Cremona modular symbols.
@@ -24,11 +24,11 @@ cdef class ModularSymbols:
         - ``verbose`` (int, default 0) -- verbosity level
 
         EXAMPLES::
-        
+
             sage: CremonaModularSymbols(123, sign=1, cuspidal=True)
             Cremona Cuspidal Modular Symbols space of dimension 13 for Gamma_0(123) of weight 2 with sign 1
             sage: CremonaModularSymbols(123, sign=-1, cuspidal=True)
-            Cremona Cuspidal Modular Symbols space of dimension 12 for Gamma_0(123) of weight 2 with sign -1
+            Cremona Cuspidal Modular Symbols space of dimension 13 for Gamma_0(123) of weight 2 with sign -1
             sage: CremonaModularSymbols(123, sign=0, cuspidal=True)
             Cremona Cuspidal Modular Symbols space of dimension 26 for Gamma_0(123) of weight 2 with sign 0
             sage: CremonaModularSymbols(123, sign=0, cuspidal=False)
@@ -50,7 +50,7 @@ cdef class ModularSymbols:
         String representation of space of Cremona modular symbols.
 
         EXAMPLES:
-        
+
         We test various types of spaces that impact printing::
 
             sage: M = CremonaModularSymbols(37, sign=1)
@@ -70,7 +70,7 @@ cdef class ModularSymbols:
         Return the level of this modular symbols space.
 
         EXAMPLES::
-        
+
             sage: M = CremonaModularSymbols(1234, sign=1)
             sage: M.level()
             1234
@@ -83,12 +83,15 @@ cdef class ModularSymbols:
         Return the dimension of this modular symbols space.
 
         EXAMPLES::
-        
+
             sage: M = CremonaModularSymbols(1234, sign=1)
             sage: M.dimension()
             156
         """
-        return self.H.h1dim()
+        if self.is_cuspidal():
+           return self.H.h1cuspdim()
+        else:
+           return self.H.h1dim()
 
     def number_of_cusps(self):
         r"""
@@ -96,7 +99,7 @@ cdef class ModularSymbols:
         level.
 
         EXAMPLES::
-        
+
             sage: M = CremonaModularSymbols(225)
             sage: M.number_of_cusps()
             24
@@ -109,7 +112,7 @@ cdef class ModularSymbols:
         Return the sign of this Cremona modular symbols space.  The sign is either 0, +1 or -1.
 
         EXAMPLES::
-        
+
             sage: M = CremonaModularSymbols(1122, sign=1); M
             Cremona Modular Symbols space of dimension 224 for Gamma_0(1122) of weight 2 with sign 1
             sage: M.sign()
@@ -131,7 +134,7 @@ cdef class ModularSymbols:
         Return whether or not this space is cuspidal.
 
         EXAMPLES::
-        
+
             sage: M = CremonaModularSymbols(1122); M.is_cuspidal()
             0
             sage: M = CremonaModularSymbols(1122, cuspidal=True); M.is_cuspidal()
@@ -144,7 +147,7 @@ cdef class ModularSymbols:
         Return the matrix of the ``p``-th Hecke operator acting on
         this space of modular symbols.
 
-        The result of this command is not cached. 
+        The result of this command is not cached.
 
         INPUT:
 
@@ -161,31 +164,31 @@ cdef class ModularSymbols:
         (matrix) If ``p`` divides the level, the matrix of the
         Atkin-Lehner involution `W_p` at ``p``; otherwise the matrix of the
         Hecke operator `T_p`,
-            
+
         EXAMPLES::
-        
+
             sage: M = CremonaModularSymbols(37)
             sage: t = M.hecke_matrix(2); t
             5 x 5 Cremona matrix over Rational Field
             sage: print t.str()
             [ 3  0  0  0  0]
-            [ 0 -1  1  0  0]
-            [ 0  1 -1  0  0]
-            [ 1 -1  0 -1  1]
-            [ 1  0  1  1 -1]
+            [-1 -1  1  1  0]
+            [ 0  0 -1  0  1]
+            [-1  1  0 -1 -1]
+            [ 0  0  1  0 -1]
             sage: t.charpoly().factor()
             (x - 3) * x^2 * (x + 2)^2
             sage: print M.hecke_matrix(2, dual=True).str()
-            [ 3  0  0  1  1]
-            [ 0 -1  1 -1  0]
+            [ 3 -1  0 -1  0]
+            [ 0 -1  0  1  0]
             [ 0  1 -1  0  1]
-            [ 0  0  0 -1  1]
-            [ 0  0  0  1 -1]
+            [ 0  1  0 -1  0]
+            [ 0  0  1 -1 -1]
             sage: w = M.hecke_matrix(37); w
             5 x 5 Cremona matrix over Rational Field
             sage: w.charpoly().factor()
             (x - 1)^2 * (x + 1)^3
-            sage: sw = w.sage_matrix_over_ZZ() 
+            sage: sw = w.sage_matrix_over_ZZ()
             sage: st = t.sage_matrix_over_ZZ()
             sage: sw^2 == sw.parent()(1)
             True
@@ -196,4 +199,4 @@ cdef class ModularSymbols:
         cdef mat M = self.H.heckeop(p, dual, verbose)
         sig_off()
         return MF.new_matrix(M)
-    
+

@@ -7,8 +7,8 @@ from sage.schemes import elliptic_curves
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #  as published by the Free Software Foundation; either version 2 of
-#  the License, or (at your option) any later version. 
-#                  http://www.gnu.org/licenses/ 
+#  the License, or (at your option) any later version.
+#                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
 
@@ -18,19 +18,19 @@ cdef class ECModularSymbol:
     using John Cremona's newforms class.
 
     EXAMPLES::
-    
+
         sage: from sage.libs.cremona.newforms import ECModularSymbol
         sage: E = EllipticCurve('11a')
-        sage: M = ECModularSymbol(E); M
+        sage: M = ECModularSymbol(E,1); M
         Modular symbol with sign 1 over Rational Field attached to Elliptic Curve defined by y^2 + y = x^3 - x^2 - 10*x - 20 over Rational Field
         sage: [M(1/i) for i in range(1,11)]
         [0, 2, 1, -1, -2, -2, -1, 1, 2, 0]
 
     """
-    def __init__(self,E):
+    def __init__(self, E, sign=1):
         """
         Construct the modular symbol.
-    
+
         EXAMPLES::
 
             sage: from sage.libs.cremona.newforms import ECModularSymbol
@@ -45,7 +45,7 @@ cdef class ECModularSymbol:
 
         This one is from trac #8042 (note that Cremona's code is more limited
         when run on a 32-bit platform, but works fine on 64-bit in this
-        case; see trac #8114).  
+        case; see trac #8114).
 
         ::
             sage: from sage.libs.cremona.newforms import ECModularSymbol
@@ -57,11 +57,11 @@ cdef class ECModularSymbol:
             Modular symbol with sign 1 over Rational Field attached to Elliptic Curve defined by y^2 + x*y = x^3 + 16353089*x - 335543012233 over Rational Field         # 64-bit
         """
         cdef ZZ_c a1, a2, a3, a4, a6, N
-        cdef Curve *C 
+        cdef Curve *C
         cdef Curvedata *CD
-        cdef CurveRed *CR 
+        cdef CurveRed *CR
         cdef int n, t
-        
+
         a1 = new_bigint(int(E.a1()))
         a2 = new_bigint(int(E.a2()))
         a3 = new_bigint(int(E.a3()))
@@ -75,16 +75,17 @@ cdef class ECModularSymbol:
         N = getconductor(CR[0])
         n = I2int(N)
         self.n = n
+        self.sign = sign
 
-        self.nfs = new_newforms(n,1,0,0)
-        self.nfs.createfromcurve(CR[0])
+        self.nfs = new_newforms(n,0)
+        self.nfs.createfromcurve(sign,CR[0])
         self._E = E
         sig_off()
 
     def __repr__(self):
         """
         TESTS::
-        
+
             sage: from sage.libs.cremona.newforms import ECModularSymbol
             sage: E = EllipticCurve('11a')
             sage: M = ECModularSymbol(E); M
@@ -96,14 +97,14 @@ cdef class ECModularSymbol:
             sage: M = ECModularSymbol(E); M
             Modular symbol with sign 1 over Rational Field attached to Elliptic Curve defined by y^2 + y = x^3 + x^2 - 2*x over Rational Field
         """
-        return "Modular symbol with sign 1 over Rational Field attached to %s"%self._E
+        return "Modular symbol with sign %s over Rational Field attached to %s"%(self.sign, self._E)
 
     def __call__(self, r):
         """
         Computes the (rational) value of self at a rational number r.
 
         EXAMPLES::
-        
+
             sage: from sage.libs.cremona.newforms import ECModularSymbol
             sage: E = EllipticCurve('11a')
             sage: M = ECModularSymbol(E)
@@ -123,7 +124,7 @@ cdef class ECModularSymbol:
         cdef mpz_t *z_n, *z_d
         cdef ZZ_c *Z_n, *Z_d
         cdef long n, d
-        
+
         sig_on()
         r = Rational(r)
         d = r.denom()
