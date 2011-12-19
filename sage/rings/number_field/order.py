@@ -1340,7 +1340,7 @@ class AbsoluteOrder(Order):
             B = Sequence([self(from_V(b)) for b in self._module_rep.basis()], immutable=True)
             self.__basis = B
         return B
-        
+    
     def absolute_order(self):
         """
         Return the absolute order associated to this order, which is
