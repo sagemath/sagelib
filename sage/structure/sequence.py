@@ -518,10 +518,10 @@ class Sequence_generic(sage.structure.sage_object.SageObject, list):
         self._require_mutable()
         list.reverse(self)
 
-    def __setitem__(self, n, x):
+    def __setitem__(self, n, value):
         """
         EXAMPLES::
-        
+
             sage: a = Sequence([1..5])
             sage: a[2] = 19
             sage: a
@@ -533,16 +533,6 @@ class Sequence_generic(sage.structure.sage_object.SageObject, list):
             sage: a[2] = '5'
             sage: a
             [1, 2, 5, 4, 5]
-        """
-        self._require_mutable()
-        y = self.__universe(x)
-        list.__setitem__(self, n, y)
-        self.__hash=None
-
-    def __setslice__(self, i, j, seq):
-        """
-        EXAMPLES::
-        
             sage: v = Sequence([1,2,3,4], immutable=True)
             sage: v[1:3] = [5,7]
             Traceback (most recent call last):
@@ -556,14 +546,17 @@ class Sequence_generic(sage.structure.sage_object.SageObject, list):
             <type 'sage.rings.integer.Integer'>
         """
         self._require_mutable()
-        y = [self.__universe(x) for x in seq]
-        list.__setslice__(self, i, j, y)
+        if isinstance(n, slice):
+            y = [self.__universe(x) for x in value]
+        else:
+            y = self.__universe(value)
+        list.__setitem__(self, n, y)
         self.__hash=None
 
-    def __getslice__(self, i, j):
+    def __getitem__(self, n):
         """
         EXAMPLES::
-        
+
             sage: v = Sequence([1,2,3,4], immutable=True)
             sage: w = v[2:]
             sage: w
@@ -575,11 +568,22 @@ class Sequence_generic(sage.structure.sage_object.SageObject, list):
             sage: v
             [1, 2, 3, 4]
         """
-        return Sequence(list.__getslice__(self, i, j),
-                        universe = self.__universe,
-                        check = False,
-                        immutable = False,
-                        cr = self.__cr)
+        if isinstance(n, slice):
+            return Sequence(list.__getitem__(self, n),
+                            universe = self.__universe,
+                            check = False,
+                            immutable = False,
+                            cr = self.__cr)
+        else:
+            return list.__getitem__(self,n)
+
+    # We have to define the *slice functions as long as Sage uses Python 2.*
+    # otherwise the inherited *slice functions from list are called
+    def __getslice__(self, i, j):
+        return self.__getitem__(slice(i,j))
+
+    def __setslice__(self, i, j, value):
+        return self.__setitem__(slice(i,j), value)
 
     def append(self, x):
         """
