@@ -291,7 +291,7 @@ cdef class MixedIntegerLinearProgram:
             p._default_mipvariable = self._default_mipvariable
         except AttributeError:
             pass
-        
+
         try:
             p._check_redundant = self._check_redundant
             p._constraints = copy(self._constraints)
@@ -1467,7 +1467,7 @@ cdef class MixedIntegerLinearProgram:
         Very common parameters have aliases making them
         solver-independent. For example, the following::
 
-            sage: p = MixedIntegerLinearProgram()
+            sage: p = MixedIntegerLinearProgram(solver = "GLPK")
             sage: p.solver_parameter("timelimit", 60)
 
         Sets the solver to stop its computations after 60 seconds, and
@@ -1506,9 +1506,9 @@ cdef class MixedIntegerLinearProgram:
 
         EXAMPLE::
 
-            sage: p = MixedIntegerLinearProgram()
+            sage: p = MixedIntegerLinearProgram(solver = "GLPK")
             sage: p.solver_parameter("timelimit", 60)
-            sage: p.solver_parameter("timelimit")    
+            sage: p.solver_parameter("timelimit")
             60.0
         """
         if value is None:
