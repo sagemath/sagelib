@@ -21,7 +21,7 @@ from sage.modules.all import vector
 class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_generic):
 
 # The functions below were prototyped at the 2007 Arizona Winter School by
-# Robert Bradshaw and Ralf Gerkmann, working with Miljan Brakovevic and 
+# Robert Bradshaw and Ralf Gerkmann, working with Miljan Brakovevic and
 # Kiran Kedlaya
 # All of the below is with respect to the Monsky Washnitzer cohomology.
 
@@ -120,15 +120,15 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
             x = x(y)
             return (x, y, 1)
 
-    def weierstrass_points(self): 
-        """ 
+    def weierstrass_points(self):
+        """
         Return the Weierstrass points of self defined over self.base_ring(),
         that is, the point at infinity and those points in the support
         of the divisor of $y$
 
         EXAMPLES::
 
-            sage: K = pAdicField(11, 5) 
+            sage: K = pAdicField(11, 5)
             sage: x = polygen(K)
             sage: C = HyperellipticCurve(x^5 + 33/16*x^4 + 3/4*x^3 + 3/8*x^2 - 1/4*x + 1/16)
             sage: C.weierstrass_points()
@@ -138,7 +138,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
         if h != 0:
             raise NotImplementedError()
         return [self((0,1,0))] + [self((x, 0, 1)) for x in f.roots()]
-    
+
     def is_in_weierstrass_disc(self,P):
         """
         Checks if $P$ is in a Weierstrass disc
@@ -210,7 +210,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
         """
         Given $Q$ a point on self in a Weierstrass disc, finds the
         center of the Weierstrass disc (if defined over self.base_ring())
-        
+
         EXAMPLES::
 
             sage: R.<x> = QQ['x']
@@ -316,7 +316,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
         r"""
         Evaluate the integrals of $f_i dx/2y$ from $P$ to $Q$ for each $f_i$ in $F$
         by formally integrating a power series in a local parameter $t$
-        
+
         $P$ and $Q$ MUST be in the same residue disc for this result to make sense.
 
         INPUT:
@@ -431,7 +431,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
     def teichmuller(self, P):
         r"""
         Find a Teichm\:uller point in the same residue class of $P$.
-        
+
         Because this lift of frobenius acts as $x \mapsto x^p$,
         take the Teichmuller lift of $x$ and then find a matching $y$
         from that.
@@ -798,7 +798,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
             sage: S = HK(1,0)
             sage: P = HK(0,3)
             sage: negP = HK(0,-3)
-            sage: T = HK(0,1,0) 
+            sage: T = HK(0,1,0)
             sage: w = HK.invariant_differential()
             sage: x,y = HK.monsky_washnitzer_gens()
             sage: HK.coleman_integral(w*x^3,S,T)
@@ -906,7 +906,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
             K = self.base_ring()
             p = K.prime()
             x = K['x'].gen(0)
-            
+
             f, f2 = self.hyperelliptic_polynomials()
             if f2 != 0:
                 raise NotImplementedError, "Curve must be in weierstrass normal form."
@@ -1010,7 +1010,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
         INPUT:
 
         - deg: the degree of the ramified extension
-        
+
         OUTPUT:
 
         self over $\Q_p(p^(1/deg))$
@@ -1046,7 +1046,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
     def get_boundary_point(self, curve_over_extn, P):
         """
         Given self over an extension field, find a point in the disc of $P$ near the boundary
-        
+
         INPUT:
 
         - curve_over_extn: self over a totally ramified extension
@@ -1055,7 +1055,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
         OUTPUT:
 
         a point in the disc of $P$ near the boundary
-        
+
         EXAMPLES::
 
             sage: R.<x> = QQ['x']
@@ -1089,7 +1089,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
 
         - P: finite Weierstrass point
         - S: point in disc of P
-        
+
         OUTPUT:
 
         Coleman integrals $\{\int_P^S x^i dx/2y \}_{i=0}^{2g-1}$
@@ -1308,7 +1308,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
             dim = len(basis_values)
             dot = sum([vec[i] * basis_values[i] for i in range(dim)])
             return const + dot
-        
+
     def coleman_integral_from_weierstrass_via_boundary(self, w, P, Q, d):
         r"""
         Computes the Coleman integral $\int_P^Q w$ via a boundary point
@@ -1317,7 +1317,7 @@ class HyperellipticCurve_padic_field(hyperelliptic_generic.HyperellipticCurve_ge
         INPUT:
 
         - w: a differential
-        - P: a Weierstrass point 
+        - P: a Weierstrass point
         - Q: a non-Weierstrass point
         - d: degree of extension where coordinates of boundary point lie
 
