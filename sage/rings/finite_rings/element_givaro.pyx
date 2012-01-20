@@ -1386,9 +1386,10 @@ cdef class FiniteField_givaroElement(FinitePolyExtElement):
 
     def _integer_(FiniteField_givaroElement self, Integer):
         """
-        Coerce self to an integer.
+        Convert self to an integer if it is in the prime subfield.
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: k.<b> = GF(5^2); k
             Finite Field in b of size 5^2
             sage: ZZ(k(4))
@@ -1396,7 +1397,7 @@ cdef class FiniteField_givaroElement(FinitePolyExtElement):
             sage: ZZ(b)
             Traceback (most recent call last):
             ...
-            TypeError: not in prime subfield            
+            TypeError: not in prime subfield
         """
         cdef int a = self._cache.log_to_int(self.element)
         if a < self._cache.objectptr.characteristic():
