@@ -11302,12 +11302,12 @@ class GenericGraph(GenericGraph_pyx):
         """
         Computes the girth of the graph. For directed graphs, computes the
         girth of the undirected graph.
-        
+
         The girth is the length of the shortest cycle in the graph. Graphs
         without cycles have infinite girth.
-        
+
         EXAMPLES::
-        
+
             sage: graphs.TetrahedralGraph().girth()
             3
             sage: graphs.CubeGraph(3).girth()
@@ -11318,20 +11318,58 @@ class GenericGraph(GenericGraph_pyx):
             6
             sage: graphs.trees(9).next().girth()
             +Infinity
-            
+
         TESTS:
-        
+
         Prior to Trac #12243, the girth computation assumed
         vertices were integers (and failed).  The example below
         tests the computation for graphs with vertices that are
         not integers.  In this example the vertices are sets.  ::
-        
+
             sage: G = graphs.OddGraph(3)
             sage: type(G.vertices()[0])
             <class 'sage.sets.set.Set_object_enumerated_with_category'>
             sage: G.girth()
-            5        
+            5
+
+        Ticket :trac:`12355`::
+
+            sage: H=Graph([(0, 1), (0, 3), (0, 4), (0, 5), (1, 2), (1, 3), (1, 4), (1, 6), (2, 5), (3, 4), (5, 6)])
+            sage: H.girth()
+            3
+
+        Girth < 3 (see :trac:`12355`)::
+
+           sage: g = graphs.PetersenGraph()
+           sage: g.allow_multiple_edges(True)
+           sage: g.allow_loops(True)
+           sage: g.girth()
+           5
+           sage: g.add_edge(0,0)
+           sage: g.girth()
+           1
+           sage: g.delete_edge(0,0)
+           sage: g.add_edge(0,1)
+           sage: g.girth()
+           2
+           sage: g.delete_edge(0,1)
+           sage: g.girth()
+           5
+           sage: g = DiGraph(g)
+           sage: g.girth()
+           2
         """
+
+        # Cases where girth <= 2
+        if self.has_loops():
+            return 1
+        if self.is_directed():
+            if any(self.has_edge(v,u) for u,v in self.edges(labels = False)):
+                return 2
+        else:
+            if self.has_multiple_edges():
+                return 2
+
         n = self.num_verts()
         best = n+1
         seen = {}
@@ -11351,9 +11389,12 @@ class GenericGraph(GenericGraph_pyx):
                         else:
                             if u in thisList:
                                 best = depth*2-1
+                                thislList = set()
                                 break
                             if u in nextList:
                                 best = depth*2
+                    if best == 2*depth-1:
+                        break
                 thisList = nextList
                 depth += 1
         if best == n+1:
