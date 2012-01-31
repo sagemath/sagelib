@@ -1518,7 +1518,7 @@ class LinearCode(module.Module_old):
             sage: S8 = SymmetricGroup(8)
             sage: g = S8("(2,3)")
             sage: C.is_permutation_automorphism(g)
-            1 
+            1
             sage: g = S8("(1,2,3,4)")
             sage: C.is_permutation_automorphism(g)
             0
