@@ -4,16 +4,23 @@ Distances/shortest paths between all pairs of vertices
 This module implements a few functions that deal with the computation of
 distances or shortest paths between all pairs of vertices.
 
-Because these functions involve listing many times the (out)-neighborhoods of
-(di)-graphs, it is useful in terms of efficiency to build a temporary copy of
-the graph in a data structure that makes it easy to compute quickly. These
-functions also work on large volume of data, typically dense matrices of size
-`n^2`, and are expected to return corresponding dictionaries of size `n^2`,
-where the integers corresponding to the vertices have first been converted to
-the vertices' labels. Sadly, this last translating operation turns out to be the
-most time-consuming, and for this reason it is also nice to have a Cython
-module, and version of these functions that return C arrays, in order to avoid
-these operations when they are not necessary.
+**Efficiency** : Because these functions involve listing many times the
+(out)-neighborhoods of (di)-graphs, it is useful in terms of efficiency to build
+a temporary copy of the graph in a data structure that makes it easy to compute
+quickly. These functions also work on large volume of data, typically dense
+matrices of size `n^2`, and are expected to return corresponding dictionaries of
+size `n^2`, where the integers corresponding to the vertices have first been
+converted to the vertices' labels. Sadly, this last translating operation turns
+out to be the most time-consuming, and for this reason it is also nice to have a
+Cython module, and version of these functions that return C arrays, in order to
+avoid these operations when they are not necessary.
+
+**Memory cost** : The methods implemented in the current module sometimes need large
+amounts of memory to return their result. Storing the distances between all
+pairs of vertices in a graph on `1500` vertices as a dictionary of dictionaries
+takes around 200MB, while storing the same information as a C array requires
+4MB.
+
 
 The module's main function
 --------------------------
@@ -51,16 +58,17 @@ Breadth First Search per vertex of the (di)graph.
     - ``gg`` a (Di)Graph.
 
     - ``unsigned short * predecessors`` -- a pointer toward an array of size
-      `n^2\text{sizeof(unsigned short)}`. Set to ``NULL`` if you do not want to
-      compute the predecessors.
+      `n^2\cdot\text{sizeof(unsigned short)}`. Set to ``NULL`` if you do not
+      want to compute the predecessors.
 
     - ``unsigned short * distances`` -- a pointer toward an array of size
-      `n^2\text{sizeof(unsigned short)}`. The computation of the distances is
-      necessary for the algorithm, so this value can **not** be set to ``NULL``.
+      `n^2\cdot\text{sizeof(unsigned short)}`. The computation of the distances
+      is necessary for the algorithm, so this value can **not** be set to
+      ``NULL``.
 
     - ``unsigned short * eccentricity`` -- a pointer toward an array of size
-      `n\text{sizeof(unsigned short)}`. Set to ``NULL`` if you do not want to
-      compute the eccentricity.
+      `n\cdot\text{sizeof(unsigned short)}`. Set to ``NULL`` if you do not want
+      to compute the eccentricity.
 
 **Technical details**
 
@@ -108,7 +116,7 @@ Functions
 #                  http://www.gnu.org/licenses/
 ##############################################################################
 
-include "../misc/bitset_pxd.pxi" 
+include "../misc/bitset_pxd.pxi"
 include "../misc/bitset.pxi"
 from sage.graphs.base.c_graph cimport CGraph
 from sage.graphs.base.c_graph cimport vertex_label
@@ -130,7 +138,7 @@ cdef inline all_pairs_shortest_path_BFS(gg,
 
     cdef list int_to_vertex = gg.vertices()
     cdef int i
-    
+
     cdef int n = len(int_to_vertex)
 
     if n > <unsigned short> -1:
@@ -178,12 +186,12 @@ cdef inline all_pairs_shortest_path_BFS(gg,
     # left to right The list of the first vertex's outneighbors, then the
     # second's, then the third's, ...
     #
-    # The outneighbors of vertex i are enumerated from 
+    # The outneighbors of vertex i are enumerated from
     #
     # p_vertices[i] to p_vertices[i+1] - 1
     # (if p_vertices[i] is equal to p_vertices[i+1], then i has no outneighbours)
     #
-    # This data structure is well documented in the module 
+    # This data structure is well documented in the module
     # sage.graphs.base.static_sparse_graph
 
     cdef short_digraph sd
@@ -320,7 +328,7 @@ def shortest_path_all_pairs(G):
     """
 
     cdef int n = G.order()
-    
+
     if n == 0:
         return {}
 
@@ -348,9 +356,9 @@ def shortest_path_all_pairs(G):
 
         d_tmp[int_to_vertex[j]] = None
         d[int_to_vertex[j]] = d_tmp
-        
+
         c_predecessors += n
-        
+
     sage_free(predecessors)
     return d
 
@@ -385,15 +393,15 @@ def distances_all_pairs(G):
         sage: from sage.graphs.distances_all_pairs import distances_all_pairs
         sage: g = graphs.PetersenGraph()
         sage: distances_all_pairs(g)
-        {0: {0: 0, 1: 1, 2: 2, 3: 2, 4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 2}, 
-        1: {0: 1, 1: 0, 2: 1, 3: 2, 4: 2, 5: 2, 6: 1, 7: 2, 8: 2, 9: 2}, 
-        2: {0: 2, 1: 1, 2: 0, 3: 1, 4: 2, 5: 2, 6: 2, 7: 1, 8: 2, 9: 2}, 
-        3: {0: 2, 1: 2, 2: 1, 3: 0, 4: 1, 5: 2, 6: 2, 7: 2, 8: 1, 9: 2}, 
-        4: {0: 1, 1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 2, 9: 1}, 
-        5: {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 0, 6: 2, 7: 1, 8: 1, 9: 2}, 
-        6: {0: 2, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 0, 7: 2, 8: 1, 9: 1}, 
-        7: {0: 2, 1: 2, 2: 1, 3: 2, 4: 2, 5: 1, 6: 2, 7: 0, 8: 2, 9: 1}, 
-        8: {0: 2, 1: 2, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 2, 8: 0, 9: 2}, 
+        {0: {0: 0, 1: 1, 2: 2, 3: 2, 4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 2},
+        1: {0: 1, 1: 0, 2: 1, 3: 2, 4: 2, 5: 2, 6: 1, 7: 2, 8: 2, 9: 2},
+        2: {0: 2, 1: 1, 2: 0, 3: 1, 4: 2, 5: 2, 6: 2, 7: 1, 8: 2, 9: 2},
+        3: {0: 2, 1: 2, 2: 1, 3: 0, 4: 1, 5: 2, 6: 2, 7: 2, 8: 1, 9: 2},
+        4: {0: 1, 1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 2, 9: 1},
+        5: {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 0, 6: 2, 7: 1, 8: 1, 9: 2},
+        6: {0: 2, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 0, 7: 2, 8: 1, 9: 1},
+        7: {0: 2, 1: 2, 2: 1, 3: 2, 4: 2, 5: 1, 6: 2, 7: 0, 8: 2, 9: 1},
+        8: {0: 2, 1: 2, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 2, 8: 0, 9: 2},
         9: {0: 2, 1: 2, 2: 2, 3: 2, 4: 1, 5: 2, 6: 1, 7: 1, 8: 2, 9: 0}}
     """
 
@@ -423,9 +431,9 @@ def distances_all_pairs(G):
 
 
         d[int_to_vertex[j]] = d_tmp
-        
+
         c_distances += n
-        
+
     sage_free(distances)
     return d
 
@@ -457,31 +465,31 @@ def distances_and_predecessors_all_pairs(G):
         sage: from sage.graphs.distances_all_pairs import distances_and_predecessors_all_pairs
         sage: g = graphs.PetersenGraph()
         sage: distances_and_predecessors_all_pairs(g)
-        ({0: {0: 0, 1: 1, 2: 2, 3: 2, 4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 2}, 
-          1: {0: 1, 1: 0, 2: 1, 3: 2, 4: 2, 5: 2, 6: 1, 7: 2, 8: 2, 9: 2}, 
-          2: {0: 2, 1: 1, 2: 0, 3: 1, 4: 2, 5: 2, 6: 2, 7: 1, 8: 2, 9: 2}, 
-          3: {0: 2, 1: 2, 2: 1, 3: 0, 4: 1, 5: 2, 6: 2, 7: 2, 8: 1, 9: 2}, 
-          4: {0: 1, 1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 2, 9: 1}, 
-          5: {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 0, 6: 2, 7: 1, 8: 1, 9: 2}, 
-          6: {0: 2, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 0, 7: 2, 8: 1, 9: 1}, 
-          7: {0: 2, 1: 2, 2: 1, 3: 2, 4: 2, 5: 1, 6: 2, 7: 0, 8: 2, 9: 1}, 
-          8: {0: 2, 1: 2, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 2, 8: 0, 9: 2}, 
+        ({0: {0: 0, 1: 1, 2: 2, 3: 2, 4: 1, 5: 1, 6: 2, 7: 2, 8: 2, 9: 2},
+          1: {0: 1, 1: 0, 2: 1, 3: 2, 4: 2, 5: 2, 6: 1, 7: 2, 8: 2, 9: 2},
+          2: {0: 2, 1: 1, 2: 0, 3: 1, 4: 2, 5: 2, 6: 2, 7: 1, 8: 2, 9: 2},
+          3: {0: 2, 1: 2, 2: 1, 3: 0, 4: 1, 5: 2, 6: 2, 7: 2, 8: 1, 9: 2},
+          4: {0: 1, 1: 2, 2: 2, 3: 1, 4: 0, 5: 2, 6: 2, 7: 2, 8: 2, 9: 1},
+          5: {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 0, 6: 2, 7: 1, 8: 1, 9: 2},
+          6: {0: 2, 1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 0, 7: 2, 8: 1, 9: 1},
+          7: {0: 2, 1: 2, 2: 1, 3: 2, 4: 2, 5: 1, 6: 2, 7: 0, 8: 2, 9: 1},
+          8: {0: 2, 1: 2, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 2, 8: 0, 9: 2},
           9: {0: 2, 1: 2, 2: 2, 3: 2, 4: 1, 5: 2, 6: 1, 7: 1, 8: 2, 9: 0}},
-         {0: {0: None, 1: 0, 2: 1, 3: 4, 4: 0, 5: 0, 6: 1, 7: 5, 8: 5, 9: 4}, 
-          1: {0: 1, 1: None, 2: 1, 3: 2, 4: 0, 5: 0, 6: 1, 7: 2, 8: 6, 9: 6}, 
-          2: {0: 1, 1: 2, 2: None, 3: 2, 4: 3, 5: 7, 6: 1, 7: 2, 8: 3, 9: 7}, 
-          3: {0: 4, 1: 2, 2: 3, 3: None, 4: 3, 5: 8, 6: 8, 7: 2, 8: 3, 9: 4}, 
-          4: {0: 4, 1: 0, 2: 3, 3: 4, 4: None, 5: 0, 6: 9, 7: 9, 8: 3, 9: 4}, 
-          5: {0: 5, 1: 0, 2: 7, 3: 8, 4: 0, 5: None, 6: 8, 7: 5, 8: 5, 9: 7}, 
-          6: {0: 1, 1: 6, 2: 1, 3: 8, 4: 9, 5: 8, 6: None, 7: 9, 8: 6, 9: 6}, 
-          7: {0: 5, 1: 2, 2: 7, 3: 2, 4: 9, 5: 7, 6: 9, 7: None, 8: 5, 9: 7}, 
-          8: {0: 5, 1: 6, 2: 3, 3: 8, 4: 3, 5: 8, 6: 8, 7: 5, 8: None, 9: 6}, 
+         {0: {0: None, 1: 0, 2: 1, 3: 4, 4: 0, 5: 0, 6: 1, 7: 5, 8: 5, 9: 4},
+          1: {0: 1, 1: None, 2: 1, 3: 2, 4: 0, 5: 0, 6: 1, 7: 2, 8: 6, 9: 6},
+          2: {0: 1, 1: 2, 2: None, 3: 2, 4: 3, 5: 7, 6: 1, 7: 2, 8: 3, 9: 7},
+          3: {0: 4, 1: 2, 2: 3, 3: None, 4: 3, 5: 8, 6: 8, 7: 2, 8: 3, 9: 4},
+          4: {0: 4, 1: 0, 2: 3, 3: 4, 4: None, 5: 0, 6: 9, 7: 9, 8: 3, 9: 4},
+          5: {0: 5, 1: 0, 2: 7, 3: 8, 4: 0, 5: None, 6: 8, 7: 5, 8: 5, 9: 7},
+          6: {0: 1, 1: 6, 2: 1, 3: 8, 4: 9, 5: 8, 6: None, 7: 9, 8: 6, 9: 6},
+          7: {0: 5, 1: 2, 2: 7, 3: 2, 4: 9, 5: 7, 6: 9, 7: None, 8: 5, 9: 7},
+          8: {0: 5, 1: 6, 2: 3, 3: 8, 4: 3, 5: 8, 6: 8, 7: 5, 8: None, 9: 6},
           9: {0: 4, 1: 6, 2: 7, 3: 4, 4: 9, 5: 7, 6: 9, 7: 9, 8: 6, 9: None}})
     """
 
     from sage.rings.infinity import Infinity
     cdef int n = G.order()
-    
+
     if n == 0:
         return {}, {}
 
@@ -518,7 +526,7 @@ def distances_and_predecessors_all_pairs(G):
 
         d_distance[int_to_vertex[j]] = t_distance
         d_predecessor[int_to_vertex[j]] = t_predecessor
-        
+
         c_distances += n
         c_predecessor += n
 
@@ -599,43 +607,43 @@ def diameter(G):
 # Wiener index #
 ################
 
-def wiener_index(G): 
-    r""" 
-    Returns the Wiener index of the graph. 
-    
-    The Wiener index of a graph `G` can be defined in two equivalent 
-    ways [KRG96b]_ : 
- 
-    - `W(G) = \frac 1 2 \sum_{u,v\in G} d(u,v)` where `d(u,v)` denotes the
-      distance between vertices `u` and `v`. 
- 
-    - Let `\Omega` be a set of `\frac {n(n-1)} 2` paths in `G` such that `\Omega` 
-      contains exactly one shortest `u-v` path for each set `\{u,v\}` of
-      vertices in `G`. Besides, `\forall e\in E(G)`, let `\Omega(e)` denote the 
-      paths from `\Omega` containing `e`. We then have 
-      `W(G) = \sum_{e\in E(G)}|\Omega(e)|`.
-         
-    EXAMPLE: 
-         
-    From [GYLL93c]_, cited in [KRG96b]_:: 
- 
-        sage: g=graphs.PathGraph(10) 
-        sage: w=lambda x: (x*(x*x -1)/6) 
-        sage: g.wiener_index()==w(10) 
-        True 
- 
-    REFERENCE: 
+def wiener_index(G):
+    r"""
+    Returns the Wiener index of the graph.
 
-    .. [KRG96b] S. Klavzar, A. Rajapakse, and I. Gutman. The Szeged and the 
+    The Wiener index of a graph `G` can be defined in two equivalent
+    ways [KRG96b]_ :
+
+    - `W(G) = \frac 1 2 \sum_{u,v\in G} d(u,v)` where `d(u,v)` denotes the
+      distance between vertices `u` and `v`.
+
+    - Let `\Omega` be a set of `\frac {n(n-1)} 2` paths in `G` such that `\Omega`
+      contains exactly one shortest `u-v` path for each set `\{u,v\}` of
+      vertices in `G`. Besides, `\forall e\in E(G)`, let `\Omega(e)` denote the
+      paths from `\Omega` containing `e`. We then have
+      `W(G) = \sum_{e\in E(G)}|\Omega(e)|`.
+
+    EXAMPLE:
+
+    From [GYLL93c]_, cited in [KRG96b]_::
+
+        sage: g=graphs.PathGraph(10)
+        sage: w=lambda x: (x*(x*x -1)/6)
+        sage: g.wiener_index()==w(10)
+        True
+
+    REFERENCE:
+
+    .. [KRG96b] S. Klavzar, A. Rajapakse, and I. Gutman. The Szeged and the
       Wiener index of graphs. *Applied Mathematics Letters*, 9(5):45--49, 1996.
- 
-    .. [GYLL93c] I. Gutman, Y.-N. Yeh, S.-L. Lee, and Y.-L. Luo. Some recent 
+
+    .. [GYLL93c] I. Gutman, Y.-N. Yeh, S.-L. Lee, and Y.-L. Luo. Some recent
       results in the theory of the Wiener number. *Indian Journal of
-      Chemistry*, 32A:651--661, 1993. 
+      Chemistry*, 32A:651--661, 1993.
     """
-    if not G.is_connected(): 
-        from sage.rings.infinity import Infinity 
-        return +Infinity 
+    if not G.is_connected():
+        from sage.rings.infinity import Infinity
+        return +Infinity
 
     cdef unsigned short * distances = c_distances_all_pairs(G)
     cdef int NN = G.order()*G.order()
@@ -645,7 +653,7 @@ def wiener_index(G):
         s += distances[i]
     sage_free(distances)
     return s/2
-    
+
 
 
 ##################
@@ -732,9 +740,9 @@ def floyd_warshall(gg, paths = True, distances = False):
 
         sage: g = graphs.DiamondGraph()
         sage: floyd_warshall(g, paths = False, distances = True)
-        {0: {0: 0, 1: 1, 2: 1, 3: 2}, 
-         1: {0: 1, 1: 0, 2: 1, 3: 1}, 
-         2: {0: 1, 1: 1, 2: 0, 3: 1}, 
+        {0: {0: 0, 1: 1, 2: 1, 3: 2},
+         1: {0: 1, 1: 0, 2: 1, 3: 1},
+         2: {0: 1, 1: 1, 2: 0, 3: 1},
          3: {0: 2, 1: 1, 2: 1, 3: 0}}
 
     TESTS:
