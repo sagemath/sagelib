@@ -29,6 +29,7 @@ from sage.categories.finite_posets import FinitePosets
 from sage.structure.unique_representation import UniqueRepresentation
 from sage.structure.parent import Parent
 from sage.rings.integer import Integer
+from sage.rings.integer_ring import ZZ
 from sage.graphs.all import DiGraph
 from sage.combinat.posets.hasse_diagram import HasseDiagram
 from sage.combinat.posets.elements import PosetElement
@@ -1591,14 +1592,20 @@ class FinitePoset(UniqueRepresentation, Parent):
         i,j = map(self._element_to_vertex,(x,y))
         return self._hasse_diagram.mobius_function(i,j)
 
-    def mobius_function_matrix(self):
+    def mobius_function_matrix(self, ring = ZZ, sparse = False):
         r"""
-        Returns a matrix whose (i,j) entry is the value of the Mobius
-        function evaluated at self.linear_extension()[i] and
-        self.linear_extension()[j].
-        
+        Returns a matrix whose ``(i,j)`` entry is the value of the Mobius
+        function evaluated at ``self.linear_extension()[i]`` and
+        ``self.linear_extension()[j]``.
+
+        INPUT:
+
+        - ``ring`` -- the ring of coefficients (default: ``ZZ``)
+        - ``sparse`` -- whether the returned matrix is sparse or not
+          (default: ``True``)
+
         EXAMPLES::
-        
+
             sage: P = Poset([[4,2,3],[],[1],[1],[1]])
             sage: x,y = (P.linear_extension()[0],P.linear_extension()[1])
             sage: P.mobius_function(x,y)
@@ -1613,17 +1620,34 @@ class FinitePoset(UniqueRepresentation, Parent):
             2
             sage: M[0,1]
             -1
-        """
-        return self._hasse_diagram.mobius_function_matrix()
 
-    def lequal_matrix(self,**kwds):
+        We now demonstrate the usage of the optional parameters::
+
+            sage: P.mobius_function_matrix(ring=QQ, sparse=False).parent()
+            Full MatrixSpace of 5 by 5 dense matrices over Rational Field
         """
-        Computes the matrix whose [i,j] entry is 1 if
-        self.linear_extension()[i] self.linear_extension()[j] 0
+        M = self._hasse_diagram.mobius_function_matrix()
+        if ring is not ZZ:
+            M = M.change_ring(ring)
+        if not sparse:
+            M = M.dense_matrix()
+        return M
+
+
+    def lequal_matrix(self, ring = ZZ, sparse = False):
+        """
+        Computes the matrix whose ``(i,j)`` entry is 1 if
+        ``self.linear_extension()[i] < self.linear_extension()[j]`` and 0
         otherwise.
-        
+
+        INPUT:
+
+        - ``ring`` -- the ring of coefficients (default: ``ZZ``)
+        - ``sparse`` -- whether the returned matrix is sparse or not
+          (default: ``True``)
+
         EXAMPLES::
-        
+
             sage: P = Poset([[1,3,2],[4],[4,5,6],[6],[7],[7],[7],[]])
             sage: LEQM = P.lequal_matrix(); LEQM
             [1 1 1 1 1 1 1 1]
@@ -1642,8 +1666,18 @@ class FinitePoset(UniqueRepresentation, Parent):
             0
             sage: P.linear_extension()[2] < P.linear_extension()[5]
             False
+
+        We now demonstrate the usage of the optional parameters::
+
+            sage: P.lequal_matrix(ring=QQ, sparse=False).parent()
+            Full MatrixSpace of 8 by 8 dense matrices over Rational Field
         """
-        return self._hasse_diagram.lequal_matrix(**kwds)
+        M = self._hasse_diagram.lequal_matrix()
+        if ring is not ZZ:
+            M = M.change_ring(ring)
+        if not sparse:
+            M = M.dense_matrix()
+        return M
 
     def coxeter_transformation(self):
         r"""
