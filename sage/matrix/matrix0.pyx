@@ -2016,6 +2016,25 @@ cdef class Matrix(sage.structure.element.Matrix):
         - Naqi Jaffery (2006-01-24): examples
         """
         return self._nrows
+    
+    def dimensions(self):
+        r"""
+        Returns the dimensions of this matrix as the tuple (nrows, ncols).
+
+        EXAMPLES::
+   
+            sage: M = matrix([[1,2,3],[4,5,6]])
+            sage: N = M.transpose()
+            sage: M.dimensions()
+            (2, 3)
+            sage: N.dimensions()
+            (3, 2)
+
+        AUTHORS:
+
+        - Benjamin Lundell (2012-02-09): examples
+        """
+        return (self._nrows,self._ncols)
 
 
     ###################################################
