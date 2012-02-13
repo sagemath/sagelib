@@ -7349,9 +7349,9 @@ cdef class Matrix(matrix1.Matrix):
 
     def density(self):
         """
-        Return the density of self.
-        
-        By density we understand the ration of the number of nonzero
+        Return the density of the matrix.
+
+        By density we understand the ratio of the number of nonzero
         positions and the self.nrows() \* self.ncols(), i.e. the number of
         possible nonzero positions.
         
