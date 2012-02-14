@@ -132,31 +132,23 @@ class FreeAlgebraQuotientElement(AlgebraElement):
         with localvars(M, Q.variable_names()):
             cffs = list(self.__vector)
             mons = Q.monomial_basis()
-            x = repr_lincomb(mons, cffs).replace("*1 "," ")
-            if x[len(x)-2:] == "*1":
-                return x[:len(x)-2]
-            else:
-                return x
-                
+            return repr_lincomb(zip(mons, cffs), strip_one=True)
+
     def _latex_(self):
         """
         EXAMPLES::
 
             sage: H, (i,j,k) = sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)
             sage: ((2/3)*i - j)._latex_()
-            '\\frac{2}{3}i + \\left(-1\\right)j'        
+            '\\frac{2}{3}i + \\left(-1\\right)j'
         """
         Q = self.parent()
         M = Q.monoid()
         with localvars(M, Q.variable_names()):
-            cffs = list(self.__vector)
+            cffs = tuple(self.__vector)
             mons = Q.monomial_basis()
-            x = repr_lincomb(mons, cffs, True).replace("*1 "," ")
-            if x[len(x)-2:] == "*1":
-                return x[:len(x)-2]
-            else:
-                return x
-        
+            return repr_lincomb(zip(mons, cffs), is_latex=True, strip_one=True)
+
     def vector(self):
         """
         Return underlying vector representation of this element.
