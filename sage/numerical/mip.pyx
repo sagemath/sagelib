@@ -1,21 +1,21 @@
 r"""
 Mixed integer linear programming
 
-A linear program (`LP <http://en.wikipedia.org/wiki/Linear_programming>`_) 
-is an `optimization problem <http://en.wikipedia.org/wiki/Optimization_%28mathematics%29>`_ 
+A linear program (`LP <http://en.wikipedia.org/wiki/Linear_programming>`_)
+is an `optimization problem <http://en.wikipedia.org/wiki/Optimization_%28mathematics%29>`_
 in the following form
 
 .. MATH::
      \max \{ c^T x \;|\; A x \leq b, x \geq 0 \}
 
-with given `A \in \mathbb{R}^{m,n}`, `b \in \mathbb{R}^m`, 
+with given `A \in \mathbb{R}^{m,n}`, `b \in \mathbb{R}^m`,
 `c \in \mathbb{R}^n` and unknown `x \in \mathbb{R}^{n}`.
 If some or all variables in the vector `x` are restricted over
 the integers `\mathbb{Z}`, the problem is called mixed integer
-linear program (`MILP <http://en.wikipedia.org/wiki/Mixed_integer_linear_programming>`_). 
+linear program (`MILP <http://en.wikipedia.org/wiki/Mixed_integer_linear_programming>`_).
 A wide variety of problems in optimization
 can be formulated in this standard form. Then, solvers are
-able to calculate a solution. 
+able to calculate a solution.
 
 Imagine you want to solve the following linear system of three equations:
 
@@ -34,10 +34,10 @@ where all `w_i \in \mathbb{Z}`. You know that the trivial solution is
 A mixed integer linear program can give you an answer:
 
   #. You have to create an instance of :class:`MixedIntegerLinearProgram` and
-     -- in our case -- specify that it is a minimization. 
+     -- in our case -- specify that it is a minimization.
   #. Create a variable vector ``w`` via ``w = p.new_variable(integer=True)`` and
      tell the system that it is over the integers.
-  #. Add those three equations as equality constraints via 
+  #. Add those three equations as equality constraints via
      :meth:`add_constraint <sage.numerical.mip.MixedIntegerLinearProgram.add_constraint>`.
   #. Also add the inequality constraint.
   #. Add an inequality constraint `w_3 \geq 1` to exclude the trivial solution.
@@ -46,22 +46,22 @@ A mixed integer linear program can give you an answer:
   #. Specify the objective function via :meth:`set_objective <sage.numerical.mip.MixedIntegerLinearProgram.set_objective>`.
      In our case that is just `w_3`. If it
      is a pure constraint satisfaction problem, specify it as ``None``.
-  #. To check if everything is set up correctly, you can print the problem via 
+  #. To check if everything is set up correctly, you can print the problem via
      :meth:`show <sage.numerical.mip.MixedIntegerLinearProgram.show>`.
   #. :meth:`Solve <sage.numerical.mip.MixedIntegerLinearProgram.solve>` it and print the solution.
 
 The following example shows all these steps::
 
-    sage: p = MixedIntegerLinearProgram(maximization=False) 
-    sage: w = p.new_variable(integer=True) 
-    sage: p.add_constraint(w[0] + w[1] + w[2] - 14*w[3] == 0) 
-    sage: p.add_constraint(w[1] + 2*w[2] - 8*w[3] == 0) 
-    sage: p.add_constraint(2*w[2] - 3*w[3] == 0) 
+    sage: p = MixedIntegerLinearProgram(maximization=False)
+    sage: w = p.new_variable(integer=True)
+    sage: p.add_constraint(w[0] + w[1] + w[2] - 14*w[3] == 0)
+    sage: p.add_constraint(w[1] + 2*w[2] - 8*w[3] == 0)
+    sage: p.add_constraint(2*w[2] - 3*w[3] == 0)
     sage: p.add_constraint(w[0] - w[1] - w[2] >= 0)
-    sage: p.add_constraint(w[3] >= 1) 
-    sage: _ = [ p.set_min(w[i], None) for i in range(1,4) ] 
-    sage: p.set_objective(w[3]) 
-    sage: p.show() 
+    sage: p.add_constraint(w[3] >= 1)
+    sage: _ = [ p.set_min(w[i], None) for i in range(1,4) ]
+    sage: p.set_objective(w[3])
+    sage: p.show()
     Minimization:
        x_3
     Constraints:
@@ -151,7 +151,7 @@ cdef class MixedIntegerLinearProgram:
          sage: p.solve(objective_only=True)
          4.0
     """
-    
+
     def __init__(self, solver = None, maximization=True, constraint_generation = False, check_redundant = False):
         r"""
         Constructor for the ``MixedIntegerLinearProgram`` class.
@@ -185,7 +185,7 @@ cdef class MixedIntegerLinearProgram:
 
         - ``constraint_generation`` -- whether to require the returned solver to
           support constraint generation (excludes Coin). ``False by default``.
-          
+
         - ``check_redundant`` -- whether to check that constraints added to the
           program are redundant with constraints already in the program.
           Only obvious redundancies are checked: to be considered redundant,
@@ -201,11 +201,30 @@ cdef class MixedIntegerLinearProgram:
         EXAMPLE::
 
             sage: p = MixedIntegerLinearProgram(maximization=True)
+
+        TESTS:
+
+        Checks the objects are deallocated (cf. :trac:`12616`)::
+
+            sage: del p
+            sage: def just_create_variables():
+            ...       p = MixedIntegerLinearProgram()
+            ...       b = p.new_variable()
+            ...       p.add_constraint(b[3]+b[6] <= 2)
+            ...       p.solve()
+            sage: C = sage.numerical.mip.MixedIntegerLinearProgram
+            sage: import gc
+            sage: _ = gc.collect()  # avoid side effects of other doc tests
+            sage: len([x for x in gc.get_objects() if isinstance(x,C)])
+            0
+            sage: just_create_variables()
+            sage: len([x for x in gc.get_objects() if isinstance(x,C)])
+            0
         """
 
         from sage.numerical.backends.generic_backend import get_solver
 
-        self._backend = get_solver(solver=solver, 
+        self._backend = get_solver(solver=solver,
                                    constraint_generation=constraint_generation)
 
         if not maximization:
@@ -216,13 +235,9 @@ cdef class MixedIntegerLinearProgram:
         self.__INTEGER = 1
 
 
-        # List of all the MIPVariables linked to this instance of
-        # MixedIntegerLinearProgram
-        self._mipvariables = []
-
         # Associates an index to the variables
         self._variables = {}
-        
+
         # Check for redundant constraints
         self._check_redundant = check_redundant
         if check_redundant:
@@ -244,7 +259,7 @@ cdef class MixedIntegerLinearProgram:
 
          return ("Mixed Integer Program "+
 
-                 ( "\"" +self._backend.problem_name()+ "\"" 
+                 ( "\"" +self._backend.problem_name()+ "\""
                    if (str(self._backend.problem_name()) != "") else "")+
 
                  " ( " + ("maximization" if b.is_maximization() else "minimization" ) +
@@ -257,10 +272,6 @@ cdef class MixedIntegerLinearProgram:
         Returns a copy of the current ``MixedIntegerLinearProgram`` instance.
         """
         cdef MixedIntegerLinearProgram p = MixedIntegerLinearProgram(solver="GLPK")
-        try:
-            p._mipvariables = copy(self._mipvariables)
-        except AttributeError:
-            pass
 
         try:
             p._variables = copy(self._variables)
@@ -395,7 +406,6 @@ cdef class MixedIntegerLinearProgram:
             vtype = self.__REAL
 
         v=MIPVariable(self, vtype, dim=dim,name=name)
-        self._mipvariables.append(v)
         return v
 
     cpdef int number_of_constraints(self):
