@@ -3682,7 +3682,7 @@ class GenericGraph(GenericGraph_pyx):
         weighted) graph and a subset of its vertices, it is NP-Hard to
         find a tree of minimum weight connecting the given set of
         vertices, which is then called a Steiner Tree.
-        
+
         `Wikipedia article on Steiner Trees
         <http://en.wikipedia.org/wiki/Steiner_tree_problem>`_.
 
@@ -3690,8 +3690,8 @@ class GenericGraph(GenericGraph_pyx):
 
         - ``vertices`` -- the vertices to be connected by the Steiner
           Tree.
-          
-        - ``weighted`` (boolean) -- Whether to consider the graph as 
+
+        - ``weighted`` (boolean) -- Whether to consider the graph as
           weighted, and use each edge's label as a weight, considering
           ``None`` as a weight of `1`. If ``weighted=False`` (default)
           all edges are considered to have a weight of `1`.
@@ -3722,13 +3722,13 @@ class GenericGraph(GenericGraph_pyx):
 
         COMPLEXITY:
 
-        NP-Hard. 
+        NP-Hard.
 
-        Note that this algorithm first checks whether the given 
+        Note that this algorithm first checks whether the given
         set of vertices induces a connected graph, returning one of its
         spanning trees if ``weighted`` is set to ``False``, and thus
         answering very quickly in some cases
-        
+
         EXAMPLES:
 
         The Steiner Tree of the first 5 vertices in a random graph is,
@@ -3783,7 +3783,7 @@ class GenericGraph(GenericGraph_pyx):
 
         # Reorder an edge
         R = lambda (x,y) : (x,y) if x<y else (y,x)
-        
+
         # edges used in the Steiner Tree
         edges = p.new_variable()
 
@@ -3811,7 +3811,7 @@ class GenericGraph(GenericGraph_pyx):
         eps = 1/(5*Integer(g.order()))
         for v in g:
             p.add_constraint(Sum([r_edges[(u,v)] for u in g.neighbors(v)]), max = 1-eps)
-                
+
 
         # Objective
         if weighted:
@@ -3821,7 +3821,7 @@ class GenericGraph(GenericGraph_pyx):
 
         p.set_objective(Sum([w(e)*edges[R(e)] for e in g.edges(labels = False)]))
 
-        p.set_binary(edges)            
+        p.set_binary(edges)
         p.solve(log = verbose)
 
         edges = p.get_values(edges)
@@ -3832,12 +3832,12 @@ class GenericGraph(GenericGraph_pyx):
 
     def edge_disjoint_spanning_trees(self,k, root=None, solver = None, verbose = 0):
         r"""
-        Returns the desired number of edge-disjoint spanning 
+        Returns the desired number of edge-disjoint spanning
         trees/arborescences.
 
         INPUT:
 
-        - ``k`` (integer) -- the required number of edge-disjoint 
+        - ``k`` (integer) -- the required number of edge-disjoint
           spanning trees/arborescences
 
         - ``root`` (vertex) -- root of the disjoint arborescences
@@ -3854,7 +3854,7 @@ class GenericGraph(GenericGraph_pyx):
 
         - ``verbose`` -- integer (default: ``0``). Sets the level of
           verbosity. Set to 0 by default, which means quiet.
-          
+
         ALGORITHM:
 
         Mixed Integer Linear Program. The formulation can be found
@@ -3892,13 +3892,13 @@ class GenericGraph(GenericGraph_pyx):
         By Edmond's theorem, a graph which is `k`-connected always has `k` edge-disjoint
         arborescences, regardless of the root we pick::
 
-            sage: g = digraphs.RandomDirectedGNP(28,.3) # reduced from 30 to 28, cf. #9584 
+            sage: g = digraphs.RandomDirectedGNP(28,.3) # reduced from 30 to 28, cf. #9584
             sage: k = Integer(g.edge_connectivity())
             sage: arborescences = g.edge_disjoint_spanning_trees(k)  # long time (up to 15s on sage.math, 2011)
             sage: all([a.is_directed_acyclic() for a in arborescences])  # long time
             True
             sage: all([a.is_connected() for a in arborescences])  # long time
-            True            
+            True
 
         In the undirected case, we can only ensure half of it::
 
@@ -3924,6 +3924,7 @@ class GenericGraph(GenericGraph_pyx):
         """
 
         from sage.numerical.mip import MixedIntegerLinearProgram, MIPSolverException, Sum
+
         p = MixedIntegerLinearProgram(solver = solver)
         p.set_objective(None)
 
@@ -3933,22 +3934,19 @@ class GenericGraph(GenericGraph_pyx):
         # edges[j][e] is equal to one if and only if edge e belongs to color j
         edges = p.new_variable(dim=2)
 
+        if root == None:
+            root = self.vertex_iterator().next()
 
-        # r_edges is a relaxed variable grater than edges. It is used to 
+        # r_edges is a relaxed variable grater than edges. It is used to
         # check the presence of cycles
         r_edges = p.new_variable(dim=2)
 
-        epsilon = 1/(10*(Integer(self.order())))
-
+        epsilon = 1/(3*(Integer(self.order())))
 
         if self.is_directed():
             # Does nothing ot an edge.. Useful when out of "if self.directed"
             S = lambda (x,y) : (x,y)
 
-            if root == None:
-                root = self.vertex_iterator().next()
-                
-            
             # An edge belongs to at most arborescence
             for e in self.edges(labels=False):
                 p.add_constraint(Sum([edges[j][e] for j in colors]), max=1)
@@ -3978,12 +3976,12 @@ class GenericGraph(GenericGraph_pyx):
                 D.add_vertices(self.vertices())
                 D.set_pos(self.get_pos())
                 classes = [D.copy() for j in colors]
-                
+
         else:
 
             # Sort an edge
             S = lambda (x,y) : (x,y) if x<y else (y,x)
-            
+
             # An edge belongs to at most one arborescence
             for e in self.edges(labels=False):
                 p.add_constraint(Sum([edges[j][S(e)] for j in colors]), max=1)
@@ -4012,7 +4010,7 @@ class GenericGraph(GenericGraph_pyx):
             for v in self:
                 p.add_constraint(Sum(r_edges[j][(u,v)] for u in self.neighbors(v)), max=1-epsilon)
 
-        p.set_binary(edges)                
+        p.set_binary(edges)
 
         try:
             p.solve(log = verbose)
@@ -4026,10 +4024,14 @@ class GenericGraph(GenericGraph_pyx):
             for e in self.edges(labels=False):
                 if edges[j][S(e)] == 1:
                     g.add_edge(e)
+            if len(list(g.breadth_first_search(root))) != self.order():
+                raise RuntimeError("The computation seems to have gone wrong somewhere..."+
+                                   "This is probably because of the value of epsilon, but"+
+                                   " in any case please report this bug, with the graph "+
+                                   "that produced it ! ;-)")
 
         return classes
-            
-                
+
     def edge_cut(self, s, t, value_only=True, use_edge_labels=False, vertices=False, method="FF", solver=None, verbose=0):
         r"""
         Returns a minimum edge cut between vertices `s` and `t`
@@ -4039,9 +4041,9 @@ class GenericGraph(GenericGraph_pyx):
         is a set `A` of edges of minimum weight such that the graph
         obtained by removing `A` from self is disconnected. For more
         information, see the
-        `Wikipedia article on cuts 
+        `Wikipedia article on cuts
         <http://en.wikipedia.org/wiki/Cut_%28graph_theory%29>`_.
-        
+
         INPUT:
 
         - ``s`` -- source vertex
@@ -4095,9 +4097,9 @@ class GenericGraph(GenericGraph_pyx):
         (examples are given below).
 
         EXAMPLES:
-       
+
         A basic application in the Pappus graph::
-        
+
            sage: g = graphs.PappusGraph()
            sage: g.edge_cut(1, 2, value_only=True)
            3
@@ -4191,7 +4193,6 @@ class GenericGraph(GenericGraph_pyx):
 
         if method != "LP":
             raise ValueError("The method argument has to be equal to either \"FF\" or \"LP\"")
-            
 
         from sage.numerical.mip import MixedIntegerLinearProgram, Sum
         g = self
@@ -4201,7 +4202,7 @@ class GenericGraph(GenericGraph_pyx):
 
         # Some vertices belong to part 1, others to part 0
         p.add_constraint(v[s], min=0, max=0)
-        p.add_constraint(v[t], min=1, max=1)        
+        p.add_constraint(v[t], min=1, max=1)
 
         if g.is_directed():
 
@@ -5796,7 +5797,7 @@ class GenericGraph(GenericGraph_pyx):
         a maximum `s-t` flow ::
 
             sage: g = DiGraph()
-            sage: g.add_edges([('s',i) for i in range(4)]) 
+            sage: g.add_edges([('s',i) for i in range(4)])
             sage: g.add_edges([(i,4+j) for i in range(4) for j in range(4)])
             sage: g.add_edges([(4+i,'t') for i in range(4)])
             sage: [cardinal, flow_graph] = g.flow('s','t',integer=True,value_only=False)
@@ -5819,17 +5820,20 @@ class GenericGraph(GenericGraph_pyx):
             sage: g.flow(0,1, method="Divination")
             Traceback (most recent call last):
             ...
-            ValueError: The method argument has to be equal to either "FF", "LP" or None        
+            ValueError: The method argument has to be equal to either "FF", "LP" or None
 
-        The two methods are indeed returning the same results::
+        The two methods are indeed returning the same results (possibly with
+        some numerical noise, cf. :trac:`12362`)::
 
            sage: g = graphs.RandomGNP(20,.3)
            sage: for u,v in g.edges(labels=False):
            ...      g.set_edge_label(u,v,round(random(),5))
-           sage: g.flow(0,1, method="FF") == g.flow(0,1,method="LP")
+           sage: flow_ff = g.flow(0,1, method="FF")
+           sage: flow_lp = g.flow(0,1,method="LP")
+           sage: abs(flow_ff-flow_lp) < 0.01
            True
         """
-        
+
         if vertex_bound == True and method == "FF":
             raise ValueError("This method does not support both vertex_bound=True and method=\"FF\".")
 
@@ -5851,12 +5855,12 @@ class GenericGraph(GenericGraph_pyx):
             capacity=lambda x: x if x in RR else 1
         else:
             capacity=lambda x: 1
-            
+
         if g.is_directed():
             # This function return the balance of flow at X
-            flow_sum=lambda X: Sum([flow[(X,v)] for (u,v) in g.outgoing_edges([X],labels=None)])-Sum([flow[(u,X)] for (u,v) in g.incoming_edges([X],labels=None)]) 
- 
-            # The flow leaving x 
+            flow_sum=lambda X: Sum([flow[(X,v)] for (u,v) in g.outgoing_edges([X],labels=None)])-Sum([flow[(u,X)] for (u,v) in g.incoming_edges([X],labels=None)])
+
+            # The flow leaving x
             flow_leaving = lambda X : Sum([flow[(uu,vv)] for (uu,vv) in g.outgoing_edges([X],labels=None)]) 
  
             # The flow to be considered when defining the capacity contraints 
