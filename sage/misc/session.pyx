@@ -413,9 +413,11 @@ def attach(*files):
     
     
     Type ``attached_files()`` for a list of all currently
-    attached files. You can remove files from this list to stop them
-    from being watched.
-    
+    attached files. 
+
+    Use ``detach(...)`` to instruct Sage to remove a file from the internal
+    list watched files.
+
     .. note::
 
         ``attach`` is exactly the same as load, except it keeps track of
