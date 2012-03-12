@@ -314,7 +314,7 @@ def steenrod_algebra_basis(n, basis='milnor', p=2, **kwds):
     The rest of these bases are only defined when `p=2`.
     
     - 'wood_y': Wood's Y basis.
-    - 'wood_z': Wood's Z basis. 
+    - 'wood_z': Wood's Z basis.
     - 'wall' or 'wall_long': Wall's basis.
     -  'arnon_a' or 'arnon_a_long': Arnon's A basis.
     -  'arnon_c': Arnon's C basis.
@@ -372,7 +372,7 @@ def steenrod_algebra_basis(n, basis='milnor', p=2, **kwds):
     profile = kwds.get("profile", None)
     if (profile is not None and profile != () and profile != ((), ())
         and basis != 'milnor' and basis.find('pst') == -1):
-        raise ValueError, "Profile functions may only be used with the Milnor or pst bases"
+        raise ValueError("Profile functions may only be used with the Milnor or pst bases")
 
     ## Milnor basis
     if basis_name == 'milnor':
@@ -386,7 +386,7 @@ def steenrod_algebra_basis(n, basis='milnor', p=2, **kwds):
         return atomic_basis_odd(n, basis_name, p, **kwds)
     ## Atomic bases, p=2
     elif p == 2 and (basis_name == 'woody' or basis_name == 'woodz'
-                     or basis_name == 'wall' or basis_name == 'arnona' 
+                     or basis_name == 'wall' or basis_name == 'arnona'
                      or basis_name.find('pst') >= 0
                      or basis_name.find('comm') >= 0):
         return atomic_basis(n, basis_name, **kwds)
@@ -394,7 +394,7 @@ def steenrod_algebra_basis(n, basis='milnor', p=2, **kwds):
     elif p == 2 and basis == 'arnonc':
         return arnonC_basis(n)
     else:
-        raise ValueError, "Unknown basis: %s at the prime %s" % (basis, p)
+        raise ValueError("Unknown basis: %s at the prime %s" % (basis, p))
 
 # helper functions for producing bases
 
@@ -780,7 +780,7 @@ def atomic_basis(n, basis, **kwds):
     see the documentation for 'steenrod_algebra_basis' for
     descriptions of them.)  For `P^s_t`-bases, you may also specify a
     profile function and truncation type; profile functions are ignored
-    for the other bases. 
+    for the other bases.
 
     EXAMPLES::
 
@@ -879,7 +879,7 @@ def atomic_basis(n, basis, **kwds):
                     t = t + 1
                 deg = 2**s * (2**t - 1)
         return dict
-    
+
     def sorting_pair(s,t,basis):   # pair used for sorting the basis
         if basis.find('wood') >= 0 and basis.find('z') >= 0:
             return (-s-t,-s)
@@ -963,7 +963,7 @@ def arnonC_basis(n,bound=1):
         return ((),)
     else:
         # Build basis recursively.  first = first term.
-        # first is >= bound, and we will prepend (first,) to the 
+        # first is >= bound, and we will prepend (first,) to the
         # elements from arnonC_basis (n - first, first / 2).
         # first also must be divisible by 2**(len(old-basis-elt))
         # This means that 3 first <= 2 n.
@@ -973,7 +973,7 @@ def arnonC_basis(n,bound=1):
                 if first % 2**len(vec) == 0:
                     result.append((first,) + vec)
         return tuple(result)
-    
+
 def atomic_basis_odd(n, basis, p, **kwds):
     r"""
     `P^s_t`-bases and commutator basis in dimension `n` at odd primes.

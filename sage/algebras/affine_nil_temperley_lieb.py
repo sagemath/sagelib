@@ -57,7 +57,7 @@ class AffineNilTemperleyLiebTypeA(CombinatorialFreeModule):
             The affine nilTemperley Lieb algebra A3 over the ring Rational Field
         """
         if not isinstance(R, Ring):
-            raise TypeError, "Argument R must be a ring."
+            raise TypeError("Argument R must be a ring.")
         self._cartan_type = CartanType(['A',n-1,1])
         self._n = n
         W = WeylGroup(self._cartan_type)
@@ -129,7 +129,7 @@ class AffineNilTemperleyLiebTypeA(CombinatorialFreeModule):
         """
         EXAMPLES::
 
-            sage: A = AffineNilTemperleyLiebTypeA(3)   
+            sage: A = AffineNilTemperleyLiebTypeA(3)
             sage: A.weyl_group()
             Weyl Group of type ['A', 2, 1] (as a matrix group acting on the root space)
         """
@@ -139,7 +139,7 @@ class AffineNilTemperleyLiebTypeA(CombinatorialFreeModule):
         """
         EXAMPLES::
 
-            sage: A = AffineNilTemperleyLiebTypeA(3)   
+            sage: A = AffineNilTemperleyLiebTypeA(3)
             sage: A.index_set()
             [0, 1, 2]
         """
@@ -152,7 +152,7 @@ class AffineNilTemperleyLiebTypeA(CombinatorialFreeModule):
 
         EXAMPLES::
 
-            sage: A = AffineNilTemperleyLiebTypeA(3)   
+            sage: A = AffineNilTemperleyLiebTypeA(3)
             sage: a = A.algebra_generators();a
             Finite family {0: a0, 1: a1, 2: a2}
             sage: a[1]
@@ -218,7 +218,7 @@ class AffineNilTemperleyLiebTypeA(CombinatorialFreeModule):
     def has_no_braid_relation(self, w, i):
         """
         Assuming that `w` contains no relations of the form `s_i^2` or `s_i s_{i+1} s_i` or
-        `s_i s_{i-1} s_i`, tests whether `w s_i` contains terms of this form. 
+        `s_i s_{i-1} s_i`, tests whether `w s_i` contains terms of this form.
         
         EXAMPLES::
         

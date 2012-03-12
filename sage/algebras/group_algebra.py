@@ -51,7 +51,7 @@ class GroupAlgebra(Algebra):
         EXAMPLES::
 
             sage: from sage.algebras.group_algebra import GroupAlgebra
-            doctest:1: DeprecationWarning:...            
+            doctest:1: DeprecationWarning:...
             sage: GroupAlgebra(GL(3, GF(7)))
             Group algebra of group "General Linear Group of degree 3 over Finite
             Field of size 7" over base ring Integer Ring
@@ -65,10 +65,10 @@ class GroupAlgebra(Algebra):
 
         """
         if not base_ring.is_commutative():
-            raise NotImplementedError, "Base ring must be commutative"
+            raise NotImplementedError("Base ring must be commutative")
         
         if not isinstance(group, Group):
-            raise TypeError, '"%s" is not a group' % group
+            raise TypeError('"%s" is not a group' % group)
 
         ParentWithGens.__init__(self, base_ring, category = GroupAlgebras(base_ring))
 
@@ -191,10 +191,10 @@ class GroupAlgebra(Algebra):
                 ans = False
         except AttributeError:
             if proof:
-                raise NotImplementedError, "cannot determine whether self is an integral domain"
+                raise NotImplementedError("cannot determine whether self is an integral domain")
         except NotImplementedError:
             if proof:
-                raise NotImplementedError, "cannot determine whether self is an integral domain"
+                raise NotImplementedError("cannot determine whether self is an integral domain")
         
         return ans
 
@@ -208,7 +208,7 @@ class GroupAlgebra(Algebra):
 
     def _an_element_impl(self):
         """
-        Return an element of self. 
+        Return an element of self.
         
         EXAMPLE:
             sage: from sage.algebras.group_algebra import GroupAlgebra
@@ -231,7 +231,7 @@ class GroupAlgebra(Algebra):
         
         INPUT:
             -- x: either a FormalSum element consisting of elements of
-            self.group(), an element of self.base_ring(), or an element 
+            self.group(), an element of self.base_ring(), or an element
             of self.group().
             -- check (boolean): whether or not to check that the given elements
             really do lie in self.group(). Chiefly provided to speed up
@@ -265,10 +265,10 @@ class GroupAlgebra(Algebra):
             ...
             TypeError: 0.770000000000000 is not an element of group General Linear Group of degree 2 over Finite Field of size 7
 
-        Ordering of elements in output unpredictable as sort order of such wildly 
-        dissimilar elements is subject to change between platforms and versions 
+        Ordering of elements in output unpredictable as sort order of such wildly
+        dissimilar elements is subject to change between platforms and versions
         (see trac ticket \#4373).
-            sage: OG(FormalSum([ (1, G(2)), (2, RR(0.77)) ]), check=False) # random 
+            sage: OG(FormalSum([ (1, G(2)), (2, RR(0.77)) ]), check=False) # random
             [2 0]
             [0 2] + 2*0.770000000000000
             sage: OG(OG.base_ring().gens()[1])
@@ -278,7 +278,7 @@ class GroupAlgebra(Algebra):
         return GroupAlgebraElement(self, x, check)
 
     def __eq__(self, other):
-        r""" Test for equality. 
+        r""" Test for equality.
         EXAMPLES:
             sage: from sage.algebras.group_algebra import GroupAlgebra
             sage: GroupAlgebra(AbelianGroup(1)) == GroupAlgebra(AbelianGroup(1))
@@ -311,7 +311,7 @@ class GroupAlgebra(Algebra):
 
 
 class GroupAlgebraElement(AlgebraElement):
-    
+
     def __init__(self, parent, x, check):
         r""" Create an element of the parent group algebra. Not intended to be
         called by the user; see GroupAlgebra.__call__ for examples and
@@ -325,7 +325,7 @@ class GroupAlgebraElement(AlgebraElement):
             if check:
                 for c,d in x._data:
                     if d.parent() != self.parent().group():
-                        raise TypeError, "%s is not an element of group %s" % (d, self.parent().group())
+                        raise TypeError("%s is not an element of group %s" % (d, self.parent().group()))
                 self._fs = x
             else:
                 self._fs = x
@@ -335,7 +335,7 @@ class GroupAlgebraElement(AlgebraElement):
         elif self.parent().group().has_coerce_map_from(x.parent()):
             self._fs = self.parent()._formal_sum_module([ (1, self.parent().group()(x)) ])
         else:
-            raise TypeError, "Don't know how to create an element of %s from %s" % (self.parent(), x)
+            raise TypeError("Don't know how to create an element of %s from %s" % (self.parent(), x))
 
     def _repr_(self):
         return self._fs._repr_()

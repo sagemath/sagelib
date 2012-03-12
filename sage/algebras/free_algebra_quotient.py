@@ -23,11 +23,11 @@ TESTS::
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
-#    This code is distributed in the hope that it will be useful, 
-#    but WITHOUT ANY WARRANTY; without even the implied warranty 
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty
 #    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# 
-#  See the GNU General Public License for more details; the full text 
+#
+#  See the GNU General Public License for more details; the full text
 #  is available at:
 #
 #                  http://www.gnu.org/licenses/
@@ -51,7 +51,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
             sage: H = sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0]  # indirect doctest
             sage: H1 = sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0]
             sage: H is H1
-            True        
+            True
         """
         new_mats = []
         for M in mats:
@@ -62,7 +62,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
                                                   tuple(new_mats), tuple(names))
 
     Element = FreeAlgebraQuotientElement
-    def __init__(self, A, mons, mats, names): 
+    def __init__(self, A, mons, mats, names):
         """
         Returns a quotient algebra defined via the action of a free algebra
         A on a (finitely generated) free module. The input for the quotient
@@ -116,7 +116,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
 
         """
         if not is_FreeAlgebra(A):
-            raise TypeError, "Argument A must be an algebra."
+            raise TypeError("Argument A must be an algebra.")
         R = A.base_ring()
 #        if not R.is_field():  # TODO: why?
 #            raise TypeError, "Base ring of argument A must be a field."
@@ -143,9 +143,9 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
             sage: HQ == HZ
             False
             sage: HZ == QQ
-            False            
+            False
         """
-        return type(self) == type(right) and \
+        return isinstance(self, type(right)) and \
                self.ngens() == right.ngens() and \
                self.rank() == right.rank() and \
                self.module() == right.module() and \
@@ -165,9 +165,9 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
             sage: a in H
             True
             sage: a = H._element_constructor_([1,2,3,4]); a
-            1 + 2*i + 3*j + 4*k        
+            1 + 2*i + 3*j + 4*k
         """
-        if isinstance(x, FreeAlgebraQuotientElement) and x.parent() is self: 
+        if isinstance(x, FreeAlgebraQuotientElement) and x.parent() is self:
             return x
         return self.element_class(self,x)
 
@@ -184,7 +184,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
             False
         """
         return S==self or self.__free_algebra.has_coerce_map_from(S)
-                                
+
     def _repr_(self):
         """
         EXAMPLES::
@@ -223,11 +223,11 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
             sage: H.gen(-1)
             Traceback (most recent call last):
             ...
-            IndexError: Argument i (= -1) must be between 0 and 2.        
+            IndexError: Argument i (= -1) must be between 0 and 2.
         """
         n = self.__ngens
         if i < 0 or not i < n: 
-            raise IndexError, "Argument i (= %s) must be between 0 and %s."%(i, n-1)
+            raise IndexError("Argument i (= %s) must be between 0 and %s."%(i, n-1))
         R = self.base_ring()
         F = self.__free_algebra.monoid()
         n = self.__ngens
@@ -251,7 +251,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
         EXAMPLES::
 
             sage: sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0].dimension()
-            4        
+            4
         """
         return self.__dim
 
@@ -274,7 +274,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
         EXAMPLES::
         
             sage: sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0].monomial_basis()
-            (1, i0, i1, i2)        
+            (1, i0, i1, i2)
         """
         return self.__monomial_basis
 
@@ -285,7 +285,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
         EXAMPLES::
 
             sage: sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0].rank()
-            4        
+            4
         """
         return self.__dim
 
@@ -296,7 +296,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
             sage: H = sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0]; H
             Free algebra quotient on 3 generators ('i', 'j', 'k') and dimension 4 over Rational Field
             sage: H.module()
-            Vector space of dimension 4 over Rational Field        
+            Vector space of dimension 4 over Rational Field
         """
         return self.__module
 
@@ -330,7 +330,7 @@ class FreeAlgebraQuotient(UniqueRepresentation, Algebra, object):
         EXAMPLES::
 
             sage: sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)[0].free_algebra()
-            Free Algebra on 3 generators (i0, i1, i2) over Rational Field        
+            Free Algebra on 3 generators (i0, i1, i2) over Rational Field
         """
         return self.__free_algebra
 
@@ -361,7 +361,7 @@ def hamilton_quatalg(R):
     quaternion algebras in Sage; the one here is mainly for testing
     purposes::
 
-        sage: R.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)  # much fast than the above 
+        sage: R.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)  # much fast than the above
     """
     n = 3
     from sage.algebras.free_algebra import FreeAlgebra
@@ -374,4 +374,4 @@ def hamilton_quatalg(R):
     mats = [M([0,1,0,0, -1,0,0,0, 0,0,0,-1, 0,0,1,0]),  M([0,0,1,0, 0,0,0,1, -1,0,0,0, 0,-1,0,0]),  M([0,0,0,1, 0,0,-1,0, 0,1,0,0, -1,0,0,0]) ]
     H3 = FreeAlgebraQuotient(A,mons,mats, names=('i','j','k'))
     return H3, H3.gens()
-    
+

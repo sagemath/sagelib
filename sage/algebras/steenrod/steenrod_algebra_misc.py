@@ -53,7 +53,7 @@ def get_basis_name(basis, p):
 
     - ``p`` - positive prime number
 
-    OUTPUT: 
+    OUTPUT:
 
     - ``basis_name`` - string
 
@@ -162,7 +162,7 @@ def get_basis_name(basis, p):
         if basis.find('long') >= 0:
             result = result + '_long'
     else:
-        raise ValueError, "%s is not a recognized basis at the prime %s." % (basis, p)
+        raise ValueError("%s is not a recognized basis at the prime %s." % (basis, p))
     return result
 
 ######################################################
@@ -272,7 +272,7 @@ def is_valid_profile(profile, truncation_type, p=2):
 
 def normalize_profile(profile, precision=None, truncation_type='auto', p=2):
     """
-    Given a profile function and related data, return it in a standard form, 
+    Given a profile function and related data, return it in a standard form,
     suitable for hashing and caching as data defining a sub-Hopf
     algebra of the Steenrod algebra.
 
@@ -330,7 +330,7 @@ def normalize_profile(profile, precision=None, truncation_type='auto', p=2):
 
     - a pair of functions, one (called `e`) from positive integers to
       non-negative integers (and `\infty`), one (called `k`) from
-      non-negative integers to the set `\{1,2\}`, e.g., 
+      non-negative integers to the set `\{1,2\}`, e.g.,
       ``(lambda n: n+2, lambda n: 1)``.  This corresponds to the
       pair ``([3, 4, 5, ...], [1, 1, 1, ...])``.
 
@@ -448,7 +448,7 @@ def normalize_profile(profile, precision=None, truncation_type='auto', p=2):
         if is_valid_profile(new_profile, truncation_type, p):
             return new_profile, truncation_type
         else:
-            raise ValueError, "Invalid profile"
+            raise ValueError("Invalid profile")
     else: # p odd
         if profile is None or profile == Infinity:
             # no specified profile or infinite profile: return profile
@@ -506,7 +506,7 @@ def normalize_profile(profile, precision=None, truncation_type='auto', p=2):
         if is_valid_profile(new_profile, truncation_type, p):
             return new_profile, truncation_type
         else:
-            raise ValueError, "Invalid profile"
+            raise ValueError("Invalid profile")
 
 ######################################################
 # string representations for elements
@@ -697,7 +697,7 @@ def wood_mono_to_string(mono, latex=False):
         sq = "Sq"
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         for (s,t) in mono:
             string = string + sq + "^{" + \
@@ -779,7 +779,7 @@ def wall_long_mono_to_string(mono, latex=False):
         sq = "Sq"
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         for (m,k) in mono:
             for i in range(k,m+1):
@@ -818,7 +818,7 @@ def arnonA_mono_to_string(mono, latex=False, p=2):
     """
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         for (m,k) in mono:
             string = string + "X^{" + str(m) + "}_{" \
@@ -861,7 +861,7 @@ def arnonA_long_mono_to_string(mono, latex=False, p=2):
         sq = "Sq"
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         for (m,k) in mono:
             for i in range(m,k-1,-1):
@@ -906,7 +906,7 @@ def pst_mono_to_string(mono, latex=False, p=2):
     """
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         if p == 2:
             for (s,t) in mono:
@@ -966,7 +966,7 @@ def comm_mono_to_string(mono, latex=False, p=2):
     """
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         if p == 2:
             for (s,t) in mono:
@@ -1026,7 +1026,7 @@ def comm_long_mono_to_string(mono, latex=False, p=2):
     """
     if len(mono) == 0:
         return "1"
-    else: 
+    else:
         string = ""
         if p == 2:
             for (s,t) in mono:
@@ -1083,7 +1083,6 @@ def convert_perm(m):
         [1, 3, 2]
         sage: sage.algebras.steenrod.steenrod_algebra_misc.convert_perm((5,0,6,3))
         [3, 1, 4, 2]
-    """    
-    m2 = list(m)
-    m2.sort()
+    """
+    m2 = sorted(m)
     return [list(m2).index(x)+1 for x in m]

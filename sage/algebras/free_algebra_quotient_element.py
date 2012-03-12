@@ -14,11 +14,11 @@ from __future__ import with_statement
 #
 #  Distributed under the terms of the GNU General Public License (GPL)
 #
-#    This code is distributed in the hope that it will be useful, 
-#    but WITHOUT ANY WARRANTY; without even the implied warranty 
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty
 #    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# 
-#  See the GNU General Public License for more details; the full text 
+#
+#  See the GNU General Public License for more details; the full text
 #  is available at:
 #
 #                  http://www.gnu.org/licenses/
@@ -88,7 +88,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
         M = A.module()
         F = A.monoid()
         B = A.monomial_basis()
-                
+
         if isinstance(x, (int, long, Integer)):
             self.__vector = x*M.gen(0)
         elif isinstance(x, RingElement) and not isinstance(x, AlgebraElement) and x in R:
@@ -97,13 +97,12 @@ class FreeAlgebraQuotientElement(AlgebraElement):
             if x in B:
                 self.__vector = M.gen(B.index(x))
             else:
-                raise AttributeError, \
-                      "Argument x (= %s) is not in monomial basis"%x
+                raise AttributeError("Argument x (= %s) is not in monomial basis"%x)
         elif isinstance(x, list) and len(x) == A.dimension():
             try:
                 self.__vector = M(x)
             except TypeError:
-                raise TypeError, "Argument x (= %s) is of the wrong type."%x
+                raise TypeError("Argument x (= %s) is of the wrong type."%x)
         elif isinstance(x, FreeAlgebraElement) and x.parent() is A.free_algebra():
             # Need to do more work here to include monomials not
             # represented in the monomial basis.
@@ -117,8 +116,8 @@ class FreeAlgebraQuotientElement(AlgebraElement):
         elif isinstance(x, AlgebraElement) and x.parent().ambient_algebra() is A:
             self.__vector = x.ambient_algebra_element().vector()
         else:
-            raise TypeError, "Argument x (= %s) is of the wrong type."%x
-                                        
+            raise TypeError("Argument x (= %s) is of the wrong type."%x)
+
     def _repr_(self):
         """
         EXAMPLES::
@@ -192,7 +191,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
             sage: -i
             -i
             sage: -(2/3*i - 3/7*j + k)
-            -2/3*i + 3/7*j - k        
+            -2/3*i + 3/7*j - k
         """
         y = self.parent()(0)
         y.__vector = -self.__vector
@@ -204,7 +203,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
         
             sage: H, (i,j,k) = sage.algebras.free_algebra_quotient.hamilton_quatalg(QQ)
             sage: 2/3*i + 4*j + k
-            2/3*i + 4*j + k        
+            2/3*i + 4*j + k
         """
         A = self.parent()
         z = A(0)
@@ -221,7 +220,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
             sage: a = 2/3*i - 4*j; a
             2/3*i - 4*j
             sage: a - a
-            0        
+            0
         """
         A = self.parent()
         z = A(0)
@@ -240,7 +239,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
             
             sage: R.<i,j,k> = QuaternionAlgebra(QQ,-1,-1)
             sage: a = (5 + 2*i - 3/5*j + 17*k); a*(a+10)
-            -5459/25 + 40*i - 12*j + 340*k        
+            -5459/25 + 40*i - 12*j + 340*k
         """
         A = self.parent()
         def monomial_product(X,w,m):
@@ -257,7 +256,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
             c = v[i]
             if c != 0: z.__vector += monomial_product(A,c*u,B[i])
         return z
-        
+
     def _rmul_(self, c):
         """
         EXAMPLES::
@@ -278,10 +277,7 @@ class FreeAlgebraQuotientElement(AlgebraElement):
             sage: (-1+i-2*j+k) * 3
             -3 + 3*i - 6*j + 3*k
             sage: (-1+i-2*j+k)._lmul_(3)
-            -3 + 3*i - 6*j + 3*k        
+            -3 + 3*i - 6*j + 3*k
         """
         return self.parent([a*c for a in self.__vector])
-
-
-
 

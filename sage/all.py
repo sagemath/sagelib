@@ -45,8 +45,8 @@ exit = quit
 
 import os, sys
 
-if not os.environ.has_key('SAGE_ROOT'):
-    raise RuntimeError, "To use the Sage libraries, set the environment variable SAGE_ROOT to the Sage build directory and LD_LIBRARY_PATH to $SAGE_ROOT/local/lib"
+if 'SAGE_ROOT' not in os.environ:
+    raise RuntimeError("To use the Sage libraries, set the environment variable SAGE_ROOT to the Sage build directory and LD_LIBRARY_PATH to $SAGE_ROOT/local/lib")
  
 if sys.version_info[:2] < (2, 5):
     print >>sys.stderr, "Sage requires Python 2.5 or newer"
@@ -54,7 +54,7 @@ if sys.version_info[:2] < (2, 5):
 
 ###################################################################
 
-# We have to set this here so urllib, etc. can detect it. 
+# We have to set this here so urllib, etc. can detect it.
 import sage.server.notebook.gnutls_socket_ssl
 sage.server.notebook.gnutls_socket_ssl.require_SSL()
 
@@ -161,7 +161,7 @@ sage.misc.misc.deprecated_callable_import(None, globals(), locals(),
 
 del message, name
 
-        
+
 ###########################################################
 #### WARNING:
 # DO *not* import numpy / matplotlib / networkx here!!
