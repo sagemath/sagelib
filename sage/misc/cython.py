@@ -23,12 +23,11 @@ from sage.misc.misc import UNAME
 
 def cblas():
     """
-    Return the name of the cblas library on this system.  If the
-    environment variable :envvar:`$SAGE_CBLAS` is set, just return its
-    value.  If not, return 'cblas' if :file:`/usr/lib/libcblas.so`
-    or :file:`/usr/lib/libcblas.dylib` exists, return 'blas' if
-    :file:`/usr/lib/libblas.dll.a` exists, and return 'gslcblas'
-    otherwise.
+    Return the name of the cblas library on this system. If the environment
+    variable :envvar:`$SAGE_CBLAS` is set, just return its value. If not,
+    return ``'cblas'`` if :file:`/usr/lib/libcblas.so` or
+    :file:`/usr/lib/libcblas.dylib` exists, return ``'blas'`` if
+    :file:`/usr/lib/libblas.dll.a` exists, and return ``'gslcblas'`` otherwise.
 
     EXAMPLES::
 
@@ -43,19 +42,19 @@ def cblas():
     elif os.path.exists('/usr/lib/libblas.dll.a'):   # untested.
         return 'blas'
     else:
-        # This is very slow  (?), but *guaranteed* to be available. 
-        return 'gslcblas'  
+        # This is very slow (?), but *guaranteed* to be available.
+        return 'gslcblas'
 
 # In case of ATLAS we need to link against cblas as well as atlas
 # In the other cases we just return the same library name as cblas()
 # which is fine for the linker
 #
-# We should be using the Accelerate FrameWork on OS X, but that requires 
+# We should be using the Accelerate FrameWork on OS X, but that requires
 # some magic due to distutils having ridden on the short bus :)
 def atlas():
     """
-    Returns the name of the ATLAS library to use.  On Darwin or
-    Cygwin, this is 'blas', and otherwise it is 'atlas'.
+    Returns the name of the ATLAS library to use. On Darwin or Cygwin, this is
+    ``'blas'``, and otherwise it is ``'atlas'``.
 
     EXAMPLES::
 
@@ -83,14 +82,14 @@ offset = 0
 
 def parse_keywords(kwd, s):
     r"""
-    Given a keyword kwd and a string s, return a list of all arguments
-    on the same line as that keyword in s, as well as a new copy of
-    s in which each occurrence of kwd is in a comment. If a comment
-    already occurs on the line containing kwd, no words after the #
-    are added to the list.
+    Given a keyword ``kwd`` and a string ``s``, return a list of all arguments
+    on the same line as that keyword in ``s``, as well as a new copy of ``s``
+    in which each occurrence of ``kwd`` is in a comment. If a comment already
+    occurs on the line containing ``kwd``, no words after the ``#`` are added
+    to the list.
 
     EXAMPLES::
-    
+
         sage: sage.misc.cython.parse_keywords('clib', " clib foo bar baz\n #cinclude bar\n")
         (['foo', 'bar', 'baz'], ' #clib foo bar baz\n #cinclude bar\n')
 
@@ -126,15 +125,15 @@ def parse_keywords(kwd, s):
             if X[0] == '#':   # skip rest of line
                 break
             v.append(X)
-            
+
     return v, s
 
 def environ_parse(s):
     r"""
-    Given a string s, find each substring of the form '\$ABC'.  If the
-    environment variable :envvar:`ABC` is set, replace '\$ABC' with its
-    value and move on to the next such substring.  If it is not set,
-    stop parsing there.
+    Given a string s, find each substring of the form ``'\$ABC'``. If the
+    environment variable :envvar:`$ABC` is set, replace ``'\$ABC'`` with its
+    value and move on to the next such substring. If it is not set, stop
+    parsing there.
 
     EXAMPLES::
 
@@ -164,30 +163,29 @@ def environ_parse(s):
 
 def pyx_preparse(s):
     r"""
-    Preparse a pyx file
+    Preparse a pyx file:
 
-    * include cdefs.pxi, interrupt.pxi, stdsage.pxi
-    * parse clang pragma (c or c++)
-    * parse clib pragma (additional libraries to link in)
-    * parse cinclude (additional include directories)
-    * parse cfile (additional files to be included)
-    * parse cargs (additional parameters passed to the compiler)
+    * include ``cdefs.pxi``, ``interrupt.pxi``, ``stdsage.pxi``
+    * parse ``clang`` pragma (c or c++)
+    * parse ``clib`` pragma (additional libraries to link in)
+    * parse ``cinclude`` (additional include directories)
+    * parse ``cfile`` (additional files to be included)
+    * parse ``cargs`` (additional parameters passed to the compiler)
 
     The pragmas:
 
-    - ``clang`` - may be either c or c++ indicating whether a C or C++
-      compiler should be used
+    - ``clang`` - may be either ``'c'`` or ``'c++'`` indicating whether a C or
+      C++ compiler should be used
 
-    - ``clib`` - additional libraries to be linked in, the space
-      separated list is split and passed to distutils.
+    - ``clib`` - additional libraries to be linked in, the space separated list
+      is split and passed to distutils.
 
-    - ``cinclude`` - additional directories to search for header
-      files. The space separated list is split and passed to
-      distutils.
+    - ``cinclude`` - additional directories to search for header files. The
+      space separated list is split and passed to distutils.
 
     - ``cfile`` - additional C or C++ files to be compiled. Also,
-      ``$SAGE_ROOT`` is expanded, but other environment variables 
-      are not.
+      :envvar:`$SAGE_ROOT` is expanded, but other environment variables are
+      not.
 
     - ``cargs`` - additional parameters passed to the compiler
 
@@ -238,7 +236,7 @@ def pyx_preparse(s):
         'csage']
         sage: libs[1:] == sage.misc.cython.standard_libs
         True
-        
+
         sage: inc
         ['bar',
         '.../local/include/csage/',
@@ -270,7 +268,7 @@ def pyx_preparse(s):
     libs = v + standard_libs
 
     additional_source_files, s = parse_keywords('cfile', s)
-    
+
     v, s = parse_keywords('cinclude', s)
     inc = [environ_parse(x.replace('"','').replace("'","")) for x in v] + include_dirs
     s = """\ninclude "cdefs.pxi"\n""" + s
@@ -290,7 +288,7 @@ def pyx_preparse(s):
 # overwriting the definitions of everything in the original .so file.
 #
 # HOW: By using a sequence_number for each .spyx file; we keep
-# these sequence numbers in a dict. 
+# these sequence numbers in a dict.
 #
 ################################################################
 
@@ -300,34 +298,33 @@ def cython(filename, verbose=False, compile_message=False,
            use_cache=False, create_local_c_file=False, annotate=True, sage_namespace=True,
            create_local_so_file=False):
     """
-    Compile a Cython file.  This converts a Cython file to a C (or C++
-    file), and then compiles that.  The .c file and the .so file are
+    Compile a Cython file. This converts a Cython file to a C (or C++ file),
+    and then compiles that. The .c file and the .so file are
     created in a temporary directory.
 
     INPUTS:
 
-    - ``filename`` - the name of the file to be compiled.  Should end
-      with 'pyx'.
+    - ``filename`` - the name of the file to be compiled. Should end with
+      'pyx'.
 
     - ``verbose`` (bool, default False) - if True, print debugging
       information.
 
     - ``compile_message`` (bool, default False) - if True, print
-      'Compiling <filename>...'
+      ``'Compiling <filename>...'``
 
     - ``use_cache`` (bool, default False) - if True, check the
       temporary build directory to see if there is already a
-      corresponding .so file.  If so, and if the .so file is newer
-      than the Cython file, don't recompile, just reuse the .so file.
+      corresponding .so file. If so, and if the .so file is newer than the
+      Cython file, don't recompile, just reuse the .so file.
 
     - ``create_local_c_file`` (bool, default False) - if True, save a
       copy of the .c file in the current directory.
 
-    - ``annotate`` (bool, default True) - if True, create an html file
-      which annotates the conversion from .pyx to .c.  By default this
-      is only created in the temporary directory, but if
-      ``create_local_c_file`` is also True, then save a copy of the
-      .html file in the current directory.
+    - ``annotate`` (bool, default True) - if True, create an html file which
+      annotates the conversion from .pyx to .c. By default this is only created
+      in the temporary directory, but if ``create_local_c_file`` is also True,
+      then save a copy of the .html file in the current directory.
 
     - ``sage_namespace`` (bool, default True) - if True, import
       ``sage.all``.
@@ -340,7 +337,7 @@ def cython(filename, verbose=False, compile_message=False,
     if not filename.endswith('pyx'):
         print "File (=%s) should have extension .pyx"%filename
 
-    # base is the name of the .so module that we create.  If we are
+    # base is the name of the .so module that we create. If we are
     # creating a local shared object file, we use a more natural
     # naming convention. If we are not creating a local shared object
     # file, the main constraint is that it is unique and determined by
@@ -355,11 +352,11 @@ def cython(filename, verbose=False, compile_message=False,
 
     # This is the *temporary* directory where we build the pyx file.
     # This is deleted when sage exits, which means pyx files must be
-    # rebuilt every time Sage is restarted at present. 
+    # rebuilt every time Sage is restarted at present.
     build_dir = '%s/%s'%(SPYX_TMP, base)
 
     if os.path.exists(build_dir):
-        # There is already a module here.  Maybe we do not have to rebuild?
+        # There is already a module here. Maybe we do not have to rebuild?
         # Find the name.
         if use_cache:
             prev_so = [F for F in os.listdir(build_dir) if F[-3:] == '.so']
@@ -379,7 +376,7 @@ def cython(filename, verbose=False, compile_message=False,
             pass
 
     # Get the absolute path to the directory that contains the pyx file.
-    # We will use this only to make some convenient symbolic links. 
+    # We will use this only to make some convenient symbolic links.
     abs_base = os.path.split(os.path.abspath(filename))[0]
 
     # bad things happen if the current directory is devel/sage-*
@@ -388,10 +385,10 @@ def cython(filename, verbose=False, compile_message=False,
         os.system(cmd)
         if os.path.exists("%s/setup.py" % build_dir):
             os.unlink("%s/setup.py" % build_dir)
-    
+
     if compile_message:
         print "Compiling %s..."%filename
-        
+
     F = open(filename).read()
 
     F, libs, includes, language, additional_source_files, extra_args = pyx_preparse(F)
@@ -447,14 +444,14 @@ ext_modules = [Extension('%s', sources=['%s.%s', %s],
                      extra_compile_args = extra_compile_args,
                      extra_link_args = extra_link_args,
                      language = '%s' )]
-                     
+
 setup(ext_modules = ext_modules,
       include_dirs = %s)
     """%(extra_args, name, name, extension, additional_source_files, libs, language, includes)
     open('%s/setup.py'%build_dir,'w').write(setup)
 
     cython_include = ' '.join(["-I '%s'"%x for x in includes if len(x.strip()) > 0 ])
-    
+
     options = ['-p']
     if annotate:
         options.append('-a')
@@ -471,7 +468,7 @@ setup(ext_modules = ext_modules,
         if annotate:
             target_html = '%s/_%s.html'%(os.path.abspath(os.curdir), base)
             cmd += " && cp '%s.html' '%s'"%(name, target_html)
-        
+
     if verbose:
         print cmd
     if os.system(cmd):
@@ -485,7 +482,7 @@ setup(ext_modules = ext_modules,
 ##     if make_c_file_nice and os.path.exists(target_c):
 ##         R = open(target_c).read()
 ##         R = "/* THIS IS A PARSED TO MAKE READABLE VERSION OF THE C FILE. */" + R
-        
+
 ##         # 1. Get rid of the annoying __pyx_'s before variable names.
 ##         # R = R.replace('__pyx_v_','').replace('__pyx','')
 ##         # 2. Replace the line number references by the actual code from the file,
@@ -510,9 +507,9 @@ setup(ext_modules = ext_modules,
 ##             except IndexError:
 ##                 line = '(missing code)'
 ##             R = R[:i+2] + '%s\n\n Line %s: %s\n\n%s'%(stars, line_number, line, stars) + R[i+j:]
-            
+
 ##         open(target_c,'w').write(R)
-    
+
 
     cmd = 'cd %s && python setup.py build 1>log 2>err'%build_dir
     if verbose: print cmd
@@ -520,7 +517,7 @@ setup(ext_modules = ext_modules,
         log = open('%s/log'%build_dir).read()
         err = open('%s/err'%build_dir).read()
         raise RuntimeError, "Error compiling %s:\n%s\n%s"%(filename, log, err)
-    
+
     # Move from lib directory.
     cmd = 'mv %s/build/lib.*/* %s'%(build_dir, build_dir)
     if verbose: print cmd
@@ -539,10 +536,9 @@ setup(ext_modules = ext_modules,
 
 def subtract_from_line_numbers(s, n):
     r"""
-    Given a string ``s`` and an integer ``n``, for any line of ``s``
-    which has the form 'text:NUM:text' subtract ``n`` from NUM and
-    return 'text:(NUM-n):text'.  Return other lines of ``s`` without
-    change.
+    Given a string ``s`` and an integer ``n``, for any line of ``s`` which has
+    the form ``'text:NUM:text'`` subtract ``n`` from NUM and return
+    ``'text:(NUM-n):text'``. Return other lines of ``s`` without change.
 
     EXAMPLES::
 
@@ -571,23 +567,25 @@ def cython_lambda(vars, expr,
                  compile_message=False,
                  use_cache=False):
     """
-    Create a compiled function which evaluates expr assuming machine
-    values for vars.
+    Create a compiled function which evaluates ``expr`` assuming machine values
+    for ``vars``.
 
-    WARNING: This implementation is not well tested.
+    .. warning::
+
+        This implementation is not well tested.
 
     INPUT:
 
-    - ``vars`` - list of pairs (variable name, c-data type), where
-      the variable names and data types are strings, OR a string such
-      as 'double x, int y, int z'
+    - ``vars`` - list of pairs (variable name, c-data type), where the variable
+      names and data types are strings, OR a string such as ``'double x, int y,
+      int z'``
 
-    - ``expr`` - an expression involving the vars and constants; you
-      can access objects defined in the current module scope globals()
-      using sagobject_name.  See the examples below.
+    - ``expr`` - an expression involving the vars and constants; you can access
+      objects defined in the current module scope ``globals()`` using
+      ``sage.object_name``.
 
     EXAMPLES:
-    
+
     We create a Lambda function in pure Python (using the r to make sure the 3.2
     is viewed as a Python float)::
 
@@ -609,7 +607,7 @@ def cython_lambda(vars, expr,
         24.455978889110629
         sage: a = 50
         sage: f(10)                                                                      # optional -- gcc
-        49.455978889110632        
+        49.455978889110632
     """
     if isinstance(vars, str):
         v = vars
@@ -639,28 +637,28 @@ def f(%s):
                                          use_cache=use_cache,
                                          create_local_c_file=False)
     return d['f']
-    
+
 def cython_create_local_so(filename):
     r"""
     Compile filename and make it available as a loadable shared object file.
-    
+
     INPUT:
 
     - ``filename`` - string: a Cython (formerly SageX) (.spyx) file
-    
+
     OUTPUT: None
-    
+
     EFFECT: A compiled, python "importable" loadable shared object file is created.
 
     .. note::
 
-        Shared object files are {NOT} reloadable. The intent is for
+        Shared object files are *not* reloadable. The intent is for
         imports in other scripts. A possible development cycle might
         go thus:
-  
+
         - Attach a .spyx file
         - Interactively test and edit it to your satisfaction
-        - Use cython_create_local_so to create the shared object file
+        - Use ``cython_create_local_so`` to create the shared object file
         - Import the .so file in other scripts
 
     EXAMPLES::
@@ -687,11 +685,11 @@ def cython_create_local_so(filename):
 
 def sanitize(f):
     """
-    Given a filename f, replace it by a filename that is a valid Python
+    Given a filename ``f``, replace it by a filename that is a valid Python
     module name.
 
-    This means that the characters are all alphanumeric or _'s and
-    doesn't begin with a numeral.
+    This means that the characters are all alphanumeric or ``_``'s and doesn't
+    begin with a numeral.
 
     EXAMPLES::
 
