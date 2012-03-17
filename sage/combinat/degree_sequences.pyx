@@ -61,7 +61,7 @@ Degree sequences are completely characterized by a result from Erdos and Gallai:
 degree sequence if and only if* `\forall i`
 
 .. MATH::
-    \sum_{j\leq i}d_j \leq j(j-1) + \sum_{j>i}min(d_j,i)
+    \sum_{j\leq i}d_j \leq j(j-1) + \sum_{j>i}\min(d_j,i)
 
 Alternatively, a degree sequence can be defined recursively :
 
@@ -249,7 +249,7 @@ Checking the consistency of enumeration and test::
 
     As soon as the ``yield`` keyword is available in Cython this should be
     changed. Updating the code does not require more than a couple of minutes.
-    
+
 """
 
 ##############################################################################
@@ -259,11 +259,11 @@ Checking the consistency of enumeration and test::
 #                  http://www.gnu.org/licenses/
 ##############################################################################
 
-from sage.libs.gmp.all cimport mpz_t 
-from sage.libs.gmp.all cimport * 
-from sage.rings.integer cimport Integer 
+from sage.libs.gmp.all cimport mpz_t
+from sage.libs.gmp.all cimport *
+from sage.rings.integer cimport Integer
 include '../../../../devel/sage/sage/ext/stdsage.pxi'
-include '../ext/cdefs.pxi'            
+include '../ext/cdefs.pxi'
 include "../ext/interrupt.pxi"
 
 
@@ -274,12 +274,21 @@ class DegreeSequences:
 
     def __init__(self, n):
         r"""
-        Constructor
+        Degree Sequences
 
-        TEST::
+        An instance of this class represents the degree sequences of graphs on a
+        given number `n` of vertices. It can be used to list and count them, as
+        well as to test whether a sequence is a degree sequence. For more
+        information, please refer to the documentation of the
+        :mod:`DegreeSequence<sage.combinat.degree_sequences>` module.
 
-            sage: DegreeSequences(6)
-            Degree sequences on 6 elements
+        EXAMPLE::
+
+            sage: DegreeSequences(8)
+            Degree sequences on 8 elements
+            sage: [3,3,2,2,2,2,2,2] in DegreeSequences(8)
+            True
+
         """
         self._n = n
 
@@ -296,7 +305,7 @@ class DegreeSequences:
         cdef int n = self._n
         if len(seq)!=n:
             return False
-        
+
         cdef int S = sum(seq)
 
         # Partial represents the left side of Erdos and Gallai's inequality,
@@ -364,7 +373,7 @@ class DegreeSequences:
         """
         if seq != NULL:
             free(seq)
-            
+
 cdef init(int n):
     """
     Initializes the memory and starts the enumeration algorithm.
@@ -392,7 +401,7 @@ cdef init(int n):
 
 cdef inline add_seq():
      """
-     This function is called whenever a sequence is found.  
+     This function is called whenever a sequence is found.
 
      Build the degree sequence corresponding to the current state of the
      algorithm and adds it to the sequences list.
@@ -408,7 +417,7 @@ cdef inline add_seq():
          for 0<= j < seq[i]:
              s.append(i)
 
-     sequences.append(s)    
+     sequences.append(s)
 
 cdef void enum(int k, int M):
     """
@@ -481,8 +490,8 @@ cdef void enum(int k, int M):
         n_current_box = seq[current_box]
         n_previous_box = seq[current_box-1]
 
-        # Note to self, and others : 
-        # 
+        # Note to self, and others :
+        #
         # In the following lines, there are many incrementation/decrementation
         # that *may* be replaced by only +1 and -1 and save some
         # instructions. This would involve adding several "if", and I feared it
