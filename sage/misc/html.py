@@ -16,28 +16,31 @@ from sage.misc.sage_eval import sage_eval
 
 def math_parse(s):
     r"""
-    Turn the HTML-ish string s that can have $$ and $'s in it into
+    Turn the HTML-ish string s that can have \$\$ and \$'s in it into
     pure HTML.  See below for a precise definition of what this means.
-    
-    INPUT:
-        s -- a string
-    OUTPUT:
-        a string.
-        
-    Do the following:
-    \begin{verbatim}
-       * Replace all $ text $'s by
-         <span class='math'> text </span>
-       * Replace all $$ text $$'s by
-         <div class='math'> text </div>
-       * Replace all \$'s by $'s.  Note that in
-         the above two cases nothing is done if the $
-         is preceeded by a backslash.
-       * Replace all \[ text \]'s by
-         <div class='math'> text </div>
-    \end{verbatim}
 
-    EXAMPLES:
+    INPUT:
+
+    - ``s`` -- a string
+
+    OUTPUT:
+
+    - a string.
+
+    Do the following:
+
+    * Replace all ``\$ text \$``\'s by
+      ``<span class='math'> text </span>``
+    * Replace all ``\$\$ text \$\$``\'s by
+      ``<div class='math'> text </div>``
+    * Replace all ``\ \$``\'s by ``\$``\'s.  Note that in
+      the above two cases nothing is done if the ``\$``
+      is preceeded by a backslash.
+    * Replace all ``\[ text \]``\'s by
+      ``<div class='math'> text </div>``
+
+    EXAMPLES::
+
         sage: sage.misc.html.math_parse('This is $2+2$.')
         'This is <span class="math">2+2</span>.'
         sage: sage.misc.html.math_parse('This is $$2+2$$.')
@@ -47,9 +50,10 @@ def math_parse(s):
         sage: sage.misc.html.math_parse(r'This is \[2+2\].')
         'This is <div class="math">2+2</div>.'
 
-    TESTS:
+    TESTS::
+
         sage: sage.misc.html.math_parse(r'This \$\$is $2+2$.')
-        'This $$is <span class="math">2+2</span>.'    
+        'This $$is <span class="math">2+2</span>.'
     """
     # first replace \\[ and \\] by <div class="math"> and </div>, respectively.
     while True:
@@ -107,42 +111,43 @@ def math_parse(s):
     return t
 
 class HTMLExpr(str):
+    r"""
+    A class for HTML expression
+    """
     def __repr__(self):
         return str(self)
 
 class HTML:
-    def __init__(self):
+    def __call__(self, s, globals=None, locals=None):
         """
         Display the given HTML expression in the notebook.
 
         INPUT:
-            s -- a string
+
+        - ``s`` -- a string
 
         OUTPUT:
-            prints a code that embeds HTML in the output. 
 
-        By default in the notebook an output cell has two parts, first a plain text
-        preformat part, then second a general HTML part (not pre).   If you call
-        html(s) at any point then that adds something that will be displayed
-        in the preformated part in html.
+        - prints a code that embeds HTML in the output.
 
-        EXAMPLES:
+        By default in the notebook an output cell has two parts, first a plain
+        text preformat part, then second a general HTML part (not pre).  If
+        you call html(s) at any point then that adds something that will be
+        displayed in the preformated part in html.
+
+        EXAMPLES::
+
             sage: html('<a href="http://sagemath.org">sagemath</a>')
             <html><font color='black'><a href="http://sagemath.org">sagemath</a></font></html>
-        """
-        
-    def __call__(self, s, globals=None, locals=None):
-        """
-        EXAMPLES:
             sage: html('<hr>')
             <html><font color='black'><hr></font></html>
         """
         return HTMLExpr(self.eval(s, globals, locals))
-    
+
     def eval(self, s, globals=None, locals=None):
         r"""
         EXAMPLES::
-        
+
             sage: html.eval('<hr>')
             <html><font color='black'><hr></font></html>
             ''
@@ -170,7 +175,7 @@ class HTML:
         return ''
 
     def table(self, x, header = False):
-        r""" 
+        r"""
         Print a nested list as a HTML table.  Strings of html
         will be parsed for math inside dollar and double-dollar signs.
         2D graphics will be displayed in the cells.  Expressions will
@@ -178,10 +183,10 @@ class HTML:
 
 
         INPUT:
-        
-          - ``x`` -- a list of lists (i.e., a list of table rows)
-          - ``header`` -- a row of headers.  If True, then the first
-             row of the table is taken to be the header.
+
+        - ``x`` -- a list of lists (i.e., a list of table rows)
+        - ``header`` -- a row of headers.  If ``True``, then the first
+          row of the table is taken to be the header.
 
         EXAMPLES::
 
@@ -214,7 +219,7 @@ class HTML:
             </table>
             </div>
             </html>
-    
+
             sage: html.table(["Functions $f(x)$", sin(x), cos(x)], header = True)
             <html>
             <div class="notruncate">
@@ -329,12 +334,12 @@ class HTML:
 
         INPUT:
 
-            - ``url`` -- a url string, either with or without URI scheme
-              (defaults to "http").
-            - ``height`` -- the number of pixels for the page height.
-              Defaults to 400.
-            - ``width`` -- the number of pixels for the page width.
-              Defaults to 800.
+        - ``url`` -- a url string, either with or without URI scheme
+          (defaults to "http").
+        - ``height`` -- the number of pixels for the page height.
+          Defaults to 400.
+        - ``width`` -- the number of pixels for the page width.
+          Defaults to 800.
 
         OUTPUT:
 
@@ -374,3 +379,6 @@ class HTML:
         return html(string)
 
 html = HTML()
+# Ensure that html appear in the sphinx doc as a function
+# so that the link :func:`html` is correctly set up.
+html.__doc__ = HTML.__call__.__doc__
