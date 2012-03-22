@@ -7608,7 +7608,7 @@ class GraphGenerators():
                     0: [1, 2, 3, 4],
                     1: [2, 3, 4],
                     3: [4],
-                    5: [2, 0, 1]                    
+                    5: [2, 0, 1]
                     }))
 
         graphs.append(Graph({

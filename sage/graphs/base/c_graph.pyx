@@ -226,12 +226,11 @@ cdef class CGraph:
 
         .. SEEALSO::
 
-            - :meth:`add_vertex_unsafe`
-              -- add a vertex to a graph. This method is potentially unsafe.
-              You should instead use :meth:`add_vertex`.
+            - ``add_vertex_unsafe`` -- add a vertex to a graph. This
+              method is potentially unsafe.  You should instead use
+              :meth:`add_vertex`.
 
-            - :meth:`add_vertices`
-              -- add a bunch of vertices to a graph.
+            - ``add_vertices`` -- add a bunch of vertices to a graph.
 
         EXAMPLES:
 
@@ -439,9 +438,8 @@ cdef class CGraph:
 
         .. SEEALSO::
 
-            - :meth:`del_vertex_unsafe`
-              -- delete a vertex from a graph. This method is potentially
-              unsafe. Use :meth:`del_vertex` instead.
+            - ``del_vertex_unsafe`` -- delete a vertex from a graph. This method
+              is potentially unsafe. Use :meth:`del_vertex` instead.
 
         EXAMPLES:
 
@@ -853,16 +851,16 @@ cdef class CGraph:
         raise NotImplementedError()
 
     cdef int * adjacency_sequence_in(self, int n, int *vertices, int v):
-        r""" 
+        r"""
         Returns the adjacency sequence corresponding to a list of vertices
-        and a vertex. 
+        and a vertex.
 
         See the OUTPUT section for a formal definition.
 
         See the function ``_test_adjacency_sequence()`` of
         ``dense_graph.pyx`` and ``sparse_graph.pyx`` for unit tests.
-        
-        INPUT: 
+
+        INPUT:
 
         - ``n`` -- nonnegative integer; the maximum index in
           ``vertices`` up to which we want to consider. If ``n = 0``,

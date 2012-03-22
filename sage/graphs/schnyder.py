@@ -1,7 +1,8 @@
-
 """
+Schnyder's Algorithm for straight-line planar embeddings.
+
 A module for computing the (x,y) coordinates for a straight-line planar
-embedding of any connected planar graph with at least three vertices.  Uses 
+embedding of any connected planar graph with at least three vertices.  Uses
 Walter Schnyder's Algorithm.
 
 AUTHORS:
@@ -26,11 +27,11 @@ def _triangulate(g, comb_emb):
     """
     Helper function to schnyder method for computing coordinates in the plane to
     plot a planar graph with no edge crossings.
-    
+
     Given a connected graph g with at least 3 vertices and a planar combinatorial
     embedding comb_emb of g, modify g in place to form a graph whose faces are
     all triangles, and return the set of newly created edges.
-    
+
     The simple way to triangulate a face is to just pick a vertex and draw
     an edge from that vertex to every other vertex in the face. Think that this
     might ultimately result in graphs that don't look very nice when we draw them
@@ -39,15 +40,16 @@ def _triangulate(g, comb_emb):
     a repeat, we keep the first edge of the face and retry the process at the next
     edge in the face list.  (By removing the special cases we guarantee that this
     method will work on one of these attempts.)
-    
+
     INPUT:
         g -- the graph to triangulate
         comb_emb -- a planar combinatorial embedding of g
-        
+
     RETURNS:
         A list of edges that are added to the graph (in place)
-    
-    EXAMPLES:
+
+    EXAMPLES::
+
         sage: from sage.graphs.schnyder import _triangulate
         sage: g = Graph(graphs.CycleGraph(4))
         sage: g.is_planar(set_embedding=True)
@@ -68,14 +70,14 @@ def _triangulate(g, comb_emb):
         raise NotImplementedError("_triangulate() only knows how to handle connected graphs.")
 
     if g.order() == 3 and len(g.edges()) == 2:             # if g is o--o--o
-        vertex_list = g.vertices()                          
+        vertex_list = g.vertices()
         if len(g.neighbors(vertex_list[0])) == 2:          # figure out which of the vertices already has two neighbors
             new_edge = (vertex_list[1], vertex_list[2])    # and connect the other two together.
         elif len(g.neighbors(vertex_list[1])) == 2:
             new_edge = (vertex_list[0], vertex_list[2])
         else:
             new_edge = (vertex_list[0], vertex_list[1])
-            
+
         g.add_edge(new_edge)
         return [new_edge]
 
@@ -83,11 +85,11 @@ def _triangulate(g, comb_emb):
     # that it is not the graph o--o--o. This is where the real work starts.
 
     faces = g.trace_faces(comb_emb)        # We start by finding all of the faces of this embedding.
-    
+
     edges_added = []                        # The list of edges that we add to the graph.
                                             # This will be returned at the end.
-                                            
-    
+
+
     for face in faces:
         new_face = []
         if len(face) < 3:
@@ -100,7 +102,7 @@ def _triangulate(g, comb_emb):
                 new_face = (face[2][1], face[1][0])
             g.add_edge(new_face)
             edges_added.append(new_face)
-        else:        
+        else:
             N = len(face)
             i = 0
             while i < N-1:
@@ -126,26 +128,27 @@ def _normal_label(g, comb_emb, external_face):
     """
     Helper function to schnyder method for computing coordinates in the plane to
     plot a planar graph with no edge crossings.
-    
+
     Constructs a normal labelling of a triangular graph g, given the planar
     combinatorial embedding of g and a designated external face.  Returns labels
-    dictionary.  The normal label is constructed by first contracting the graph 
+    dictionary.  The normal label is constructed by first contracting the graph
     down to its external face, then expanding the graph back to the original while
     simultaneously adding angle labels.
-    
+
     INPUT:
         g -- the graph to find the normal labeling of (g must be triangulated)
         comb_emb -- a planar combinatorial embedding of g
         external_face -- the list of three edges in the external face of g
-    
+
     RETURNS:
         x -- tuple with entries
             x[0] = dict of dicts of normal labeling for each vertex of g and each
-                    adjacent neighbors u,v (u < v) of vertex:  
+                    adjacent neighbors u,v (u < v) of vertex:
                     { vertex : { (u,v): angel_label } }
             x[1] = (v1,v2,v3) tuple of the three vertices of the external face.
-            
-    EXAMPLES:
+
+    EXAMPLES::
+
         sage: from sage.graphs.schnyder import _triangulate, _normal_label, _realizer
         sage: g = Graph(graphs.CycleGraph(7))
         sage: g.is_planar(set_embedding=True)
@@ -157,13 +160,13 @@ def _normal_label(g, comb_emb, external_face):
         sage: _realizer(g, tn)
         ({0: [<sage.graphs.schnyder.TreeNode instance at ...>]},
          (0, 1, 2))
-        
+
     """
     contracted = []
     contractible = []
 
     labels = {}
-    
+
     external_vertices = [external_face[0][0], external_face[1][0], external_face[2][0]]
     external_vertices.sort()
     v1,v2,v3 = external_vertices
@@ -174,14 +177,14 @@ def _normal_label(g, comb_emb, external_face):
         neighbor_count[v] = 0
     for v in g.neighbors(v1):
         neighbor_count[v] = len(v1_neighbors.intersection( Set(g.neighbors(v))))
-    
+
 
     for v in v1_neighbors:
         if v in [v1,v2,v3]:
             continue
         if neighbor_count[v] == 2:
             contractible.append(v)
-    
+
     # contraction phase:
 
     while g.order() > 3:
@@ -206,8 +209,8 @@ def _normal_label(g, comb_emb, external_face):
         for w in g.neighbors(v1):
             if(len(v1_neighbors.intersection( Set(g.neighbors(w))))) == 2 and w not in [v1, v2, v3]:
                 contractible.append(w)
-            
-    
+
+
     # expansion phase:
 
     v1, v2, v3 = g.vertices() #always in sorted order
@@ -227,7 +230,7 @@ def _normal_label(g, comb_emb, external_face):
         if len(neighbors_to_delete) == 0:
             # we are adding v into the face new_neighbors
             w1, w2, w3 = sorted(new_neighbors)
-            
+
             labels[v] = {(w1, w2): labels[w3].pop((w1,w2)), (w2,w3) : labels[w1].pop((w2,w3)), (w1,w3) : labels[w2].pop((w1,w3))}
             labels[w1][tuple(sorted((w2,v)))] = labels[v][(w2,w3)]
             labels[w1][tuple(sorted((w3,v)))] = labels[v][(w2,w3)]
@@ -267,7 +270,7 @@ def _normal_label(g, comb_emb, external_face):
                 else:
                     vertices_in_order.append(angle[0])
                 angles_out_of_v1.remove(angle)
-            
+
             w = vertices_in_order
 
             # is w[0] a 2 or a 3?
@@ -282,7 +285,7 @@ def _normal_label(g, comb_emb, external_face):
                 labels[w[i]][ tuple(sorted( (w[i+1], v) )) ] = top_label
                 labels[w[i+1]][ tuple(sorted( (w[i], v) )) ] = bottom_label
                 i = i + 1
-            
+
             labels[v][tuple(sorted( (v1, w[0])))] = bottom_label
             labels[v][tuple(sorted( (v1, w[-1])))] = top_label
 
@@ -291,7 +294,7 @@ def _normal_label(g, comb_emb, external_face):
             labels[w[-1]][tuple(sorted((v1,v)))] = bottom_label
             labels[v1][tuple(sorted( (w[0],v) ))] = 1
             labels[v1][tuple(sorted( (w[-1],v) ))] = 1
-            
+
             #delete all the extra labels
 
             for angle in angle_set:
@@ -299,11 +302,11 @@ def _normal_label(g, comb_emb, external_face):
 
             labels[w[0]].pop( tuple (sorted( (v1, w[1]) ) ))
             labels[w[-1]].pop( tuple (sorted( (v1, w[-2]) ) ))
-            
+
             i = 1
             while i < len(w) - 1:
-                labels[w[i]].pop(tuple(sorted( (v1, w[i+1])))) 
-                labels[w[i]].pop(tuple(sorted( (v1, w[i-1])))) 
+                labels[w[i]].pop(tuple(sorted( (v1, w[i+1]))))
+                labels[w[i]].pop(tuple(sorted( (v1, w[i-1]))))
                 i = i + 1
 
         for w in new_neighbors:
@@ -317,32 +320,33 @@ def _realizer(g, x, example=False):
     realizer and returns a dictionary of three trees determined by the
     realizer, each spanning all interior vertices and rooted at one of
     the three external vertices.
-    
+
     A realizer is a directed graph with edge labels that span all interior
     vertices from each external vertex.  It is determined by giving direction
     to the edges that have the same angle label on both sides at a vertex.
     (Thus the direction actually points to the parent in the tree.)  The
     edge label is set as whatever the matching angle label is.  Then from
-    any interior vertex, following the directed edges by label will 
+    any interior vertex, following the directed edges by label will
     give a path to each of the three external vertices.
-    
+
     INPUT:
         g -- the graph to compute the realizer of
         x -- tuple with entries
-             x[0] = dict of dicts representing a normal labeling of g.  For 
-                    each vertex of g and each adjacent neighbors u,v (u < v) of 
+             x[0] = dict of dicts representing a normal labeling of g.  For
+                    each vertex of g and each adjacent neighbors u,v (u < v) of
                     vertex:  { vertex : { (u,v): angle_label } }
              x[1] = (v1, v2, v3) tuple of the three external vertices (also
                     the roots of each tree)
-                    
+
     RETURNS:
         x -- tuple with entries
             x[0] = dict of lists of TreeNodes:
                     { root_vertex : [ list of all TreeNodes under root_vertex ] }
             x[0] = (v1,v2,v3) tuple of the three external vertices (also the
                     roots of each tree)
-                    
-    EXAMPLES:
+
+    EXAMPLES::
+
         sage: from sage.graphs.schnyder import _triangulate, _normal_label, _realizer
         sage: g = Graph(graphs.CycleGraph(7))
         sage: g.is_planar(set_embedding=True)
@@ -354,7 +358,7 @@ def _realizer(g, x, example=False):
         sage: _realizer(g, tn)
         ({0: [<sage.graphs.schnyder.TreeNode instance at ...>]},
          (0, 1, 2))
-                
+
     """
     normal_labeling, (v1, v2, v3) = x
     realizer = DiGraph()
@@ -362,7 +366,7 @@ def _realizer(g, x, example=False):
     tree_nodes = {}
     for v in g:
         tree_nodes[v] = [TreeNode(label = v, children = []), TreeNode(label = v, children = []), TreeNode(label = v, children = [])]
-    
+
 
     for v in g:
         ones = []
@@ -375,7 +379,7 @@ def _realizer(g, x, example=False):
         ones.sort()
         twos.sort()
         threes.sort()
-        
+
         i = 0
         while i < len(ones) - 1:
             if ones[i] == ones[i+1]:
@@ -399,7 +403,7 @@ def _realizer(g, x, example=False):
             i = i + 1
 
     _compute_coordinates(realizer, (tree_nodes, (v1, v2, v3)))
-    
+
     if example:
         realizer.show(talk=True, edge_labels=True)
 
@@ -408,21 +412,22 @@ def _realizer(g, x, example=False):
 def _compute_coordinates(g, x):
     """
     Given a triangulated graph g with a dict of trees given by the
-    realizer and tuple of the external vertices, we compute the 
+    realizer and tuple of the external vertices, we compute the
     coordinates of a planar geometric embedding in the grid.
-    
+
     The coordinates will be set to the _pos attribute of g.
-    
+
     INPUT:
         g -- the graph to compute the coordinates of
         x -- tuple with entries
-             x[0] = dict of tree nodes for the three trees with each external 
+             x[0] = dict of tree nodes for the three trees with each external
                     vertex as root
                     { root_vertex : [ list of all TreeNodes under root_vertex ] }
-                    
+
              x[1] = (v1, v2, v3) tuple of the three external vertices (also
                     the roots of each tree)
-    EXAMPLES:
+    EXAMPLES::
+
         sage: from sage.graphs.schnyder import _triangulate, _normal_label, _realizer, _compute_coordinates
         sage: g = Graph(graphs.CycleGraph(7))
         sage: g.is_planar(set_embedding=True)
@@ -436,7 +441,7 @@ def _compute_coordinates(g, x):
         sage: g.get_pos()
         {0: [5, 1], 1: [0, 5], 2: [1, 0], 3: [1, 4], 4: [2, 1], 5: [2, 3], 6: [3, 2]}
     """
-    
+
     tree_nodes, (v1, v2, v3) = x
     # find the roots of each tree:
     t1, t2, t3 = tree_nodes[v1][0], tree_nodes[v2][1], tree_nodes[v3][2]
@@ -462,10 +467,10 @@ def _compute_coordinates(g, x):
         if v not in [t1.label,t2.label,t3.label]:
             # Computing coordinates for v
             r = list((0,0,0))
-            
+
             for i in [0,1,2]:
                 # Computing size of region i:
-                
+
                 # Tracing up tree (i + 1) % 3
                 p = tree_nodes[v][(i + 1) % 3]
                 while p is not None:
@@ -475,7 +480,7 @@ def _compute_coordinates(g, x):
                     r[i] += q
                     p = p.parent
 
-                # Tracing up tree (i - 1) % 3                    
+                # Tracing up tree (i - 1) % 3
                 p = tree_nodes[v][(i - 1) % 3]
                 while p is not None:
                     q = tree_nodes[p.label][i].number_of_descendants
@@ -483,12 +488,12 @@ def _compute_coordinates(g, x):
                     # labels on path up tree (i - 1) % 3
                     r[i] += q
                     p = p.parent
-                
+
                 q = tree_nodes[v][i].number_of_descendants
-                # Subtracting 
+                # Subtracting
                 r[i] -= q
-                
-                # Subtracting 
+
+                # Subtracting
                 q = tree_nodes[v][(i-1)%3].depth
                 r[i] -= q
 
@@ -504,15 +509,16 @@ class TreeNode():
     A class to represent each node in the trees used by _realizer() and
     _compute_coordinates() when finding a planar geometric embedding in
     the grid.
-    
+
     Each tree node is doubly linked to its parent and children.
-    
+
     INPUT:
         parent -- the parent TreeNode of self
         children -- a list of TreeNode children of self
         label -- the associated realizer vertex label
-        
-    EXAMPLES:
+
+    EXAMPLES::
+
         sage: from sage.graphs.schnyder import TreeNode
         sage: tn = TreeNode(label=5)
         sage: tn2 = TreeNode(label=2,parent=tn)
@@ -535,8 +541,9 @@ class TreeNode():
             parent -- the parent TreeNode of self
             children -- a list of TreeNode children of self
             label -- the associated realizer vertex label
-            
-        EXAMPLE:
+
+        EXAMPLE::
+
             sage: from sage.graphs.schnyder import TreeNode
             sage: tn = TreeNode(label=5)
             sage: tn2 = TreeNode(label=2,parent=tn)
@@ -563,10 +570,11 @@ class TreeNode():
 
     def compute_number_of_descendants(self):
         """
-        Computes the number of descendants of self and all descendants.  
+        Computes the number of descendants of self and all descendants.
         For each TreeNode, sets result as attribute self.number_of_descendants
-        
-        EXAMPLES:
+
+        EXAMPLES::
+
             sage: from sage.graphs.schnyder import TreeNode
             sage: tn = TreeNode(label=5)
             sage: tn2 = TreeNode(label=2,parent=tn)
@@ -588,13 +596,14 @@ class TreeNode():
             n += child.compute_number_of_descendants()
         self.number_of_descendants = n
         return n
-    
+
     def compute_depth_of_self_and_children(self):
         """
         Computes the depth of self and all descendants.
         For each TreeNode, sets result as attribute self.depth
-        
-        EXAMPLES:
+
+        EXAMPLES::
+
             sage: from sage.graphs.schnyder import TreeNode
             sage: tn = TreeNode(label=5)
             sage: tn2 = TreeNode(label=2,parent=tn)
@@ -617,12 +626,13 @@ class TreeNode():
             self.depth = self.parent.depth + 1
         for child in self.children:
             child.compute_depth_of_self_and_children()
-            
+
     def append_child(self, child):
         """
         Add a child to list of children.
-        
-        EXAMPLES:
+
+        EXAMPLES::
+
             sage: from sage.graphs.schnyder import TreeNode
             sage: tn = TreeNode(label=5)
             sage: tn2 = TreeNode(label=2,parent=tn)

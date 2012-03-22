@@ -3,19 +3,21 @@ Linear Extensions of Directed Acyclic Graphs.
 
 A linear extension of a directed acyclic graph is a total (linear) ordering on
 the vertices that is compatible with the graph in the following sense:
-if there is a path from x to y in the graph, the x appears before y in the 
+if there is a path from x to y in the graph, the x appears before y in the
 linear extension.
 
 The algorithm implemented in this module is from "Generating Linear Extensions
-Fast" by Preusse and Ruskey, which can be found at 
+Fast" by Preusse and Ruskey, which can be found at
 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.52.3057 .  The algorithm
 generates the extensions in constant amortized time (CAT) -- a constant amount
-of time per extension generated, or linear in the number of extensions 
+of time per extension generated, or linear in the number of extensions
 generated.
 
 EXAMPLES:
+
 Here we generate the 5 linear extensions of the following directed
-acyclic graph.
+acyclic graph::
+
     sage: from sage.graphs.linearextensions import LinearExtensions
     sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
     sage: D.is_directed_acyclic()
@@ -31,7 +33,8 @@ Notice how all of the total orders are compatible with the ordering
 induced from the graph.
 
 We can also get at the linear extensions directly from the graph.  From
-the graph, the linear extensions are known as topological sorts.
+the graph, the linear extensions are known as topological sorts ::
+
     sage: D.topological_sort_generator()
     [[0, 1, 2, 3, 4],
      [0, 1, 2, 4, 3],
@@ -62,15 +65,16 @@ class LinearExtensions(CombinatorialClass):
 
         This is an in-place algorithm and the list self.le keeps track
         of the current linear extensions.  The boolean variable self.is_plus
-        keeps track of the "sign". 
+        keeps track of the "sign".
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: l = LinearExtensions(D)
             sage: l == loads(dumps(l))
             True
-       
+
         """
         ################
         #Precomputation#
@@ -113,20 +117,21 @@ class LinearExtensions(CombinatorialClass):
         self.is_plus = True
         self.linear_extensions = None
         self._name = "Linear extensions of %s"%dag
-    
+
 
     def switch(self, i):
         """
         This implements the Switch procedure described on page 7
         of "Generating Linear Extensions Fast" by Pruesse and Ruskey.
 
-        If i == -1, then the sign is changed.  If i > 0, then self.a[i] 
+        If i == -1, then the sign is changed.  If i > 0, then self.a[i]
         and self.b[i] are transposed.
 
         Note that this meant to be called by the generate_linear_extensions
         method and is not meant to be used directly.
-        
-        EXAMPLES:
+
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: l = LinearExtensions(D)
@@ -171,13 +176,14 @@ class LinearExtensions(CombinatorialClass):
         of "Generating Linear Extensions Fast" by Pruesse and Ruskey.
 
         If direction is "left", then this transposes element with the
-        element on its left.  If the direction is "right", then this 
+        element on its left.  If the direction is "right", then this
         transposes element with the element on its right.
-             
+
         Note that this is meant to be called by the generate_linear_extensions
         method and is not meant to be used directly.
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: l = LinearExtensions(D)
@@ -209,18 +215,19 @@ class LinearExtensions(CombinatorialClass):
         """
         If letter =="b", then this returns True if and only if
         self.b[i] is incomparable with the elements to its right
-        in self.le.  If letter == "a", then it returns True if 
+        in self.le.  If letter == "a", then it returns True if
         and only if self.a[i] is incomparable with the element to its
         right in self.le and the element to the right is not
         self.b[i]
-        
-        This is the Right function described on page 8 of 
+
+        This is the Right function described on page 8 of
         "Generating Linear Extensions Fast" by Pruesse and Ruskey.
 
         Note that this is meant to be called by the generate_linear_extensions
         method and is not meant to be used directly.
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: l = LinearExtensions(D)
@@ -270,7 +277,8 @@ class LinearExtensions(CombinatorialClass):
         Note that this is meant to be called by the list
         method and is not meant to be used directly.
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: l = LinearExtensions(D)
@@ -322,10 +330,11 @@ class LinearExtensions(CombinatorialClass):
         """
         Returns a list of the linear extensions of the directed acyclic graph.
 
-        Note that once they are computed, the linear extensions are 
+        Note that once they are computed, the linear extensions are
         cached in this object.
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: LinearExtensions(D).list()
@@ -337,7 +346,7 @@ class LinearExtensions(CombinatorialClass):
         """
         if self.linear_extensions is not None:
             return self.linear_extensions[:]
-        
+
         self.linear_extensions = []
         self.linear_extensions.append(self.le[:])
         self.generate_linear_extensions(self.max_pair)
@@ -346,13 +355,14 @@ class LinearExtensions(CombinatorialClass):
         self.linear_extensions.sort()
         return self.linear_extensions[:]
 
-    
+
     def incomparable(self, x, y):
         """
         Returns True if vertices x and y are incomparable in the directed
         acyclic graph when thought of as a poset.
 
-        EXAMPLES:
+        EXAMPLES::
+
             sage: from sage.graphs.linearextensions import LinearExtensions
             sage: D = DiGraph({ 0:[1,2], 1:[3], 2:[3,4] })
             sage: l = LinearExtensions(D)

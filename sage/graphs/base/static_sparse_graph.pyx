@@ -401,7 +401,7 @@ cdef strongly_connected_component_containing_vertex(short_digraph g, short_digra
     bitset_intersection(scc, scc, scc_reversed)
 
 cdef void free_short_digraph(short_digraph g):
-            
+
     if g.edges != NULL:
         sage_free(g.edges)
 
@@ -419,19 +419,19 @@ def strongly_connected_components(G):
     .. NOTE::
 
         This method has been written as an attempt to solve the slowness
-        reported in #12235. It is not the one used by
-        :meth:`sage.graphs.digraph.strongly_connected_components` as saving some
-        time on the computation of the strongly connected components is not
-        worth copying the whole graph, but it is a nice way to test this
+        reported in :trac:`12235`. It is not the one used by
+        :meth:`sage.graphs.digraph.DiGraph.strongly_connected_components` as
+        saving some time on the computation of the strongly connected components
+        is not worth copying the whole graph, but it is a nice way to test this
         module's functions. It is also tested in the doctest or
-        :meth:`sage.graphs.digraph.strongly_connected_components`.
+        :meth:`sage.graphs.digraph.DiGraph.strongly_connected_components`.
 
     EXAMPLE::
 
         sage: from sage.graphs.base.static_sparse_graph import strongly_connected_components
         sage: g = digraphs.ButterflyGraph(2)
         sage: strongly_connected_components(g)
-        [[('00', 0)], [('00', 1)], [('00', 2)], [('01', 0)], [('01', 1)], [('01', 2)], 
+        [[('00', 0)], [('00', 1)], [('00', 2)], [('01', 0)], [('01', 1)], [('01', 2)],
         [('10', 0)], [('10', 1)], [('10', 2)], [('11', 0)], [('11', 1)], [('11', 2)]]
     """
 
@@ -467,7 +467,7 @@ def strongly_connected_components(G):
         strongly_connected_component_containing_vertex(g, gr, v, scc)
         answer.append([vertices[i] for i in bitset_list(scc)])
         bitset_union(seen, seen, scc)
-        
+
     bitset_free(seen)
     bitset_free(scc)
     free_short_digraph(g)
