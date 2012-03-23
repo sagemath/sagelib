@@ -20,6 +20,15 @@ from copy import copy
 cdef class CoinBackend(GenericBackend):
 
     def __cinit__(self, maximization = True):
+        """
+        Cython constructor
+
+        EXAMPLE::
+
+            sage: from sage.numerical.backends.generic_backend import get_solver
+            sage: p = get_solver(solver = "Coin")                  # optional - Coin
+
+        """
 
         # Coin devs seem to favor OsiClpSolverInterface
         self.si = new OsiClpSolverInterface()
@@ -44,7 +53,7 @@ cdef class CoinBackend(GenericBackend):
             sage_free(self.solution)
 
     cpdef int add_variable(self, lower_bound=0.0, upper_bound=None, binary=False, continuous=False, integer=False, obj=0.0, name=None) except -1:
-        """
+        r"""
         Add a variable.
 
         This amounts to adding a new column to the matrix. By default,
@@ -96,7 +105,6 @@ cdef class CoinBackend(GenericBackend):
             'x'
             sage: p.objective_coefficient(3)                        # optional - Coin
             1.0
-
         """
 
         # the solution is no longer valid if we add a new column
@@ -127,8 +135,6 @@ cdef class CoinBackend(GenericBackend):
         elif integer:
             self.set_variable_type(n,1)
 
-        # THE NAMES ARE IGNORED BY COIN AT THE MOMENT
-        # (not in this patch)
         if name:
             self.col_names.append(name)
         else:
@@ -136,7 +142,7 @@ cdef class CoinBackend(GenericBackend):
 
         if obj:
             self.si.setObjCoeff(n, obj)
-            
+
         return n
 
     cpdef int add_variables(self, int number, lower_bound=0.0, upper_bound=None, binary=False, continuous=False, integer=False, obj=0.0, names=None) except -1:
@@ -186,7 +192,7 @@ cdef class CoinBackend(GenericBackend):
         #cdef int vtype = int(bool(binary)) + int(bool(continuous)) + int(bool(integer))
         cdef int vtype = int(binary) + int(continuous) + int(integer)
         if  vtype == 0:
-            continuous = True            
+            continuous = True
         elif vtype != 1:
             raise ValueError("Exactly one parameter of 'binary', 'integer' and 'continuous' must be 'True'.")
 
@@ -194,7 +200,7 @@ cdef class CoinBackend(GenericBackend):
         n = self.si.getNumCols()
 
         cdef int i
-        
+
         for 0<= i < number:
 
             self.si.addCol(0, NULL, NULL, 0, self.si.getInfinity(), 0)
@@ -444,8 +450,8 @@ cdef class CoinBackend(GenericBackend):
         for i,c in coefficients:
             row.insert(i, c)
 
-        self.si.addRow (row[0], 
-                        lower_bound if lower_bound != None else -self.si.getInfinity(), 
+        self.si.addRow (row[0],
+                        lower_bound if lower_bound != None else -self.si.getInfinity(),
                         upper_bound if upper_bound != None else +self.si.getInfinity())
         if name != None:
             self.row_names.append(name)
@@ -613,7 +619,7 @@ cdef class CoinBackend(GenericBackend):
         for 0<= i< n:
             c_indices[i] = indices[i]
             c_values[i] = coeffs[i]
-        
+
 
         self.si.addCol (1, c_indices, c_values, 0, self.si.getInfinity(), 0)
         if self.solution != NULL:
@@ -665,7 +671,7 @@ cdef class CoinBackend(GenericBackend):
         model.setNumberThreads(multiprocessing.cpu_count())
 
         model.branchAndBound()
-        
+
         if model.solver().isAbandoned():
             raise MIPSolverException("CBC : The solver has abandoned!")
 
@@ -690,7 +696,7 @@ cdef class CoinBackend(GenericBackend):
         cdef int i
         for i in xrange(self.si.getNumCols()): self.solution[i] = temp_sol[i]
         del model
-        
+
 
     cpdef double get_objective_value(self):
         r"""
@@ -723,7 +729,7 @@ cdef class CoinBackend(GenericBackend):
             return self.obj_value
         else:
             raise MIPSolverException("If you change a linear program, you must solve it before requesting solutions.")
-    
+
     cpdef double get_variable_value(self, int variable):
         r"""
         Returns the value of a variable given by the solver.
@@ -816,7 +822,7 @@ cdef class CoinBackend(GenericBackend):
 
         return (0 == self.si.isContinuous(index) and
                 self.variable_lower_bound(index) == 0 and
-                self.variable_upper_bound(index) == 1)     
+                self.variable_upper_bound(index) == 1)
 
     cpdef bint is_variable_integer(self, int index):
         r"""
@@ -954,7 +960,7 @@ cdef class CoinBackend(GenericBackend):
             if self.solution != NULL:
               sage_free(self.solution)
               self.solution = NULL
-    
+
     cpdef write_mps(self, char * filename, int modern):
         r"""
         Writes the problem to a .mps file

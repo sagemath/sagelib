@@ -9006,7 +9006,7 @@ class GenericGraph(GenericGraph_pyx):
             sage: g = graphs.CompleteBipartiteGraph(3,4)
             sage: mad_g = g.maximum_average_degree(value_only=False)
             sage: g.is_isomorphic(mad_g)
-            True           
+            True
         """
 
         g = self
@@ -9026,22 +9026,22 @@ class GenericGraph(GenericGraph_pyx):
             p.add_constraint( one[ reorder(u,v) ] - 2*d[v] , max = 0 )
 
         p.add_constraint( Sum([d[v] for v in g]), max = 1)
-        
+
         p.set_objective( Sum([ one[reorder(u,v)] for u,v in g.edge_iterator(labels=False)]) )
 
         obj = p.solve(log = verbose)
-        
+
         # Paying attention to numerical error :
         # The zero values could be something like 0.000000000001
         # so I can not write l > 0
         # And the non-zero, though they should be equal to
         # 1/(order of the optimal subgraph) may be a bit lower
 
-        # setting the minimum to 1/(10 * size of the whole graph ) 
+        # setting the minimum to 1/(10 * size of the whole graph )
         # should be safe :-)
-        m = 1/(10*g.order())
+        m = 1/(10 *Integer(g.order()))
         g_mad = g.subgraph([v for v,l in p.get_values(d).iteritems() if l>m ])
-
+        
         if value_only:
             return g_mad.average_degree()
         else:
@@ -9050,15 +9050,15 @@ class GenericGraph(GenericGraph_pyx):
     def degree_histogram(self):
         """
         Returns a list, whose ith entry is the frequency of degree i.
-        
+
         EXAMPLES::
-        
+
             sage: G = graphs.Grid2dGraph(9,12)
             sage: G.degree_histogram()
             [0, 0, 4, 34, 70]
-        
+
         ::
-        
+
             sage: G = graphs.Grid2dGraph(9,12).to_directed()
             sage: G.degree_histogram()
             [0, 0, 0, 0, 4, 0, 34, 0, 70]
@@ -9076,17 +9076,17 @@ class GenericGraph(GenericGraph_pyx):
         of a digraph, the degree is defined as the sum of the in-degree and
         the out-degree, i.e. the total number of edges incident to a given
         vertex.
-        
+
         INPUT: labels=False: returns an iterator over degrees. labels=True:
         returns an iterator over tuples (vertex, degree).
-        
-        
+
+
         -  ``vertices`` - if specified, restrict to this
            subset.
-        
-        
+
+
         EXAMPLES::
-        
+
             sage: G = graphs.Grid2dGraph(3,4)
             sage: for i in G.degree_iterator():
             ...    print i
@@ -9104,9 +9104,9 @@ class GenericGraph(GenericGraph_pyx):
             ...
             ((0, 3), 2)
             ((1, 1), 4)
-        
+
         ::
-        
+
             sage: D = graphs.Grid2dGraph(2,4).to_directed()
             sage: for i in D.degree_iterator():
             ...    print i
