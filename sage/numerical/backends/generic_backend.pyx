@@ -808,7 +808,7 @@ def default_mip_solver(solver = None):
     INPUT:
 
     - ``solver`` -- defines the solver to use:
-    
+
         - GLPK (``solver="GLPK"``). See the `GLPK
           <http://www.gnu.org/software/glpk/>`_ web site.
 
@@ -895,7 +895,7 @@ cpdef GenericBackend get_solver(constraint_generation = False, solver = None):
     INPUT:
 
     - ``solver`` -- 4 solvers should be available through this class:
-    
+
         - GLPK (``solver="GLPK"``). See the `GLPK
           <http://www.gnu.org/software/glpk/>`_ web site.
 
@@ -931,7 +931,7 @@ cpdef GenericBackend get_solver(constraint_generation = False, solver = None):
 
     if solver is None:
         solver = default_mip_solver()
-        
+
         # We do not want to use Coin for constraint_generation. It just does not
         # work
         if solver == "Coin" and constraint_generation:
