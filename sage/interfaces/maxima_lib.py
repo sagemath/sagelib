@@ -1,16 +1,15 @@
 r"""
 Library interface to Maxima
 
-Maxima is a free GPL'd general purpose computer algebra system
-whose development started in 1968 at MIT. It contains symbolic
-manipulation algorithms, as well as implementations of special
-functions, including elliptic functions and generalized
-hypergeometric functions. Moreover, Maxima has implementations of
-many functions relating to the invariant theory of the symmetric
-group `S_n`. (However, the commands for group invariants,
-and the corresponding Maxima documentation, are in French.) For many
-links to Maxima documentation see
-http://maxima.sourceforge.net/docs.shtml/.
+Maxima is a free GPL'd general purpose computer algebra system whose
+development started in 1968 at MIT. It contains symbolic manipulation
+algorithms, as well as implementations of special functions, including
+elliptic functions and generalized hypergeometric functions. Moreover,
+Maxima has implementations of many functions relating to the invariant
+theory of the symmetric group `S_n`. (However, the commands for group
+invariants, and the corresponding Maxima documentation, are in
+French.) For many links to Maxima documentation, see
+http://maxima.sourceforge.net/documentation.html.
 
 AUTHORS:
 
@@ -227,10 +226,10 @@ def stdout_to_string(s):
 
     OUTPUT: string
 
-    This is currently used to implement display2d.
+    This is currently used to implement ``MaximaLib.display2d()``.
 
     EXAMPLES::
-    
+
         sage: from sage.interfaces.maxima_lib import stdout_to_string
         sage: stdout_to_string('1+1')
         ''
@@ -317,7 +316,7 @@ class MaximaLib(MaximaAbstract):
             sage: maxima_lib == loads(dumps(maxima_lib))
             True
 
-        We make sure labels are turned off (see trac 6816)::
+        We make sure labels are turned off (see :trac:`6816`)::
 
             sage: 'nolabels : true' in maxima_lib._MaximaLib__init_code
             True
@@ -366,11 +365,11 @@ class MaximaLib(MaximaAbstract):
         A couple consisting of:
 
         - the function to call for unpickling
-        
+
         - a tuple of arguments for the function
 
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib.__reduce__()
             (<function reduce_load_MaximaLib at 0x...>, ())
@@ -385,10 +384,10 @@ class MaximaLib(MaximaAbstract):
         INPUT:
 
         - ``line`` - string; text to evaluate
-        
+
         - ``locals`` - None (ignored); this is used for compatibility with the
           Sage notebook's generic system interface.
-        
+
         - ``reformat`` - boolean; whether to strip output or not
 
         - ``**kwds`` - All other arguments are currently ignored.
@@ -437,7 +436,7 @@ class MaximaLib(MaximaAbstract):
     def lisp(self, cmd):
         """
         Send a lisp command to maxima.
-        
+
         INPUT:
 
         - ``cmd`` - string
@@ -447,9 +446,9 @@ class MaximaLib(MaximaAbstract):
         .. note::
 
            The output of this command is very raw - not pretty.
-        
+
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib.lisp("(+ 2 17)")
             <ECL: 19>
@@ -459,17 +458,17 @@ class MaximaLib(MaximaAbstract):
     def set(self, var, value):
         """
         Set the variable var to the given value.
-        
+
         INPUT:
-        
+
         -  ``var`` - string
-        
+
         -  ``value`` - string
 
         OUTPUT: none
-        
+
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib.set('xxxxx', '2')
             sage: maxima_lib.get('xxxxx')
@@ -507,16 +506,16 @@ class MaximaLib(MaximaAbstract):
 
     def get(self, var):
         """
-        Get the string value of the variable var.
+        Get the string value of the variable ``var``.
 
         INPUT:
 
         - ``var`` - string
 
         OUTPUT: string
-        
+
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib.set('xxxxx', '2')
             sage: maxima_lib.get('xxxxx')
@@ -575,11 +574,11 @@ class MaximaLib(MaximaAbstract):
         Return the Python class of Maxima functions.
 
         INPUT: none
-        
+
         OUTPUT: type
 
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib._function_class()
             <class 'sage.interfaces.maxima_lib.MaximaLibFunction'>
@@ -591,11 +590,11 @@ class MaximaLib(MaximaAbstract):
         Return the Python class of Maxima elements.
 
         INPUT: none
-        
+
         OUTPUT: type
-        
+
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib._object_class()
             <class 'sage.interfaces.maxima_lib.MaximaLibElement'>
@@ -607,11 +606,11 @@ class MaximaLib(MaximaAbstract):
         Return the Python class of Maxima functions of elements.
 
         INPUT: none
-        
+
         OUTPUT: type
 
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib._function_element_class()
             <class 'sage.interfaces.maxima_lib.MaximaLibFunctionElement'>
@@ -623,11 +622,11 @@ class MaximaLib(MaximaAbstract):
         Return the Python class of Maxima user-defined functions.
 
         INPUT: none
-        
+
         OUTPUT: type
 
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: maxima_lib._object_function_class()
             <class 'sage.interfaces.maxima_lib.MaximaLibElementFunction'>
@@ -674,8 +673,8 @@ class MaximaLib(MaximaAbstract):
             sage: assumptions()  # Check the assumptions really were forgotten
             []
 
-        Make sure the abs_integrate package is being used, trac
-        #11483. The following are examples from the Maxima
+        Make sure the abs_integrate package is being used,
+        :trac:`11483`. The following are examples from the Maxima
         abs_integrate documentation::
 
             sage: integrate(abs(x), x)
@@ -707,7 +706,7 @@ class MaximaLib(MaximaAbstract):
             sage: integrate(f, x, -Infinity, Infinity)
             -erf(1/2*sqrt(2))
 
-        From trac #8624::
+        From :trac:`8624`::
 
             sage: integral(abs(cos(x))*sin(x),(x,pi/2,pi))
             1/2
@@ -717,13 +716,13 @@ class MaximaLib(MaximaAbstract):
             sage: integrate(sqrt(x + sqrt(x)), x).simplify_full()
             1/12*sqrt(sqrt(x) + 1)*((8*x - 3)*x^(1/4) + 2*x^(3/4)) - 1/8*log(sqrt(sqrt(x) + 1) - x^(1/4)) + 1/8*log(sqrt(sqrt(x) + 1) + x^(1/4))
 
-        And trac #11594::
+        And :trac:`11594`::
 
             sage: integrate(abs(x^2 - 1), x, -2, 2)
             4
 
         This definite integral returned zero (incorrectly) in at least
-        maxima-5.23. The correct answer is now given (trac #11591)::
+        maxima-5.23. The correct answer is now given (:trac:`11591`)::
 
             sage: f = (x^2)*exp(x) / (1+exp(x))^2
             sage: integrate(f, (x, -infinity, infinity))
@@ -833,7 +832,7 @@ class MaximaLib(MaximaAbstract):
             []
 
         The second limit below was computed incorrectly prior to
-        maxima-5.24 (trac #10868)::
+        maxima-5.24 (:trac:`10868`)::
 
             sage: f(n) = 2 + 1/factorial(n)
             sage: limit(f(n), n=infinity)
@@ -879,9 +878,9 @@ class MaximaLib(MaximaAbstract):
 def is_MaximaLibElement(x):
     r"""
     Returns True if x is of type MaximaLibElement.
-    
+
     EXAMPLES::
-    
+
         sage: from sage.interfaces.maxima_lib import maxima_lib, is_MaximaLibElement
         sage: m = maxima_lib(1)
         sage: is_MaximaLibElement(m)
@@ -941,8 +940,8 @@ class MaximaLibElement(MaximaAbstractElement):
 
         EXAMPLES:
 
-            The zXXX below are names for arbitrary integers and
-            subject to change::
+        The zXXX below are names for arbitrary integers and
+        subject to change::
 
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: sol = maxima_lib(sin(x) == 0).to_poly_solve(x)
@@ -970,7 +969,7 @@ class MaximaLibElement(MaximaAbstractElement):
         and returned as a string otherwise.
 
         EXAMPLES::
-        
+
             sage: from sage.interfaces.maxima_lib import maxima_lib
             sage: F = maxima_lib('x^5 - y^5').factor()
             sage: F.display2d()
@@ -1015,7 +1014,7 @@ def reduce_load_MaximaLib():
     Unpickle the (unique) Maxima library interface.
 
     EXAMPLES::
-    
+
         sage: from sage.interfaces.maxima_lib import reduce_load_MaximaLib
         sage: reduce_load_MaximaLib()
         Maxima_lib
@@ -1092,7 +1091,7 @@ def add_vararg(*args):
     Addition of a variable number of arguments.
 
     INPUT:
-    
+
     - ``args`` - arguments to add
 
     OUTPUT: sum of arguments
@@ -1113,7 +1112,7 @@ def mul_vararg(*args):
     Multiplication of a variable number of arguments.
 
     INPUT:
-    
+
     - ``args`` - arguments to multiply
 
     OUTPUT: product of arguments
@@ -1170,7 +1169,7 @@ max_gamma_incomplete=sage_op_dict[sage.functions.other.gamma_inc]
 def mrat_to_sage(expr):
     r"""
     Convert a Maxima MRAT expression to Sage SR.
-    
+
     INPUT:
 
     - ``expr`` - ECL object; a Maxima MRAT expression
@@ -1319,6 +1318,7 @@ def dummy_integrate(expr):
     OUTPUT: symbolic expression
 
     EXAMPLES::
+
         sage: from sage.interfaces.maxima_lib import maxima_lib, dummy_integrate
         sage: f = maxima_lib('f(x)').integrate('x')
         sage: f.ecl()
@@ -1327,6 +1327,7 @@ def dummy_integrate(expr):
         integrate(f(x), x)
 
     ::
+
         sage: f = maxima_lib('f(x)').integrate('x',0,10)
         sage: f.ecl()
         <ECL: ((%INTEGRATE SIMP) (($F SIMP) $X) $X 0 10)>
@@ -1378,9 +1379,11 @@ def pyobject_to_max(obj):
     OUTPUT: ECL object
 
     .. note::
-    This uses functions defined in sage.libs.ecl.
+
+       This uses functions defined in sage.libs.ecl.
 
     EXAMPLES::
+
         sage: from sage.interfaces.maxima_lib import pyobject_to_max
         sage: pyobject_to_max(4)
         <ECL: 4>
@@ -1412,6 +1415,7 @@ def sr_to_max(expr):
     OUTPUT: ECL object
 
     EXAMPLES::
+
         sage: from sage.interfaces.maxima_lib import sr_to_max
         sage: var('x')
         x
