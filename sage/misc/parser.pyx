@@ -932,14 +932,30 @@ cdef class Parser:
         """
         Returns an expr, or a (name, expr) tuple corresponding to a single 
         function call argument. 
-        
-        EXAMPLES: 
+
+        EXAMPLES:
+
+        Parsing a normal expression::
+
             sage: from sage.misc.parser import Parser, Tokenizer
             sage: p = Parser(make_var=var)
             sage: p.p_arg(Tokenizer("a+b"))
             a + b
+
+       A keyword expression argument::
+
+            sage: from sage.misc.parser import Parser, Tokenizer
+            sage: p = Parser(make_var=var)
             sage: p.p_arg(Tokenizer("val=a+b"))
             ('val', a + b)
+
+        A lone list::
+
+            sage: from sage.misc.parser import Parser, Tokenizer
+            sage: p = Parser(make_var=var)
+            sage: p.p_arg(Tokenizer("[x]"))
+            [x]
+
         """
         cdef int token = tokens.next()
         if token == NAME and tokens.peek() == '=':
