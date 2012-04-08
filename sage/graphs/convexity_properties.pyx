@@ -1,9 +1,26 @@
 r"""
 Convexity properties of graphs
 
-This class gathers the algorithms related to convexity in a graph.
+This class gathers the algorithms related to convexity in a graph. It implements
+the following methods:
 
-AUTHOR: Nathann Cohen
+.. csv-table::
+    :class: contentstable
+    :widths: 30, 70
+    :delim: |
+
+    :meth:`ConvexityProperties.hull` | Returns the convex hull of a set of vertices
+    :meth:`ConvexityProperties.hull_number` | Computes the hull number of a graph and a corresponding generating set.
+
+These methods can be used through the :class:`ConvexityProperties` object
+returned by :meth:`Graph.convexity_properties`.
+
+AUTHORS:
+
+    -  Nathann Cohen
+
+Methods
+-------
 """
 
 include "../misc/bitset.pxi"
@@ -53,7 +70,7 @@ cdef class ConvexityProperties:
         * This class is useful if you compute the convex hulls of many sets in
           the same graph, or if you want to compute the hull number itself as it
           involves many calls to :meth:`hull`
-        
+
         * Using this class on non-conected graphs is a waste of space and
           efficiency ! If your graph is disconnected, the best for you is to
           deal independently with each connected component, whatever you are
@@ -102,7 +119,7 @@ cdef class ConvexityProperties:
         ...
         ValueError: This is currenly implemented for Graphs only.Only minor updates are needed if you want to makeit support DiGraphs too.
     """
-    
+
     def __init__(self, G):
         r"""
         Constructor
@@ -119,7 +136,7 @@ cdef class ConvexityProperties:
             raise ValueError("This is currenly implemented for Graphs only."+
                              "Only minor updates are needed if you want to make"+
                              "it support DiGraphs too.")
-        
+
         # Cached number of vertices
         cdef int n = G.order()
         self._n = n
@@ -176,14 +193,14 @@ cdef class ConvexityProperties:
                 # Filling it
                 for 0<= k < n:
                     if ((d_i[self._list_integers_to_vertices[k]]
-                         + d_j[self._list_integers_to_vertices[k]]) 
+                         + d_j[self._list_integers_to_vertices[k]])
                         == d_ij):
                         bitset_add(p_bitset[0], k)
 
                 # Next bitset !
                 p_bitset = p_bitset + 1
 
-    
+
     def __destruct__(self):
         r"""
         Destructor
@@ -204,7 +221,7 @@ cdef class ConvexityProperties:
             p_bitset = p_bitset + 1
 
         sage_free(self._cache_hull_pairs)
-            
+
     cdef list _vertices_to_integers(self, vertices):
         r"""
         Converts a list of vertices to a list of integers with the cached data.
@@ -240,7 +257,7 @@ cdef class ConvexityProperties:
         count = bitset_len(hull)
 
         while True:
-            
+
             # Iterating over all the elements in the cache
             p_bitset = self._cache_hull_pairs
 
@@ -264,14 +281,14 @@ cdef class ConvexityProperties:
                     # Next bitset !
                     p_bitset = p_bitset + 1
 
-            
+
             tmp_count = bitset_len(hull)
 
             # If we added nothing new during the previous loop, our set is
             # convex !
             if tmp_count == count:
                 return
-    
+
             # Otherwise, update and back to the loop
             count = tmp_count
 
@@ -291,7 +308,7 @@ cdef class ConvexityProperties:
             sage: CP.hull([1,3])
             [1, 2, 3]
         """
-        cdef bitset_t bs 
+        cdef bitset_t bs
         bitset_init(bs, self._n)
         bitset_set_first_n(bs, 0)
 
@@ -312,7 +329,7 @@ cdef class ConvexityProperties:
         Given a bitset whose hull is not the whole set, greedily add vertices
         and stop before its hull is the whole set.
 
-        NOTE: 
+        NOTE:
 
         * Counting the bits at each turn is not the best way...
         """
@@ -327,19 +344,19 @@ cdef class ConvexityProperties:
                 self._bitset_convex_hull(tmp)
                 if bitset_len(tmp) < self._n:
                     bitset_add(bs, i)
-    
+
 
     cpdef hull_number(self, value_only = True, verbose = False):
         r"""
-        Computes the hull number and a correspondin generating set.
+        Computes the hull number and a corresponding generating set.
 
         The hull number `hn(G)` of a graph `G` is the cardinality of a smallest
         set of vertices `S` such that `h(S)=V(G)`.
 
         INPUT:
 
-        * ``value_only`` (boolean) -- whether to return only the hull number (default) or
-          a minimum set whose convex hull is the whole graph.
+        * ``value_only`` (boolean) -- whether to return only the hull number
+          (default) or a minimum set whose convex hull is the whole graph.
 
         * ``verbose`` (boolean) -- whether to display information on the LP.
 
@@ -404,7 +421,7 @@ cdef class ConvexityProperties:
           Mathematical and computer modelling
           vol. 17 n11 pp.89--95, 1993
         """
-    
+
         cdef int i
         cdef list constraint # temporary variable to add constraints to the LP
 
@@ -413,7 +430,7 @@ cdef class ConvexityProperties:
                 return self._n
             else:
                 return self._list_integers_to_vertices
-            
+
         cdef GenericBackend p = <GenericBackend> get_solver(constraint_generation = True)
 
         # Minimization
@@ -434,7 +451,7 @@ cdef class ConvexityProperties:
         bitset_set_first_n(current_hull,1)
 
         while True:
-            
+
             # Greedily increase it to obtain a better constraint
             self._greedy_increase(current_hull)
 

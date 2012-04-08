@@ -1,11 +1,48 @@
 """
 Graph coloring
 
+This module gathers all methods related to graph coloring. Here is what it can
+do :
+
+**Proper vertex coloring**
+
+.. csv-table::
+    :class: contentstable
+    :widths: 30, 70
+    :delim: |
+
+    :meth:`all_graph_colorings` | Computes all `n`-colorings a graph
+    :meth:`first_coloring` | Returns the first vertex coloring found
+    :meth:`number_of_n_colorings` | Computes the number of `n`-colorings of a graph
+    :meth:`numbers_of_colorings` | Computes the number of colorings of a graph
+    :meth:`chromatic_number` | Returns the chromatic number of the graph
+    :meth:`vertex_coloring` | Computes Vertex colorings and chromatic numbers
+
+
+**Other colorings**
+
+.. csv-table::
+    :class: contentstable
+    :widths: 30, 70
+    :delim: |
+
+    :meth:`grundy_coloring` | Computes Grundy numbers and Grundy colorings
+    :meth:`b_coloring` | Computes a b-chromatic numbers and b-colorings
+    :meth:`edge_coloring` | Compute chromatic index and edge colorings
+    :meth:`round_robin` | Computes a round-robin coloring of the complete graph on `n` vertices
+    :meth:`linear_arboricity` | Computes the linear arboricity of the given graph
+    :meth:`acyclic_edge_coloring` | Computes an acyclic edge coloring of the current graph
+
+
+
 AUTHORS:
 
 - Tom Boothby (2008-02-21): Initial version
 - Carlo Hamalainen (2009-03-28): minor change: switch to C++ DLX solver
 - Nathann Cohen (2009-10-24): Coloring methods using linear programming
+
+Methods
+-------
 """
 
 #*****************************************************************************
@@ -177,8 +214,7 @@ def first_coloring(G, n=0, hex_colors=False):
 
 def number_of_n_colorings(G,n):
     r"""
-    Given a graph `G` and a natural number `n`, returns the number of
-    `n`-colorings of the graph.
+    Computes the number of `n`-colorings of a graph
 
     EXAMPLES::
 
@@ -532,7 +568,7 @@ def grundy_coloring(g, k, value_only = True, solver = None, verbose = 0):
     EXAMPLES:
 
     The Grundy number of a `P_4` is equal to 3::
-    
+
         sage: from sage.graphs.graph_coloring import grundy_coloring
         sage: g = graphs.PathGraph(4)
         sage: grundy_coloring(g, 4)
@@ -570,7 +606,7 @@ def grundy_coloring(g, k, value_only = True, solver = None, verbose = 0):
     for u,v in g.edges(labels = None):
         for i in classes:
             p.add_constraint(b[v][i] + b[u][i], max = 1)
-    
+
     # The following constraints ensure that if v is colored with i,
     # then it has a neighbor colored with j for every j<i
 
@@ -588,14 +624,14 @@ def grundy_coloring(g, k, value_only = True, solver = None, verbose = 0):
     # is_used[i] can be set to 1 only if the color is used
     for i in classes:
         p.add_constraint( Sum( b[v][i] for v in g ) - is_used[i], min = 0)
-         
+
     # Both variables are binary
     p.set_binary(b)
     p.set_binary(is_used)
 
     # Trying to use as many colors as possible
     p.set_objective( Sum( is_used[i] for i in classes ) )
-    
+
     try:
         obj = p.solve(log = verbose, objective_only = value_only)
         from sage.rings.integer import Integer
@@ -627,19 +663,19 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
     number of colors, if such a coloring exists
 
     Definition :
-     
+
     Given a proper coloring of a graph `G` and a color class `C` such
     that none of its vertices have neighbors in all the other color
-    classes, one can eliminate color class `C` assigning to each of 
+    classes, one can eliminate color class `C` assigning to each of
     its elements a missing color in its neighborhood.
-    
+
     Let a b-vertex be a vertex with neighbors in all other colorings.
-    Then, one can repeat the above procedure until a coloring 
-    is obtained where every color class contains a b-vertex, 
+    Then, one can repeat the above procedure until a coloring
+    is obtained where every color class contains a b-vertex,
     in which case none of the color classes can be eliminated
-    with the same ideia.  So, one can define a b-coloring as a 
+    with the same ideia.  So, one can define a b-coloring as a
     proper coloring where each color class has a b-vertex.
-    
+
     In the worst case, after successive applications of the above procedure,
     one get a proper coloring that uses a number of colors equal to the
     the b-chromatic number of `G` (denoted `\chi_b(G)`):
@@ -693,7 +729,7 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
     EXAMPLES:
 
     The b-chromatic number of a `P_5` is equal to 3::
-    
+
         sage: from sage.graphs.graph_coloring import b_coloring
         sage: g = graphs.PathGraph(5)
         sage: b_coloring(g, 5)
@@ -712,7 +748,7 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
     from sage.numerical.mip import MixedIntegerLinearProgram
     from sage.numerical.mip import MIPSolverException, Sum
 
-        
+
     # Calculate the upper bound m(G)
     # To do so, it takes the list of degrees in
     # non-increasing order and computes the largest
@@ -720,7 +756,7 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
     # at least i - 1 (note that in the code we need
     # to take in consideration that the indices
     # of the list starts with 0)
-    
+
     deg = g.degree()
     deg.sort(reverse = True)
     for i in xrange(g.order()):
@@ -735,7 +771,7 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
     if k > m:
         k = m
 
-    
+
     p = MixedIntegerLinearProgram(solver = solver)
 
     # List of possible colors
@@ -743,40 +779,40 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
 
     #color[v][i] is set to 1 if and only if v is colored i
     color = p.new_variable(dim=2)
-          
+
     #b[v][i] is set to 1 if and only if v is a b-vertex from color class i
     b = p.new_variable(dim=2)
 
     #is_used[i] is set to 1 if and only if color [i] is used by some vertex
     is_used = p.new_variable()
-    
+
     # Each vertex is in exactly one class
     for v in g.vertices():
         p.add_constraint(Sum(color[v][i] for i in xrange(k)), min=1, max=1)
-    
+
     # Adjacent vertices have distinct colors
     for (u, v) in g.edge_iterator(labels=None):
         for i in classes:
             p.add_constraint(color[u][i] + color[v][i], max=1)
-    
+
     # The following constraints ensure that if v is a b-vertex of color i
     # then it has a neighbor colored j for every j != i
 
-    
+
     for v in g.vertices():
         for i in classes:
             for j in classes:
                 if j != i:
-                    # If v is not a b-vertex of color i, the constraint 
-                    # is always satisfied, since the only possible 
+                    # If v is not a b-vertex of color i, the constraint
+                    # is always satisfied, since the only possible
                     # negative term in this case is -is_used[j] which is
                     # cancelled by + 1. If v is a b-vertex of color i
                     # then we MUST have sum(color[w][j] for w in g.neighbors(v))
-                    # valued at least 1, which means that v has a neighbour in 
+                    # valued at least 1, which means that v has a neighbour in
                     # color j, as desired.
-                    p.add_constraint(Sum(color[w][j] for w in g.neighbors(v)) - b[v][i] 
+                    p.add_constraint(Sum(color[w][j] for w in g.neighbors(v)) - b[v][i]
                         + 1 - is_used[j], min=0)
-    
+
     #if color i is used, there is a vertex colored i
     for i in classes:
         p.add_constraint(Sum(color[v][i] for v in g.vertices()) - is_used[i], min = 0)
@@ -784,7 +820,7 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
     #if there is a vertex colored with color i, then i is used
     for v in g.vertices():
         for i in classes:
-            p.add_constraint(color[v][i] - is_used[i], max = 0) 
+            p.add_constraint(color[v][i] - is_used[i], max = 0)
 
 
     #a color class is used if and only if it has one b-vertex
@@ -799,7 +835,7 @@ def b_coloring(g, k, value_only = True, solver = None, verbose = 0):
 
     #We want to maximize the number of used colors
     p.set_objective(Sum(is_used[i] for i in classes))
-  
+
 
     try:
         obj = p.solve(log = verbose, objective_only = value_only)
@@ -891,7 +927,7 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, solver = 
        In a few cases, it is possible to find very quickly the chromatic
        index of a graph, while it remains a tedious job to compute
        a corresponding coloring. For this reason, ``value_only = True``
-       can sometimes be much faster, and it is a bad idea to compute 
+       can sometimes be much faster, and it is a bad idea to compute
        the whole coloring if you do not need it !
 
     EXAMPLE::
@@ -913,7 +949,7 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, solver = 
 
     if g.is_clique():
         if value_only:
-            return g.order()-1 if g.order() % 2 == 0 else g.order() 
+            return g.order()-1 if g.order() % 2 == 0 else g.order()
         vertices = g.vertices()
         r = round_robin(g.order())
         classes = [[] for v in g]
@@ -961,10 +997,10 @@ def edge_coloring(g, value_only=False, vizing=False, hex_colors=False, solver = 
             return k + 1
         else:
             # if the coloring with Delta colors fails, tries Delta + 1
-            return edge_coloring(g, 
-                                 vizing=True, 
-                                 hex_colors=hex_colors, 
-                                 verbose=verbose, 
+            return edge_coloring(g,
+                                 vizing=True,
+                                 hex_colors=hex_colors,
+                                 verbose=verbose,
                                  solver = solver)
     if value_only:
         return k
@@ -1053,7 +1089,7 @@ def linear_arboricity(g, k=1, hex_colors=False, value_only=False, solver = None,
     Computes the linear arboricity of the given graph.
 
     The linear arboricity of a graph `G` is the least
-    number `la(G)` such that the edges of `G` can be 
+    number `la(G)` such that the edges of `G` can be
     partitioned into linear forests (i.e. into forests
     of paths).
 
@@ -1071,7 +1107,7 @@ def linear_arboricity(g, k=1, hex_colors=False, value_only=False, solver = None,
           of edges (meant as an argument to the ``edge_colors``
           keyword of the ``plot`` method).
 
-        - If ``hex_colors = False`` (default value), returns 
+        - If ``hex_colors = False`` (default value), returns
           a list of graphs corresponding to each color class.
 
     - ``value_only`` (boolean)
@@ -1084,7 +1120,7 @@ def linear_arboricity(g, k=1, hex_colors=False, value_only=False, solver = None,
 
     - ``k`` (integer) -- the number of colors to use.
 
-        - If ``0``, computes a decomposition of `G` into 
+        - If ``0``, computes a decomposition of `G` into
           `\lceil \frac {\Delta(G)} 2 \rceil`
           forests of paths
 
@@ -1146,22 +1182,22 @@ def linear_arboricity(g, k=1, hex_colors=False, value_only=False, solver = None,
       Mathematical Institute of the Slovak Academy of Sciences
       Mathematica Slovaca vol30, n4, pages 405--417, 1980
     """
-    
+
     from sage.rings.integer import Integer
 
     if k is None:
         try:
-            return linear_arboricity(g, 
+            return linear_arboricity(g,
                                      k = (Integer(max(g.degree()))/2).ceil(),
                                      value_only = value_only,
-                                     hex_colors = hex_colors, 
+                                     hex_colors = hex_colors,
                                      solver = solver,
                                      verbose = verbose)
         except ValueError:
-            return linear_arboricity(g, 
+            return linear_arboricity(g,
                                      k = 0,
                                      value_only = value_only,
-                                     hex_colors = hex_colors, 
+                                     hex_colors = hex_colors,
                                      solver = solver,
                                      verbose = verbose)
     elif k==1:
@@ -1218,7 +1254,7 @@ def linear_arboricity(g, k=1, hex_colors=False, value_only=False, solver = None,
             raise Exception("It looks like you have found a counterexample to a very old conjecture. Please do not loose it ! Please publish it, and send a post to sage-devel to warn us. I implore you ! Nathann Cohen ")
         else:
             raise ValueError("This graph can not be colored with the given number of colors.")
-    
+
     c = p.get_values(c)
 
     if hex_colors:
@@ -1247,12 +1283,12 @@ def acyclic_edge_coloring(g, hex_colors=False, value_only=False, k=0, solver = N
     An edge coloring of a graph is a assignment of colors
     to the edges of a graph such that :
 
-    - the coloring is proper (no adjacent edges share a 
+    - the coloring is proper (no adjacent edges share a
       color)
     - For any two colors `i,j`, the union of the edges
       colored with `i` or `j` is a forest.
 
-    The least number of colors such that such a coloring 
+    The least number of colors such that such a coloring
     exists for a graph `G` is written `\chi'_a(G)`, also
     called the acyclic chromatic index of `G`.
 
@@ -1271,7 +1307,7 @@ def acyclic_edge_coloring(g, hex_colors=False, value_only=False, k=0, solver = N
           of edges (meant as an argument to the ``edge_colors``
           keyword of the ``plot`` method).
 
-        - If ``hex_colors = False`` (default value), returns 
+        - If ``hex_colors = False`` (default value), returns
           a list of graphs corresponding to each color class.
 
     - ``value_only`` (boolean)
@@ -1311,12 +1347,12 @@ def acyclic_edge_coloring(g, hex_colors=False, value_only=False, k=0, solver = N
 
     EXAMPLE:
 
-    The complete graph on 8 vertices can not be acyclically 
+    The complete graph on 8 vertices can not be acyclically
     edge-colored with less `\Delta+1` colors, but it can be
     colored with `\Delta+2=9`::
 
         sage: from sage.graphs.graph_coloring import acyclic_edge_coloring
-        sage: g = graphs.CompleteGraph(8)   
+        sage: g = graphs.CompleteGraph(8)
         sage: colors = acyclic_edge_coloring(g)
 
     Each color class is of course a matching ::
@@ -1334,7 +1370,7 @@ def acyclic_edge_coloring(g, hex_colors=False, value_only=False, k=0, solver = N
         sage: all([g1.union(g2).is_forest() for g1 in colors for g2 in colors])
         True
 
-    If one wants to acyclically color a cycle on `4` vertices, 
+    If one wants to acyclically color a cycle on `4` vertices,
     at least 3 colors will be necessary. The function raises
     an exception when asked to color it with only 2::
 
@@ -1360,9 +1396,9 @@ def acyclic_edge_coloring(g, hex_colors=False, value_only=False, k=0, solver = N
 
         while True:
             try:
-                return acyclic_edge_coloring(g, 
+                return acyclic_edge_coloring(g,
                                              value_only = value_only,
-                                             hex_colors = hex_colors, 
+                                             hex_colors = hex_colors,
                                              k = k,
                                              solver = solver,
                                              verbose = verbose)
@@ -1373,7 +1409,7 @@ def acyclic_edge_coloring(g, hex_colors=False, value_only=False, k=0, solver = N
 
     elif k==0:
         k = max(g.degree())+2
-    
+
     from sage.numerical.mip import MixedIntegerLinearProgram, MIPSolverException, Sum
     from sage.plot.colors import rainbow
 

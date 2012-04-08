@@ -1,12 +1,25 @@
 """
 Matching Polynomial Routine
 
+This module contains the following methods:
+
+.. csv-table::
+    :class: contentstable
+    :widths: 30, 70
+    :delim: |
+
+    :meth:`matching_polynomial` | Computes the matching polynomial of a given graph
+    :meth:`complete_poly` | Compute the matching polynomial of the complete graph on `n` vertices.
+
 AUTHORS:
-    -- Robert Miller, Tom Boothby - original implementation
+
+    - Robert Miller, Tom Boothby - original implementation
 
 REFERENCE:
     Chris Godsil, Algebraic Combinatorics.
 
+Methods
+-------
 """
 
 #*****************************************************************************
@@ -38,18 +51,18 @@ def matching_polynomial(G, complement=True, name=None):
     .. MATH::
 
         \mu(x)=\sum_{k \geq 0} (-1)^k p(G,k) x^{n-2k}
-        
-        
+
+
     INPUT:
-        
+
     - ``complement`` - (default: ``True``) whether to use Godsil's duality
       theorem to compute the matching polynomial from that of the graphs
       complement (see ALGORITHM).
-        
+
     - ``name`` - optional string for the variable name in the polynomial
 
     .. NOTE::
-        
+
         The ``complement`` option uses matching polynomials of complete graphs,
         which are cached. So if you are crazy enough to try computing the
         matching polynomial on a graph with millions of vertices, you might not
@@ -60,7 +73,7 @@ def matching_polynomial(G, complement=True, name=None):
 
     The algorithm used is a recursive one, based on the following observation
     [Godsil93]_:
-        
+
     - If `e` is an edge of `G`, `G'` is the result of deleting the edge `e`, and
       `G''` is the result of deleting each vertex in `e`, then the matching
       polynomial of `G` is equal to that of `G'` minus that of `G''`.
@@ -75,13 +88,13 @@ def matching_polynomial(G, complement=True, name=None):
     .. MATH::
 
         \mu(\overline{G}, x) = \sum_{k \geq 0} p(G,k) \mu( K_{n-2k}, x)
-            
+
 
     Where `\overline{G}` is the complement of `G`, and `K_n` the complete graph
     on `n` vertices.
 
     EXAMPLES::
-        
+
         sage: g = graphs.PetersenGraph()
         sage: g.matching_polynomial()
         x^10 - 15*x^8 + 75*x^6 - 145*x^4 + 90*x^2 - 6
@@ -94,7 +107,7 @@ def matching_polynomial(G, complement=True, name=None):
         sage: prod([h.matching_polynomial() for h in L]) == sum(L, g).matching_polynomial()  # long time (up to 10s on sage.math, 2011)
         True
 
-    :: 
+    ::
 
         sage: from sage.graphs.matchpoly import matching_polynomial
         sage: for i in [1..12]:  # long time (10s on sage.math, 2011)
@@ -196,14 +209,14 @@ def matching_polynomial(G, complement=True, name=None):
 
 
     """
-    
+
     cdef int nverts, nedges, i, j, v, cur
     cdef int *edges1, *edges2, *edges_mem, **edges
     cdef fmpz_poly_t pol
-    
+
     if G.has_multiple_edges():
         raise NotImplementedError
-    
+
     nverts = G.num_verts()
 
     # Using Godsil's duality theorem when the graph is dense
@@ -217,7 +230,7 @@ def matching_polynomial(G, complement=True, name=None):
         return f
 
     nedges = G.num_edges()
-    
+
     # Relabelling the vertices of the graph as [0...n-1] so that they are sorted
     # in increasing order of degree
 
@@ -230,7 +243,7 @@ def matching_polynomial(G, complement=True, name=None):
         d[L[i][1]] = i
     G = G.relabel(d, inplace=False)
     G.allow_loops(False)
-    
+
     # Initialization of pol, edges* variables.
 
     # The edges_mem table is of size (2 * nedges * nedges), and is to be read as
@@ -251,7 +264,7 @@ def matching_polynomial(G, complement=True, name=None):
         if edges is not NULL:
             sage_free(edges)
         raise MemoryError("Error allocating memory for matchpoly.")
-    
+
     for i from 0 <= i < 2*nedges:
         edges[i] = edges_mem + i * nedges
 
@@ -263,7 +276,7 @@ def matching_polynomial(G, complement=True, name=None):
         edges1[cur] = i
         edges2[cur] = j
         cur += 1
-    
+
     # Computing the signless matching polynomial
 
     sig_on()
@@ -271,7 +284,7 @@ def matching_polynomial(G, complement=True, name=None):
     sig_off()
 
     # Building the actual matching polynomial
-    
+
     coeffs_ZZ = []
     cdef Integer c_ZZ
     for i from 0 <= i <= nverts:
@@ -299,15 +312,16 @@ def complete_poly(n):
 
     - ``n`` -- order of the complete graph
 
-    TODO:
+    .. TODO::
 
-    This code could probably be made more efficient by using FLINT polynomials
-    and being written in Cython, using an array of fmpz_poly_t pointers or
-    something...  Right now just about the whole complement optimization is
-    written in Python, and could be easily sped up.
+        This code could probably be made more efficient by using FLINT
+        polynomials and being written in Cython, using an array of
+        fmpz_poly_t pointers or something...  Right now just about the
+        whole complement optimization is written in Python, and could
+        be easily sped up.
 
     EXAMPLES::
-    
+
         sage: from sage.graphs.matchpoly import complete_poly
         sage: f = complete_poly(10)
         sage: f
@@ -372,7 +386,7 @@ cdef void delete_and_add(int **edges, int nverts, int nedges, int totverts, int 
         else:
             fmpz_add_ui_inplace(coeff, 1)
         return
-    
+
     edges1 = edges[2*depth]
     edges2 = edges[2*depth + 1]
     new_edges1 = edges[2*depth + 2]

@@ -32,7 +32,7 @@ rank-decompositions. It is based on ideas from :
 
     * "Computing rank-width exactly" by Sang-il Oum [Oum]_
     * "Sopra una formula numerica" by Ernesto Pascal
-    * "Generation of a Vector from the Lexicographical Index" by B.P. Buckles and M. Lybanon [BL]_ 
+    * "Generation of a Vector from the Lexicographical Index" by B.P. Buckles and M. Lybanon [BL]_
     * "Fast additions on masked integers" by Michael D. Adams and David S. Wise [AW]_
 
 **OUTPUT:**
@@ -110,6 +110,9 @@ REFERENCES:
     vol. 41, n.5, pages 39--45
     ACM
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.86.1801&rep=rep1&type=pdf
+
+Methods
+-------
 """
 
 #*****************************************************************************
@@ -131,7 +134,7 @@ def rank_decomposition(G, verbose = False):
     r"""
     Computes an optiml rank-decomposition of the given graph.
 
-    This function is available as a method of the 
+    This function is available as a method of the
     :class:`Graph <sage.graphs.graph>` class. See
     :meth:`rank_decomposition <sage.graphs.graph.rank_decomposition>`.
 
@@ -162,7 +165,7 @@ def rank_decomposition(G, verbose = False):
         Exception: The rank decomposition cannot be computed on graphs of >= 32 vertices.
 
     The empty graph::
-    
+
         sage: g = Graph()
         sage: rank_decomposition(g)
         (0, Graph on 0 vertices)
@@ -220,14 +223,14 @@ cdef int sage_graph_to_matrix(G):
     Converts the given Sage graph as an adjacency matrix.
     """
     global id_to_vertices
-    global vertices_to_id 
+    global vertices_to_id
     global adjacency_matrix
     global slots
     global cslots
 
     id_to_vertices = []
     vertices_to_id = {}
-    
+
     global num_vertices
     num_vertices = G.order()
 
@@ -271,7 +274,7 @@ cdef void set_am(int i, int j, int val):
     (this function is a copy of what can be found in rankwidth/rw.c)
     """
     global adjacency_matrix
-    
+
     adjacency_matrix[i] &= ~bitmask(j)
     adjacency_matrix[j] &= ~bitmask(i)
 
@@ -315,7 +318,7 @@ def mkgraph():
     global id_to_vertices
 
     cdef subset_t s
-    
+
     from sage.graphs.graph import Graph
     g = Graph()
 

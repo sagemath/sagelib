@@ -1,7 +1,9 @@
 r"""
 PQ-Trees
 
-This module implements PQ-Trees and methods to help recognise Interval Graphs.
+This module implements PQ-Trees and methods to help recognise Interval
+Graphs. It is used by :meth:`is_interval
+<sage.graphs.generic_graph.GenericGraph.is_interval>`.
 """
 
 # Constants, to make the code more readable
@@ -24,7 +26,7 @@ UNALIGNED      = False
 
 set_contiguous = lambda tree, x : (
     tree.set_contiguous(x) if isinstance(tree, PQ) else
-    ((FULL, ALIGNED) if x in tree 
+    ((FULL, ALIGNED) if x in tree
      else (EMPTY, ALIGNED)))
 
 new_P = lambda liste : P(liste) if len(liste) > 1 else liste[0]
@@ -90,7 +92,7 @@ def reorder_sets(sets):
     return tree.ordering()
 
 class PQ:
-    r""" 
+    r"""
     This class implements the PQ-Tree, used for the recognition of
     Interval Graphs, or equivalently for matrices having the so-caled
     "consecutive ones property".
@@ -236,7 +238,7 @@ class PQ:
         False
 
     def split(self, v):
-        r""" 
+        r"""
         Returns the subsequences of children containing and not
         containing ``v``
 
@@ -313,13 +315,13 @@ class PQ:
 
             sage: from sage.graphs.pq_trees import P, Q
             sage: p = Q([[1,2], [2,3], P([[2,4], [2,8], [2,9]])])
-            sage: p.cardinality() 
+            sage: p.cardinality()
             3
         """
         return len(self._children)
 
     def ordering(self):
-        r""" 
+        r"""
         Returns the current ordering given by listing the leaves from
         left to right.
 
@@ -327,7 +329,7 @@ class PQ:
 
             sage: from sage.graphs.pq_trees import P, Q
             sage: p = Q([[1,2], [2,3], P([[2,4], [2,8], [2,9]])])
-            sage: p.ordering()                                
+            sage: p.ordering()
             [{1, 2}, {2, 3}, {2, 4}, {8, 2}, {9, 2}]
         """
         value = []
@@ -409,7 +411,7 @@ class PQ:
         else:
 
             contains, does_not_contain = self.split(v)
-            
+
             A = new_P(does_not_contain)
             B = new_P(contains)
 
@@ -471,11 +473,11 @@ class PQ:
 
 class P(PQ):
     r"""
-    A P-Tree is a PQ-Tree whose children are 
+    A P-Tree is a PQ-Tree whose children are
     not ordered (they can be permuted in any way)
     """
     def set_contiguous(self, v):
-        r""" 
+        r"""
         Updates ``self`` so that its sets containing ``v`` are
         contiguous for any admissible permutation of its subtrees.
 
@@ -615,7 +617,7 @@ class P(PQ):
             self._children = set_EMPTY + set_PARTIAL_ALIGNED
             return (PARTIAL, ALIGNED)
 
-        
+
         ################################################################
         # 2/2                                                          #
         #                                                              #
@@ -641,7 +643,7 @@ class P(PQ):
             # We must also make sure these elements will not be
             # reordered in such a way that the elements containing v
             # are not contiguous
-    
+
             # ==> We create a Q-tree
 
             if n_PARTIAL_ALIGNED < 2:
@@ -667,7 +669,7 @@ class P(PQ):
                 # We lock all of them in a Q-tree
 
                 self._children.append(new_Q(new))
-                
+
                 return PARTIAL, True
 
             # If there are 2 partial elements, we take care of both
@@ -707,12 +709,12 @@ class P(PQ):
 
 class Q(PQ):
     r"""
-    A Q-Tree is a PQ-Tree whose children are 
+    A Q-Tree is a PQ-Tree whose children are
     ordered up to reversal
     """
 
     def set_contiguous(self, v):
-        r""" 
+        r"""
         Updates ``self`` so that its sets containing ``v`` are
         contiguous for any admissible permutation of its subtrees.
 
@@ -835,11 +837,11 @@ class Q(PQ):
         #                                                                 #
         # * if the last element is empty (as we checked the whole         #
         #   vector is not empty                                           #
-        #                                                                 # 
+        #                                                                 #
         # * if the last element is partial, aligned, and all the          #
         #   others are full                                               #
         ###################################################################
-        
+
         if (f_seq[self._children[-1]] == (EMPTY, ALIGNED) or
             (f_seq[self._children[-1]] == (PARTIAL, ALIGNED) and n_FULL == self.cardinality() - 1)):
 
@@ -887,7 +889,7 @@ class Q(PQ):
 
             if set_PARTIAL_ALIGNED[0] == self._children[-1]:
                 return (PARTIAL, ALIGNED)
-            
+
             else:
                 return (PARTIAL, UNALIGNED)
 
@@ -911,7 +913,7 @@ class Q(PQ):
 
             new_children = []
 
-            # Two variables to remember where we are 
+            # Two variables to remember where we are
             # according to the interval
 
             seen_nonempty = False
@@ -919,8 +921,8 @@ class Q(PQ):
 
 
             for i in self:
-                
-                type, aligned = f_seq[i]                
+
+                type, aligned = f_seq[i]
 
                 # We met an empty element
                 if type == EMPTY:
@@ -937,7 +939,7 @@ class Q(PQ):
                     #    of the interval
 
                     new_children.append(i)
-                        
+
                     if seen_nonempty:
                         seen_right_end = True
 
@@ -965,7 +967,7 @@ class Q(PQ):
                         # If we see an UNALIGNED partial element after
                         # having met a nonempty element, there is no
                         # solution to the alignment problem
-                            
+
                         elif seen_nonempty and not aligned:
                             raise ValueError(impossible_msg)
 
@@ -983,19 +985,19 @@ class Q(PQ):
                             subtree = i
 
                             new_children.extend(subtree.simplify(v, right = True))
-                        
+
 
                     else:
-                        new_children.append(i)                        
+                        new_children.append(i)
 
                     seen_nonempty = True
 
             # Setting the updated sequence of children
             self._children = new_children
 
-            
+
             # Whether we achieved an alignment to the right is the
             # complement of whether we have seen the right end
 
             return (PARTIAL, not seen_right_end)
-            
+
