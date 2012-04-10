@@ -1124,7 +1124,7 @@ cdef class GLPKBackend(GenericBackend):
         Write the problem to a .mps file
 
         INPUT:
-        
+
         - ``filename`` (string)
 
         EXAMPLE::
@@ -1147,10 +1147,10 @@ cdef class GLPKBackend(GenericBackend):
 
             sage: from sage.numerical.backends.generic_backend import get_solver
             sage: p = MixedIntegerLinearProgram(solver = "GLPK")
-            sage: b = p.new_variable()                         
-            sage: p.add_constraint(b[1] + b[2] <= 6)           
-            sage: p.set_objective(b[1] + b[2])                 
-            sage: copy(p).solve()                              
+            sage: b = p.new_variable()
+            sage: p.add_constraint(b[1] + b[2] <= 6)
+            sage: p.set_objective(b[1] + b[2])
+            sage: copy(p).solve()
             6.0
         """
         cdef GLPKBackend p = GLPKBackend(maximization = (1 if self.is_maximization() else -1))
@@ -1171,13 +1171,16 @@ cdef class GLPKBackend(GenericBackend):
         - ``value`` -- the parameter's value if it is to be defined,
           or ``None`` (default) to obtain its current value.
 
-        You can supply the name of a parameter and its value using either a string
-        or a ``glp_`` constant.
-        In most cases, you can use the same name for a paramter as that given
+        You can supply the name of a parameter and its value using either a
+        string or a ``glp_`` constant (which are defined as Cython variables of
+        this module).
+
+        In most cases, you can use the same name for a parameter as that given
         in the GLPK documentation, which is available by downloading GLPK from
         <http://www.gnu.org/software/glpk/>. The exceptions relate to parameters
-        common to both methods; these require you to append ``_simplex`` or ``_intopt``
-        to the name to resolve ambiguity, since the interface allows access to both.
+        common to both methods; these require you to append ``_simplex`` or
+        ``_intopt`` to the name to resolve ambiguity, since the interface allows
+        access to both.
 
         We have also provided more meaningful names, to assist readability.
 
@@ -1192,113 +1195,176 @@ cdef class GLPKBackend(GenericBackend):
 
         Naturally, you can use ``True`` and ``False`` in cases where ``glp_on`` and ``glp_off``
         would be used.
-        
-        A list of parameter names, with their values:
 
-        - ``timelimit`` -- specify the time limit IN SECONDS.
-          This affects both simplex and intopt.
+        A list of parameter names, with their possible values:
 
-        - ``timelimit_simplex`` and ``timelimit_intopt`` -- specify the time limit
-          IN MILLISECONDS. (This is glpk's default.)
+        **General-purpose parameters:**
 
-        - ``simplex_or_intopt`` -- whether to use the ``simplex`` or ``intopt``
-          routines in GLPK. This is controlled by using ``glp_simplex_only``,
-          ``glp_intopt_only``, and ``glp_simplex_then_intopt``. The latter is
-          useful to deal with a problem in GLPK where problems with no solution
-          hang when using integer optimization; if you specify
-          ``glp_simplex_then_intopt``, sage will try simplex first,
-          then perform integer optimization only if a solution of the LP
-          relaxation exists.
+        .. list-table::
+         :widths: 30 70
 
-        - ``verbosity_intopt`` and ``verbosity_simplex`` -- one of ``GLP_MSG_OFF``,
-          ``GLP_MSG_ERR``, ``GLP_MSG_ON``, or ``GLP_MSG_ALL``. The default in sage
-          is ``GLP_MSG_OFF``.
+         * - ``timelimit``
 
-        - ``output_frequency_intopt`` and ``output_frequency_simplex`` --
-          the output frequency, in milliseconds. Default is 5000.
+           - specify the time limit IN SECONDS.  This affects both simplex
+             and intopt.
 
-        - ``output_delay_intopt`` and ``output_delay_simplex`` --
-          the output delay, in milliseconds, regarding the use of the simplex
-          method on the LP relaxation. Default is 10000.
+         * - ``timelimit_simplex`` and ``timelimit_intopt``
 
-        - ``intopt``-specific parameters: 
+           - specify the time limit IN MILLISECONDS. (This is glpk's
+             default.)
 
-          - ``branching`` -- one of:
-            - ``GLP_BR_FFV`` -- first fractional variable
-            - ``GLP_BR_LFV`` -- last fractional variable
-            - ``GLP_BR_MFV`` -- most fractional variable
-            - ``GLP_BR_DTH`` -- Driebeck-Tomlin heuristic (default)
-            - ``GLP_BR_PCH`` -- hybrid pseudocost heuristic
+         * - ``simplex_or_intopt``
 
-          - ``backtracking`` -- one of:
-            - ``GLP_BT_DFS`` -- depth first search
-            - ``GLP_BT_BFS`` -- breadth first search
-            - ``GLP_BT_BLB`` -- best local bound (default)
-            - ``GLP_BT_BPH`` -- best projection heuristic
+           - whether to use the ``simplex`` or ``intopt`` routines in
+             GLPK. This is controlled by using ``glp_simplex_only``,
+             ``glp_intopt_only``, and ``glp_simplex_then_intopt``. The latter
+             is useful to deal with a problem in GLPK where problems with no
+             solution hang when using integer optimization; if you specify
+             ``glp_simplex_then_intopt``, sage will try simplex first, then
+             perform integer optimization only if a solution of the LP
+             relaxation exists.
 
-          - ``preprocessing`` -- one of:
-            - ``GLP_PP_NONE``
-            - ``GLP_PP_ROOT`` -- preprocessing only at root level
-            - ``GLP_PP_ALL`` (default)
+         * - ``verbosity_intopt`` and ``verbosity_simplex``
 
-          - ``feasibility_pump`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default)
+           - one of ``GLP_MSG_OFF``, ``GLP_MSG_ERR``, ``GLP_MSG_ON``, or
+             ``GLP_MSG_ALL``. The default is ``GLP_MSG_OFF``.
 
-          - ``gomory_cuts`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default)
+         * - ``output_frequency_intopt`` and ``output_frequency_simplex``
 
-          - ``mixed_int_rounding_cuts`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default)
+           - the output frequency, in milliseconds. Default is 5000.
 
-          - ``mixed_cover_cuts`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default)
+         * - ``output_delay_intopt`` and ``output_delay_simplex``
 
-          - ``clique_cuts`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default)
+           - the output delay, in milliseconds, regarding the use of the
+             simplex method on the LP relaxation. Default is 10000.
 
-          - ``absolute_tolerance`` -- (double) used to check if optimal solution to LP relaxation
-            is integer feasible. GLPK manual advises, "do not change... without detailed
-            understanding of its purpose."
 
-          - ``relative_tolerance`` -- (double) used to check if objective value in LP relaxation
-            is not better than best known integer solution. GLPK manual advises, "do not
-            change... without detailed understanding of its purpose."
+        **intopt-specific parameters:**
 
-          - ``mip_gap_tolerance`` -- (double) relative mip gap tolerance. Default is 0.0.
+        .. list-table::
+         :widths: 30 70
 
-          - ``presolve_intopt`` -- one of ``GLP_ON`` (default in sage) or ``GLP_OFF``.
+         * - ``branching``
+           - - ``GLP_BR_FFV``  first fractional variable
+             - ``GLP_BR_LFV``  last fractional variable
+             - ``GLP_BR_MFV``  most fractional variable
+             - ``GLP_BR_DTH``  Driebeck-Tomlin heuristic (default)
+             - ``GLP_BR_PCH``  hybrid pseudocost heuristic
 
-          - ``binarize`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default)
+         * - ``backtracking``
+           - - ``GLP_BT_DFS``  depth first search
+             - ``GLP_BT_BFS``  breadth first search
+             - ``GLP_BT_BLB``  best local bound (default)
+             - ``GLP_BT_BPH``  best projection heuristic
 
-        - ``simplex``-specific parameters:
+         * - ``preprocessing``
+           - - ``GLP_PP_NONE``
+             - ``GLP_PP_ROOT``  preprocessing only at root level
+             - ``GLP_PP_ALL``   (default)
 
-          - ``primal_v_dual`` -- one of ``GLP_PRIMAL`` (default), ``GLP_DUAL``, or
-            ``GLP_DUALP``.
 
-          - ``pricing`` -- one of:
-            - ``GLP_PT_STD`` -- standard (textbook)
-            - ``GLP_PT_PSE`` -- projected steepest edge (default)
+         * - ``feasibility_pump``
 
-          - ``ratio_test`` -- one of:
-            - ``GLP_RT_STD`` -- standard (textbook)
-            - ``GLP_RT_HAR`` -- Harris' two-pass ratio test (default)
+           - ``GLP_ON`` or ``GLP_OFF`` (default)
 
-          - ``tolerance_primal`` -- (double) tolerance used to check if basic solution
-            is primal feasible. GLPK manual advises, "do not
-            change... without detailed understanding of its purpose."
+         * - ``gomory_cuts``
 
-          - ``tolerance_dual`` -- (double) tolerance used to check if basic solution
-            is dual feasible. GLPK manual advises, "do not
-            change... without detailed understanding of its purpose."
+           - ``GLP_ON`` or ``GLP_OFF`` (default)
 
-          - ``tolerance_pivot`` -- (double) tolerance used to choose pivot. GLPK manual advises, "do not
-            change... without detailed understanding of its purpose."
+         * - ``mixed_int_rounding_cuts``
 
-          - ``obj_lower_limit`` -- (double) lower limit of the objective function.
-            The default is ``-DBL_MAX``.
+           - ``GLP_ON`` or ``GLP_OFF`` (default)
 
-          - ``obj_upper_limit`` -- (double) upper limit of the objective function.
-            The default is ``DBL_MAX``.
+         * - ``mixed_cover_cuts``
 
-          - ``iteration_limit`` -- (int) iteration limit of the simplex algorithn.
-            The default is ``INT_MAX``.
+           - ``GLP_ON`` or ``GLP_OFF`` (default)
 
-          - ``presolve_simplex`` -- one of ``GLP_ON`` or ``GLP_OFF`` (default).
+         * - ``clique_cuts``
+
+           - ``GLP_ON`` or ``GLP_OFF`` (default)
+
+         * - ``absolute_tolerance``
+
+           - (double) used to check if optimal solution to LP relaxation is
+             integer feasible. GLPK manual advises, "do not change... without
+             detailed understanding of its purpose."
+
+         * - ``relative_tolerance``
+
+           - (double) used to check if objective value in LP relaxation is not
+             better than best known integer solution. GLPK manual advises, "do
+             not change... without detailed understanding of its purpose."
+
+         * - ``mip_gap_tolerance``
+
+           - (double) relative mip gap tolerance. Default is 0.0.
+
+         * - ``presolve_intopt``
+
+           - ``GLP_ON`` (default) or ``GLP_OFF``.
+
+         * - ``binarize``
+
+           - ``GLP_ON`` or ``GLP_OFF`` (default)
+
+
+        **simplex-specific parameters:**
+
+        .. list-table::
+         :widths: 30 70
+
+         * - ``primal_v_dual``
+
+           - - ``GLP_PRIMAL``  (default)
+             - ``GLP_DUAL``
+             - ``GLP_DUALP``
+
+         * - ``pricing``
+
+           - - ``GLP_PT_STD``    standard (textbook)
+             - ``GLP_PT_PSE``    projected steepest edge (default)
+
+         * - ``ratio_test``
+
+           - - ``GLP_RT_STD``  standard (textbook)
+             - ``GLP_RT_HAR``  Harris' two-pass ratio test (default)
+
+         * - ``tolerance_primal``
+
+           - (double) tolerance used to check if basic solution is primal
+             feasible. GLPK manual advises, "do not change... without
+             detailed understanding of its purpose."
+
+         * - ``tolerance_dual``
+
+           - (double) tolerance used to check if basic solution is dual
+             feasible. GLPK manual advises, "do not change... without
+             detailed understanding of its purpose."
+
+         * - ``tolerance_pivot``
+
+           - (double) tolerance used to choose pivot. GLPK manual advises,
+             "do not change... without detailed understanding of its
+             purpose."
+
+         * - ``obj_lower_limit``
+
+           - (double) lower limit of the objective function.  The default is
+             ``-DBL_MAX``.
+
+         * - ``obj_upper_limit``
+
+           - (double) upper limit of the objective function.  The default is
+             ``DBL_MAX``.
+
+         * - ``iteration_limit``
+
+           - (int) iteration limit of the simplex algorithn.  The default is
+             ``INT_MAX``.
+
+         * - ``presolve_simplex``
+
+           - ``GLP_ON`` or ``GLP_OFF`` (default).
 
         .. NOTE::
 
@@ -1311,20 +1377,21 @@ cdef class GLPKBackend(GenericBackend):
 
             sage: from sage.numerical.backends.generic_backend import get_solver
             sage: p = get_solver(solver = "GLPK")
-            sage: p.solver_parameter("timelimit", 60)             
-            sage: p.solver_parameter("timelimit")                 
+            sage: p.solver_parameter("timelimit", 60)
+            sage: p.solver_parameter("timelimit")
             60.0
 
-        Don't forget the difference between ``timelimit`` and ``timelimit_intopt``.
+        - Don't forget the difference between ``timelimit`` and ``timelimit_intopt``
 
-        ..::
+        ::
 
             sage: p.solver_parameter("timelimit_intopt")
             60000
 
-        If you don't care for an integer answer, you can ask for an lp relaxation instead.
-        The default solver performs integer optimization, but
-        you can switch to the standard simplex algorithm.
+        If you don't care for an integer answer, you can ask for an lp
+        relaxation instead.  The default solver performs integer optimization,
+        but you can switch to the standard simplex algorithm through the
+        ``glp_simplex_or_intopt`` parameter.
 
         EXAMPLE::
 
@@ -1345,13 +1412,9 @@ cdef class GLPKBackend(GenericBackend):
             2.0
             sage: lp.get_values([x,y])
             [1.5, 0.5]
-        
-        You can get glpk to spout all sorts of information at you.
-        The default is to turn this off, but sometimes (debugging) it's very useful.
-        
-        .. link
 
-        ::
+        You can get glpk to spout all sorts of information at you.
+        The default is to turn this off, but sometimes (debugging) it's very useful::
 
             sage: lp.solver_parameter(backend.glp_simplex_or_intopt, backend.glp_simplex_then_intopt)
             sage: lp.solver_parameter(backend.glp_mir_cuts, backend.glp_on)
@@ -1385,7 +1448,8 @@ cdef class GLPKBackend(GenericBackend):
 
         elif name == simplex_or_intopt:
             if value == None: return self.simplex_or_intopt
-            if not value in (simplex_only,intopt_only,simplex_then_intopt): raise MIPSolverException, "GLPK: invalid value for simplex_or_intopt; see documentation"
+            if not value in (simplex_only,intopt_only,simplex_then_intopt):
+                raise MIPSolverException, "GLPK: invalid value for simplex_or_intopt; see documentation"
             self.simplex_or_intopt = value
 
         elif name == msg_lev_simplex:
