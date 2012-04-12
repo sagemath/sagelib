@@ -1314,18 +1314,18 @@ class DiGraph(GenericGraph):
         - ``verbose`` -- integer (default: ``0``). Sets the level of
           verbosity. Set to 0 by default, which means quiet.
 
-        ALGORITHM: 
+        ALGORITHM:
 
         This problem is solved using Linear Programming, in two different
         ways. The first one is to solve the following formulation:
 
         .. MATH::
 
-            \mbox{Minimize : }&\sum_{(u,v)\in G} b_{(u,v)}\\ 
-            \mbox{Such that : }&\\ 
-            &\forall (u,v)\in G, d_u-d_v+nb_{(u,v)}\geq 0\\
+            \mbox{Minimize : }&\sum_{(u,v)\in G} b_{(u,v)}\\
+            \mbox{Such that : }&\\
+            &\forall (u,v)\in G, d_u-d_v+ n \cdot b_{(u,v)}\geq 0\\
             &\forall u\in G, 0\leq d_u\leq |G|\\
-                        
+
         An explanation:
 
         An acyclic digraph can be seen as a poset, and every poset has a linear
@@ -1339,17 +1339,17 @@ class DiGraph(GenericGraph):
 
         The number of edges removed is then minimized, which is the objective.
 
-        (Constraint Generation) 
- 
+        (Constraint Generation)
+
         If the parameter ``constraint_generation`` is enabled, a more efficient
         formulation is used :
- 
-        .. MATH:: 
- 
-            \mbox{Minimize : }&\sum_{(u,v)\in G} b_{(u,v)}\\  
-            \mbox{Such that : }&\\  
-            &\forall C\text{ circuits }\subseteq G, \sum_{uv\in C}b_{(u,v)}\geq 1\\ 
- 
+
+        .. MATH::
+
+            \mbox{Minimize : }&\sum_{(u,v)\in G} b_{(u,v)}\\
+            \mbox{Such that : }&\\
+            &\forall C\text{ circuits }\subseteq G, \sum_{uv\in C}b_{(u,v)}\geq 1\\
+
         As the number of circuits contained in a graph is exponential, this LP
         is solved through constraint generation. This means that the solver is
         sequentially asked to solved the problem, knowing only a portion of the
@@ -1364,11 +1364,11 @@ class DiGraph(GenericGraph):
 
             sage: cycle=graphs.CycleGraph(5)
             sage: dcycle=DiGraph(cycle)
-            sage: cycle.size() 
+            sage: cycle.size()
             5
             sage: dcycle.feedback_edge_set(value_only=True)
             5
-        
+
         And in this situation, for any edge `uv` of the first graph, `uv` of
         `vu` is in the returned feedback arc set::
 
@@ -1379,16 +1379,18 @@ class DiGraph(GenericGraph):
            sage: (u,v) in feedback or (v,u) in feedback
            True
 
-        TESTS: 
- 
-        Comparing with/without constraint generation::
- 
-            sage: g = digraphs.RandomDirectedGNP(10,.3) 
-            sage: x = g.feedback_edge_set(value_only = True) 
-            sage: y = g.feedback_edge_set(value_only = True, 
-            ...          constraint_generation = False) 
-            sage: x == y 
-            True 
+        TESTS:
+
+        Comparing with/without constraint generation. Also double-checks ticket :trac:`12833`::
+
+            sage: for i in range(20):
+            ...      g = digraphs.RandomDirectedGNP(10,.3)
+            ...      x = g.feedback_edge_set(value_only = True)
+            ...      y = g.feedback_edge_set(value_only = True,
+            ...             constraint_generation = False)
+            ...      if x != y:
+            ...         print "Oh my, oh my !"
+            ...         break
         """
         # It would be a pity to start a LP if the digraph is already acyclic
         if self.is_directed_acyclic():
@@ -1409,14 +1411,14 @@ class DiGraph(GenericGraph):
 
             # Variables are binary, and their coefficient in the objective is 1
 
-            p.set_objective( Sum( b[u][v] 
+            p.set_objective( Sum( b[u][v]
                                   for u,v in self.edges(labels = False)))
 
             p.solve(log = verbose)
 
             # For as long as we do not break because the digraph is
             # acyclic....
-            while (1):
+            while True:
 
                 # Building the graph without the edges removed by the LP
                 h = DiGraph()
@@ -1426,7 +1428,7 @@ class DiGraph(GenericGraph):
 
                 # Is the digraph acyclic ?
                 isok, certificate = h.is_directed_acyclic(certificate = True)
-        
+
                 # If so, we are done !
                 if isok:
                     break
@@ -1437,18 +1439,18 @@ class DiGraph(GenericGraph):
                 # There is a circuit left. Let's add the corresponding
                 # constraint !
 
-                p.add_constraint( 
-                    Sum( b[u][v] for u,v in 
+                p.add_constraint(
+                    Sum( b[u][v] for u,v in
                          zip(certificate, certificate[1:] + [certificate[0]])),
                     min = 1)
-                
+
                 obj = p.solve(log = verbose)
 
             if value_only:
                 return Integer(round(obj))
-            
+
             else:
-            
+
                 # listing the edges contained in the MFAS
                 return [(u,v) for u,v in self.edges(labels = False)
                         if p.get_values(b[u][v]) > .5]
@@ -1458,7 +1460,7 @@ class DiGraph(GenericGraph):
         ######################################
         else:
             p=MixedIntegerLinearProgram(maximization=False, solver=solver)
-        
+
             b=p.new_variable(binary = True)
             d=p.new_variable(integer = True)
 
@@ -1468,8 +1470,7 @@ class DiGraph(GenericGraph):
                 p.add_constraint(d[u]-d[v]+n*(b[(u,v)]),min=1)
 
             for v in self:
-                p.add_constraint(d[v],min=n)
-
+                p.add_constraint(d[v] <= n)
 
             p.set_objective(Sum([b[(u,v)] for (u,v) in self.edges(labels=None)]))
 
@@ -1477,9 +1478,9 @@ class DiGraph(GenericGraph):
                 return Integer(round(p.solve(objective_only=True, log=verbose)))
             else:
                 p.solve(log=verbose)
-                
+
                 b_sol=p.get_values(b)
-                
+
                 return [(u,v) for (u,v) in self.edges(labels=None) if b_sol[(u,v)]==1]
 
     def feedback_vertex_set(self, value_only=False, solver=None, verbose=0, constraint_generation = True):

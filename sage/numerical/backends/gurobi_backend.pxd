@@ -61,7 +61,7 @@ cdef extern from "../../../local/include/gurobi_c.h":
      int GRBsetintparam(GRBenv *env, char * attrname, int value)
 
      GRBenv * GRBgetenv (GRBmodel * model )
-     
+
 
      int GRBgetconstrs (GRBmodel * model, int * numnzP, int * cbeg, int * cind, double * cval, int start, int len )
 
@@ -95,7 +95,7 @@ cdef class GurobiBackend(GenericBackend):
 
     cdef GRBenv * env
     cdef GRBmodel ** model
-    
+
     cdef int num_vars
 
 

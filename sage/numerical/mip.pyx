@@ -456,7 +456,7 @@ cdef class MixedIntegerLinearProgram:
         others.
 
         ``lower_bound`` and ``upper_bound`` are numerical values.
-        
+
         EXAMPLE:
 
         First, let us define a small LP::
@@ -526,7 +526,7 @@ cdef class MixedIntegerLinearProgram:
             for i in indices:
                 lb, ub = b.row_bounds(i)
                 result.append((lb, b.row(i), ub))
-        
+
             return result
 
         # Weird Input
@@ -576,10 +576,10 @@ cdef class MixedIntegerLinearProgram:
         cdef GenericBackend b = self._backend
 
         # inv_variables associates a MIPVariable object to an id
-        inv_variables = [0]*len(self._variables)
+        inv_variables = {}
+
         for (v, id) in self._variables.iteritems():
             inv_variables[id]=v
-
 
         # varid_name associates variables id to names
         varid_name = {}
@@ -592,7 +592,7 @@ cdef class MixedIntegerLinearProgram:
 
         print ("Maximization:" if b.is_maximization() else "Minimization:")
         print " ",
-        
+
         first = True
         for 0<= i< b.ncols():
             c = b.objective_coefficient(i)
@@ -1493,7 +1493,8 @@ cdef class MixedIntegerLinearProgram:
 
               The command ::
 
-                  sage: p.solver_parameter("CPX_PARAM_TILIM", 60) # optional - CPLEX
+                  sage: p = MixedIntegerLinearProgram(solver = "CPLEX") # optional - CPLEX
+                  sage: p.solver_parameter("CPX_PARAM_TILIM", 60)       # optional - CPLEX
 
               works as intended.
 
