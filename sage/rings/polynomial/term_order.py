@@ -4,7 +4,7 @@ Term orders
 Sage supports the following term orders:
 
 Lexicographic (lex)
-    `x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.  
+    `x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
     This term order is called 'lp' in Singular.
 
     EXAMPLES:
@@ -24,10 +24,10 @@ Lexicographic (lex)
         False
 
 Degree reverse lexicographic (degrevlex)
-    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-    `x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and  
-    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.  
-    This term order is called 'dp' in Singular.   
+    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+    `x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
+    This term order is called 'dp' in Singular.
 
     EXAMPLES:
 
@@ -46,9 +46,9 @@ Degree reverse lexicographic (degrevlex)
         False
 
 Degree lexicographic (deglex)
-    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-    `x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and  
-    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.  
+    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+    `x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
     This term order is called 'Dp' in Singular.
 
     EXAMPLES:
@@ -68,7 +68,7 @@ Degree lexicographic (deglex)
         True
 
 Inverse lexicographic (invlex)
-    `x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i < b_i`. 
+    `x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i < b_i`.
     This order is called 'rp' in Singular.
 
     EXAMPLES:
@@ -91,7 +91,7 @@ Inverse lexicographic (invlex)
     `k[x_n, \dots, x_1]` with term order 'lex'.
 
 Negative lexicographic (neglex)
-    `x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i > b_i`.   
+    `x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i > b_i`.
     This term order is called 'ls' in Singular.
 
     EXAMPLES:
@@ -111,9 +111,9 @@ Negative lexicographic (neglex)
         False
 
 Negative degree reverse lexicographic (negdegrevlex)
-    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-    `x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and  
-    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.  
+    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+    `x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
     This term order is called 'ds' in Singular.
 
     EXAMPLES:
@@ -133,9 +133,9 @@ Negative degree reverse lexicographic (negdegrevlex)
         False
 
 Negative degree lexicographic (negdeglex)
-    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-    `x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and 
-    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.  
+    Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+    `x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
     This term order is called 'Ds' in Singular.
 
     EXAMPLES:
@@ -155,16 +155,16 @@ Negative degree lexicographic (negdeglex)
         True
 
 Weighted degree reverse lexicographic (wdegrevlex), positive integral weights
-    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-    `x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and  
-    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.   
-    This term order is called 'wp' in Singular.     
+    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+    `x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
+    This term order is called 'wp' in Singular.
 
     EXAMPLES:
 
     ::
 
-        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('wdegrevlex',(1,2,3)))   
+        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('wdegrevlex',(1,2,3)))
         sage: x > y
         False
         sage: x > x^2
@@ -177,16 +177,16 @@ Weighted degree reverse lexicographic (wdegrevlex), positive integral weights
         False
 
 Weighted degree lexicographic (wdeglex), positive integral weights
-    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-    `x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and 
-    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.  
-    This term order is called 'Wp' in Singular.     
+    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+    `x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
+    This term order is called 'Wp' in Singular.
 
     EXAMPLES:
 
     ::
 
-        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('wdeglex',(1,2,3))) 
+        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('wdeglex',(1,2,3)))
         sage: x > y
         False
         sage: x > x^2
@@ -199,16 +199,16 @@ Weighted degree lexicographic (wdeglex), positive integral weights
         False
 
 Negative weighted degree reverse lexicographic (negwdegrevlex), positive integral weights
-    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-    `x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and  
-    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.  
-    This term order is called 'ws' in Singular.     
+    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+    `x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+    there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
+    This term order is called 'ws' in Singular.
 
     EXAMPLES:
 
     ::
 
-        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('negwdegrevlex',(1,2,3)))  
+        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('negwdegrevlex',(1,2,3)))
         sage: x > y
         True
         sage: x > x^2
@@ -221,16 +221,16 @@ Negative weighted degree reverse lexicographic (negwdegrevlex), positive integra
         False
 
 Negative weighted degree lexicographic (negwdeglex), positive integral weights
-    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-    `x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and 
-    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.    
-    This term order is called 'Ws' in Singular.     
+    Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+    `x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+    there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
+    This term order is called 'Ws' in Singular.
 
     EXAMPLES:
 
     ::
 
-        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('negwdeglex',(1,2,3)))     
+        sage: P.<x,y,z> = PolynomialRing(QQ, 3, order=TermOrder('negwdeglex',(1,2,3)))
         sage: x > y
         True
         sage: x > x^2
@@ -245,11 +245,11 @@ Negative weighted degree lexicographic (negwdeglex), positive integral weights
 Of these, only 'degrevlex', 'deglex', 'wdegrevlex', 'wdeglex',
 'invlex' and 'lex' are global orders.
 
-Sage also supports matrix term order. Given a square matrix `A`, 
+Sage also supports matrix term order. Given a square matrix `A`,
 
     `x^a <_A x^b` if and only if `Aa < Ab`
 
-where `<` is the lexicographic term order. 
+where `<` is the lexicographic term order.
 
 EXAMPLE::
 
@@ -259,7 +259,7 @@ EXAMPLE::
     sage: T = TermOrder(m); T
     Matrix term order with matrix
     [2 3]
-    [0 1]    
+    [0 1]
     sage: P.<a,b> = PolynomialRing(QQ,2,order=T)
     sage: P
     Multivariate Polynomial Ring in a, b over Rational Field
@@ -269,7 +269,7 @@ EXAMPLE::
     True
     sage: S = TermOrder('M(2,3,0,1)')
     sage: T == S
-    True    
+    True
 
 Additionally all these monomial orders may be combined to product or block orders, defined as:
 
@@ -279,7 +279,7 @@ variables, `<_1` a monomial order on `k[x]` and `<_2` a monomial order on `k[y]`
 The product order (or block order) `<` `:=` `(<_1,<_2)` on `k[x,y]` is defined as:
 `x^a y^b < x^A y^B` if and only if `x^a <_1 x^A` or (`x^a =x^A` and `y^b <_2 y^B`).
 
-These block orders are constructed in Sage by giving a comma separated list of monomial orders 
+These block orders are constructed in Sage by giving a comma separated list of monomial orders
 with the length of each block attached to them.
 
 EXAMPLE:
@@ -311,7 +311,7 @@ The same result can be achieved by::
     True
 
 If any other unsupported term order is given the provided string
-can be forced to be passed through as is to Singular, Macaulay2, and Magma. 
+can be forced to be passed through as is to Singular, Macaulay2, and Magma.
 This ensures that it is for example possible to calculate a Groebner
 basis with respect to some term order Singular supports but Sage
 doesn't::
@@ -325,7 +325,7 @@ doesn't::
     royalorder term order
     sage: T.singular_str()
     'royalorder'
-    
+
 AUTHORS:
 
 - David Joyner and William Stein: initial version of multi_polynomial_ring
@@ -337,150 +337,150 @@ AUTHORS:
 - Kwankyu Lee: implemented matrix and weighted degree term orders, refactoring
 """
 
-import re 
-from sage.structure.sage_object import SageObject   
+import re
+from sage.structure.sage_object import SageObject
 
 print_name_mapping = {
-    'lex'           : 'Lexicographic', 
-    'invlex'        : 'Inverse lexicographic', 
-    'degrevlex'     : 'Degree reverse lexicographic',    
-    'deglex'        : 'Degree lexicographic',       
-    'neglex'        : 'Negative lexicographic', 
-    'negdegrevlex'  : 'Negative degree reverse lexicographic', 
+    'lex'           : 'Lexicographic',
+    'invlex'        : 'Inverse lexicographic',
+    'degrevlex'     : 'Degree reverse lexicographic',
+    'deglex'        : 'Degree lexicographic',
+    'neglex'        : 'Negative lexicographic',
+    'negdegrevlex'  : 'Negative degree reverse lexicographic',
     'negdeglex'     : 'Negative degree lexicographic',
-    'wdegrevlex'    : 'Weighted degree reverse lexicographic',  
+    'wdegrevlex'    : 'Weighted degree reverse lexicographic',
     'wdeglex'       : 'Weighted degree lexicographic',
-    'negwdegrevlex' : 'Negative weighted degree reverse lexicographic', 
-    'negwdeglex'    : 'Negative weighted degree lexicographic',        
+    'negwdegrevlex' : 'Negative weighted degree reverse lexicographic',
+    'negwdeglex'    : 'Negative weighted degree lexicographic',
 }
 
 singular_name_mapping = {
-    'lex'           : 'lp', 
-    'invlex'        : 'rp', 
-    'degrevlex'     : 'dp', 
-    'deglex'        : 'Dp', 
+    'lex'           : 'lp',
+    'invlex'        : 'rp',
+    'degrevlex'     : 'dp',
+    'deglex'        : 'Dp',
     'neglex'        : 'ls',
-    'negdegrevlex'  : 'ds', 
+    'negdegrevlex'  : 'ds',
     'negdeglex'     : 'Ds',
-    'wdegrevlex'    : 'wp',  
+    'wdegrevlex'    : 'wp',
     'wdeglex'       : 'Wp',
-    'negwdegrevlex' : 'ws', 
-    'negwdeglex'    : 'Ws',      
+    'negwdegrevlex' : 'ws',
+    'negwdeglex'    : 'Ws',
 }
 
 inv_singular_name_mapping = dict(zip(singular_name_mapping.values(),singular_name_mapping.keys()))
 
 macaulay2_name_mapping = {
-    'lex'           : 'Lex', 
-    'revlex'        : 'RevLex, Global=>false', 
-    'degrevlex'     : 'GRevLex', 
+    'lex'           : 'Lex',
+    'revlex'        : 'RevLex, Global=>false',
+    'degrevlex'     : 'GRevLex',
     'deglex'        : 'GLex',
 }
 
-inv_macaulay2_name_mapping = dict(zip(macaulay2_name_mapping.values(),macaulay2_name_mapping.keys())) 
+inv_macaulay2_name_mapping = dict(zip(macaulay2_name_mapping.values(),macaulay2_name_mapping.keys()))
 
 magma_name_mapping = {
-    'lex'           : '"lex"', 
+    'lex'           : '"lex"',
     'degrevlex'     : '"grevlex"',
     'deglex'        : '"glex"',
 }
 
-inv_magma_name_mapping = dict(zip(magma_name_mapping.values(),magma_name_mapping.keys())) 
+inv_magma_name_mapping = dict(zip(magma_name_mapping.values(),magma_name_mapping.keys()))
 
 lex_description = """
 Lexicographic (lex) term order.
 
-`x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.  
+`x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
 """
 
 invlex_description = """
 Inverse lexicographic (invlex) term order.
 
-`x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i < b_i`.  
-"""  
+`x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i < b_i`.
+"""
 
 degrevlex_description = """
 Degree reverse lexicographic (degrevlex) term order.
 
-Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-`x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and  
-there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`. 
+Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+`x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
 """
 
 deglex_description = """
 Degree lexicographic (deglex) term order.
 
-Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-`x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and  
-there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.    
+Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+`x^a < x^b` if and only if `\deg(x^a) < \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
 """
 
 neglex_description = """
 Negative lexicographic (neglex) term order.
 
-`x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i > b_i`. 
+`x^a < x^b` if and only if there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i > b_i`.
 """
 
 negdegrevlex_description = """
 Negative degree reverse lexicographic (negdegrevlex) term order.
 
-Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-`x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and  
-there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.   
-"""   
+Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+`x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
+"""
 
 negdeglex_description = """
 Negative degree lexicographic (negdeglex) term order.
 
-Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then 
-`x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and 
-there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`. 
-"""  
-
-wdegrevlex_description = """  
-Weighted degree reverse lexicographic (wdegrevlex) term order.
- 
-Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-`x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and  
-there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.   
+Let `\deg(x^a) = a_1 + a_2 + \dots + a_n`, then
+`x^a < x^b` if and only if `\deg(x^a) > \deg(x^b)` or `\deg(x^a) = \deg(x^b)` and
+there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
 """
- 
-wdeglex_description = r"""  
+
+wdegrevlex_description = """
+Weighted degree reverse lexicographic (wdegrevlex) term order.
+
+Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+`x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
+"""
+
+wdeglex_description = r"""
 Weighted degree lexicographic (wdeglex) term order.
 
-Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-`x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and 
-there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.  
-"""  
+Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+`x^a < x^b` if and only if `\deg_w(x^a) < \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
+"""
 
-negwdegrevlex_description = """  
+negwdegrevlex_description = """
 Negative weighted degree reverse lexicographic (negwdegrevlex) term order.
 
-Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-`x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and  
-there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.  
+Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+`x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+there exists `1 \le i \le n` such that `a_n = b_n, \dots, a_{i+1} = b_{i+1}, a_i > b_i`.
 """
-  
-negwdeglex_description = """  
+
+negwdeglex_description = """
 Negative weighted degree lexicographic (negwdeglex) term order.
 
-Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then 
-`x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and 
-there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.    
-"""   
+Let `\deg_w(x^a) = a_1w_1 + a_2w_2 + \dots + a_nw_n` with weights `w`, then
+`x^a < x^b` if and only if `\deg_w(x^a) > \deg_w(x^b)` or `\deg_w(x^a) = \deg_w(x^b)` and
+there exists `1 \le i \le n` such that `a_1 = b_1, \dots, a_{i-1} = b_{i-1}, a_i < b_i`.
+"""
 
 matrix_description = """
 Matrix term order defined by a matrix A.
 
 `x^a < x^b` if and only if `x^{Aa} < x^{Ab}` where `<` is the lexicographic term order.
-"""  
+"""
 
 block_description = """
 Block term order defined by term orders `<_1, <_2, \dots, <_n`.
 
-`x^a < x^b` if and only if `a = b` with respect to the first `n-1` term orders and `a <_n b` 
+`x^a < x^b` if and only if `a = b` with respect to the first `n-1` term orders and `a <_n b`
 with respect to the `n`th term order `<_n`.
-"""   
+"""
 
 description_mapping = {
     'lex'           : lex_description,
@@ -491,8 +491,8 @@ description_mapping = {
     'negdegrevlex'  : negdegrevlex_description,
     'negdeglex'     : negdeglex_description,
     'wdeglex'       : wdeglex_description,
-    'wdegrevlex'    : wdegrevlex_description,  
-    'negwdegrevlex' : negwdegrevlex_description, 
+    'wdegrevlex'    : wdegrevlex_description,
+    'negwdegrevlex' : negwdegrevlex_description,
     'negwdeglex'    : negwdeglex_description,
     'matrix'        : matrix_description,
     'block'         : block_description,
@@ -500,11 +500,11 @@ description_mapping = {
 }
 
 class TermOrder(SageObject):
-    r"""
+    """
     A term order.
-    
-    See ``sage.rings.polynomial.term_order`` for details
-    on supported term orders.
+
+    See ``sage.rings.polynomial.term_order`` for details on supported
+    term orders.
     """
     def __setstate__(self, dict):
         """
@@ -524,47 +524,45 @@ class TermOrder(SageObject):
             n = dict['_TermOrder__length']
             t = TermOrder(name,n)
             self.__dict__.update(t.__dict__)
-        else:             
+        else:
             self.__dict__.update(dict)
 
     def __init__(self, name='lex', n=0, blocks=True, force=False):
         """
         Construct a new term order object.
-        
+
         INPUT:
-        
+
         - ``name`` - name of the term order (default: lex)
-        
+
         - ``n`` - number of variables (default is `0`) weights for
           weighted degree orders. The weights are converted to
           integers and must be positive.
 
         - ``blocks`` - this is deprecated.
-        
+
         - ``force`` - ignore unknown term orders.
-        
+
         See the ``sage.rings.polynomial.term_order`` module
         for help which names and orders are available.
-        
+
         EXAMPLES::
-        
+
             sage: t = TermOrder('lex')
             sage: t
             Lexicographic term order
             sage: loads(dumps(t)) == t
             True
-        
-        We can construct block orders directly as
-        
-        ::
-        
+
+        We can construct block orders directly as::
+
             sage: TermOrder('degrevlex(3),neglex(2)')
             Block term order with blocks:
             (Degree reverse lexicographic term order of length 3,
              Negative lexicographic term order of length 2)
-        
+
         or by adding together the blocks::
-        
+
             sage: t1 = TermOrder('degrevlex',3)
             sage: t2 = TermOrder('neglex',2)
             sage: t1 + t2
@@ -576,7 +574,7 @@ class TermOrder(SageObject):
             Block term order with blocks:
             (Degree reverse lexicographic term order of length 3,
              Weighted degree lexicographic term order with weights (1, 2))
-        
+
         .. note::
 
            The optional `n` parameter is not necessary if only
@@ -597,14 +595,26 @@ class TermOrder(SageObject):
             sage: a.degree()
             1
 
-        """  
+        We enforce consistency when calling the copy constructor (cf. #12748)::
+
+            sage: T = TermOrder('degrevlex', 6) + TermOrder('degrevlex',10)
+            sage: R.<x0,y0,z0,x1,y1,z1,a0,a1,a2,a3,a4,a5,a6,a7,a8> = PolynomialRing(QQ,order=T)
+            Traceback (most recent call last):
+            ...
+            ValueError: TermOrder copy constructor called with different number of variables (15) than input term order (16).
+
+        """
         if isinstance(name, TermOrder):
             self.__copy(name)
-            if n > 0 and not name.is_block_order() and not name.is_weighted_degree_order():
-                self._length = n
-            return  
+            if n > 0:
+                if not name.is_block_order() and not name.is_weighted_degree_order():
+                    self._length = n
+                else:
+                    if n != len(name):
+                        raise ValueError("TermOrder copy constructor called with different number of variables (%d) than input term order (%d)."%(n,len(name)))
+            return
 
-        if isinstance(name, str):  
+        if isinstance(name, str):
             name = name.lower()
         else:
             try:
@@ -634,15 +644,15 @@ class TermOrder(SageObject):
                 if t.name() == 'block':
                     blocks = blocks + list(t.blocks())
                     singular_str.append("%s"%(t.singular_str()[1:-1],))  # [1:-1] is needed to remove parenthesis
-                    macaulay2_str.append("%s"%(t.macaulay2_str()[1:-1],))  
+                    macaulay2_str.append("%s"%(t.macaulay2_str()[1:-1],))
                 else:
                     if len(t) == 0:
-                        raise ArithmeticError, "Can only concatenate term orders with length attribute."   
+                        raise ArithmeticError, "Can only concatenate term orders with length attribute."
                     blocks.append(t)
                     if t.is_weighted_degree_order(): # true if t is a matrix order as well
                         singular_str.append("%s"%(t.singular_str(),))
                     else:
-                        singular_str.append("%s(%d)"%(t.singular_str(), len(t)))                                            
+                        singular_str.append("%s(%d)"%(t.singular_str(), len(t)))
                     macaulay2_str.append("%s => %d"%(t.macaulay2_str(), len(t)))
                 length += len(t)
 
@@ -651,34 +661,34 @@ class TermOrder(SageObject):
             self._singular_str = "(" + ",".join(singular_str) + ")"
             self._macaulay2_str = "{" + ",".join(macaulay2_str) + "}"
             self._magma_str = "" # Magma does not support block order
-            self._blocks = tuple(blocks) 
+            self._blocks = tuple(blocks)
         elif isinstance(name, str) and not (isinstance(n, tuple) or isinstance(n,list)): # string representation of simple or block orders
             if force:
                 self._length = n
                 self._name = name
                 self._singular_str = singular_name_mapping.get(name,name)
                 self._macaulay2_str = macaulay2_name_mapping.get(name,name)
-                self._magma_str = magma_name_mapping.get(name,name)  
+                self._magma_str = magma_name_mapping.get(name,name)
             else:
-                split_pattern = "([^(),]+(?:\([^()]*\)[^(),]*)*)" # split by outermost commas          
+                split_pattern = "([^(),]+(?:\([^()]*\)[^(),]*)*)" # split by outermost commas
                 block_names = re.findall(split_pattern,name)
 
                 if len(block_names) == 0:
-                    raise TypeError, "No term order specified" 
+                    raise TypeError, "No term order specified"
                 elif len(block_names) == 1:
                     name = block_names[0]
                     match = re.match('m\(([-+0-9,]+)\)$',name)
                     if match: # matrix term order
-                        m = map(int,match.groups()[0].split(',')) # replace match.groups()[0]  with match.group(1) later 
-                        self.__copy(TermOrder(m)) 
+                        m = map(int,match.groups()[0].split(',')) # replace match.groups()[0]  with match.group(1) later
+                        self.__copy(TermOrder(m))
                     else: # simple order
                         if name not in print_name_mapping.keys() and name not in singular_name_mapping.values():
-                            raise TypeError, "Unknown term order '%s'"%(name,) 
+                            raise TypeError, "Unknown term order '%s'"%(name,)
                         self._length = n
                         self._name = name
                         self._singular_str = singular_name_mapping.get(name,name)
                         self._macaulay2_str = macaulay2_name_mapping.get(name,name)
-                        self._magma_str = magma_name_mapping.get(name,name)                
+                        self._magma_str = magma_name_mapping.get(name,name)
                 else: # len(block_names) > 1, and hence block order represented by a string
                     length = 0
                     blocks = []
@@ -704,50 +714,50 @@ class TermOrder(SageObject):
                                 raise TypeError, "%s is not a valid term ordering (wrong part: '%s')"%(name, block)
 
                     if n != 0 and length != n:
-                        raise TypeError, "Term order length does not match the number of generators" 
-                    self.__copy(TermOrder('block', blocks)) 
+                        raise TypeError, "Term order length does not match the number of generators"
+                    self.__copy(TermOrder('block', blocks))
         elif isinstance(name, str) and (isinstance(n, tuple) or isinstance(n,list)): # weighted degree term orders
             if name not in print_name_mapping.keys() and name not in singular_name_mapping.values() and not force:
-                raise TypeError, "Unknown term order '%s'"%(name,)  
+                raise TypeError, "Unknown term order '%s'"%(name,)
             weights = tuple(int(w) for w in n) # n is a tuple of weights
             if any([w<=0 for w in weights]):
                 raise ValueError, "the degree weights must be positive integers"
-            
+
             self._length = len(weights)
             self._name = name
             self._singular_str = singular_name_mapping.get(name,name) + '(' + ','.join([str(w) for w in weights]) + ')'
-            self._macaulay2_str = "" 
+            self._macaulay2_str = ""
             self._magma_str = ""
-            self._weights = weights # defined only for weighted degree orders                   
-        elif isinstance(name, tuple): # name represents a matrix  
+            self._weights = weights # defined only for weighted degree orders
+        elif isinstance(name, tuple): # name represents a matrix
             if n == 0:
                 from math import sqrt
-                n = int(sqrt(len(name)))                   
+                n = int(sqrt(len(name)))
             if n**2 != len(name):
-                raise TypeError, "%s does not specify a square matrix"%(name,)   
+                raise TypeError, "%s does not specify a square matrix"%(name,)
 
             int_str = ','.join([str(int(e)) for e in name])
 
             self._length = n
             self._name = "matrix"
-            self._singular_str = "M(%s)"%(int_str,) 
+            self._singular_str = "M(%s)"%(int_str,)
             self._macaulay2_str = "" # Macaulay2 does not support matrix term order directly
             self._magma_str = '"weight",[%s]'%(int_str,)
 
-            from sage.matrix.constructor import matrix   
-            self._matrix = matrix(n,name)  # defined only for matrix term order 
+            from sage.matrix.constructor import matrix
+            self._matrix = matrix(n,name)  # defined only for matrix term order
             self._weights = name[:n] # the first row of the matrix gives weights
         else:
-            raise TypeError, "%s is not a valid term order"%(name,)   
+            raise TypeError, "%s is not a valid term order"%(name,)
 
-        self.__doc__ = description_mapping.get(self._name, "No description available")                 
+        self.__doc__ = description_mapping.get(self._name, "No description available")
 
     def __copy(self, other):
         """
         Copy other term order to self.
 
         EXAMPLE::
-        
+
             sage: t = TermOrder('lex')
             sage: s = TermOrder(t)
             sage: t == s            # indirect test
@@ -758,14 +768,14 @@ class TermOrder(SageObject):
     def __getattr__(self,name):
         """
         Return the correct compare_tuples/greater_tuple function.
-        
+
         EXAMPLE::
-        
+
             sage: TermOrder('lex').compare_tuples
             <bound method TermOrder.compare_tuples_lex of Lexicographic term order>
-        
+
         ::
-        
+
             sage: TermOrder('deglex').compare_tuples
             <bound method TermOrder.compare_tuples_deglex of Degree lexicographic term order>
         """
@@ -780,15 +790,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the matrix
         term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLES::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='m(1,3,1,0)')
             sage: y > x^2 # indirect doctest
             True
@@ -798,26 +808,26 @@ class TermOrder(SageObject):
         for row in self._matrix:
             sf = sum(l*r for (l,r) in zip(row,f))
             sg = sum(l*r for (l,r) in zip(row,g))
-        
+
             if sf > sg:
                 return 1
             elif sf < sg:
                 return -1
-        return 0  
+        return 0
 
     def compare_tuples_lex(self,f,g):
         """
         Compares two exponent tuples with respect to the lexicographical
         term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='lex')
             sage: x > y^2 # indirect doctest
             True
@@ -835,15 +845,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the inversed
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='invlex')
             sage: x > y^2 # indirect doctest
             False
@@ -856,15 +866,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the degree
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='deglex')
             sage: x > y^2 # indirect doctest
             False
@@ -884,15 +894,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the degree reversed
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='degrevlex')
             sage: x > y^2 # indirect doctest
             False
@@ -912,15 +922,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the negative
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='neglex')
             sage: x > y^2 # indirect doctest
             False
@@ -933,15 +943,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the negative degree
         reverse lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='negdegrevlex')
             sage: x > y^2 # indirect doctest
             True
@@ -961,15 +971,15 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the negative degree
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='negdeglex')
             sage: x > y^2 # indirect doctest
             True
@@ -989,16 +999,16 @@ class TermOrder(SageObject):
         """
         Compares two exponent tuples with respect to the weighted degree reverse
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
- 
-            sage: t = TermOrder('wdegrevlex',(3,2))  
+
+            sage: t = TermOrder('wdegrevlex',(3,2))
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order=t)
             sage: x > y^2 # indirect doctest
             False
@@ -1006,27 +1016,27 @@ class TermOrder(SageObject):
             True
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))  
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
         if sf > sg:
             return 1
         elif sf < sg:
             return -1
         elif sf == sg:
-            return -self.compare_tuples_lex(f.reversed(),g.reversed())  
+            return -self.compare_tuples_lex(f.reversed(),g.reversed())
 
     def compare_tuples_wdeglex(self,f,g):
         """
         Compares two exponent tuples with respect to the weighted degree
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: t = TermOrder('wdeglex',(3,2))
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order=t)
             sage: x > y^2 # indirect doctest
@@ -1035,28 +1045,28 @@ class TermOrder(SageObject):
             True
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))  
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
         if sf > sg:
             return 1
         elif sf < sg:
             return -1
         elif sf == sg:
-            return self.compare_tuples_lex(f,g)   
+            return self.compare_tuples_lex(f,g)
 
     def compare_tuples_negwdeglex(self,f,g):
         """
         Compares two exponent tuples with respect to the negative weighted
         degree lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
 
-            sage: t = TermOrder('negwdeglex',(3,2))  
+            sage: t = TermOrder('negwdeglex',(3,2))
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order=t)
             sage: x > y^2 # indirect doctest
             True
@@ -1064,28 +1074,28 @@ class TermOrder(SageObject):
             True
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))  
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
         if sf > sg:
             return -1
         elif sf < sg:
             return 1
         elif sf == sg:
-            return self.compare_tuples_lex(f,g)  
- 
+            return self.compare_tuples_lex(f,g)
+
     def compare_tuples_negwdegrevlex(self,f,g):
         """
         Compares two exponent tuples with respect to the negative weighted
         degree reverse lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
- 
-             sage: t = TermOrder('negwdegrevlex',(3,2))   
+
+             sage: t = TermOrder('negwdegrevlex',(3,2))
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order=t)
             sage: x > y^2 # indirect doctest
             True
@@ -1093,27 +1103,27 @@ class TermOrder(SageObject):
             True
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))   
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
         if sf > sg:
             return -1
         elif sf < sg:
             return 1
         elif sf == sg:
-            return (-1)*self.compare_tuples_lex(f.reversed(),g.reversed()) 
+            return (-1)*self.compare_tuples_lex(f.reversed(),g.reversed())
 
     def compare_tuples_block(self, f,g):
         """
         Compares two exponent tuples with respect to the block order as
         specified when constructing this element.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<a,b,c,d,e,f>=PolynomialRing(QQbar, 6, order='degrevlex(3),degrevlex(3)')
             sage: a > c^4 # indirect doctest
             False
@@ -1132,15 +1142,15 @@ class TermOrder(SageObject):
         """
         Return the greater exponent tuple with respect to the matrix
         term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y> = PolynomialRing(QQbar, 2, order='m(1,3,1,0)')
             sage: y > x^2 # indirect doctest
             True
@@ -1150,30 +1160,30 @@ class TermOrder(SageObject):
         for row in self._matrix:
             sf = sum(l*r for (l,r) in zip(row,f))
             sg = sum(l*r for (l,r) in zip(row,g))
-        
+
             if sf > sg:
                 return f
             elif sf < sg:
                 return g
-        return g    
+        return g
 
     def greater_tuple_lex(self,f,g):
         """
         Return the greater exponent tuple with respect to the
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLES::
-        
+
             sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order='lex')
             sage: f = x + y^2; f.lm() # indirect doctest
             x
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
@@ -1183,91 +1193,91 @@ class TermOrder(SageObject):
         """
         Return the greater exponent tuple with respect to the inversed
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order='invlex')
             sage: f = x + y; f.lm() # indirect doctest
             y
             sage: f = y + x^2; f.lm()
             y
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         return f.reversed() > g.reversed() and f or g
-        
+
     def greater_tuple_deglex(self,f,g):
         """
         Return the greater exponent tuple with respect to the total degree
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order='deglex')
             sage: f = x + y; f.lm() # indirect doctest
             x
             sage: f = x + y^2*z; f.lm()
             y^2*z
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(f.nonzero_values(sort=False))
-        sg = sum(g.nonzero_values(sort=False)) 
+        sg = sum(g.nonzero_values(sort=False))
         return ( sf > sg or ( sf == sg and f  > g )) and f or g
-    
+
     def greater_tuple_degrevlex(self,f,g):
         """
         Return the greater exponent tuple with respect to the total degree
         reversed lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLES::
-        
+
             sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order='degrevlex')
             sage: f = x + y; f.lm() # indirect doctest
             x
             sage: f = x + y^2*z; f.lm()
             y^2*z
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(f.nonzero_values(sort=False))
-        sg = sum(g.nonzero_values(sort=False)) 
-        return ( sf > sg or ( sf == sg and f.reversed() < g.reversed() )) and f or g          
-    
+        sg = sum(g.nonzero_values(sort=False))
+        return ( sf > sg or ( sf == sg and f.reversed() < g.reversed() )) and f or g
+
     def greater_tuple_negdegrevlex(self,f,g):
         """
         Return the greater exponent tuple with respect to the negative
         degree reverse lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order='negdegrevlex')
             sage: f = x + y; f.lm() # indirect doctest
             x
@@ -1275,27 +1285,27 @@ class TermOrder(SageObject):
             x
             sage: f = x^2*y*z^2 + x*y^3*z; f.lm()
             x*y^3*z
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(f.nonzero_values(sort=False))
-        sg = sum(g.nonzero_values(sort=False)) 
-        return ( sf < sg or ( sf == sg and f.reversed() < g.reversed() )) and f or g 
+        sg = sum(g.nonzero_values(sort=False))
+        return ( sf < sg or ( sf == sg and f.reversed() < g.reversed() )) and f or g
 
     def greater_tuple_negdeglex(self,f,g):
         """
         Return the greater exponent tuple with respect to the negative
         degree lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order='negdeglex')
             sage: f = x + y; f.lm() # indirect doctest
             x
@@ -1303,30 +1313,30 @@ class TermOrder(SageObject):
             x
             sage: f = x^2*y*z^2 + x*y^3*z; f.lm()
             x^2*y*z^2
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(f.nonzero_values(sort=False))
-        sg = sum(g.nonzero_values(sort=False)) 
-        return ( sf < sg or ( sf == sg and f  > g )) and f or g   
+        sg = sum(g.nonzero_values(sort=False))
+        return ( sf < sg or ( sf == sg and f  > g )) and f or g
 
     def greater_tuple_neglex(self,f,g):
         """
         Return the greater exponent tuple with respect to the negative
         lexicographical term order.
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<a,b,c,d,e,f>=PolynomialRing(QQbar, 6, order='degrevlex(3),degrevlex(3)')
             sage: f = a + c^4; f.lm() # indirect doctest
             c^4
@@ -1339,13 +1349,13 @@ class TermOrder(SageObject):
         """
         Return the greater exponent tuple with respect to the weighted degree
         lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
 
             sage: t = TermOrder('wdeglex',(1,2,3))
@@ -1354,115 +1364,115 @@ class TermOrder(SageObject):
             y
             sage: f = x*y + z; f.lm()
             x*y
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))         
-        return (sf > sg or ( sf == sg and f  > g )) and f or g   
- 
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
+        return (sf > sg or ( sf == sg and f  > g )) and f or g
+
     def greater_tuple_wdegrevlex(self,f,g):
         """
         Return the greater exponent tuple with respect to the weighted degree
         reverse lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLES::
-        
+
             sage: t = TermOrder('wdegrevlex',(1,2,3))
-            sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order=t) 
+            sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order=t)
             sage: f = x + y; f.lm() # indirect doctest
             y
             sage: f = x + y^2*z; f.lm()
             y^2*z
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))          
-        return (sf > sg or ( sf == sg and f.reversed() < g.reversed())) and f or g  
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
+        return (sf > sg or ( sf == sg and f.reversed() < g.reversed())) and f or g
 
     def greater_tuple_negwdeglex(self,f,g):
         """
         Return the greater exponent tuple with respect to the negative
         weighted degree lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: t = TermOrder('negwdeglex',(1,2,3))
-            sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order=t)  
+            sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order=t)
             sage: f = x + y; f.lm() # indirect doctest
             x
             sage: f = x + x^2; f.lm()
             x
             sage: f = x^3 + z; f.lm()
             x^3
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))  
-        return (sf < sg or ( sf == sg and f  > g )) and f or g  
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
+        return (sf < sg or ( sf == sg and f  > g )) and f or g
 
     def greater_tuple_negwdegrevlex(self,f,g):
         """
         Return the greater exponent tuple with respect to the negative
         weighted degree reverse lexicographical term order.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: t = TermOrder('negwdegrevlex',(1,2,3))
-            sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order=t) 
+            sage: P.<x,y,z> = PolynomialRing(QQbar, 3, order=t)
             sage: f = x + y; f.lm() # indirect doctest
             x
             sage: f = x + x^2; f.lm()
             x
-            sage: f = x^3 + z; f.lm()  
+            sage: f = x^3 + z; f.lm()
             x^3
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
         """
         sf = sum(l*r for (l,r) in zip(f,self._weights))
-        sg = sum(l*r for (l,r) in zip(g,self._weights))  
-        return (sf < sg or ( sf == sg and f.reversed() < g.reversed() )) and f or g    
-        
+        sg = sum(l*r for (l,r) in zip(g,self._weights))
+        return (sf < sg or ( sf == sg and f.reversed() < g.reversed() )) and f or g
+
     def greater_tuple_block(self, f,g):
         """
         Return the greater exponent tuple with respect to the block
         order as specified when constructing this element.
-        
+
         This method is called by the lm/lc/lt methods of
         ``MPolynomial_polydict``.
-        
+
         INPUT:
-        
+
         - ``f`` - exponent tuple
-        
+
         - ``g`` - exponent tuple
-        
+
         EXAMPLE::
-        
+
             sage: P.<a,b,c,d,e,f>=PolynomialRing(QQbar, 6, order='degrevlex(3),degrevlex(3)')
             sage: f = a + c^4; f.lm() # indirect doctest
             c^4
@@ -1485,22 +1495,22 @@ class TermOrder(SageObject):
         Return the weight of tuple f.
 
         INPUT:
-        
-        - ``f`` - exponent tuple  
 
-        EXAMPLE::   
+        - ``f`` - exponent tuple
+
+        EXAMPLE::
 
             sage: t=TermOrder('wdeglex',(1,2,3))
             sage: P.<a,b,c>=PolynomialRing(QQbar, order=t)
             sage: P.term_order().tuple_weight([3,2,1])
             10
         """
-        return sum(l*r for (l,r) in zip(f,self._weights)) 
+        return sum(l*r for (l,r) in zip(f,self._weights))
 
     def name(self):
         """
         EXAMPLE::
-        
+
             sage: TermOrder('lex').name()
             'lex'
         """
@@ -1509,7 +1519,7 @@ class TermOrder(SageObject):
     def _repr_(self):
         """
         EXAMPLE::
-        
+
             sage: TermOrder('lex') # indirect doctest
             Lexicographic term order
         """
@@ -1532,11 +1542,11 @@ class TermOrder(SageObject):
     def singular_str(self):
         """
         Return a SINGULAR representation of self.
-        
+
         Used to convert polynomial rings to their SINGULAR representation.
-        
+
         EXAMPLE::
-        
+
             sage: P = PolynomialRing(GF(127),10,names='x',order='lex(3),deglex(5),lex(2)')
             sage: T = P.term_order()
             sage: T.singular_str()
@@ -1558,12 +1568,12 @@ class TermOrder(SageObject):
     def macaulay2_str(self):
         """
         Return a Macaulay2 representation of self.
-        
+
         Used to convert polynomial rings to their Macaulay2
         representation.
-        
+
         EXAMPLE::
-        
+
             sage: P = PolynomialRing(GF(127), 8,names='x',order='degrevlex(3),lex(5)')
             sage: T = P.term_order()
             sage: T.macaulay2_str()
@@ -1576,19 +1586,19 @@ class TermOrder(SageObject):
     def magma_str(self):
         """
         Return a MAGMA representation of self.
-        
+
         Used to convert polynomial rings to their MAGMA representation.
-        
+
         EXAMPLE::
-        
+
             sage: P = PolynomialRing(GF(127), 10,names='x',order='degrevlex')
             sage: magma(P)                                                        # optional - magma
             Polynomial ring of rank 10 over GF(127)
             Order: Graded Reverse Lexicographical
             Variables: x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
-        
+
         ::
-        
+
             sage: T = P.term_order()
             sage: T.magma_str()
             '"grevlex"'
@@ -1616,17 +1626,17 @@ class TermOrder(SageObject):
         else:
             return [self]
 
-    def matrix(self):   
+    def matrix(self):
         """
         Return the matrix defining matrix term order.
 
         EXAMPLE::
 
             sage: t = TermOrder("M(1,2,0,1)")
-            sage: t.matrix() 
+            sage: t.matrix()
             [1 2]
             [0 1]
-            
+
         """
         return self._matrix
 
@@ -1639,7 +1649,7 @@ class TermOrder(SageObject):
             sage: t=TermOrder('wdeglex',(2,3))
             sage: t.weights()
             (2, 3)
-        """           
+        """
         return self._weights
 
     def __eq__(self, other):
@@ -1647,24 +1657,24 @@ class TermOrder(SageObject):
         Return true if self and other are equal.
 
         EXAMPLE::
-        
+
             sage: TermOrder('lex') == TermOrder('lex',3)
             True
-        
+
         ::
-        
+
             sage: TermOrder('degrevlex') == TermOrder('lex')
             False
-        
+
         ::
-        
+
             sage: T1 = TermOrder('lex',2)+TermOrder('lex',3)
             sage: T2 = TermOrder('lex',3)+TermOrder('lex',2)
             sage: T1 == T2
             True
-        
+
         ::
-        
+
             sage: T1 = TermOrder('lex',2)+TermOrder('neglex',3)
             sage: T2 = TermOrder('lex',2)+TermOrder('neglex',3)
             sage: T1 == T2
@@ -1678,7 +1688,7 @@ class TermOrder(SageObject):
 
         return (self._name == other._name       # note that length is not considered.
             and self._blocks == other._blocks
-            and self._weights == other._weights 
+            and self._weights == other._weights
             and self._matrix == other._matrix)
 
     def __ne__(self, other):
@@ -1686,33 +1696,33 @@ class TermOrder(SageObject):
         Return true if self and other are not equal.
 
         EXAMPLE::
-        
+
             sage: T1 = TermOrder('lex',2)+TermOrder('lex',3)
             sage: T2 = TermOrder('lex',3)+TermOrder('lex',2)
             sage: T1 != T2
-            False  
+            False
         """
         return not self.__eq__(other)
 
     def __add__(self, other):
         """
         Construct a block order combining self and other.
-        
+
         INPUT:
-        
+
         - ``other`` - a term order
-        
+
         OUTPUT: a block order
-        
+
         EXAMPLE::
-        
+
             sage: from sage.rings.polynomial.term_order import TermOrder
             sage: TermOrder('deglex',2) + TermOrder('degrevlex(3),neglex(3)')
             Block term order with blocks:
             (Degree lexicographic term order of length 2,
              Degree reverse lexicographic term order of length 3,
              Negative lexicographic term order of length 3)
-        """    
+        """
         if isinstance(other, TermOrder):
             return TermOrder('block',[self,other])
         else:
@@ -1723,9 +1733,9 @@ class TermOrder(SageObject):
         Return the length of this term order, i.e. the number of
         variables it covers. This may be zero for indefinitely many
         variables.
-        
+
         EXAMPLE::
-        
+
             sage: T = TermOrder('lex')
             sage: len(T)
             0
@@ -1738,28 +1748,28 @@ class TermOrder(SageObject):
     def __getitem__(self, i):
         r"""
         Return the i-th block of this term order.
-        
+
         INPUT:
-        
+
         - ``i`` - index
-        
+
         EXAMPLE::
-        
+
             sage: T = TermOrder('lex')
             sage: T[0]
             Lexicographic term order
-        
+
         ::
-        
+
             sage: T = TermOrder('lex', 2) + TermOrder('degrevlex', 3)
             sage: T[1]
             Degree reverse lexicographic term order
-        
+
         Note that ``len(self)`` does not count blocks but
         variables.
-        
+
         ::
-        
+
             sage: T = TermOrder('lex', 2) + TermOrder('degrevlex', 3)
             sage: T[len(T)-1]
             Traceback (most recent call last):
@@ -1771,19 +1781,19 @@ class TermOrder(SageObject):
     def __iter__(self):
         r"""
         Iterate over the blocks of this term order.
-        
+
         EXAMPLE::
-        
+
             sage: T = TermOrder('lex')
             sage: list(T) # indirect doctest
             [Lexicographic term order]
-        
+
         ::
-        
+
             sage: T = TermOrder('lex', 2) + TermOrder('degrevlex', 3)
             sage: list(T)
             [Lexicographic term order, Degree reverse lexicographic term order]
-        
+
         Note that ``len(self)`` and
         ``len(list(self))`` are not the same. The former counts
         the number of variables in ``self`` while the latter
@@ -1796,9 +1806,9 @@ class TermOrder(SageObject):
         Return true if this term order is definitely
         global. Return false otherwise, which includes
         unknown term orders.
-        
+
         EXAMPLE::
-        
+
             sage: T = TermOrder('lex')
             sage: T.is_global()
             True
@@ -1812,7 +1822,7 @@ class TermOrder(SageObject):
         if self.name() in ('lex','degrevlex','deglex','wdegrevlex','wdeglex'):
             return True
         elif self.name() is 'block':
-            return all([t.is_global() for t in self.blocks()]) 
+            return all([t.is_global() for t in self.blocks()])
         else:
             return False
 
@@ -1821,9 +1831,9 @@ class TermOrder(SageObject):
         Return true if this term order is definitely
         local. Return false otherwise, which includes
         unknown term orders.
-        
+
         EXAMPLE::
-        
+
             sage: T = TermOrder('lex')
             sage: T.is_local()
             False
@@ -1834,7 +1844,7 @@ class TermOrder(SageObject):
             sage: T.is_local()
             False
         """
-        if (self.name() in ('neglex','negdegrevlex','negdeglex','negwdegrevlex','negwdeglex') or 
+        if (self.name() in ('neglex','negdegrevlex','negdeglex','negwdegrevlex','negwdeglex') or
             self.singular_str() in ('ls','ds','Ds','ws','Ws')):
             return True
         elif self.name() is 'block':
@@ -1863,7 +1873,7 @@ class TermOrder(SageObject):
             sage: t=TermOrder('wdeglex',(2,3))
             sage: t.is_weighted_degree_order()
             True
-        """           
+        """
         return self._weights is not None
 
 def termorder_from_singular(S):
@@ -1908,7 +1918,7 @@ def termorder_from_singular(S):
         if blocktype in ['c','C','a']:
             continue
         elif blocktype == 'M':
-            from sage.matrix.constructor import matrix   
+            from sage.matrix.constructor import matrix
             coefs = list(block[2].sage())
             n = ZZ(len(coefs)).sqrt()
             order.append(TermOrder(matrix(n,coefs)))
