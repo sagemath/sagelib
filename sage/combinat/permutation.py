@@ -279,7 +279,7 @@ class Permutation_class(CombinatorialObject):
     def __hash__(self):
         """
         TESTS::
-        
+
             sage: d = {}
             sage: p = Permutation([1,2,3])
             sage: d[p] = 1
@@ -293,7 +293,7 @@ class Permutation_class(CombinatorialObject):
     def __str__(self):
         """
         TESTS::
-        
+
             sage: PermutationOptions(display='list')
             sage: p = Permutation([2,1,3])
             sage: str(p)
@@ -311,7 +311,7 @@ class Permutation_class(CombinatorialObject):
     def __repr__(self):
         """
         TESTS::
-        
+
             sage: PermutationOptions(display='list')
             sage: p = Permutation([2,1,3])
             sage: repr(p)

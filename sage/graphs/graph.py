@@ -1826,7 +1826,7 @@ class Graph(GenericGraph):
         from sage.graphs.graph_generators import graphs
 
         for g in graphs.line_graph_forbidden_subgraphs():
-            h = self.subgraph_search(g, induced = True) 
+            h = self.subgraph_search(g, induced = True)
             if h is not None:
                 if certificate:
                     return h
@@ -1835,25 +1835,83 @@ class Graph(GenericGraph):
 
         return True
 
-    def is_bipartite(self):
+    def is_bipartite(self, certificate = False):
         """
-        Returns True if graph G is bipartite, False if not.
-        
-        Traverse the graph G with depth-first-search and color nodes. This
-        function uses the corresponding NetworkX function.
-        
+        Returns ``True`` if graph `G` is bipartite, ``False`` if not.
+
+        Traverse the graph G with breadth-first-search and color nodes.
+
+        INPUT:
+
+        - ``certificate`` -- whether to return a certificate (``False`` by
+          default). If set to ``True``, the certificate returned in a proper
+          2-coloring when `G` is bipartite, and an odd cycle otherwise.
+
         EXAMPLES::
-        
+
             sage: graphs.CycleGraph(4).is_bipartite()
             True
             sage: graphs.CycleGraph(5).is_bipartite()
             False
+
+        A random graph is very rarely bipartite::
+
+            sage: g = graphs.PetersenGraph()
+            sage: g.is_bipartite()
+            False
+            sage: false, oddcycle = g.is_bipartite(certificate = True)
+            sage: len(oddcycle) % 2
+            1
         """
-        try:
-            self.bipartite_color()
+        color = {}
+
+        # For any uncolored vertex in the graph (to ensure we do the right job
+        # when the graph is not connected !)
+        for u in self:
+            if u in color:
+                continue
+
+            # Let us run a BFS starting from u
+            queue = [u]
+            color[u] = 1
+            while queue:
+                v = queue.pop(0)
+                c = 1-color[v]
+                for w in self.neighbor_iterator(v):
+
+                    # If the vertex has already been colored
+                    if w in color:
+
+                        # The graph is not bipartite !
+                        if color[w] == color[v]:
+
+                            # Should we return an odd cycle ?
+                            if certificate:
+
+                                # We build the first half of the cycle, i.e. a
+                                # u-w path
+                                cycle = self.shortest_path(u,w)
+
+                                # The second half is a v-u path, but there may
+                                # be common vertices in the two paths. But we
+                                # can avoid that !
+
+                                for v in self.shortest_path(v,u):
+                                    if v in cycle:
+                                        return False, cycle[cycle.index(v):]
+                                    else:
+                                        cycle.append(v)
+                            else:
+                                return False
+
+                    # We color a new vertex
+                    else:
+                        color[w] = c
+                        queue.append(w)
+        if certificate:
+            return True, color
+        else:
             return True
-        except:
-            return False
 
     def is_triangle_free(self):
         r"""
@@ -2436,9 +2494,9 @@ class Graph(GenericGraph):
         """
         Returns a dictionary with vertices as the keys and the color class
         as the values. Fails with an error if the graph is not bipartite.
-        
+
         EXAMPLES::
-        
+
             sage: graphs.CycleGraph(4).bipartite_color()
             {0: 1, 1: 0, 2: 1, 3: 0}
             sage: graphs.CycleGraph(5).bipartite_color()
@@ -2446,32 +2504,20 @@ class Graph(GenericGraph):
             ...
             RuntimeError: Graph is not bipartite.
         """
-        # Straight from the NetworkX source:
-        color = {}
-        for u in self:
-            if u in color:
-                continue
-            queue = [u]
-            color[u] = 1
-            while queue:
-                v = queue.pop()
-                c = 1-color[v]
-                for w in self.neighbors(v):
-                    if w in color:
-                        if color[w] == color[v]:
-                            raise RuntimeError("Graph is not bipartite.")
-                    else:
-                        color[w] = c
-                        queue.append(w)
-        return color
+        isit, certificate = self.is_bipartite(certificate = True)
+
+        if isit:
+            return certificate
+        else:
+            raise RuntimeError("Graph is not bipartite.")
 
     def bipartite_sets(self):
         """
-        Returns (X,Y) where X and Y are the nodes in each bipartite set of
-        graph G. Fails with an error if graph is not bipartite.
-        
+        Returns `(X,Y)` where `X` and `Y` are the nodes in each bipartite set of
+        graph `G`. Fails with an error if graph is not bipartite.
+
         EXAMPLES::
-        
+
             sage: graphs.CycleGraph(4).bipartite_sets()
             (set([0, 2]), set([1, 3]))
             sage: graphs.CycleGraph(5).bipartite_sets()
@@ -2480,9 +2526,16 @@ class Graph(GenericGraph):
             RuntimeError: Graph is not bipartite.
         """
         color = self.bipartite_color()
-        left = set([v for v in color if color[v] == 1])
-        right = set([v for v in color if color[v] == 0])
-        return (left, right)
+        left = set([])
+        right = set([])
+
+        for u,s in color.iteritems():
+            if s:
+                left.add(u)
+            else:
+                right.add(u)
+
+        return left, right
 
     def chromatic_polynomial(self):
         """
