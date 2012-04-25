@@ -108,9 +108,9 @@ class GraphPlot(SageObject):
     def _repr_(self):
         """
         Returns a string representation of a GraphPlot object.
-        
+
         EXAMPLE:
-        
+
         This function is called implicitly by the code below::
 
             sage: g = Graph({0:[1,2], 2:[3], 4:[0,1]})
@@ -118,13 +118,13 @@ class GraphPlot(SageObject):
             GraphPlot object for Graph on 5 vertices
         """
         return "GraphPlot object for %s"%self._graph
-        
+
     def set_pos(self):
         """
         Sets the position plotting parameters for this GraphPlot.
-        
+
         EXAMPLES:
-        
+
         This function is called implicitly by the code below::
 
             sage: g = Graph({0:[1,2], 2:[3], 4:[0,1]})
@@ -142,7 +142,7 @@ class GraphPlot(SageObject):
              2: [-0.587..., -0.809...],
              3: [0.587..., -0.809...],
              4: [0.951..., 0.309...]}
-             
+
             sage: T = list(graphs.trees(7))
             sage: t = T[3]
             sage: t.plot(heights={0:[0], 1:[4,5,1], 2:[2], 3:[3,6]})
@@ -153,7 +153,7 @@ class GraphPlot(SageObject):
         isn't a bug in itself but makes it too easy to accidentally
         introduce a bug elsewhere, such as in set_edges (trac #10124),
         via silent truncating division of integers::
-        
+
             sage: g = graphs.FruchtGraph()
             sage: gp = g.graphplot()
             sage: set(map(type, flatten(gp._pos.values())))
@@ -165,7 +165,7 @@ class GraphPlot(SageObject):
 
         """
         self._pos = self._graph.layout(**self._options)
-        # make sure the positions are floats (trac #10124) 
+        # make sure the positions are floats (trac #10124)
         self._pos = dict((k,(float(v[0]), float(v[1]))) for k,v in self._pos.iteritems())
 
     def set_vertices(self, **vertex_options):
