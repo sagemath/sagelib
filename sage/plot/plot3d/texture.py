@@ -1,10 +1,10 @@
 r"""
 Texture Support
 
-This module provides texture/material support for 3D Graphics 
-objects and plotting.  This is a very rough common interface for 
-Tachyon, x3d, and obj (mtl).   See 
-:meth:`Texture <sage.plot.plot3d.texture.Texture>` and 
+This module provides texture/material support for 3D Graphics
+objects and plotting.  This is a very rough common interface for
+Tachyon, x3d, and obj (mtl).   See
+:meth:`Texture <sage.plot.plot3d.texture.Texture>` and
 :class:`Texture_class <sage.plot.plot3d.texture.Texture_class>`
 for full details about options and use.
 
@@ -32,7 +32,7 @@ And the Texture objects keep track of all their data::
 AUTHOR:
 
 - Robert Bradshaw (2007-07-07) Initial version.
-    
+
 """
 from sage.structure.sage_object import SageObject
 
@@ -136,23 +136,22 @@ def Texture(id=None, **kwds):
     """
     if isinstance(id, Texture_class):
         return id
-    if kwds.has_key('texture'):
+    if 'texture' in kwds:
         t = kwds['texture']
         if is_Texture(t):
             return t
         else:
-            raise TypeError, "texture keyword must be a texture object"
+            raise TypeError("texture keyword must be a texture object")
     if isinstance(id, dict):
         kwds = id
-        if kwds.has_key('rgbcolor'):
+        if 'rgbcolor' in kwds:
             kwds['color'] = kwds['rgbcolor']
         id = None
     elif isinstance(id, Color):
         kwds['color'] = id.rgb()
         id = None
-    elif isinstance(id, str) and colors.has_key(id):
+    elif isinstance(id, str) and id in colors:
         kwds['color'] = id
-        #kwds = {"color": id}
         id = None
     elif isinstance(id, tuple):
         kwds['color'] = id
@@ -193,6 +192,8 @@ def parse_color(info, base=None):
 
         sage: parse_color('red')
         RGB color (1.0, 0.0, 0.0)
+        sage: parse_color('#ff0000')
+        RGB color (1.0, 0.0, 0.0)
 
     From a non valid color str::
 
@@ -211,9 +212,9 @@ def parse_color(info, base=None):
         return info.rgb()
     elif isinstance(info, str):
         try:
-            return colors[info]
+            return Color(info)
         except KeyError:
-            raise ValueError, "unknown color '%s'"%info
+            raise ValueError("unknown color '%s'"%info)
     else:
         r, g, b = base
         # We don't want to lose the data when we split it into its respective components.
@@ -227,7 +228,8 @@ class Texture_class(SageObject):
     r"""
     Construction of a texture. 
     
-    See documentation of :meth:`Texture <sage.plot.plot3d.texture.Texture>` for more details and examples.
+    See documentation of :meth:`Texture <sage.plot.plot3d.texture.Texture>`
+    for more details and examples.
 
     EXAMPLES:
 
@@ -250,7 +252,8 @@ class Texture_class(SageObject):
         r"""
         Construction of a texture. 
         
-        See documentation of :meth:`Texture <sage.plot.plot3d.texture.Texture>` for more details and examples.
+        See documentation of :meth:`Texture <sage.plot.plot3d.texture.Texture>`
+        for more details and examples.
 
         EXAMPLES::
 
@@ -385,7 +388,7 @@ class Texture_class(SageObject):
             sage: t = Texture(opacity=0.6)
             sage: t.jmol_str('obj')
             'color obj translucent 0.4 [102,102,255]'
-            
+
         ::
 
             sage: sum([dodecahedron(center=[2.5*x, 0, 0], color=(1, 0, 0, x/10)) for x in range(11)]).show(aspect_ratio=[1,1,1], frame=False, zoom=2)
@@ -393,6 +396,4 @@ class Texture_class(SageObject):
         translucent = "translucent %s" % float(1-self.opacity) if self.opacity < 1 else ""
         return "color %s %s [%s,%s,%s]" % (obj, translucent,
                 int(255*self.color[0]), int(255*self.color[1]), int(255*self.color[2]))
-
-
 
