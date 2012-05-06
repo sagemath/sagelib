@@ -307,7 +307,12 @@ def test_executable(args, input="", timeout=50.0):
         True
         sage: ret
         42
-    
+
+    When testing IPython, use Sage's ipython directory, to avoid
+    incompatibilities for config files among different versions of
+    IPython. ::
+
+        sage: os.environ['IPYTHONDIR'] = os.path.join(os.environ['DOT_SAGE'], 'ipython')
         sage: (out, err, ret) = test_executable(["sage", "--ipython"], "\n3**33\n")
         sage: out.find("5559060566555523") >= 0
         True
