@@ -3004,12 +3004,19 @@ class DiGraph(GenericGraph):
 
         if keep_labels:
             g = DiGraph(multiedges=True, loops=True)
-            g.add_vertices(scc_set)
-            g.add_edges( set((scc_set[d[u]], scc_set[d[v]], label) for (u,v,label) in self.edges() ) )
+            g.add_vertices(range(len(scc)))
+
+            g.add_edges( set((d[u], d[v], label) for (u,v,label) in self.edges() ) )
+            g.relabel(scc_set, inplace = True)
+
         else:
             g = DiGraph(multiedges=False, loops=False)
-            g.add_vertices(scc_set)
-            g.add_edges( (scc_set[d[u]], scc_set[d[v]]) for u,v in self.edges(labels=False) )
+            g.add_vertices(range(len(scc)))
+
+            for u,v in self.edges(labels=False):
+                g.add_edge(d[u], d[v])
+
+            g.relabel(scc_set, inplace = True)
 
         return g
 
@@ -3018,7 +3025,7 @@ class DiGraph(GenericGraph):
         Returns whether the current ``DiGraph`` is strongly connected.
 
         EXAMPLE:
-        
+
         The circuit is obviously strongly connected ::
 
             sage: g = digraphs.Circuit(5)
