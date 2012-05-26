@@ -856,8 +856,6 @@ cdef class MPolynomial(CommutativeRingElement):
         """
         Return the Newton polytope of this polynomial.
 
-        You should have the optional polymake package installed.
-
         EXAMPLES::
 
             sage: R.<x,y> = QQ[]
@@ -875,7 +873,7 @@ cdef class MPolynomial(CommutativeRingElement):
             The empty polyhedron in QQ^0
             sage: R(1).newton_polytope()
             A 0-dimensional polyhedron in QQ^2 defined as the convex hull of 1 vertex
-            
+
         """
         from sage.geometry.polyhedron.constructor import Polyhedron
         e = self.exponents()

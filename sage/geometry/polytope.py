@@ -16,8 +16,8 @@ needs.'
    If you have trouble with this module do::
 
        sage: !polymake --reconfigure   # not tested
-       
-   at the command line.        
+
+   at the command line.
 
 AUTHORS:
 
@@ -55,15 +55,15 @@ tmp_file = '%s/tmp.poly'%SAGE_TMP
 class Polytope(SageObject):
     """
     Create a polytope.
-    
+
     EXAMPLES::
-    
-        sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])   # optional: needs polymake
-    
+
+        sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])   # optional - polymake
+
     .. note::
 
-       If you have trouble with this module do:: 
-    
+       If you have trouble with this module do::
+
           sage: !polymake --reconfigure   # not tested
 
        at the command line.
@@ -84,20 +84,17 @@ class Polytope(SageObject):
         except AttributeError:
             pass
         return s
-        
+
 
 
     def __add__(self, other):
-        """
-        
-        """
         if not isinstance(other, Polytope):
             raise TypeError, "other (=%s) must be a polytope"%other
         output_file = tmp_filename()
         infile1 = tmp_filename()
         open(infile1,'w').write(self.__data)
         infile2 = tmp_filename()
-        open(infile2,'w').write(other.__data)        
+        open(infile2,'w').write(other.__data)
         cmd = "minkowski_sum %s 1 %s 1 %s"%(output_file, infile1,
                                             infile2)
         stdin, stdout, stderr = os.popen3(cmd)
@@ -111,8 +108,8 @@ class Polytope(SageObject):
         os.unlink(infile2)
         os.unlink(output_file)
         return S
-        
-        
+
+
     def data(self):
         return self.__data
 
@@ -133,7 +130,7 @@ class Polytope(SageObject):
             else:
                 j += i
             return D[i+len(cmd2)-1:j]
-        
+
         F = tmp_file
         open(F,'w').write(self.__data)
         c = '%s %s %s'%(polymake_command, F, cmd)
@@ -146,14 +143,14 @@ class Polytope(SageObject):
                 err,cmd)
         self.__data = open(F).read()
         return ans
-    
+
 
     def facets(self):
         """
         EXAMPLES::
-        
-            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])   # optional: needs polymake
-            sage: P.facets()                            # optional
+
+            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])   # optional - polymake
+            sage: P.facets()                            # optional - polymake
             [(0, 0, 0, 1), (0, 1, 0, 0), (0, 0, 1, 0), (1, 0, 0, -1), (1, 0, -1, 0), (1, -1, 0, 0)]
         """
         try:
@@ -174,9 +171,9 @@ class Polytope(SageObject):
     def vertices(self):
         """
         EXAMPLES::
-        
-            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])     # optional: needs polymake
-            sage: P.vertices()                            # optional
+
+            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])     # optional - polymake
+            sage: P.vertices()                            # optional - polymake
             [(1, 0, 0, 0), (1, 0, 0, 1), (1, 0, 1, 0), (1, 0, 1, 1), (1, 1, 0, 0), (1, 1, 0, 1), (1, 1, 1, 0), (1, 1, 1, 1)]
         """
         try:
@@ -211,16 +208,16 @@ class Polytope(SageObject):
     def is_simple(self):
         r"""
         Return True if this polytope is simple.
-        
+
         A polytope is *simple* if the degree of each vertex equals the
         dimension of the polytope.
-        
+
         EXAMPLES::
-        
-            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])        # optional: needs polymake
-            sage: P.is_simple()                              # optional
+
+            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])        # optional - polymake
+            sage: P.is_simple()                              # optional - polymake
             True
-        
+
         AUTHORS:
 
         - Edwin O'Shea (2006-05-02): Definition of simple.
@@ -233,15 +230,15 @@ class Polytope(SageObject):
         i = s.find('\n')
         self.__is_simple = bool(int(s[i:]))
         return self.__is_simple
-        
-    
-    
+
+
+
     def n_facets(self):
         """
         EXAMPLES::
-        
-            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])     # optional: needs polymake
-            sage: P.n_facets()                            # optional
+
+            sage: P = polymake.convex_hull([[1,0,0,0], [1,0,0,1], [1,0,1,0], [1,0,1,1],  [1,1,0,0], [1,1,0,1], [1,1,1,0], [1,1,1,1]])     # optional - polymake
+            sage: P.n_facets()                            # optional - polymake
             6
         """
         try:
@@ -268,7 +265,7 @@ class Polymake:
     def reconfigure(self):
         """
         Reconfigure polymake.
-        
+
         Remember to run polymake.reconfigure() as soon as you have changed
         the customization file and/or installed missing software!
         """
@@ -276,43 +273,43 @@ class Polymake:
 
     def associahedron(self, dimension):
         return self.__make('associahedron %s %s'%(tmp_file, dimension),
-                           '%s-dimensional associahedron'%dimension)   
-                        
+                           '%s-dimensional associahedron'%dimension)
+
     def birkhoff(self, n):
         return self.__make('birkhoff %s %s'%(tmp_file, n),
                            'Birkhoff %s'%n)
-                        
+
 
     def cell24(self):
         """
         EXAMPLES::
-        
-            sage: polymake.cell24()            # optional: needs polymake
+
+            sage: polymake.cell24()            # optional - polymake
             The 24-cell
         """
         return self.__make('24-cell %s'%tmp_file,
                            'The 24-cell')
-    
+
     def convex_hull(self, points=[]):
         r"""
         EXAMPLES::
-        
+
             sage: R.<x,y,z> = PolynomialRing(QQ,3)
             sage: f = x^3 + y^3 + z^3 + x*y*z
             sage: e = f.exponents()
             sage: a = [[1] + list(v) for v in e]
             sage: a
             [[1, 3, 0, 0], [1, 0, 3, 0], [1, 1, 1, 1], [1, 0, 0, 3]]
-            sage: n = polymake.convex_hull(a)       # optional: needs polymake
-            sage: n                                 # optional
+            sage: n = polymake.convex_hull(a)       # optional - polymake
+            sage: n                                 # optional - polymake
             Convex hull of points [[1, 0, 0, 3], [1, 0, 3, 0], [1, 1, 1, 1], [1, 3, 0, 0]]
-            sage: n.facets()                        # optional
+            sage: n.facets()                        # optional - polymake
             [(0, 1, 0, 0), (3, -1, -1, 0), (0, 0, 1, 0)]
-            sage: n.is_simple()                     # optional
+            sage: n.is_simple()                     # optional - polymake
             True
-            sage: n.graph()                         # optional
+            sage: n.graph()                         # optional - polymake
             'GRAPH\n{1 2}\n{0 2}\n{0 1}\n\n'
-        """        
+        """
         f = 'POINTS\n'
         points.sort()
         for p in points:
@@ -333,7 +330,7 @@ class Polymake:
             cmd += ' -seed %s'%seed
         return self.__make(cmd,
               '%s-dimensional 0/1-polytope with %s random vertices (uniform distribution)'%(d, n))
-            
+
 
 
 polymake = Polymake()
