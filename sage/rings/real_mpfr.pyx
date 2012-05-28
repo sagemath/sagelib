@@ -352,6 +352,8 @@ mpfr_set_exp_max(mpfr_get_emax_max())
 
 _rounding_modes = ['RNDN', 'RNDZ', 'RNDU', 'RNDD']
 
+cdef double LOG_TEN_TWO_PLUS_EPSILON = 3.321928094887363 # a small overestimate of log(10,2)
+
 cdef object RealField_cache = weakref.WeakValueDictionary()
 
 def RealField(int prec=53, int sci_not=0, rnd="RNDN"):
@@ -5019,7 +5021,7 @@ cdef class RealLiteral(RealNumber):
             return RealLiteral(self._parent, self.literal[1:], self.base)
         else:
             return RealLiteral(self._parent, '-'+self.literal, self.base)
-    
+
 RR = RealField()
 
 RR_min_prec = RealField(MPFR_PREC_MIN)
@@ -5030,25 +5032,25 @@ def create_RealNumber(s, int base=10, int pad=0, rnd="RNDN", int min_prec=53):
     Return the real number defined by the string s as an element of
     ``RealField(prec=n)``, where n potentially has slightly
     more (controlled by pad) bits than given by s.
-    
+
     INPUT:
-    
-    
+
+
     -  ``s`` - a string that defines a real number (or
        something whose string representation defines a number)
-    
+
     -  ``base`` - an integer between 2 and 36
-    
+
     -  ``pad`` - an integer = 0.
-    
+
     -  ``rnd`` - rounding mode: RNDN, RNDZ, RNDU, RNDD
-    
+
     -  ``min_prec`` - number will have at least this many
        bits of precision, no matter what.
-    
-    
+
+
     EXAMPLES::
-    
+
         sage: RealNumber('2.3')
         2.30000000000000
         sage: RealNumber(10)
@@ -5059,22 +5061,30 @@ def create_RealNumber(s, int base=10, int pad=0, rnd="RNDN", int min_prec=53):
         1.2000000000000000000000000000000000000000000000000000000000
         sage: (1.2).parent() is RR
         True
-        
+
     TESTS::
-    
+
         sage: RealNumber('.000000000000000000000000000000001').prec()
         53
         sage: RealNumber('-.000000000000000000000000000000001').prec()
         53
+
+    Make sure we've rounded up log(10,2) enough to guarantee
+    sufficient precision (trac #10164)::
+
+        sage: ks = 5*10**5, 10**6
+        sage: all(RealNumber("1." + "0"*k +"1")-1 > 0 for k in ks)
+        True
+
     """
     if not isinstance(s, str):
         s = str(s)
-        
+
     if base == 10 and min_prec == 53 and len(s) <= 15:
         R = RR
-    
+
     else:
-    
+
         if 'e' in s or 'E' in s:
             #Figure out the exponent
             index = max( s.find('e'), s.find('E') )
@@ -5082,24 +5092,25 @@ def create_RealNumber(s, int base=10, int pad=0, rnd="RNDN", int min_prec=53):
             mantissa = s[:index]
         else:
             mantissa = s
-            
+
         #Find the first nonzero entry in rest
         sigfigs = 0
         for i in range(len(mantissa)):
             if mantissa[i] != '.' and mantissa[i] != '0' and mantissa[i] != '-':
                 sigfigs = len(mantissa) - i
                 break
-        
+
         if '.' in mantissa and mantissa[:2] != '0.':
             sigfigs -= 1
-        
+
         if base == 10:
-            bits = int(3.32192*sigfigs)+1
+            # hard-code the common case
+            bits = int(LOG_TEN_TWO_PLUS_EPSILON*sigfigs)+1
         else:
-            bits = int(math.log(base,2)*sigfigs)+1
+            bits = int(math.log(base,2)*1.00001*sigfigs)+1
 
         R = RealField(prec=max(bits+pad, min_prec), rnd=rnd)
-        
+
     return RealLiteral(R, s, base)
 
 

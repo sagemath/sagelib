@@ -46,6 +46,8 @@ cdef object numpy_object_interface = {'typestr': '|O'}
 cdef mp_rnd_t rnd
 rnd = GMP_RNDN
 
+cdef double LOG_TEN_TWO_PLUS_EPSILON = 3.321928094887363 # a small overestimate of log(10,2)
+
 def set_global_complex_round_mode(n):
     global rnd
     rnd = n
@@ -2196,23 +2198,23 @@ def create_ComplexNumber(s_real, s_imag=None, int pad=0, min_prec=53):
     s_imag as an element of ``ComplexField(prec=n)``,
     where n potentially has slightly more (controlled by pad) bits than
     given by s.
-    
+
     INPUT:
-    
+
     -  ``s_real`` - a string that defines a real number
        (or something whose string representation defines a number)
-    
+
     -  ``s_imag`` - a string that defines a real number
        (or something whose string representation defines a number)
-    
+
     -  ``pad`` - an integer >= 0.
-    
+
     -  ``min_prec`` - number will have at least this many
        bits of precision, no matter what.
-    
-    
+
+
     EXAMPLES::
-    
+
         sage: ComplexNumber('2.3')
         2.30000000000000
         sage: ComplexNumber('2.3','1.1')
@@ -2225,26 +2227,39 @@ def create_ComplexNumber(s_real, s_imag=None, int pad=0, min_prec=53):
         1.00000000000000000000000000 + 2.00000000000000000000000000*I
         sage: ComplexNumber(1,2.000000000000000000000)
         1.00000000000000000000 + 2.00000000000000000000*I
-    
+
     ::
-    
+
         sage: sage.rings.complex_number.create_ComplexNumber(s_real=2,s_imag=1)
         2.00000000000000 + 1.00000000000000*I
+
+    TESTS:
+
+    Make sure we've rounded up log(10,2) enough to guarantee
+    sufficient precision (trac #10164)::
+
+        sage: s = "1." + "0"*10**6 + "1"
+        sage: sage.rings.complex_number.create_ComplexNumber(s,0).real()-1 == 0
+        False
+        sage: sage.rings.complex_number.create_ComplexNumber(0,s).imag()-1 == 0
+        False
+
     """
     if s_imag is None:
         s_imag = 0
-        
+
     if not isinstance(s_real, str):
         s_real = str(s_real).strip()
     if not isinstance(s_imag, str):
         s_imag = str(s_imag).strip()
     #if base == 10:
-    bits = max(int(3.32192*len(s_real)),int(3.32192*len(s_imag)))
+    bits = max(int(LOG_TEN_TWO_PLUS_EPSILON*len(s_real)),
+               int(LOG_TEN_TWO_PLUS_EPSILON*len(s_imag)))
     #else:
     #    bits = max(int(math.log(base,2)*len(s_imag)),int(math.log(base,2)*len(s_imag)))
-        
+
     C = complex_field.ComplexField(prec=max(bits+pad, min_prec))
-        
+
     return ComplexNumber(C, s_real, s_imag)
 
 
