@@ -5620,8 +5620,14 @@ cdef class Polynomial(CommutativeAlgebraElement):
         Return False if this polynomial is not square-free, i.e., if there is a
         non-unit `g` in the polynomial ring such that `g^2` divides ``self``.
 
+        .. WARNING::
+
+            This method is not consistent with
+            :meth:`.squarefree_decomposition` since the latter does not factor
+            the content of a polynomial. See the examples below.
+
         EXAMPLES::
-        
+
             sage: R.<x> = QQ[]
             sage: f = (x-1)*(x-2)*(x^2-5)*(x^17-3); f
             x^21 - 3*x^20 - 3*x^19 + 15*x^18 - 10*x^17 - 3*x^4 + 9*x^3 + 9*x^2 - 45*x + 30
@@ -5666,6 +5672,22 @@ cdef class Polynomial(CommutativeAlgebraElement):
             sage: (x^3+t).is_squarefree()
             True
             sage: R(t^2).is_squarefree()
+            True
+
+        This method is not consistent with :meth:`.squarefree_decomposition`::
+
+            sage: R.<x> = ZZ[]
+            sage: f = 4 * x
+            sage: f.is_squarefree()
+            False
+            sage: f.squarefree_decomposition()
+            (4) * x
+
+        If you want this method equally not to consider the content, you can
+        remove it as in the following example::
+
+            sage: c = f.content()
+            sage: (f/c).is_squarefree()
             True
 
         """
